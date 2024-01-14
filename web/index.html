@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FM-DX Webserver [Noobish's Server]</title>
+    <link href="/styles.css" type="text/css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="wrapper">
+        <canvas id="signal-canvas" width="1024" height="200" style="margin-top: 120px;"></canvas>
+
+        <div class="flex-container">
+            <div class="panel-75" style="height: 110px;">
+                <span class="text-big" id="data-ps"></span>
+            </div>
+
+            <div class="panel-33">
+                <h2 style="padding-top: 18px;">
+                    <span id="data-pty" style="color: #eee;"></span>
+                    <span style="margin-left: 30px;" id="data-tp">TP</span>
+                    <span style="margin-left: 15px; color: #ff5776;" id="data-st"></span>
+                </h2>
+            </div>
+        </div>
+
+
+        <div class="flex-container">
+            <div class="panel-33">
+                <h2>PI CODE</h2>
+                <span id="data-pi" class="text-big"></span>
+            </div>
+            
+            <div class="panel-33">
+                <h2>FREQUENCY</h2>
+                <span id="data-frequency" class="text-big"></span>
+            </div>
+            
+            <div class="panel-33">
+                <h2>SIGNAL</h2>
+                <span class="text-big">
+                    <span id="data-signal"></span>
+                    <span id="signal-units" class="text-medium-big">dBf</span>
+                </span>
+            </div>
+        </div>
+        
+        <div class="flex-container">
+            <div class="panel-33" style="height: 48px;">
+                <audio id="myAudio" preload="none" autoplay></audio>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+            </div>
+            
+            <div class="panel-33" style="opacity: 0;">
+            <button id="playButton">play</button>
+            </div>
+            
+            <div class="panel-33" style="height: 48px;">
+                <label class="toggleSwitch nolabel" onclick="">
+                    <input id="signal-units-toggle" type="checkbox"/>
+                    <a></a>
+                    <span>
+                        <span class="left-span">dBf</span>
+                        <span class="right-span">dBµV</span>
+                    </span>											
+                </label>
+            </div>
+        </div>
+        
+        <div class="panel-100">
+            <h2 style="margin: 0;">RADIOTEXT</h2>
+            <div id="data-rt0"></div>
+            <div id="data-rt1"></div>
+            <div id="data-container" style="display: none;"></div>
+        </div>
+
+        <div id="data-af" style="text-align: center;"></div>
+    </div>
+    
+    <button id="settings"><i class="fa-solid fa-gear"></i></button>
+    
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-title">Settings</span>
+            <span class="close" id="closeModal"><i class="fa-solid fa-xmark"></i></span>
+
+            <label for="themes" style="margin-top: 50px;"><i class="fa-solid fa-palette"></i> Theme:</label>
+            <select name="themes" style="margin-bottom: 50px;" id="theme-selector">
+                <option value="theme1">Blurple</option>
+                <option value="theme2">Red</option>
+                <option value="theme3">Green</option>
+                <option value="theme4">Cyan</option>
+                <option value="theme5">Orange</option>
+            </select>
+            <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librds by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
+            <button class="button-close" id="closeModalButton">Close</button>
+        </div>
+    </div>
+    <script src="main.js"></script>
+    <script src="themes.js"></script>
+    <script src="modal.js"></script>
+    <script src="stream.js"></script>
+</body>
+</html>
