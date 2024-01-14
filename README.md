@@ -6,9 +6,9 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 
 - 🌐 **Web-Based Control:** Access and control your TEF6686 / F1HD receiver from any device with a web browser.
 - 📻 **FM DXing:** Enhance your FM DXing experience with a user-friendly web interface.
-- 📡 **Cross-Platform:** Works seamlessly across different platforms.
 
 ##  Features to be added
+- **Cross-Platform:** Our main priority, as we use librdsparser, we are patiently waiting for a Windows version.
 - **Low-latency streaming**: Currently planned as a feature similar to WebSDRs to provide a zero-delay audio using your browser.
 - **Pre-compiled app version**: Currently planned right after finishing the low-latency streaming feature. 
 
