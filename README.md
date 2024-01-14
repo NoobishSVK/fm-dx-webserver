@@ -8,6 +8,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 - 📻 **FM DXing:** Enhance your FM DXing experience with a user-friendly web interface.
 
 ##  Features to be added
+- **Tuner control:** Currently the tuner info is read only, however in the near future you will also be able to control via password authentication.
 - **Cross-Platform:** Our main priority, as we use librdsparser, we are patiently waiting for a Windows version.
 - **Low-latency streaming**: Currently planned as a feature similar to WebSDRs to provide a zero-delay audio using your browser.
 - **Pre-compiled app version**: Currently planned right after finishing the low-latency streaming feature. 
