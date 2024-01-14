@@ -42,7 +42,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 4. Start the server:
 
     ```bash
-    npm start
+    node .
     ```
 
 4. Open your web browser and navigate to `http://web-server-ip:web-server-port` to access the web interface.
