@@ -17,7 +17,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/FM-DX-Webserver.git
+    git clone https://github.com/NoobishSVK/FM-DX-Webserver.git
     ```
 
 2. Install dependencies:
@@ -45,7 +45,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
     npm start
     ```
 
-4. Open your web browser and navigate to `http://localhost:3000` to access the web interface.
+4. Open your web browser and navigate to `http://web-server-ip:web-server-port` to access the web interface.
 
 ## Dependencies
 
