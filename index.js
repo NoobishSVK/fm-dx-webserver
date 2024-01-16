@@ -11,7 +11,7 @@ const axios = require('axios');
 const dataHandler = require('./datahandler');
 
 /* Server settings */
-const webServerHost = '192.168.1.39'; // IP of the web server
+const webServerHost = '192.168.1.14'; // IP of the web server
 const webServerPort = 8080; // web server port
 
 const xdrdServerHost = '192.168.1.15'; // xdrd server iP
