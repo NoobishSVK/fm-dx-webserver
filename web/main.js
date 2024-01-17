@@ -166,3 +166,68 @@ signalToggle.addEventListener("change", function() {
         signalText.textContent = 'dBf';
     }
 });
+
+const textInput = document.getElementById('commandinput');
+
+textInput.addEventListener('keyup', function (event) {
+    // Get the current input value
+    let inputValue = textInput.value;
+
+    // Remove non-digit characters
+    inputValue = inputValue.replace(/[^0-9]/g, '');
+
+    console.log("InputValue contains dot: ", inputValue.toLowerCase().includes("."));
+    
+    // Determine where to add the dot based on the frequency range
+    if (inputValue.includes(".") === false) {
+        if (inputValue.startsWith('10') && inputValue.length > 2) {
+            // For frequencies starting with '10', add the dot after the third digit
+            inputValue = inputValue.slice(0, 3) + '.' + inputValue.slice(3);
+            textInput.value = inputValue;
+        } else if (inputValue.length > 2) {
+            // For other frequencies, add the dot after the second digit
+            inputValue = inputValue.slice(0, 2) + '.' + inputValue.slice(2);
+            textInput.value = inputValue;
+        }
+    }
+
+    // Update the input value
+
+    // Check if the pressed key is 'Enter' (key code 13)
+    if (event.key === 'Enter') {
+        // Retrieve the input value
+        const inputValue = textInput.value;
+
+        // Send the input value to the WebSocket
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(inputValue);
+        }
+
+        // Clear the input field if needed
+        textInput.value = '';
+    }
+});
+
+document.onkeydown = checkKey;
+
+function checkKey(e) {
+    e = e || window.event;
+    currentFreq = document.getElementById("data-frequency").textContent;
+    currentFreq = parseFloat(currentFreq).toFixed(3);
+    currentFreq = parseFloat(currentFreq);
+
+    if (socket.readyState === WebSocket.OPEN) {
+        if (e.keyCode == '38') {
+                socket.send((currentFreq + 0.01).toFixed(3));
+            }
+        else if (e.keyCode == '40') {
+                socket.send((currentFreq - 0.01).toFixed(3));
+        }
+        else if (e.keyCode == '37') {
+                socket.send((currentFreq - 0.10).toFixed(3));
+        }
+        else if (e.keyCode == '39') {
+            socket.send((currentFreq + 0.10).toFixed(3));
+        }
+    }
+}

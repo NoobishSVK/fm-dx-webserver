@@ -20,7 +20,7 @@ koffi.proto('void callback_ptyn(void *rds, void *user_data)');
 
 const rdsparser = {
     new: lib.func('void* rdsparser_new()'),
-    clear: lib.func('void* rdsparser_clear()'),
+    clear: lib.func('void rdsparser_clear(void *rds)'),
     free: lib.func('void rdsparser_free(void *rds)'),
     parse_string: lib.func('bool rdsparser_parse_string(void *rds, const char *input)'),
     get_pi: lib.func('int32_t rdsparser_get_pi(void *rds)'),
@@ -107,8 +107,8 @@ const callbacks = {
   }, 'callback_rt *'),
 
   ptyn: koffi.register((rds, flag) => (
-    value = decode_unicode(rdsparser.get_ptyn(rds)),
-    console.log('PTYN: ' + value)
+    value = decode_unicode(rdsparser.get_ptyn(rds))
+    /*console.log('PTYN: ' + value)*/
 ), 'callback_ptyn *')
 };
 

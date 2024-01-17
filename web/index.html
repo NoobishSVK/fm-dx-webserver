@@ -51,8 +51,9 @@
                 <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
             </div>
             
-            <div class="panel-33" style="opacity: 0;">
-            <button id="playButton">play</button>
+            <div class="panel-33" style="opacity: 1;">
+            <!--<button id="playButton">play</button>-->
+            <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency">
             </div>
             
             <div class="panel-33" style="height: 48px;">
@@ -73,8 +74,11 @@
             <div id="data-rt1"></div>
             <div id="data-container" style="display: none;"></div>
         </div>
-
-        <div id="data-af" style="text-align: center;"></div>
+        
+        <div class="panel-100" style="overflow: hidden">
+            <h2 style="margin: 0;">AF</h2>
+            <div id="data-af" style="text-align: center;"></div>
+        </div>
     </div>
     
     <button id="settings"><i class="fa-solid fa-gear"></i></button>
@@ -92,7 +96,7 @@
                 <option value="theme4">Cyan</option>
                 <option value="theme5">Orange</option>
             </select>
-            <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librds by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
+            <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
             <button class="button-close" id="closeModalButton">Close</button>
         </div>
     </div>

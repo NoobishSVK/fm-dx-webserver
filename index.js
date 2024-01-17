@@ -6,29 +6,37 @@ const path = require('path');
 const net = require('net');
 const cors = require('cors');
 const axios = require('axios');
+const crypto = require('crypto');
 
+let receivedSalt = '';
+let receivedPassword = false;
 // Other JS files
 const dataHandler = require('./datahandler');
+const config = require('./userconfig');
 
 /* Server settings */
-const webServerHost = '192.168.1.14'; // IP of the web server
-const webServerPort = 8080; // web server port
+const webServerHost = config.webServerHost; // IP of the web server
+const webServerPort = config.webServerPort; // web server port
 
-const xdrdServerHost = '192.168.1.15'; // xdrd server iP
-const xdrdServerPort = 7373; // xdrd server port
+const xdrdServerHost = config.xdrdServerHost; // xdrd server iP
+const xdrdServerPort = config.xdrdServerPort; // xdrd server port
+const xdrdPassword = config.xdrdPassword;
 
 const wss = new WebSocket.Server({ noServer: true });
 
 const app = express();
 const httpServer = http.createServer(app);
-
+/* connection to xdrd */
+const client = new net.Socket();
 
 /* webSocket handlers */
 wss.on('connection', (ws) => {
   console.log('WebSocket client connected');
 
   ws.on('message', (message) => {
-    console.log('Received message from client:', message);
+    console.log('Received message from client:', message.toString());
+    newFreq = message.toString() * 1000; 
+    client.write("T" + newFreq + '\n');
   });
 });
 
@@ -36,15 +44,56 @@ wss.on('connection', (ws) => {
 // Serve static files from the "web" folder
 app.use(express.static(path.join(__dirname, 'web')));
 
-/* connection to xdrd */
-const client = new net.Socket();
+// Function to authenticate with the xdrd server
+function authenticateWithXdrd(client, salt, password) {
+  const sha1 = crypto.createHash('sha1');
 
+  // Convert salt and password to buffers
+  const saltBuffer = Buffer.from(salt, 'utf-8');
+  const passwordBuffer = Buffer.from(password, 'utf-8');
+
+  // Update the hash context with salt and password
+  sha1.update(saltBuffer);
+  sha1.update(passwordBuffer);
+
+  // Finalize the hash and get the hashed password
+  const hashedPassword = sha1.digest('hex');
+  client.write(hashedPassword + '\n');
+  client.write('x\n');
+}
+
+// WebSocket client connection
 client.connect(xdrdServerPort, xdrdServerHost, () => {
   console.log('Connected to xdrd');
+  
+  client.once('data', (data) => {
+    const receivedData = data.toString();
+    const lines = receivedData.split('\n');
+
+    // Assuming that the first message contains the salt
+    if (lines.length > 0 && !receivedPassword) {
+      receivedSalt = lines[0].trim();
+      authenticateWithXdrd(client, receivedSalt, xdrdPassword);
+      receivedPassword = true;
+    }
+  });
 });
 
 client.on('data', (data) => {
   const receivedData = data.toString();
+
+  const lines = receivedData.split('\n');
+
+  // If there's at least one line, set it as the received salt
+  /*if (lines.length > 0 && receivedPassword === false) {
+    receivedSalt = lines[0].trim(); // Trim any leading or trailing whitespace
+    console.log('Received Salt:', receivedSalt);
+
+    // Authentication logic
+    authenticateWithXdrd(client, receivedSalt, xdrdPassword);
+    receivedPassword = true;
+  }*/
+
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       dataHandler.handleData(client, receivedData);
@@ -52,11 +101,10 @@ client.on('data', (data) => {
   });
 });
 
+
 client.on('close', () => {
   console.log('Disconnected from xdrd');
 });
-
-client.write('x');
 
 /* HTTP Server */
 
