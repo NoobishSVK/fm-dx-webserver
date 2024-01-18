@@ -135,17 +135,42 @@ function divideByHundred(a) {
 }
 
 function updatePanels(parsedData) {
-    sortedAf = parsedData.af.sort(compareNumbers);
-    
-    sortedAf.forEach((element, index, array) => {
-        array[index] = element / 1000;
+    // Assuming sortedAf is your array
+    const sortedAf = parsedData.af.sort(compareNumbers);
 
-        // Check if it's the last element in the array
-        if (index === array.length - 1) {
-            document.querySelector('#data-af').innerHTML = array;
-        }
+    // Convert the values in the array (dividing by 1000)
+    const scaledArray = sortedAf.map(element => element / 1000);
+
+    // Get the container element where you want to display the list
+    const listContainer = document.querySelector('#af-list');
+
+    // Preserve the current scroll position
+    const scrollTop = listContainer.scrollTop;
+
+    // Get the existing ul element
+    const ul = listContainer.querySelector('ul');
+
+    // If ul doesn't exist, create a new one
+    if (!ul) {
+        ul = document.createElement('ul');
+        listContainer.appendChild(ul);
+    }
+
+    // Remove existing list items
+    ul.innerHTML = '';
+
+    // Create an array of list items
+    const listItems = scaledArray.map(element => {
+        const li = document.createElement('li');
+        li.textContent = element.toFixed(1);
+        return li;
     });
 
+    // Append the list items to the unordered list
+    listItems.forEach(li => ul.appendChild(li));
+
+    // Restore the scroll position
+    listContainer.scrollTop = scrollTop;
     document.querySelector('#data-frequency').textContent = parsedData.freq;
     document.querySelector('#data-pi').innerHTML = parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi;
     document.querySelector('#data-ps').innerHTML = parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : parsedData.ps;
@@ -212,9 +237,8 @@ document.onkeydown = checkKey;
 
 function checkKey(e) {
     e = e || window.event;
-    currentFreq = document.getElementById("data-frequency").textContent;
-    currentFreq = parseFloat(currentFreq).toFixed(3);
-    currentFreq = parseFloat(currentFreq);
+
+    getCurrentFreq();
 
     if (socket.readyState === WebSocket.OPEN) {
         if (e.keyCode == '38') {
@@ -229,5 +253,33 @@ function checkKey(e) {
         else if (e.keyCode == '39') {
             socket.send((currentFreq + 0.10).toFixed(3));
         }
+    }
+}
+
+function getCurrentFreq() {
+    currentFreq = document.getElementById("data-frequency").textContent;
+    currentFreq = parseFloat(currentFreq).toFixed(3);
+    currentFreq = parseFloat(currentFreq);
+
+    return currentFreq;
+}
+
+freqUpButton = document.getElementById('freq-up');
+freqDownButton = document.getElementById('freq-down');
+
+freqUpButton.addEventListener("click", tuneUp);
+freqDownButton.addEventListener("click", tuneDown);
+
+function tuneUp() {
+    if (socket.readyState === WebSocket.OPEN) {
+        getCurrentFreq();
+        socket.send((currentFreq + 0.10).toFixed(3));
+    }
+}
+
+function tuneDown() {
+    if (socket.readyState === WebSocket.OPEN) {
+        getCurrentFreq();
+        socket.send((currentFreq - 0.10).toFixed(3));
     }
 }

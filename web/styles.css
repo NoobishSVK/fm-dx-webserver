@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Monomaniac+One&display=swap');
 
 :root {
     --color-main: #1d1838;
@@ -34,7 +35,7 @@ a {
 #wrapper {
     margin: auto;
     width: auto;
-    max-width: 1024px;
+    max-width: 1240px;
 }
 
 #color-settings, #settings {
@@ -71,6 +72,21 @@ h2 {
     display: flex;
 }
 
+.no-bg {
+    background: transparent !important;
+}
+
+.panel-10 {
+    width: 10%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
 .panel-33 {
     width: 33%;
     background: var(--color-1);
@@ -91,6 +107,16 @@ h2 {
     margin-top: 30px;
 }
 
+.panel-90 {
+    width: 88%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+}
+
 
 .panel-100 {
     width: 98%;
@@ -103,13 +129,23 @@ h2 {
     margin-top: 30px;
 }
 
+#af-list ul {
+    display:list-item;
+    padding: 0;
+    list-style-type: none;
+    height: 425px;
+    overflow: scroll;
+    margin-bottom: 0;
+}
+
 .auto {
     margin: auto;
 }
 
 .text-big {
     font-size: 72px;
-    font-weight: 600;
+    font-weight: 300;
+    /*font-family: "Monomaniac One", sans-serif;*/
 }
 
 .text-medium-big {
@@ -130,32 +166,60 @@ h2 {
     background: #100d1f;
 }
 
-input[type="text"] {
-  width: 100%;
+#tune-buttons input[type="text"] {
+  width: 50%;
   height: 100%;
   min-height: 46px;
-  border-radius: 30px;
   padding-left: 20px;
   box-sizing: border-box;
-  border: 0;
+  border: 2px solid transparent;
+  outline: 0;
   color: white;
   background-color: var(--color-1);
   font-family: 'Titillium Web', sans-serif;
 }
 
-input[type="text"]:focus {
-    outline: 2px solid var(--color-main-bright);
+input[type="text"]:hover {
+    border: 2px solid var(--color-main-bright);
+}
+
+#tune-buttons button {
+    box-sizing: border-box;
+    background-color: var(--color-4);
+    border: 0;
+    color: var(--color-1);
+    width: 25%;
+    height: 100%;
+    display: block;
+    padding: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+#tune-buttons button:hover {
+    background-color: var(--color-main-bright);
+}
+
+#freq-down {
+    border-radius: 30px 0 0 30px;
+}
+
+#freq-up {
+    border-radius: 0 30px 30px 0;
 }
 
 @media only screen and (max-width: 768px) {
     .flex-container {
         display: block;
     }
+    .flex-phone {
+        display: flex;
+    }
     .modal-content {
         max-width: 90%;
         margin: auto;
     }
-    .panel-33 {
+    .panel-10, .panel-33, .panel-90 {
         width: 90%;
         margin: auto;
         margin-bottom: 20px;

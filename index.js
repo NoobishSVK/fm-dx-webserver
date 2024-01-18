@@ -10,6 +10,11 @@ const crypto = require('crypto');
 
 let receivedSalt = '';
 let receivedPassword = false;
+let currentUsers = 0;
+
+const infoMsg = "\x1b[32m[INFO]\x1b[0m";
+const debugMsg = "\x1b[36m[DEBUG]\x1b[0m";
+
 // Other JS files
 const dataHandler = require('./datahandler');
 const config = require('./userconfig');
@@ -17,7 +22,6 @@ const config = require('./userconfig');
 /* Server settings */
 const webServerHost = config.webServerHost; // IP of the web server
 const webServerPort = config.webServerPort; // web server port
-
 const xdrdServerHost = config.xdrdServerHost; // xdrd server iP
 const xdrdServerPort = config.xdrdServerPort; // xdrd server port
 const xdrdPassword = config.xdrdPassword;
@@ -30,16 +34,27 @@ const httpServer = http.createServer(app);
 const client = new net.Socket();
 
 /* webSocket handlers */
-wss.on('connection', (ws) => {
-  console.log('WebSocket client connected');
+wss.on('connection', (ws, request) => {
+  const clientIp = request.connection.remoteAddress;
+  currentUsers++;
+  console.log(infoMsg, `WebSocket client connected\nIP: ${clientIp}\nUsers online: ${currentUsers}`);
 
   ws.on('message', (message) => {
-    console.log('Received message from client:', message.toString());
+    if(config.verboseMode === true) {
+      console.log(debugMsg,'Received message from client:', message.toString());
+    }
     newFreq = message.toString() * 1000; 
     client.write("T" + newFreq + '\n');
   });
-});
 
+  ws.on('close', (code, reason) => {
+    currentUsers--;
+    console.log(infoMsg, `WebSocket client disconnected\nIP: ${clientIp}\nCode: ${code} ${reason}\nUsers online: ${currentUsers}`);
+  });
+
+  ws.on('error', console.error);
+
+});
 
 // Serve static files from the "web" folder
 app.use(express.static(path.join(__dirname, 'web')));
@@ -64,7 +79,7 @@ function authenticateWithXdrd(client, salt, password) {
 
 // WebSocket client connection
 client.connect(xdrdServerPort, xdrdServerHost, () => {
-  console.log('Connected to xdrd');
+  console.log(infoMsg, 'Connected to xdrd successfully.');
   
   client.once('data', (data) => {
     const receivedData = data.toString();
@@ -81,18 +96,6 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
 
 client.on('data', (data) => {
   const receivedData = data.toString();
-
-  const lines = receivedData.split('\n');
-
-  // If there's at least one line, set it as the received salt
-  /*if (lines.length > 0 && receivedPassword === false) {
-    receivedSalt = lines[0].trim(); // Trim any leading or trailing whitespace
-    console.log('Received Salt:', receivedSalt);
-
-    // Authentication logic
-    authenticateWithXdrd(client, receivedSalt, xdrdPassword);
-    receivedPassword = true;
-  }*/
 
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -115,7 +118,7 @@ httpServer.on('upgrade', (request, socket, head) => {
 });
 
 httpServer.listen(webServerPort, webServerHost, () => {
-  console.log(`Web server is running at http://${webServerHost}:${webServerPort}`);
+  console.log(infoMsg, `Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
 });
 
 /* Audio */

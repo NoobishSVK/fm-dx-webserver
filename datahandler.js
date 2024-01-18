@@ -1,7 +1,5 @@
 const koffi = require('koffi');
 const path = require('path');
-//const lib = koffi.load(path.join(__dirname, "librds.so"));
-//const lib = koffi.load(path.join(__dirname, "librds.dll"));
 const os = require('os');
 const win32 = (os.platform() == "win32");
 const unicode_type = (win32 ? 'int16_t' : 'int32_t');
@@ -56,8 +54,8 @@ const decode_unicode = function(string)
 
 const callbacks = {
   pi: koffi.register(rds => (
-    value = rdsparser.get_pi(rds),
-    console.log('PI: ' + value.toString(16).toUpperCase())
+    value = rdsparser.get_pi(rds)
+    //console.log('PI: ' + value.toString(16).toUpperCase())
   ), 'callback_pi *'),
 
   pty: koffi.register(rds => (
@@ -71,13 +69,13 @@ const callbacks = {
   ), 'callback_tp *'),
 
   ta: koffi.register(rds => (
-    value = rdsparser.get_ta(rds),
-    console.log('TA: ' + value)
+    value = rdsparser.get_ta(rds)
+    //console.log('TA: ' + value)
   ), 'callback_ta *'),
 
   ms: koffi.register(rds => (
-    value = rdsparser.get_ms(rds),
-    console.log('MS: ' + value)
+    value = rdsparser.get_ms(rds)
+    //console.log('MS: ' + value)
   ), 'callback_ms *'),
 
   af: koffi.register((rds, value) => (
@@ -85,8 +83,8 @@ const callbacks = {
   ), 'callback_af *'),
 
   ecc: koffi.register(rds => (
-    value = rdsparser.get_ecc(rds),
-    console.log('ECC: ' + value.toString(16).toUpperCase())
+    value = rdsparser.get_ecc(rds)
+    //console.log('ECC: ' + value.toString(16).toUpperCase())
   ), 'callback_ecc *'),
 
   ps: koffi.register(rds => (
@@ -131,8 +129,8 @@ const clientUpdateIntervals = new Map(); // Store update intervals for each clie
 // Initialize the data object
 var dataToSend = {
   pi: '?',
-  freq: 0,
-  signal: '',
+  freq: 87.500.toFixed(3),
+  signal: 0,
   st: false,
   rds: '',
   ps: '',
@@ -145,8 +143,8 @@ var dataToSend = {
 
 const initialData = {
   pi: '?',
-  freq: 0,
-  signal: '',
+  freq: 87.500.toFixed(3),
+  signal: 0,
   st: false,
   rds: '',
   ps: '',
@@ -245,15 +243,6 @@ function handleData(ws, receivedData) {
     ws.send(dataToSendJSON);
     }
 }
-
-/*setInterval(function () {
-  // some code
-  if (rdsBuffer.length > 50) {
-    handleBuffer();
-    //console.log("handling buffer");
-  }
-  //console.log(rdsBuffer.length);
-}, 150);*/
 
 module.exports = {
   handleData

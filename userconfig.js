@@ -5,6 +5,8 @@ const xdrdServerHost = '192.168.1.15'; // xdrd server iP
 const xdrdServerPort = 7373; // xdrd server port
 const xdrdPassword = ''; // xdrd password (optional)
 
+const verboseMode = false; // if true, console will display extra messages
+
 module.exports = {
-    webServerHost, webServerPort, xdrdServerHost, xdrdServerPort, xdrdPassword
+    webServerHost, webServerPort, xdrdServerHost, xdrdServerPort, xdrdPassword, verboseMode
   };
