@@ -2,8 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Monomaniac+One&display=swap');
 
 :root {
-    --color-main: #1d1838;
-    --color-main-bright: #8069fa;
+    --color-main: #111;
+    --color-main-bright: #aaa;
     
     --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright));
     --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright));
@@ -20,7 +20,8 @@
 body {
     font-family: 'Titillium Web', sans-serif;
     color: white;
-    background: var(--color-main);
+    background-color: var(--color-main);
+    transition: 0.3s ease-in-out background-color;
 }
 
 a {
@@ -33,7 +34,10 @@ a {
 }
 
 #wrapper {
-    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: auto;
     max-width: 1240px;
 }
@@ -89,12 +93,18 @@ h2 {
 
 .panel-33 {
     width: 33%;
-    background: var(--color-1);
+    background-color: var(--color-1);
     margin-left: 10px;
     margin-right: 10px;
     border-radius: 30px;
     text-align: center;
     margin-top: 30px;
+    transition: 0.3s ease-in-out background-color;
+}
+
+.hover-brighten:hover {
+    cursor: pointer;
+    background-color: var(--color-2);
 }
 
 .panel-75 {
@@ -241,6 +251,14 @@ input[type="text"]:hover {
         margin: auto;
     }
     
+}
+
+@media (max-width: 960px) {
+    #wrapper {
+        position: static;
+        transform: none;
+        margin: 0 auto;
+    }
 }
 
 input[type="range"] {

@@ -242,16 +242,16 @@ function checkKey(e) {
 
     if (socket.readyState === WebSocket.OPEN) {
         if (e.keyCode == '38') {
-                socket.send((currentFreq + 0.01).toFixed(3));
+                socket.send((currentFreq + 0.01).toFixed(2));
             }
         else if (e.keyCode == '40') {
-                socket.send((currentFreq - 0.01).toFixed(3));
+                socket.send((currentFreq - 0.01).toFixed(2));
         }
         else if (e.keyCode == '37') {
-                socket.send((currentFreq - 0.10).toFixed(3));
+                socket.send((currentFreq - 0.10).toFixed(1));
         }
         else if (e.keyCode == '39') {
-            socket.send((currentFreq + 0.10).toFixed(3));
+            socket.send((currentFreq + 0.10).toFixed(1));
         }
     }
 }
@@ -266,20 +266,63 @@ function getCurrentFreq() {
 
 freqUpButton = document.getElementById('freq-up');
 freqDownButton = document.getElementById('freq-down');
+piCodeContainer = document.getElementById('pi-code-container');
+freqContainer = document.getElementById('freq-container');
 
 freqUpButton.addEventListener("click", tuneUp);
 freqDownButton.addEventListener("click", tuneDown);
+piCodeContainer.addEventListener("click", copyPi);
+freqContainer.addEventListener("click", function() {
+    textInput.focus();
+});
 
 function tuneUp() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send((currentFreq + 0.10).toFixed(3));
+        socket.send((currentFreq + 0.10).toFixed(1));
     }
 }
 
 function tuneDown() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send((currentFreq - 0.10).toFixed(3));
+        socket.send((currentFreq - 0.10).toFixed(1));
+    }
+}
+
+async function copyPi() {
+    console.log("clicked pi");
+    let frequency = document.querySelector('#data-frequency').textContent;
+    let pi = document.querySelector('#data-pi').textContent;
+    let ps = document.querySelector('#data-ps').textContent;
+    let signal = document.querySelector('#data-signal').textContent;
+    let signalUnit = document.querySelector('#signal-units').textContent;
+    try {
+        await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + " " + signalUnit + "]");
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+async function copyToClipboard(textToCopy) {
+    // Navigator clipboard api needs a secure context (https)
+    if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+    } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+            
+        document.body.prepend(textArea);
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+        } catch (error) {
+            console.error(error);
+        } finally {
+            textArea.remove();
+        }
     }
 }

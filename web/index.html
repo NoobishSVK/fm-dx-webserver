@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="wrapper">
-        <canvas id="signal-canvas" width="1240" height="200" style="margin-top: 80px;"></canvas>
+        <canvas id="signal-canvas" width="1240" height="200"></canvas>
         
         <div class="flex-container">
             <div class="panel-90 no-bg">
@@ -28,12 +28,12 @@
                 
                 
                 <div class="flex-container">
-                    <div class="panel-33">
+                    <div class="panel-33 hover-brighten" id="pi-code-container">
                         <h2>PI CODE</h2>
                         <span id="data-pi" class="text-big"></span>
                     </div>
                     
-                    <div class="panel-33">
+                    <div class="panel-33 hover-brighten" id="freq-container">
                         <h2>FREQUENCY</h2>
                         <span id="data-frequency" class="text-big"></span>
                     </div>
@@ -108,6 +108,7 @@
                 <option value="theme3">Green</option>
                 <option value="theme4">Cyan</option>
                 <option value="theme5">Orange</option>
+                <option value="theme6">Pink</option>
             </select>
             <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
             <button class="button-close" id="closeModalButton">Close</button>

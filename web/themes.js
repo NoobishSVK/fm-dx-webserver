@@ -18,6 +18,10 @@ const themes = {
   theme5: {
     '--color-main': '#171106',
     '--color-main-bright': '#f5b642',
+  },
+  theme6: {
+    '--color-main': '#21091d',
+    '--color-main-bright': '#ed51d3',
   }
 };
 
