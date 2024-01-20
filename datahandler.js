@@ -139,6 +139,7 @@ var dataToSend = {
   af: [],
   rt0: '',
   rt1: '',
+  users: ''
 };
 
 const initialData = {
@@ -153,6 +154,7 @@ const initialData = {
   af: [],
   rt0: '',
   rt1: '',
+  users: ''
 };
 
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
@@ -244,6 +246,12 @@ function handleData(ws, receivedData) {
     }
 }
 
+function showOnlineUsers(currentUsers) {
+  console.log(currentUsers);
+  dataToSend.users = currentUsers;
+  initialData.users = currentUsers;
+}
+
 module.exports = {
-  handleData
+  handleData, showOnlineUsers
 };

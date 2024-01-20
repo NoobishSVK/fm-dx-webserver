@@ -12,6 +12,22 @@
     --color-5: color-mix(in srgb, var(--color-main) 0%, var(--color-main-bright));
 }
 
+.color-1 {
+    color: var(--color-1);
+}
+
+.color-2 {
+    color: var(--color-2);
+}
+
+.color-3 {
+    color: var(--color-3);
+}
+
+.color-4 {
+    color: var(--color-4);
+}
+
 ::selection {
     background: var(--color-main-bright);
     color: inherit;
@@ -115,6 +131,7 @@ h2 {
     border-radius: 30px;
     text-align: center;
     margin-top: 30px;
+    transition: 0.3s ease-in-out background-color;
 }
 
 .panel-90 {
@@ -158,10 +175,14 @@ h2 {
     /*font-family: "Monomaniac One", sans-serif;*/
 }
 
-.text-medium-big {
+.text-medium {
     font-size: 24px;
     color: #aaa;
     font-weight: 300;
+}
+
+.text-medium-big {
+    font-size: 46px;
 }
 
 .text-small {
@@ -519,11 +540,7 @@ input[type="range"]::-moz-range-thumb {
     display: block;
 }
 
-.themes-list select {
-    display: none;
-}
-
-#theme-selector {
+select {
     height: 42px;
     width: 150px;
     padding: 10px;
@@ -533,8 +550,17 @@ input[type="range"]::-moz-range-thumb {
     border-bottom: 4px solid var(--color-2);
     cursor: pointer;
     transition: 0.35s ease-in-out background;
+    font-family: inherit;
+    font-weight: bold;
 }
 
-#theme-selector:hover {
+select option {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 300;
+    padding: 10px;
+    border: 0;
+}
+
+select:hover {
     background: var(--color-5);
 }

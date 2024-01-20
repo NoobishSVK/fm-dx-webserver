@@ -20,11 +20,7 @@ const dataHandler = require('./datahandler');
 const config = require('./userconfig');
 
 /* Server settings */
-const webServerHost = config.webServerHost; // IP of the web server
-const webServerPort = config.webServerPort; // web server port
-const xdrdServerHost = config.xdrdServerHost; // xdrd server iP
-const xdrdServerPort = config.xdrdServerPort; // xdrd server port
-const xdrdPassword = config.xdrdPassword;
+const { webServerHost, webServerPort, xdrdServerHost, xdrdServerPort, xdrdPassword, qthLatitude, qthLongitude } = config;
 
 const wss = new WebSocket.Server({ noServer: true });
 
@@ -37,6 +33,7 @@ const client = new net.Socket();
 wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
+  dataHandler.showOnlineUsers(currentUsers);
   console.log(infoMsg, `WebSocket client connected\nIP: ${clientIp}\nUsers online: ${currentUsers}`);
 
   ws.on('message', (message) => {
@@ -49,6 +46,7 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', (code, reason) => {
     currentUsers--;
+    dataHandler.showOnlineUsers(currentUsers);
     console.log(infoMsg, `WebSocket client disconnected\nIP: ${clientIp}\nCode: ${code} ${reason}\nUsers online: ${currentUsers}`);
   });
 
@@ -121,6 +119,11 @@ httpServer.listen(webServerPort, webServerHost, () => {
   console.log(infoMsg, `Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
 });
 
+
+app.get('/coordinates', (req, res) => {
+  // Sending the coordinates to the client
+  res.json({ qthLatitude, qthLongitude });
+});
 /* Audio */
 
 app.get('/audio-proxy', (req, res) => {

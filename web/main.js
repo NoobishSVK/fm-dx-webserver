@@ -38,6 +38,19 @@ function zoomOut() {
     zoomMaxValue *= 1.1;
 }
 
+function getInitialSettings() {
+    fetch('/coordinates')
+  .then(response => response.json())
+  .then(data => {
+    // Use the received data (data.qthLatitude, data.qthLongitude) as needed
+    localStorage.setItem('qthLatitude', data.qthLatitude);
+    localStorage.setItem('qthLongitude', data.qthLongitude);
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+getInitialSettings();
+
 function updateCanvas() {
     // Remove old data when it exceeds the maximum data points
 
@@ -179,7 +192,14 @@ function updatePanels(parsedData) {
     document.querySelector('#data-st').innerHTML = parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST";
     document.querySelector('#data-rt0').innerHTML = parsedData.rt0;
     document.querySelector('#data-rt1').innerHTML = parsedData.rt1;
-    document.querySelector('#data-signal').textContent = signalToggle.checked ? (parsedData.signal - 11.75).toFixed(1) : parsedData.signal;
+
+    const signalValue = signalToggle.checked ? (parsedData.signal - 11.75) : parsedData.signal;
+    const integerPart = Math.floor(signalValue);
+    const decimalPart = (signalValue - integerPart).toFixed(1).slice(1); // Adjusted this line
+    
+    document.querySelector('#data-signal').textContent = integerPart;
+    document.querySelector('#data-signal-decimal').textContent = decimalPart;
+    document.querySelector('#users-online').textContent = parsedData.users;
 }       
 
 signalToggle.addEventListener("change", function() {
@@ -194,25 +214,42 @@ signalToggle.addEventListener("change", function() {
 
 const textInput = document.getElementById('commandinput');
 
+textInput.addEventListener('change', function (event) {
+    const inputValue = textInput.value;
+    // Check if the user agent contains 'iPhone'
+    if (/iPhone/i.test(navigator.userAgent) && socket.readyState === WebSocket.OPEN) {
+        socket.send(inputValue);
+            // Clear the input field if needed
+    textInput.value = '';
+    }
+});
+
 textInput.addEventListener('keyup', function (event) {
-    // Get the current input value
-    let inputValue = textInput.value;
+    // Check if the pressed key is 'Backspace' (key code 8)
+    if (event.key !== 'Backspace') {
+        // Get the current input value
+        let inputValue = textInput.value;
 
-    // Remove non-digit characters
-    inputValue = inputValue.replace(/[^0-9]/g, '');
+        // Remove non-digit characters (excluding dot)
+        inputValue = inputValue.replace(/[^0-9.]/g, '');
 
-    console.log("InputValue contains dot: ", inputValue.toLowerCase().includes("."));
-    
-    // Determine where to add the dot based on the frequency range
-    if (inputValue.includes(".") === false) {
-        if (inputValue.startsWith('10') && inputValue.length > 2) {
-            // For frequencies starting with '10', add the dot after the third digit
-            inputValue = inputValue.slice(0, 3) + '.' + inputValue.slice(3);
+        // Remove the last dot if there are two consecutive dots
+        if (inputValue.includes("..")) {
+            inputValue = inputValue.slice(0, inputValue.lastIndexOf('.')) + inputValue.slice(inputValue.lastIndexOf('.') + 1);
             textInput.value = inputValue;
-        } else if (inputValue.length > 2) {
-            // For other frequencies, add the dot after the second digit
-            inputValue = inputValue.slice(0, 2) + '.' + inputValue.slice(2);
-            textInput.value = inputValue;
+        }
+
+        // Determine where to add the dot based on the frequency range
+        if (!inputValue.includes(".")) {
+            if (inputValue.startsWith('10') && inputValue.length > 2) {
+                // For frequencies starting with '10', add the dot after the third digit
+                inputValue = inputValue.slice(0, 3) + '.' + inputValue.slice(3);
+                textInput.value = inputValue;
+            } else if (inputValue.length > 2) {
+                // For other frequencies, add the dot after the second digit
+                inputValue = inputValue.slice(0, 2) + '.' + inputValue.slice(2);
+                textInput.value = inputValue;
+            }
         }
     }
 
@@ -266,12 +303,14 @@ function getCurrentFreq() {
 
 freqUpButton = document.getElementById('freq-up');
 freqDownButton = document.getElementById('freq-down');
+psContainer = document.getElementById('ps-container');
 piCodeContainer = document.getElementById('pi-code-container');
 freqContainer = document.getElementById('freq-container');
 
 freqUpButton.addEventListener("click", tuneUp);
 freqDownButton.addEventListener("click", tuneDown);
-piCodeContainer.addEventListener("click", copyPi);
+psContainer.addEventListener("click", copyPs);
+piCodeContainer.addEventListener("click", findOnMaps);
 freqContainer.addEventListener("click", function() {
     textInput.focus();
 });
@@ -290,18 +329,27 @@ function tuneDown() {
     }
 }
 
-async function copyPi() {
-    console.log("clicked pi");
+async function copyPs() {
     let frequency = document.querySelector('#data-frequency').textContent;
     let pi = document.querySelector('#data-pi').textContent;
     let ps = document.querySelector('#data-ps').textContent;
     let signal = document.querySelector('#data-signal').textContent;
+    let signalDecimal = document.querySelector('#data-signal-decimal').textContent;
     let signalUnit = document.querySelector('#signal-units').textContent;
     try {
-        await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + " " + signalUnit + "]");
+        await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + signalDecimal + " " + signalUnit + "]");
     } catch(error) {
         console.error(error);
     }
+}
+
+function findOnMaps() {
+    let frequency = document.querySelector('#data-frequency').textContent;
+    let pi = document.querySelector('#data-pi').textContent;
+    let latitude = localStorage.getItem('qthLongitude');
+    let longitude = localStorage.getItem('qthLatitude');
+    frequency = parseFloat(frequency).toFixed(1);
+    window.open("https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi, "_blank");
 }
 
 async function copyToClipboard(textToCopy) {

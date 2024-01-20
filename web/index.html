@@ -2,8 +2,10 @@
 <html>
 <head>
     <title>FM-DX Webserver [Noobish's Server]</title>
-    <link href="/styles.css" type="text/css" rel="stylesheet">
+    <link href="css/styles.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="icon" type="image/png" href="favicon2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -13,16 +15,18 @@
         <div class="flex-container">
             <div class="panel-90 no-bg">
                 <div class="flex-container">
-                    <div class="panel-75" style="height: 110px;">
+                    <div class="panel-75 hover-brighten" id="ps-container" style="height: 110px;">
                         <span class="text-big" id="data-ps"></span>
                     </div>
                     
                     <div class="panel-33">
-                        <h2 style="padding-top: 18px;">
-                            <span id="data-pty" style="color: #eee;"></span>
-                            <span style="margin-left: 30px;" id="data-tp">TP</span>
-                            <span style="margin-left: 15px; color: #ff5776;" id="data-st"></span>
+                        <h2>
+                            <div id="data-pty" style="color:white;"></div>
                         </h2>
+                        <h3 style="margin-top:5px;">
+                            <span id="data-tp" class="color-4">TP</span>
+                            <span style="margin-left: 15px; color: #ff5776;" id="data-st"></span>
+                        </h3>
                     </div>
                 </div>
                 
@@ -41,8 +45,9 @@
                     <div class="panel-33">
                         <h2>SIGNAL</h2>
                         <span class="text-big">
-                            <span id="data-signal"></span>
-                            <span id="signal-units" class="text-medium-big">dBf</span>
+                            <span id="data-signal"></span><!--
+                        --><span id="data-signal-decimal" class="text-medium-big" style="color: #ccc;"></span>
+                            <span id="signal-units" class="text-medium">dBf</span>
                         </span>
                     </div>
                 </div>
@@ -102,7 +107,7 @@
             <span class="close" id="closeModal"><i class="fa-solid fa-xmark"></i></span>
             
             <label for="themes" style="margin-top: 50px;"><i class="fa-solid fa-palette"></i> Theme:</label>
-            <select name="themes" style="margin-bottom: 50px;" id="theme-selector">
+            <select name="themes" style="margin-bottom: 15px;" id="theme-selector">
                 <option value="theme1">Blurple</option>
                 <option value="theme2">Red</option>
                 <option value="theme3">Green</option>
@@ -110,6 +115,11 @@
                 <option value="theme5">Orange</option>
                 <option value="theme6">Pink</option>
             </select>
+
+            <div style="margin-bottom: 20px;">
+                <label for="themes"><i class="fa-solid fa-user"></i> Users online:</label>
+                <span id="users-online" name="users-online">0</span>
+            </div>
             <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
             <button class="button-close" id="closeModalButton">Close</button>
         </div>
