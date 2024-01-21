@@ -193,6 +193,8 @@ function updatePanels(parsedData) {
     document.querySelector('#data-rt0').innerHTML = parsedData.rt0;
     document.querySelector('#data-rt1').innerHTML = parsedData.rt1;
 
+    document.querySelector('#data-flag').innerHTML = '<i title="' + parsedData.country_name + '" class="flag-sm flag-sm-' + parsedData.country_iso + '"></i>';
+
     const signalValue = signalToggle.checked ? (parsedData.signal - 11.75) : parsedData.signal;
     const integerPart = Math.floor(signalValue);
     const decimalPart = (signalValue - integerPart).toFixed(1).slice(1); // Adjusted this line

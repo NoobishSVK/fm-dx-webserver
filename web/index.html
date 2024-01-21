@@ -3,6 +3,7 @@
 <head>
     <title>FM-DX Webserver [Noobish's Server]</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet">
+    <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="icon" type="image/png" href="favicon2.png" />
@@ -15,7 +16,7 @@
         <div class="flex-container">
             <div class="panel-90 no-bg">
                 <div class="flex-container">
-                    <div class="panel-75 hover-brighten" id="ps-container" style="height: 110px;">
+                    <div class="panel-75 hover-brighten flex-center" id="ps-container" style="height: 110px;">
                         <span class="text-big" id="data-ps"></span>
                     </div>
                     
@@ -23,9 +24,12 @@
                         <h2>
                             <div id="data-pty" style="color:white;"></div>
                         </h2>
-                        <h3 style="margin-top:5px;">
+                        <h3 style="margin-top:0;" class="flex-center">
                             <span id="data-tp" class="color-4">TP</span>
                             <span style="margin-left: 15px; color: #ff5776;" id="data-st"></span>
+                            <div style="display:inline-block">
+                                <span style="margin-left: 18px;display: block;margin-top: 2px;" id="data-flag"></span>
+                            </div>
                         </h3>
                     </div>
                 </div>
@@ -114,6 +118,7 @@
                 <option value="theme4">Cyan</option>
                 <option value="theme5">Orange</option>
                 <option value="theme6">Pink</option>
+                <option value="theme7">Monochrome</option>
             </select>
 
             <div style="margin-bottom: 20px;">

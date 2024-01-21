@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Monomaniac+One&display=swap');
 
 :root {
     --color-main: #111;
@@ -88,8 +87,18 @@ h2 {
     margin-bottom: 0;
 }
 
+h3 {
+    font-size: 22px;
+}
+
 .flex-container {
     display: flex;
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .no-bg {
@@ -170,9 +179,8 @@ h2 {
 }
 
 .text-big {
-    font-size: 72px;
+    font-size: 60px;
     font-weight: 300;
-    /*font-family: "Monomaniac One", sans-serif;*/
 }
 
 .text-medium {
@@ -247,7 +255,7 @@ input[type="text"]:hover {
         display: flex;
     }
     .modal-content {
-        max-width: 90%;
+        min-width: 90% !important;
         margin: auto;
     }
     .panel-10, .panel-33, .panel-90 {
@@ -261,11 +269,18 @@ input[type="text"]:hover {
     }
     .panel-33 h2 {
         padding: 20px;
+        padding-top: 5px;
+    }
+    .text-medium-big {
+        font-size: 32px;
     }
     .text-big {
-        font-size: 54px;
+        font-size: 40px;
         display: block;
-        margin-top: -50px;
+        margin-top: -25px;
+    }
+    .text-big#data-ps {
+        margin: 0;
     }
     .panel-100 {
         width: 90%;
@@ -478,8 +493,8 @@ input[type="range"]::-moz-range-thumb {
 .modal-content {
     box-sizing: border-box; 
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 50vh;
+    left: 50vw;
     transform: translate(-50%, -50%);
     background-color: var(--color-main);
     padding: 30px;

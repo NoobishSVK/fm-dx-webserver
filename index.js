@@ -34,7 +34,7 @@ wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  console.log(infoMsg, `WebSocket client connected\nIP: ${clientIp}\nUsers online: ${currentUsers}`);
+  console.log(infoMsg, `WebSocket client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
 
   ws.on('message', (message) => {
     if(config.verboseMode === true) {
@@ -47,7 +47,7 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
-    console.log(infoMsg, `WebSocket client disconnected\nIP: ${clientIp}\nCode: ${code} ${reason}\nUsers online: ${currentUsers}`);
+    console.log(infoMsg, `WebSocket client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 
   ws.on('error', console.error);
