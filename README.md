@@ -29,7 +29,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
     ```
 
     
-3. Update your config in index.js:
+3. Update your config in userconfig.js:
 
     ```js
     const webServerHost = '192.168.1.39'; // IP of the web server
