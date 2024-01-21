@@ -39,12 +39,15 @@ function zoomOut() {
 }
 
 function getInitialSettings() {
-    fetch('/coordinates')
+    fetch('/static_data')
   .then(response => response.json())
   .then(data => {
     // Use the received data (data.qthLatitude, data.qthLongitude) as needed
     localStorage.setItem('qthLatitude', data.qthLatitude);
     localStorage.setItem('qthLongitude', data.qthLongitude);
+    localStorage.setItem('webServerName', data.webServerName);
+
+    document.title = 'FM-DX Webserver [' + data.webServerName + ']';
   })
   .catch(error => console.error('Error:', error));
 }
