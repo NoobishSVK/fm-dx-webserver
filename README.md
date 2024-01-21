@@ -15,8 +15,10 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 - **Pre-compiled app version**: Currently planned right after finishing the low-latency streaming feature. 
 
 ## Getting Started
+Please install **node.js version 21.5.0** or older to make this work. 
+Version >=21.6.0 is currently not working correctly. 
 
-1. Clone the repository:
+1. Clone the repository (or alternatively download it manually):
 
     ```bash
     git clone https://github.com/NoobishSVK/FM-DX-Webserver.git
@@ -28,7 +30,6 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
     npm install
     ```
 
-    
 3. Update your config in userconfig.js:
 
     ```js
