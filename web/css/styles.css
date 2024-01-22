@@ -580,3 +580,7 @@ select option {
 select:hover {
     background: var(--color-5);
 }
+
+#data-ps, #data-rt0, #data-rt1 {
+    font-family: monospace;
+}
