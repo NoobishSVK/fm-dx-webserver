@@ -1,0 +1,241 @@
+
+#tune-buttons input[type="text"] {
+    width: 50%;
+    height: 100%;
+    min-height: 46px;
+    padding-left: 20px;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    outline: 0;
+    color: white;
+    background-color: var(--color-1);
+    font-family: 'Titillium Web', sans-serif;
+  }
+  
+  input[type="text"]:hover {
+      border: 2px solid var(--color-main-bright);
+  }
+  
+  #tune-buttons button {
+      box-sizing: border-box;
+      background-color: var(--color-4);
+      border: 0;
+      color: var(--color-1);
+      width: 25%;
+      height: 100%;
+      display: block;
+      padding: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+  }
+  
+  #tune-buttons button:hover {
+      background-color: var(--color-main-bright);
+  }
+  
+  #freq-down {
+      border-radius: 30px 0 0 30px;
+  }
+  
+  #freq-up {
+      border-radius: 0 30px 30px 0;
+  }
+
+input[type="range"] {
+    margin: 0;
+    /* removing default appearance */
+    -webkit-appearance: none;
+    appearance: none; 
+    /* creating a custom design */
+    width: 100%;
+    cursor: pointer;
+    outline: none;
+    /*  slider progress trick  */
+    overflow: hidden;
+    border-radius: 30px;
+    height: 100%;
+    background: transparent;
+}
+
+/* Track: Mozilla Firefox */
+input[type="range"]::-moz-range-track {
+    height: 48px;
+    background: var(--color-1);
+    border-radius: 30px;
+    border: 0;
+}
+
+/* Thumb: webkit */
+input[type="range"]::-webkit-slider-thumb {
+    /* removing default appearance */
+    -webkit-appearance: none;
+    appearance: none; 
+    /* creating a custom design */
+    height: 48px;
+    width: 48px;
+    background-color: #fff;
+    border-radius: 10px;
+    border: 2px solid var(--color-4);
+    /*  slider progress trick  */
+    box-shadow: -407px 0 0 400px var(--color-4);
+}
+
+/* Thumb: Firefox */
+input[type="range"]::-moz-range-thumb {
+    box-sizing: border-box;
+    height: 48px;
+    width: 48px;
+    background-color: var(--color-4);
+    border-radius: 0px 30px 30px 0px;
+    border: 0;
+    outline: none;
+    /*  slider progress trick  */
+    box-shadow: -420px 0 0 400px var(--color-4);
+}
+
+/*  Toggle Switch  */
+
+.toggleSwitch span span {
+    display: none;
+}  
+
+.toggleSwitch {
+    user-select: none;
+    display: inline-block;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 25px;
+    font-weight: bold;
+}
+.toggleSwitch * {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.toggleSwitch input:focus ~ a,
+.toggleSwitch input:focus + label {
+    outline: none;
+}
+.toggleSwitch label {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 100%;
+}
+.toggleSwitch input {
+    position: absolute;
+    opacity: 0;
+    z-index: 5;
+}
+.toggleSwitch > span {
+    position: absolute;
+    left: 0;
+    width: calc(100% - 6px);
+    margin: 0;
+    text-align: left;
+    white-space: nowrap;
+    margin:0;
+}
+.toggleSwitch > span span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+    display: block;
+    width: 50%;
+    margin-left: 50px;
+    text-align: left;
+    font-size: 0.9em;
+    width: auto;
+    opacity: 1;
+    width: 40%;
+    text-align: center;
+    line-height:48px;
+}
+.toggleSwitch a {
+    position: absolute;
+    right: 50%;
+    z-index: 4;
+    display: block;
+    top: 0;
+    bottom: 0;
+    padding: 0;
+    left: 0;
+    width: 50%;
+    background-color: var(--color-4);
+    border-radius: 25px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.toggleSwitch > span span:first-of-type {
+    color: var(--color-1);
+    opacity: 1;
+    left: 0;
+    margin: 0;
+    width: 50%;
+}
+.toggleSwitch > span span:last-of-type {
+    left:auto;
+    right:0;
+    color: var(--color-4);
+    margin: 0;
+    width: 50%;
+}
+.toggleSwitch > span:before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: -2px;
+    border-radius: 30px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+.toggleSwitch input:checked ~ a {
+    left: calc(50% - 3px);
+}
+
+.toggleSwitch input:checked ~ span span:first-of-type {
+    left:0;
+    color: var(--color-4);
+}
+.toggleSwitch input:checked ~ span span:last-of-type {
+    color: var(--color-1);
+}
+
+/*  End Toggle Switch  */
+
+select {
+    height: 42px;
+    width: 150px;
+    padding: 10px;
+    background: var(--color-4);
+    color: var(--color-1);
+    border: 0;
+    border-bottom: 4px solid var(--color-2);
+    cursor: pointer;
+    transition: 0.35s ease-in-out background;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+select option {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 300;
+    padding: 10px;
+    border: 0;
+}
+
+select:hover {
+    background: var(--color-5);
+}

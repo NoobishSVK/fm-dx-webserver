@@ -1,0 +1,47 @@
+h2 {
+    color: var(--color-4);
+    margin-bottom: 0;
+}
+
+h3 {
+    font-size: 22px;
+}
+
+#data-ps, #data-rt0, #data-rt1 {
+    font-family: monospace;
+}
+
+#color-settings, #settings {
+    background: transparent;
+    border: 0;
+    color: white;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 16px;
+    width: 64px;
+    height: 64px;
+    line-height: 64px;
+    text-align: center;
+    border-radius: 50%;
+    transition: 500ms ease-in-out background;
+    cursor: pointer;
+}
+
+#color-settings {
+    top: 96px;
+}
+
+#settings:hover, #color-settings:hover {
+    background: var(--color-3);
+}
+
+#af-list ul {
+    display:list-item;
+    padding: 0;
+    list-style-type: none;
+    height: 425px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin-bottom: 0;
+}

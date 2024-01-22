@@ -1,9 +1,12 @@
+/* Libraries / Imports */
 const koffi = require('koffi');
 const path = require('path');
 const os = require('os');
 const win32 = (os.platform() == "win32");
 const unicode_type = (win32 ? 'int16_t' : 'int32_t');
 const lib = koffi.load(path.join(__dirname, "librdsparser." + (win32 ? "dll" : "so")));
+
+var rdsBuffer = [];
 
 koffi.proto('void callback_pi(void *rds, void *user_data)');
 koffi.proto('void callback_pty(void *rds, void *user_data)');
@@ -61,21 +64,6 @@ const rdsparser = {
   country_lookup_name: lib.func('const char* rdsparser_country_lookup_name(int country)'),
   country_lookup_iso: lib.func('const char* rdsparser_country_lookup_iso(int country)')
 }
-
-const decode_unicode = function(string)
-{
-    let content = rdsparser.string_get_content(string);
-    let length = rdsparser.string_get_length(string);
-    let array = koffi.decode(content, koffi.array(unicode_type, length));
-    return Buffer.from(array, 'utf-8').toString();
-};
-
-const decode_errors = function(string) {
-    let errors = rdsparser.string_get_errors(string);
-    let length = rdsparser.string_get_length(string);
-    let array = koffi.decode(errors, koffi.array('uint8_t', length));
-    return Uint8Array.from(array).toString();
-};
 
 const callbacks = {
   pi: koffi.register(rds => (
@@ -178,6 +166,21 @@ rdsparser.register_rt(rds, callbacks.rt);
 rdsparser.register_ptyn(rds, callbacks.ptyn);
 rdsparser.register_ct(rds, callbacks.ct);
 
+const decode_unicode = function(string)
+{
+    let content = rdsparser.string_get_content(string);
+    let length = rdsparser.string_get_length(string);
+    let array = koffi.decode(content, koffi.array(unicode_type, length));
+    return Buffer.from(array, 'utf-8').toString();
+};
+
+const decode_errors = function(string) {
+    let errors = rdsparser.string_get_errors(string);
+    let length = rdsparser.string_get_length(string);
+    let array = koffi.decode(errors, koffi.array('uint8_t', length));
+    return Uint8Array.from(array).toString();
+};
+
 const updateInterval = 75;
 const clientUpdateIntervals = new Map(); // Store update intervals for each client
 
@@ -197,26 +200,8 @@ var dataToSend = {
   country_iso: 'UN',
   users: '',
 };
-
-const initialData = {
-  pi: '?',
-  freq: 87.500.toFixed(3),
-  signal: 0,
-  st: false,
-  ps: '',
-  tp: false,
-  pty: 0,
-  af: [],
-  rt0: '',
-  rt1: '',
-  country_name: '',
-  country_iso: 'UN',
-  users: ''
-};
-
+const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
-
-var rdsBuffer = [];
 
 function handleBuffer() {
   for (let group of rdsBuffer)
@@ -233,15 +218,13 @@ function handleData(ws, receivedData) {
   const receivedLines = receivedData.split('\n');
 
   for (const receivedLine of receivedLines) {
-
     switch (true) {
       case receivedLine.startsWith('P'):
         modifiedData = receivedLine.slice(1);
-        if (dataToSend.pi.length > modifiedData.length || dataToSend.pi == '?') {
+        if (dataToSend.pi.length >= modifiedData.length || dataToSend.pi == '?') {
           dataToSend.pi = modifiedData;
         }
         break;
-
       case receivedLine.startsWith('T'):
         rdsBuffer = [];
         resetToDefault(dataToSend);
@@ -281,8 +264,8 @@ function handleData(ws, receivedData) {
         if (rdsBuffer.length > 1000) {
           rdsBuffer.shift();
         }
+
         rdsBuffer.push(modifiedData);
-        //console.log("\"" + modifiedData + "\",");
 
         if (rdsBuffer.length > 1) {
           handleBuffer();
@@ -293,9 +276,9 @@ function handleData(ws, receivedData) {
 
     // Send the updated data to the client
     const dataToSendJSON = JSON.stringify(dataToSend);
-      if (currentTime - lastUpdateTime >= updateInterval) {
-    clientUpdateIntervals.set(ws, currentTime); // Update the last update time for this client
-    ws.send(dataToSendJSON);
+    if (currentTime - lastUpdateTime >= updateInterval) {
+      clientUpdateIntervals.set(ws, currentTime); // Update the last update time for this client
+      ws.send(dataToSendJSON);
     }
 }
 

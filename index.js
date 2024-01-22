@@ -1,41 +1,34 @@
-// Libraries
+/* Libraries / Imports */
 const express = require('express');
+const app = express();
 const http = require('http');
+const httpServer = http.createServer(app);
 const WebSocket = require('ws');
+const wss = new WebSocket.Server({ noServer: true });
 const path = require('path');
 const net = require('net');
+const client = new net.Socket();
 const crypto = require('crypto');
 const dataHandler = require('./datahandler');
+const consoleCmd = require('./console');
 const config = require('./userconfig');
 
-/* Server settings */
 const { webServerHost, webServerPort, webServerName, xdrdServerHost, xdrdServerPort, xdrdPassword, qthLatitude, qthLongitude } = config;
-
-const infoMsg = "\x1b[32m[INFO]\x1b[0m";
-const debugMsg = "\x1b[36m[DEBUG]\x1b[0m";
+const { logInfo, logDebug } = consoleCmd;
 
 let receivedSalt = '';
 let receivedPassword = false;
 let currentUsers = 0;
-
-const wss = new WebSocket.Server({ noServer: true });
-
-const app = express();
-const httpServer = http.createServer(app);
-/* connection to xdrd */
-const client = new net.Socket();
 
 /* webSocket handlers */
 wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  console.log(infoMsg, `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+  consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
 
   ws.on('message', (message) => {
-    if(config.verboseMode === true) {
-      console.log(debugMsg,'Received message from client:', message.toString());
-    }
+    consoleCmd.logDebug('Received message from client:', message.toString());
     newFreq = message.toString() * 1000; 
     client.write("T" + newFreq + '\n');
   });
@@ -43,14 +36,14 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
-    console.log(infoMsg, `Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+    consoleCmd.logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 
   ws.on('error', console.error);
 
 });
 
-// Serve static files from the "web" folder
+/* Serving of HTML files */
 app.use(express.static(path.join(__dirname, 'web')));
 
 // Function to authenticate with the xdrd server
@@ -68,7 +61,7 @@ function authenticateWithXdrd(client, salt, password) {
 
 // WebSocket client connection
 client.connect(xdrdServerPort, xdrdServerHost, () => {
-  console.log(infoMsg, 'Connected to xdrd successfully.');
+  consoleCmd.logInfo('Connected to xdrd successfully.');
   
   client.once('data', (data) => {
     const receivedData = data.toString();
@@ -107,10 +100,10 @@ httpServer.on('upgrade', (request, socket, head) => {
 });
 
 httpServer.listen(webServerPort, webServerHost, () => {
-  console.log(infoMsg, `Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
+  consoleCmd.logInfo(`Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
 });
 
-
+/* Static data are being sent through here on connection - these don't change when the server is running */
 app.get('/static_data', (req, res) => {
   res.json({ qthLatitude, qthLongitude, webServerName });
 });

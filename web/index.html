@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>FM-DX Webserver</title>
-    <link href="css/styles.css" type="text/css" rel="stylesheet">
+    <link href="css/entry.css" type="text/css" rel="stylesheet">
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -14,7 +14,7 @@
         <canvas id="signal-canvas" width="1240" height="200"></canvas>
         
         <div class="flex-container">
-            <div class="panel-90 no-bg">
+            <div class="panel-90 bg-none">
                 <div class="flex-container">
                     <div class="panel-75 hover-brighten flex-center" id="ps-container" style="height: 110px;">
                         <span class="text-big" id="data-ps"></span>
@@ -38,7 +38,7 @@
                 <div class="flex-container">
                     <div class="panel-33 hover-brighten" id="pi-code-container">
                         <h2>PI CODE</h2>
-                        <span id="data-pi" class="text-big"></span>
+                        <span id="data-pi" class="text-big text-uppercase"></span>
                     </div>
                     
                     <div class="panel-33 hover-brighten" id="freq-container">
@@ -58,12 +58,10 @@
                 
                 <div class="flex-container">
                     <div class="panel-33" style="height: 48px;">
-                        <audio id="myAudio" preload="none" autoplay></audio>
                         <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
                     </div>
                     
                     <div class="panel-33 flex-container flex-phone" id="tune-buttons" style="opacity: 1;">
-                        <!--<button id="playButton">play</button>-->
                         <button id="freq-down">◀</button>
                         <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency">
                         <button id="freq-up">▶</button>
@@ -81,16 +79,26 @@
                     </div>
                 </div>
                 
-                <div class="panel-100">
-                    <h2 style="margin: 0;">RADIOTEXT</h2>
-                    <div id="data-rt0"></div>
-                    <div id="data-rt1"></div>
-                    <div id="data-container" style="display: none;"></div>
+                <div class="flex-container">
+                    <div class="panel-75 hover-brighten" id="rt-container" style="height: 110px;">
+                        <h2 style="margin: 0;">RADIOTEXT</h2>
+                        <div id="data-rt0"></div>
+                        <div id="data-rt1"></div>
+                        <div id="data-container" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="panel-33">
+                        <h2>
+                            <div id="data-pty" style="color:white;"></div>
+                        </h2>
+                        <h3 style="margin-top:0;" class="flex-center">
+                        </h3>
+                    </div>
                 </div>
                 
             </div>
 
-            <div class="panel-10 no-bg">
+            <div class="panel-10 bg-none">
                 <div class="panel-100" style="height: 100%;">
                     <h2>AF</h2>
                     <div id="af-list" style="text-align: center;">
@@ -129,9 +137,6 @@
             <button class="button-close" id="closeModalButton">Close</button>
         </div>
     </div>
-    <script src="main.js"></script>
-    <script src="themes.js"></script>
-    <script src="modal.js"></script>
-    <script src="stream.js"></script>
+    <script src="js/webserver.js"></script>
 </body>
 </html>

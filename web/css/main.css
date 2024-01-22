@@ -1,0 +1,50 @@
+
+:root {
+    --color-main: #111;
+    --color-main-bright: #aaa;
+    
+    --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright));
+    --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright));
+    --color-3: color-mix(in srgb, var(--color-main) 50%, var(--color-main-bright));
+    --color-4: color-mix(in srgb, var(--color-main) 20%, var(--color-main-bright));
+    --color-5: color-mix(in srgb, var(--color-main) 0%, var(--color-main-bright));
+}
+
+* {
+    box-sizing: border-box;
+}
+
+::selection {
+    background: var(--color-main-bright);
+    color: inherit;
+}
+
+body {
+    font-family: 'Titillium Web', sans-serif;
+    color: white;
+    background-color: var(--color-main);
+    transition: 0.3s ease-in-out background-color;
+}
+
+#wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    max-width: 1240px;
+}
+
+
+@media (max-width: 960px) {
+    #wrapper {
+        position: static;
+        transform: none;
+        margin: 0 auto;
+    }
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}

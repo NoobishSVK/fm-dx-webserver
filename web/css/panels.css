@@ -1,0 +1,77 @@
+.panel-10 {
+    width: 10%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.panel-33 {
+    width: 33%;
+    background-color: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+    transition: 0.3s ease-in-out background-color;
+}
+
+.panel-75 {
+    width: 68%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+    transition: 0.3s ease-in-out background-color;
+}
+
+.panel-90 {
+    width: 88%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+}
+
+
+.panel-100 {
+    width: 98%;
+    background: var(--color-1);
+    margin-left: 10px;
+    margin-right: 10px;
+    min-height: 100px;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 30px;
+}
+
+
+
+@media only screen and (max-width: 768px) {
+    .panel-10, .panel-33, .panel-90 {
+        width: 90%;
+        margin: auto;
+        margin-bottom: 20px;
+    }
+    .panel-75 {
+        margin: 80px auto 0 auto !important;
+        width: 90%;
+    }
+    .panel-33 h2 {
+        padding: 20px;
+        padding-top: 5px;
+    }
+    .panel-100 {
+        width: 90%;
+        margin: auto;
+    }
+    
+}

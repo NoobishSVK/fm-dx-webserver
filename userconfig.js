@@ -9,7 +9,7 @@ const xdrdPassword = 'changememe'; // xdrd password (optional)
 const qthLatitude = '50.357935'; // your latitude, useful for maps.fmdx.pl integration
 const qthLongitude = '15.924395'; // your longitude, useful for maps.fmdx.pl integration
 
-const verboseMode = false; // if true, console will display extra messages
+const verboseMode = true; // if true, console will display extra messages
 
 // DO NOT MODIFY ANYTHING BELOW THIS LINE
 module.exports = {
