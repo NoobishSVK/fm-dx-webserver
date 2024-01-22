@@ -6,8 +6,6 @@ const win32 = (os.platform() == "win32");
 const unicode_type = (win32 ? 'int16_t' : 'int32_t');
 const lib = koffi.load(path.join(__dirname, "librdsparser." + (win32 ? "dll" : "so")));
 
-var rdsBuffer = [];
-
 koffi.proto('void callback_pi(void *rds, void *user_data)');
 koffi.proto('void callback_pty(void *rds, void *user_data)');
 koffi.proto('void callback_tp(void *rds, void *user_data)');
@@ -200,15 +198,9 @@ var dataToSend = {
   country_iso: 'UN',
   users: '',
 };
+var legacyRdsPiBuffer = null;
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
-
-function handleBuffer() {
-  for (let group of rdsBuffer)
-    {
-      rdsparser.parse_string(rds, group);
-    }
-}
 
 function handleData(ws, receivedData) {
   // Retrieve the last update time for this client
@@ -221,12 +213,12 @@ function handleData(ws, receivedData) {
     switch (true) {
       case receivedLine.startsWith('P'):
         modifiedData = receivedLine.slice(1);
+        legacyRdsPiBuffer = modifiedData;
         if (dataToSend.pi.length >= modifiedData.length || dataToSend.pi == '?') {
           dataToSend.pi = modifiedData;
         }
         break;
       case receivedLine.startsWith('T'):
-        rdsBuffer = [];
         resetToDefault(dataToSend);
         dataToSend.af.length = 0;
         rdsparser.clear(rds);
@@ -261,15 +253,33 @@ function handleData(ws, receivedData) {
       case receivedLine.startsWith('R'):
         modifiedData = receivedLine.slice(1);
 
-        if (rdsBuffer.length > 1000) {
-          rdsBuffer.shift();
+        if (modifiedData.length == 14) {
+          // Handle legacy RDS message
+          var errorsNew = 0;
+          var pi;
+
+          if (legacyRdsPiBuffer !== null &&
+              legacyRdsPiBuffer.length >= 4) {
+            pi = legacyRdsPiBuffer.slice(0, 4);
+            // PI message does not carry explicit information about
+            // error correction, but this is a good substitute.
+            errorsNew = (legacyRdsPiBuffer.length - 4) << 6;
+          } else {
+            pi = '0000';
+            errorsNew = (0x03 << 6);
+          }
+
+          let errorsOld = parseInt(modifiedData.slice(12), 16);
+          errorsNew |= (errorsOld & 0x03) << 4;
+          errorsNew |= (errorsOld & 0x0C);
+          errorsNew |= (errorsOld & 0x30) >> 4;
+
+          modifiedData = pi + modifiedData.slice(0, 12);
+          modifiedData += errorsNew.toString(16).padStart(2, '0');
         }
 
-        rdsBuffer.push(modifiedData);
-
-        if (rdsBuffer.length > 1) {
-          handleBuffer();
-        }
+        rdsparser.parse_string(rds, modifiedData);
+        legacyRdsPiBuffer = null;
         break;
     }
   }
