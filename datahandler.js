@@ -23,6 +23,8 @@ const rdsparser = {
   free: lib.func('void rdsparser_free(void *rds)'),
   clear: lib.func('void rdsparser_clear(void *rds)'),
   parse_string: lib.func('bool rdsparser_parse_string(void *rds, const char *input)'),
+  set_text_correction: lib.func('bool rdsparser_set_text_correction(void *rds, uint8_t text, uint8_t type, uint8_t error)'),
+  set_text_progressive: lib.func('bool rdsparser_set_text_progressive(void *rds, uint8_t string, bool state)'),
   get_pi: lib.func('int32_t rdsparser_get_pi(void *rds)'),
   get_pty: lib.func('int8_t rdsparser_get_pty(void *rds)'),
   get_tp: lib.func('int8_t rdsparser_get_tp(void *rds)'),
@@ -46,6 +48,7 @@ const rdsparser = {
   register_ptyn: lib.func('void rdsparser_register_ptyn(void *rds, callback_ptyn *cb)'),
   register_ct: lib.func('void rdsparser_register_ct(void *rds, callback_ct *cb)'),
   string_get_content: lib.func(unicode_type + '* rdsparser_string_get_content(void *string)'),
+  string_get_errors: lib.func('uint8_t* rdsparser_string_get_errors(void *string)'),
   string_get_length: lib.func('uint8_t rdsparser_string_get_length(void *string)'),
   ct_get_year: lib.func('uint16_t rdsparser_ct_get_year(void *ct)'),
   ct_get_month: lib.func('uint8_t rdsparser_ct_get_month(void *ct)'),
@@ -65,6 +68,13 @@ const decode_unicode = function(string)
     let length = rdsparser.string_get_length(string);
     let array = koffi.decode(content, koffi.array(unicode_type, length));
     return Buffer.from(array, 'utf-8').toString();
+};
+
+const decode_errors = function(string) {
+    let errors = rdsparser.string_get_errors(string);
+    let length = rdsparser.string_get_length(string);
+    let array = koffi.decode(errors, koffi.array('uint8_t', length));
+    return Uint8Array.from(array).toString();
 };
 
 const callbacks = {
@@ -110,19 +120,22 @@ const callbacks = {
   ), 'callback_country*'),
 
   ps: koffi.register(rds => (
-    value = decode_unicode(rdsparser.get_ps(rds)),
-    dataToSend.ps = value
+    ps = rdsparser.get_ps(rds),
+    dataToSend.ps = decode_unicode(ps),
+    dataToSend.ps_errors = decode_errors(ps)
   ), 'callback_ps*'),
 
   rt: koffi.register((rds, flag) => {
-    const value = decode_unicode(rdsparser.get_rt(rds, flag));
+    const rt = rdsparser.get_rt(rds, flag);
 
     if (flag === 0) {
-      dataToSend.rt0 = value;
+      dataToSend.rt0 = decode_unicode(rt);
+      dataToSend.rt0_errors = decode_errors(rt);
     }
 
     if (flag === 1) {
-      dataToSend.rt1 = value;
+      dataToSend.rt1 = decode_unicode(rt);
+      dataToSend.rt1_errors = decode_errors(rt);
     }
   }, 'callback_rt*'),
 
@@ -146,6 +159,12 @@ const callbacks = {
 };
 
 let rds = rdsparser.new()
+rdsparser.set_text_correction(rds, 0, 0, 2);
+rdsparser.set_text_correction(rds, 0, 1, 2);
+rdsparser.set_text_correction(rds, 1, 0, 2);
+rdsparser.set_text_correction(rds, 1, 1, 2);
+rdsparser.set_text_progressive(rds, 0, true)
+rdsparser.set_text_progressive(rds, 1, true)
 rdsparser.register_pi(rds, callbacks.pi);
 rdsparser.register_pty(rds, callbacks.pty);
 rdsparser.register_tp(rds, callbacks.tp);
@@ -217,8 +236,10 @@ function handleData(ws, receivedData) {
 
     switch (true) {
       case receivedLine.startsWith('P'):
-        modifiedData = receivedLine.substring(1, 5);
-        dataToSend.pi = modifiedData;
+        modifiedData = receivedLine.slice(1);
+        if (dataToSend.pi.length > modifiedData.length || dataToSend.pi == '?') {
+          dataToSend.pi = modifiedData;
+        }
         break;
 
       case receivedLine.startsWith('T'):
@@ -241,7 +262,7 @@ function handleData(ws, receivedData) {
         dataToSend.st = false;
 
         if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(1);
+          dataToSend.signal = parsedValue.toFixed(2);
         }
         break;
       case receivedData.startsWith('Ss'):
@@ -250,7 +271,7 @@ function handleData(ws, receivedData) {
         dataToSend.st = true;
 
         if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(1);
+          dataToSend.signal = parsedValue.toFixed(2);
         }
         break;
 

@@ -150,6 +150,31 @@ function divideByHundred(a) {
     a = a / 100;
 }
 
+function escapeHTML(unsafeText) {
+    let div = document.createElement('div');
+    div.innerText = unsafeText;
+    return div.innerHTML.replace(' ', '&nbsp;');
+}
+
+function processString(string, errors) {
+    var output = '';
+    const max_alpha = 70;
+    const alpha_range = 50;
+    const max_error = 10;
+    errors = errors.split(',');
+
+    for (let i = 0; i < string.length; i++) {
+        alpha = parseInt(errors[i]) * (alpha_range / (max_error + 1));
+        if (alpha) {
+            output += "<span style='opacity: " + (max_alpha - alpha) + "%'>" + escapeHTML(string[i]) + "</span>";
+        } else {
+            output += escapeHTML(string[i]);
+        }
+    }
+
+    return output;
+}
+
 function updatePanels(parsedData) {
     // Assuming sortedAf is your array
     const sortedAf = parsedData.af.sort(compareNumbers);
@@ -189,12 +214,12 @@ function updatePanels(parsedData) {
     listContainer.scrollTop = scrollTop;
     document.querySelector('#data-frequency').textContent = parsedData.freq;
     document.querySelector('#data-pi').innerHTML = parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi;
-    document.querySelector('#data-ps').innerHTML = parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : parsedData.ps;
+    document.querySelector('#data-ps').innerHTML = parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : processString(parsedData.ps, parsedData.ps_errors);
     document.querySelector('#data-tp').innerHTML = parsedData.tp === false ? "<span class='text-gray'>TP</span>" : "TP";
     document.querySelector('#data-pty').innerHTML = europe_programmes[parsedData.pty];
     document.querySelector('#data-st').innerHTML = parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST";
-    document.querySelector('#data-rt0').innerHTML = parsedData.rt0;
-    document.querySelector('#data-rt1').innerHTML = parsedData.rt1;
+    document.querySelector('#data-rt0').innerHTML = processString(parsedData.rt0, parsedData.rt0_errors);
+    document.querySelector('#data-rt1').innerHTML = processString(parsedData.rt1, parsedData.rt1_errors);
 
     document.querySelector('#data-flag').innerHTML = '<i title="' + parsedData.country_name + '" class="flag-sm flag-sm-' + parsedData.country_iso + '"></i>';
 
