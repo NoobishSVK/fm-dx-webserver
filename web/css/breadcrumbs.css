@@ -11,6 +11,10 @@ h3 {
     font-family: monospace;
 }
 
+.form-group {
+    display: inline-block;
+}
+
 #color-settings, #settings {
     background: transparent;
     border: 0;

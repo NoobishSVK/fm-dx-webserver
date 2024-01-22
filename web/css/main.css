@@ -19,6 +19,26 @@
     color: inherit;
 }
 
+/* width */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: var(--color-1); 
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: var(--color-2); 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-3); 
+}
+
 body {
     font-family: 'Titillium Web', sans-serif;
     color: white;
@@ -34,7 +54,6 @@ body {
     width: auto;
     max-width: 1240px;
 }
-
 
 @media (max-width: 960px) {
     #wrapper {

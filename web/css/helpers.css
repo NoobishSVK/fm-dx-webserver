@@ -68,13 +68,7 @@
     text-transform: uppercase;
 }
 
-@media only screen and (max-width: 768px) {
-    .flex-container {
-        display: block;
-    }
-    .flex-phone {
-        display: flex;
-    }
+@media only screen and (max-width: 960px) {
     .text-medium-big {
         font-size: 32px;
     }
@@ -85,5 +79,14 @@
     }
     .text-big#data-ps {
         margin: 0;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .flex-container {
+        display: block;
+    }
+    .flex-phone {
+        display: flex;
     }
 }
