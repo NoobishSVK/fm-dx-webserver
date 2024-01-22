@@ -1,13 +1,13 @@
-const webServerHost = '192.168.1.14'; // IP of the web server
+const webServerHost = '0.0.0.0'; // IP of the web server
 const webServerPort = 8080; // web server port
 const webServerName = "Noobish's Server" // web server name (will be displayed in title, bookmarks...)
 
-const xdrdServerHost = '192.168.1.15'; // xdrd server iP
+const xdrdServerHost = '192.168.1.15'; // xdrd server IP (if it's running on the same machine, use 127.0.0.1)
 const xdrdServerPort = 7373; // xdrd server port
-const xdrdPassword = 'changememe'; // xdrd password (optional)
+const xdrdPassword = 'changeme'; // xdrd password (optional)
 
-const qthLatitude = '50.357935'; // your latitude, useful for maps.fmdx.pl integration
-const qthLongitude = '15.924395'; // your longitude, useful for maps.fmdx.pl integration
+const qthLatitude = ''; // your latitude, useful for maps.fmdx.pl integration
+const qthLongitude = ''; // your longitude, useful for maps.fmdx.pl integration
 
 const verboseMode = true; // if true, console will display extra messages
 
