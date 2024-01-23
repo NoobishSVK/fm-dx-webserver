@@ -164,12 +164,11 @@ rdsparser.register_rt(rds, callbacks.rt);
 rdsparser.register_ptyn(rds, callbacks.ptyn);
 rdsparser.register_ct(rds, callbacks.ct);
 
-const decode_unicode = function(string)
-{
+const decode_unicode = function(string) {
     let content = rdsparser.string_get_content(string);
     let length = rdsparser.string_get_length(string);
     let array = koffi.decode(content, koffi.array(unicode_type, length));
-    return Buffer.from(array, 'utf-8').toString();
+    return String.fromCodePoint.apply(String, array);
 };
 
 const decode_errors = function(string) {
