@@ -61,31 +61,59 @@ function authenticateWithXdrd(client, salt, password) {
 
 // WebSocket client connection
 client.connect(xdrdServerPort, xdrdServerHost, () => {
-  consoleCmd.logInfo('Connected to xdrd successfully.');
-  
-  client.once('data', (data) => {
+  consoleCmd.logInfo('Connection to xdrd established successfully.');
+
+  const authFlags = {
+    authMsg: false,
+    firstClient: false,
+    receivedPassword: false
+  };
+
+  const authDataHandler = (data) => {
     const receivedData = data.toString();
     const lines = receivedData.split('\n');
 
-    // Salt reading, so we can authenticate
-    if (lines.length > 0 && !receivedPassword) {
-      receivedSalt = lines[0].trim();
-      authenticateWithXdrd(client, receivedSalt, xdrdPassword);
-      receivedPassword = true;
+    for (const line of lines) {
+
+      if (!authFlags.receivedPassword) {
+        authFlags.receivedSalt = line.trim();
+        authenticateWithXdrd(client, authFlags.receivedSalt, xdrdPassword);
+        authFlags.receivedPassword = true;
+      } else {
+        if (line.startsWith('a')) {
+          authFlags.authMsg = true;
+          consoleCmd.logWarn('Authentication with xdrd failed. Is your password set correctly?');
+        } else if (line.startsWith('o1')) {
+          authFlags.firstClient = true;
+        } else if (line.startsWith('T') && line.length <= 7) {
+          const freq = line.slice(1) / 1000;
+          dataHandler.dataToSend.freq = freq.toFixed(3);
+        } else if (line.startsWith('OK')) {
+          authFlags.authMsg = true;
+          consoleCmd.logInfo('Authentication with xdrd successful.');
+        }
+
+        if (authFlags.authMsg && authFlags.firstClient) {
+          client.write('T87500\n');
+          client.off('data', authDataHandler);
+          return;
+        }
+      }
     }
+  };
+
+  client.on('data', (data) => {
+    const receivedData = data.toString();
+
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        dataHandler.handleData(client, receivedData);
+      }
+    });
   });
+
+  client.on('data', authDataHandler);
 });
-
-client.on('data', (data) => {
-  const receivedData = data.toString();
-
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      dataHandler.handleData(client, receivedData);
-    }
-  });
-});
-
 
 client.on('close', () => {
   console.log('Disconnected from xdrd');

@@ -197,6 +197,7 @@ var dataToSend = {
   country_iso: 'UN',
   users: '',
 };
+
 var legacyRdsPiBuffer = null;
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
@@ -297,5 +298,5 @@ function showOnlineUsers(currentUsers) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers
+  handleData, showOnlineUsers, dataToSend
 };

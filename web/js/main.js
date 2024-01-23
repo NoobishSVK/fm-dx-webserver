@@ -14,7 +14,7 @@ $(document).ready(function() {
     canvas.width = canvas.parentElement.clientWidth;
     
     var data = [];
-    var maxDataPoints = 250;
+    var maxDataPoints = 300;
     var pointWidth = (canvas.width - 80) / maxDataPoints;
     
     var europe_programmes = [
@@ -52,15 +52,15 @@ $(document).ready(function() {
     function updateCanvas() {
         const color2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
         const color4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-        
+    
         while (data.length >= maxDataPoints) {
             data.shift();
         }
-        
+    
         // Modify the WebSocket onmessage callback
         socket.onmessage = (event) => {
             const parsedData = JSON.parse(event.data);
-            
+    
             updatePanels(parsedData);
             // Push the new signal data to the array
             data.push(parsedData.signal);
@@ -69,69 +69,71 @@ $(document).ready(function() {
             zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
             zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
             zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
-            
+    
             // Clear the canvas
             context.clearRect(0, 0, canvas.width, canvas.height);
-            
+    
             // Draw the signal graph with zoom
             context.beginPath();
-            context.moveTo(50, canvas.height - (data[0] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue)));
             
-            for (let i = 1; i < data.length; i++) {
-                const x = i * pointWidth;
+            // Start drawing from the rightmost point
+            const startingIndex = Math.max(0, data.length - maxDataPoints);
+            context.moveTo(canvas.width - 40 - (data.length - startingIndex) * pointWidth, canvas.height - (data[startingIndex] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue)));
+    
+            for (let i = startingIndex + 1; i < data.length; i++) {
+                const x = canvas.width - (data.length - i) * pointWidth - 40;
                 const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-                context.lineTo(x + 40, y);
+                context.lineTo(x, y);
             }
-            
+    
             context.strokeStyle = color4;
             context.lineWidth = 1;
             context.stroke();
-            
+    
             // Draw horizontal lines for lowest, highest, and average values
             context.strokeStyle = color2; // Set line color
             context.lineWidth = 1;
-            
+    
             // Draw the lowest value line
             const lowestY = canvas.height - (zoomMinValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
             context.beginPath();
             context.moveTo(40, lowestY - 18);
             context.lineTo(canvas.width - 40, lowestY - 18);
             context.stroke();
-            
+    
             // Draw the highest value line
             const highestY = canvas.height - (zoomMaxValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
             context.beginPath();
             context.moveTo(40, highestY + 10);
             context.lineTo(canvas.width - 40, highestY + 10);
             context.stroke();
-            
+    
             const avgY = canvas.height / 2;
             context.beginPath();
             context.moveTo(40, avgY - 7);
             context.lineTo(canvas.width - 40, avgY - 7);
             context.stroke();
-            
+    
             // Label the lines with their values
             context.fillStyle = color4;
             context.font = '12px Titillium Web';
-            
+    
             const offset = signalToggle.prop('checked') ? 11.75 : 0;
             context.textAlign = 'right';
             context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
             context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
             context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, 35, avgY - 3);
-            
+    
             context.textAlign = 'left';
             context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, canvas.width - 35, lowestY - 14);
             context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
             context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
-            
+    
             // Update the data container with the latest data
             dataContainer.html(event.data + '<br>');
         };
         requestAnimationFrame(updateCanvas);
-    }
-    
+    }    
     
     
     function compareNumbers(a, b) {

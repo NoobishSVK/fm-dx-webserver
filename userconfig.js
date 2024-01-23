@@ -2,7 +2,7 @@ const webServerHost = '0.0.0.0'; // IP of the web server
 const webServerPort = 8080; // web server port
 const webServerName = "Noobish's Server" // web server name (will be displayed in title, bookmarks...)
 
-const xdrdServerHost = '192.168.1.15'; // xdrd server IP (if it's running on the same machine, use 127.0.0.1)
+const xdrdServerHost = '127.0.0.1'; // xdrd server IP (if it's running on the same machine, use 127.0.0.1)
 const xdrdServerPort = 7373; // xdrd server port
 const xdrdPassword = 'password'; // xdrd password (optional)
 

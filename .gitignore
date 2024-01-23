@@ -1,3 +1,4 @@
 node_modules/
-./example.js
-./userconfig.json
+/example.js
+/userconfig.json
+/userconfig_backup.js
