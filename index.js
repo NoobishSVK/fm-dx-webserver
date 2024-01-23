@@ -83,7 +83,7 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
         if (line.startsWith('a')) {
           authFlags.authMsg = true;
           consoleCmd.logWarn('Authentication with xdrd failed. Is your password set correctly?');
-        } else if (line.startsWith('o1')) {
+        } else if (line.startsWith('o1,')) {
           authFlags.firstClient = true;
         } else if (line.startsWith('T') && line.length <= 7) {
           const freq = line.slice(1) / 1000;
