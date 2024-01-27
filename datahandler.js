@@ -83,13 +83,13 @@ const callbacks = {
   ), 'callback_tp*'),
 
   ta: koffi.register(rds => (
-    value = rdsparser.get_ta(rds)
-    //console.log('TA: ' + value)
+    value = rdsparser.get_ta(rds),
+    dataToSend.ta = value
   ), 'callback_ta*'),
 
   ms: koffi.register(rds => (
-    value = rdsparser.get_ms(rds)
-    //console.log('MS: ' + value)
+    value = rdsparser.get_ms(rds),
+    dataToSend.ms = value
   ), 'callback_ms*'),
 
   af: koffi.register((rds, value) => (
@@ -192,6 +192,8 @@ var dataToSend = {
   st: false,
   ps: '',
   tp: false,
+  ta: 0,
+  ms: -1,
   pty: 0,
   af: [],
   rt0: '',

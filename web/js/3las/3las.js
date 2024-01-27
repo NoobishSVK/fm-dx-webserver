@@ -2,7 +2,7 @@ var _3LAS_Settings = /** @class */ (function () {
     function _3LAS_Settings() {
         this.SocketHost = document.location.hostname ? document.location.hostname : "127.0.0.1";
         this.SocketPort = localStorage.getItem('audioPort') ? localStorage.getItem('audioPort') : 8081;
-        this.SocketPath = "/audio";
+        this.SocketPath = "/";
         this.WebRTC = new WebRTC_Settings();
         this.Fallback = new Fallback_Settings();
     }

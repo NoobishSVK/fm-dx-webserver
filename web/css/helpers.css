@@ -59,7 +59,7 @@
 }
 
 .text-big {
-    font-size: 60px;
+    font-size: 52px;
     font-weight: 300;
 }
 
@@ -77,8 +77,16 @@
     font-size: 13px;
 }
 
+.text-smaller {
+    font-size: 11px;
+}
+
 .text-gray {
     color: #666;
+}
+
+.text-red {
+    color: #ff5776;
 }
 
 .text-uppercase {

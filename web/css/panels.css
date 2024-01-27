@@ -33,11 +33,6 @@
 
 
 @media only screen and (max-width: 768px) {
-    .panel-10, .panel-33, .panel-90 {
-        width: 90%;
-        margin: auto;
-        margin-bottom: 20px;
-    }
     .panel-75 {
         width: 90%;
     }
@@ -49,4 +44,9 @@
         width: 90%;
         margin: auto;
     } 
+    [class^="panel-"] {
+        margin: auto;
+        width: 90%;
+        margin-bottom: 20px;
+    }
 }

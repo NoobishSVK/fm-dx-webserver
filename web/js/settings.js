@@ -1,21 +1,21 @@
 /* Themes */
 const themes = {
-  theme1: ['#1d1838', '#8069fa'],
-  theme2: ['#381818', '#ff7070'],
+  theme1: ['#111', '#aaa'],
+  theme2: ['#1f0c0c', '#ff7070'],
   theme3: ['#121c0c', '#a9ff70'],
   theme4: ['#0c1c1b', '#68f7ee'],
   theme5: ['#171106', '#f5b642'],
   theme6: ['#21091d', '#ed51d3'],
-  theme7: ['#111', '#aaa']
+  theme7: ['#1d1838', '#8069fa'],
+  theme8: ['#000', '#888'],
 };
 
-function setTheme(themeName) {
-  const themeColors = themes[themeName];
-  if (themeColors) {
-    $(':root').css('--color-main', themeColors[0]);
-    $(':root').css('--color-main-bright', themeColors[1]);
-  }
-}
+/* Signal Units */
+const signalUnits = {
+  dbf: ['dBf'],
+  dbuv: ['dBµV'],
+  dbm: ['dBm'],
+};
 
 $(document).ready(() => {
   const themeSelector = $('#theme-selector');
@@ -31,16 +31,7 @@ $(document).ready(() => {
     setTheme(selectedTheme);
     localStorage.setItem('theme', selectedTheme);
   });
-});
 
-/* Signal Units */
-const signalUnits = {
-  dbf: ['dBf'],
-  dbuv: ['dBµV'],
-  dbm: ['dBm'],
-};
-
-$(document).ready(() => {
   const signalSelector = $('#signal-selector');
 
   if (localStorage.getItem('signalUnit')) {
@@ -52,3 +43,11 @@ $(document).ready(() => {
     localStorage.setItem('signalUnit', selectedSignalUnit);
   });
 });
+
+function setTheme(themeName) {
+  const themeColors = themes[themeName];
+  if (themeColors) {
+    $(':root').css('--color-main', themeColors[0]);
+    $(':root').css('--color-main-bright', themeColors[1]);
+  }
+}

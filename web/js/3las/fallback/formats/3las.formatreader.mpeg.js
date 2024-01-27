@@ -281,4 +281,3 @@ var AudioFormatReader_MPEG = /** @class */ (function (_super) {
     AudioFormatReader_MPEG.MPEG_slot_size = new Array(0, 1, 1, 4); // Rsvd, 3, 2, 1
     return AudioFormatReader_MPEG;
 }(AudioFormatReader));
-//# sourceMappingURL=3las.formatreader.mpeg.js.map

@@ -49,7 +49,7 @@
         <div class="flex-container">
             <div class="panel-90 bg-none">
                 <div class="flex-container">
-                    <div class="panel-75 hover-brighten flex-center" id="ps-container" style="height: 110px;">
+                    <div class="panel-75 hover-brighten flex-center" id="ps-container" style="height: 90px;">
                         <span class="text-big" id="data-ps"></span>
                     </div>
                     
@@ -57,12 +57,14 @@
                         <h2>
                             <div id="data-pty" style="color:white;"></div>
                         </h2>
-                        <h3 style="margin-top:0;" class="flex-center">
+                        <h3 style="margin-top:0;margin-bottom:0;" class="flex-center">
                             <span id="data-tp" class="color-4">TP</span>
-                            <span style="margin-left: 15px; color: #ff5776;" id="data-st"></span>
+                            <span style="margin-left: 15px;" id="data-ta" class="color-4">TA</span>
                             <div style="display:inline-block">
-                                <span style="margin-left: 18px;display: block;margin-top: 2px;" id="data-flag"></span>
+                                <span style="margin-left: 20px;display: block;margin-top: 2px;" id="data-flag"></span>
                             </div>
+                            <span style="margin-left: 20px; color: #ff5776;" id="data-st"></span>
+                            <span style="margin-left: 15px;" id="data-ms"><span style="color: #ff5776">M</span><span class="text-gray">S</span></span>
                         </h3>
                     </div>
                 </div>
@@ -154,13 +156,14 @@
             <div class="form-group">
                 <label for="themes" style="margin-top: 50px;"><i class="fa-solid fa-palette"></i> Theme:</label>
                 <select name="themes" style="margin-bottom: 15px;" id="theme-selector">
-                    <option value="theme1">Blurple</option>
+                    <option value="theme1">Monochrome</option>
                     <option value="theme2">Red</option>
                     <option value="theme3">Green</option>
                     <option value="theme4">Cyan</option>
                     <option value="theme5">Orange</option>
                     <option value="theme6">Pink</option>
-                    <option value="theme7">Monochrome</option>
+                    <option value="theme7">Blurple</option>
+                    <option value="theme8">AMOLED</option>
                 </select>
             </div>
 
@@ -177,14 +180,17 @@
                 <label for="themes"><i class="fa-solid fa-user"></i> Users online:</label>
                 <span id="users-online" name="users-online">0</span>
             </div>
-            <div class="flex-container flex-left text-left hover-brighten p-10 br-5">
-                <i class="fa-brands fa-discord"></i>&nbsp;<span>Join our <strong>Discord</strong> community!</span>
+            <div class="flex-container flex-left text-left hover-brighten p-10 br-5" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
+                <i class="fa-brands fa-discord"></i>&nbsp;<span>Join our <strong>OpenRadio Discord</strong> community!</span>
             </div>
-            <div class="flex-container flex-left text-left bottom-20 hover-brighten p-10 br-5">
+            <div class="flex-container flex-left text-left bottom-20 hover-brighten p-10 br-5" onclick="window.open('https://buymeacoffee.com/noobish')">
                 <i class="fa-solid fa-hand-holding-medical"></i>&nbsp;<span><strong>Support</strong> the developer!</span>
             </div>
             <p class="text-small">FM-DX WebServer by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
-            <p class="text-small bottom-50">This app uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
+            <p class="text-small bottom-50">This app works thanks to these amazing projects: <br>
+                <span class="text-smaller">- librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a></span><br>
+                <span class="text-smaller">- 3LAS by <a href="https://github.com/JoJoBond/3LAS" target="_blank">JoJoBond</a></span><br>
+                <span class="text-smaller">- flat-flags by <a href="https://github.com/luishdez/flat-flags/tree/master" target="_blank">luishdez</a></span><br></p>
             <button class="button-close" id="closeModalButton">Close</button>
         </div>
     </div>

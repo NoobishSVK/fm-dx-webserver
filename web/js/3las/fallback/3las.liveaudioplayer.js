@@ -144,4 +144,3 @@ var LiveAudioPlayer = /** @class */ (function () {
     LiveAudioPlayer.OffsetVariance = 0.2;
     return LiveAudioPlayer;
 }());
-//# sourceMappingURL=3las.liveaudioplayer.js.map

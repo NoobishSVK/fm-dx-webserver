@@ -1,10 +1,21 @@
-$(document).ready(function() {
-    var hostParts = window.location.host.split(':');
-    var hostname = hostParts[0]; // Extract the hostname
-    var port = hostParts[1] || '8080'; // Extract the port or use a default (e.g., 8080)
-    var socketAddress = 'ws://' + hostname + ':' + port + '/text'; // Use 'wss' for secure WebSocket connections (recommended for external access)
-    var socket = new WebSocket(socketAddress);
+var hostParts = window.location.host.split(':');
+var hostname = hostParts[0]; // Extract the hostname
+var port = hostParts[1] || '8080'; // Extract the port or use a default (e.g., 8080)
+var socketAddress = 'ws://' + hostname + ':' + port + '/text'; // Use 'wss' for secure WebSocket connections (recommended for external access)
+var socket = new WebSocket(socketAddress);
+
     
+const europe_programmes = [
+    "No PTY", "News", "Current Affairs", "Info",
+    "Sport", "Education", "Drama", "Culture", "Science", "Varied",
+    "Pop M", "Rock M", "Easy Listening", "Light Classical",
+    "Serious Classical", "Other Music", "Weather", "Finance",
+    "Children's Programmes", "Social Affairs", "Religion", "Phone-in",
+    "Travel", "Leisure", "Jazz Music", "Country Music", "National Music",
+    "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
+];
+
+$(document).ready(function() {
     var dataContainer = $('#data-container');
     var canvas = $('#signal-canvas')[0];
     var context = canvas.getContext('2d');
@@ -16,36 +27,6 @@ $(document).ready(function() {
     var data = [];
     var maxDataPoints = 300;
     var pointWidth = (canvas.width - 80) / maxDataPoints;
-    
-    var europe_programmes = [
-        "No PTY", "News", "Current Affairs", "Info",
-        "Sport", "Education", "Drama", "Culture", "Science", "Varied",
-        "Pop M", "Rock M", "Easy Listening", "Light Classical",
-        "Serious Classical", "Other Music", "Weather", "Finance",
-        "Children's Programmes", "Social Affairs", "Religion", "Phone-in",
-        "Travel", "Leisure", "Jazz Music", "Country Music", "National Music",
-        "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
-    ];
-    
-    function getInitialSettings() {
-        $.ajax({
-            url: '/static_data',
-            dataType: 'json',
-            success: function(data) {
-                // Use the received data (data.qthLatitude, data.qthLongitude) as needed
-                localStorage.setItem('qthLatitude', data.qthLatitude);
-                localStorage.setItem('qthLongitude', data.qthLongitude);
-                localStorage.setItem('webServerName', data.webServerName);
-                localStorage.setItem('audioPort', data.audioPort);
-                localStorage.setItem('streamEnabled', data.streamEnabled);
-                
-                document.title = 'FM-DX Webserver [' + data.webServerName + ']';
-            },
-            error: function(error) {
-                console.error('Error:', error);
-            }
-        });
-    }
     
     getInitialSettings();
     // Start updating the canvas
@@ -120,7 +101,7 @@ $(document).ready(function() {
             context.fillStyle = color4;
             context.font = '12px Titillium Web';
     
-            const offset = signalToggle.prop('checked') ? 11.75 : 0;
+            const offset = signalToggle.prop('checked') ? 11.25 : 0;
             context.textAlign = 'right';
             context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
             context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
@@ -136,37 +117,7 @@ $(document).ready(function() {
         };
         requestAnimationFrame(updateCanvas);
     }    
-    
-    
-    function compareNumbers(a, b) {
-        return a - b;
-    }
-    
-    function escapeHTML(unsafeText) {
-        let div = document.createElement('div');
-        div.innerText = unsafeText;
-        return div.innerHTML.replace(' ', '&nbsp;');
-    }
-    
-    function processString(string, errors) {
-        var output = '';
-        const max_alpha = 70;
-        const alpha_range = 50;
-        const max_error = 10;
-        errors = errors?.split(',');
-        
-        for (let i = 0; i < string.length; i++) {
-            alpha = parseInt(errors[i]) * (alpha_range / (max_error + 1));
-            if (alpha) {
-                output += "<span style='opacity: " + (max_alpha - alpha) + "%'>" + escapeHTML(string[i]) + "</span>";
-            } else {
-                output += escapeHTML(string[i]);
-            }
-        }
-        
-        return output;
-    }
-    
+
     function updatePanels(parsedData) {
         const sortedAf = parsedData.af.sort(compareNumbers);
         const scaledArray = sortedAf.map(element => element / 1000);
@@ -191,6 +142,14 @@ $(document).ready(function() {
         $('#data-pi').html(parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi);
         $('#data-ps').html(parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
         $('#data-tp').html(parsedData.tp === false ? "<span class='text-gray'>TP</span>" : "TP");
+        $('#data-ta').html(parsedData.ta === 0 ? "<span class='text-gray'>TA</span>" : "TA");
+        $('#data-ms').html(parsedData.ms === 0
+            ? "<span class='text-gray'>M</span><span class='text-red'>S</span>"
+            : (parsedData.ms === -1
+                ? "<span class='text-gray'>M</span><span class='text-gray'>S</span>"
+                : "<span class='text-red'>M</span><span class='text-gray'>S</span>"
+              )
+        );        
         $('#data-pty').html(europe_programmes[parsedData.pty]);
         $('#data-st').html(parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST");
         $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
@@ -203,7 +162,7 @@ $(document).ready(function() {
 
         switch (signalUnit) {
             case 'dbuv':
-                signalValue = parsedData.signal - 11.75;
+                signalValue = parsedData.signal - 11.25;
                 signalText.text('dBµV');
                 break;
 
@@ -216,7 +175,6 @@ $(document).ready(function() {
                 signalText.text('dBf');
                 break;
         }
-        //const signalValue = signalToggle.is(':checked') ? (parsedData.signal - 11.75) : parsedData.signal;
         const integerPart = Math.floor(signalValue);
         const decimalPart = (signalValue - integerPart).toFixed(1).slice(1); // Adjusted this line
         
@@ -279,35 +237,20 @@ $(document).ready(function() {
     });
     
     document.onkeydown = checkKey;
+
+    $(window).on('wheel', function(e) {
+        var delta = e.originalEvent.deltaY;
     
-    function checkKey(e) {
-        e = e || window.event;
-        
-        getCurrentFreq();
-        
-        if (socket.readyState === WebSocket.OPEN) {
-            if (e.keyCode == '38') {
-                socket.send((currentFreq + 0.01).toFixed(2));
+        // Check if the scroll event originated from #af-list
+        if ($(e.target).closest('#af-list').length === 0) {
+            if (delta > 0) {
+                tuneDown();
+            } else {
+                tuneUp();
             }
-            else if (e.keyCode == '40') {
-                socket.send((currentFreq - 0.01).toFixed(2));
-            }
-            else if (e.keyCode == '37') {
-                socket.send((currentFreq - 0.10).toFixed(1));
-            }
-            else if (e.keyCode == '39') {
-                socket.send((currentFreq + 0.10).toFixed(1));
-            }
+            return false;
         }
-    }
-    
-    function getCurrentFreq() {
-        currentFreq = $('#data-frequency').text();
-        currentFreq = parseFloat(currentFreq).toFixed(3);
-        currentFreq = parseFloat(currentFreq);
-        
-        return currentFreq;
-    }
+    });    
     
     var freqUpButton = $('#freq-up')[0];
     var freqDownButton = $('#freq-down')[0];
@@ -324,85 +267,161 @@ $(document).ready(function() {
     $(freqContainer).on("click", function() {
         textInput.focus();
     });
+});
+
+function getInitialSettings() {
+    $.ajax({
+        url: '/static_data',
+        dataType: 'json',
+        success: function(data) {
+            // Use the received data (data.qthLatitude, data.qthLongitude) as needed
+            localStorage.setItem('qthLatitude', data.qthLatitude);
+            localStorage.setItem('qthLongitude', data.qthLongitude);
+            localStorage.setItem('webServerName', data.webServerName);
+            localStorage.setItem('audioPort', data.audioPort);
+            localStorage.setItem('streamEnabled', data.streamEnabled);
+            
+            document.title = 'FM-DX Webserver [' + data.webServerName + ']';
+        },
+        error: function(error) {
+            console.error('Error:', error);
+        }
+    });
+}
     
+function compareNumbers(a, b) {
+    return a - b;
+}
+
+function escapeHTML(unsafeText) {
+    let div = document.createElement('div');
+    div.innerText = unsafeText;
+    return div.innerHTML.replace(' ', '&nbsp;');
+}
+
+function processString(string, errors) {
+    var output = '';
+    const max_alpha = 70;
+    const alpha_range = 50;
+    const max_error = 10;
+    errors = errors?.split(',');
     
-    function tuneUp() {
-        if (socket.readyState === WebSocket.OPEN) {
-            getCurrentFreq();
+    for (let i = 0; i < string.length; i++) {
+        alpha = parseInt(errors[i]) * (alpha_range / (max_error + 1));
+        if (alpha) {
+            output += "<span style='opacity: " + (max_alpha - alpha) + "%'>" + escapeHTML(string[i]) + "</span>";
+        } else {
+            output += escapeHTML(string[i]);
+        }
+    }
+    
+    return output;
+}
+
+function getCurrentFreq() {
+    currentFreq = $('#data-frequency').text();
+    currentFreq = parseFloat(currentFreq).toFixed(3);
+    currentFreq = parseFloat(currentFreq);
+    
+    return currentFreq;
+}
+
+function checkKey(e) {
+    e = e || window.event;
+    
+    getCurrentFreq();
+    
+    if (socket.readyState === WebSocket.OPEN) {
+        if (e.keyCode == '38') {
+            socket.send((currentFreq + 0.01).toFixed(2));
+        }
+        else if (e.keyCode == '40') {
+            socket.send((currentFreq - 0.01).toFixed(2));
+        }
+        else if (e.keyCode == '37') {
+            socket.send((currentFreq - 0.10).toFixed(1));
+        }
+        else if (e.keyCode == '39') {
             socket.send((currentFreq + 0.10).toFixed(1));
         }
     }
-    
-    function tuneDown() {
-        if (socket.readyState === WebSocket.OPEN) {
-            getCurrentFreq();
-            socket.send((currentFreq - 0.10).toFixed(1));
-        }
+}
+
+function tuneUp() {
+    if (socket.readyState === WebSocket.OPEN) {
+        getCurrentFreq();
+        socket.send((currentFreq + 0.10).toFixed(1));
     }
+}
+
+function tuneDown() {
+    if (socket.readyState === WebSocket.OPEN) {
+        getCurrentFreq();
+        socket.send((currentFreq - 0.10).toFixed(1));
+    }
+}
+
+async function copyPs() {
+    var frequency = $('#data-frequency').text();
+    var pi = $('#data-pi').text();
+    var ps = $('#data-ps').text();
+    var signal = $('#data-signal').text();
+    var signalDecimal = $('#data-signal-decimal').text();
+    var signalUnit = $('#signal-units').text();
     
-    async function copyPs() {
-        var frequency = $('#data-frequency').text();
-        var pi = $('#data-pi').text();
-        var ps = $('#data-ps').text();
-        var signal = $('#data-signal').text();
-        var signalDecimal = $('#data-signal-decimal').text();
-        var signalUnit = $('#signal-units').text();
+    try {
+        await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + signalDecimal + " " + signalUnit + "]");
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+async function copyRt() {
+    var rt0 = $('#data-rt0').text();
+    var rt1 = $('#data-rt1').text();
+    
+    try {
+        await copyToClipboard("[0] RT: " + rt0 + "\n[1] RT: " + rt1);
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+function copyToClipboard(textToCopy) {
+    // Navigator clipboard api needs a secure context (https)
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy)
+        .catch(function(err) {
+            console.error('Error:', err);
+        });
+    } else {
+        var textArea = $('<textarea></textarea>');
+        textArea.val(textToCopy);
+        textArea.css({
+            'position': 'absolute',
+            'left': '-999999px'
+        });
+        
+        $('body').prepend(textArea);
+        textArea.select();
         
         try {
-            await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + signalDecimal + " " + signalUnit + "]");
-        } catch(error) {
-            console.error(error);
+            document.execCommand('copy');
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            textArea.remove();
         }
     }
+}
+
+function findOnMaps() {
+    var frequency = $('#data-frequency').text();
+    var pi = $('#data-pi').text();
+    var latitude = localStorage.getItem('qthLongitude');
+    var longitude = localStorage.getItem('qthLatitude');
+    frequency = parseFloat(frequency).toFixed(1);
     
-    async function copyRt() {
-        var rt0 = $('#data-rt0').text();
-        var rt1 = $('#data-rt1').text();
-        
-        try {
-            await copyToClipboard("[0] RT: " + rt0 + "\n[1] RT: " + rt1);
-        } catch(error) {
-            console.error(error);
-        }
-    }
-    
-    
-    function findOnMaps() {
-        var frequency = $('#data-frequency').text();
-        var pi = $('#data-pi').text();
-        var latitude = localStorage.getItem('qthLongitude');
-        var longitude = localStorage.getItem('qthLatitude');
-        frequency = parseFloat(frequency).toFixed(1);
-        
-        var url = "https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi;
-        window.open(url, "_blank");
-    }
-    
-    function copyToClipboard(textToCopy) {
-        // Navigator clipboard api needs a secure context (https)
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(textToCopy)
-            .catch(function(err) {
-                console.error('Error:', err);
-            });
-        } else {
-            var textArea = $('<textarea></textarea>');
-            textArea.val(textToCopy);
-            textArea.css({
-                'position': 'absolute',
-                'left': '-999999px'
-            });
-            
-            $('body').prepend(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-            } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                textArea.remove();
-            }
-        }
-    }
-});
+    var url = "https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi;
+    window.open(url, "_blank");
+}

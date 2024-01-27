@@ -1,6 +1,7 @@
 h2 {
     color: var(--color-4);
     margin-bottom: 0;
+    margin-top: 8px;
 }
 
 h3 {
@@ -44,8 +45,8 @@ h3 {
     display:list-item;
     padding: 0;
     list-style-type: none;
-    height: 425px;
-    overflow-y: scroll;
-    overflow-x: hidden;
     margin-bottom: 0;
+    font-size: 14px;
+    max-height: 380px;
+    overflow-y: auto;
 }
