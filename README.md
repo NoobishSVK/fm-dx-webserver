@@ -35,6 +35,12 @@ Version >=21.6.0 is currently not working correctly.
 
 3. Nagivate to the fm-dx-webserver folder in your terminal and run this command:
 
+    In case you haven't installed node-pre-gyp yet: 
+    ```bash
+    npm install -g node-pre-gyp
+    ```
+
+    Afterwards:
     ```bash
     npm install
     ```
