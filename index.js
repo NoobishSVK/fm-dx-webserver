@@ -20,6 +20,7 @@ const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
 let currentUsers = 0;
 let streamEnabled = false;
+let incompleteDataBuffer = '';
 
 /* Audio Stream */
 commandExists('ffmpeg')
@@ -119,13 +120,29 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
   };
 
   client.on('data', (data) => {
-    const receivedData = data.toString();
+    var receivedData = incompleteDataBuffer + data.toString();
+    const isIncomplete = (receivedData.slice(-1) != '\n');
 
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        dataHandler.handleData(client, receivedData);
+    if (isIncomplete) {
+      const position = receivedData.lastIndexOf('\n');
+      if (position < 0) {
+        incompleteDataBuffer = receivedData;
+        receivedData = '';
+      } else {
+        incompleteDataBuffer = receivedData.slice(position + 1);
+        receivedData = receivedData.slice(0, position + 1);
       }
-    });
+    } else {
+      incompleteDataBuffer = '';
+    }
+
+    if (receivedData.length) {
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          dataHandler.handleData(client, receivedData);
+        }
+      });
+    }
   });
 
   client.on('data', authDataHandler);
