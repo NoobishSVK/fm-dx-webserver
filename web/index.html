@@ -8,11 +8,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="icon" type="image/png" href="favicon2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- 3LAS Scripts for Audio streaming -->
+    <script src="js/3las/util/3las.helpers.js"></script>
+    <script src="js/3las/util/3las.logging.js"></script>
+    <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
+    <script src="js/3las/fallback/3las.formatreader.js"></script>
+    <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
+    <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
+    <script src="js/3las/util/3las.websocketclient.js"></script>
+    <script src="js/3las/fallback/3las.fallback.js"></script>
+    <script src="js/3las/3las.webrtc.js"></script>
+    <script src="js/3las/3las.js"></script>
+    <script src="js/3las/main.js"></script>
+    <script type="text/javascript">
+        		var RtcConfig = {
+				
+				iceServers: [
+					{
+						urls: "turns:turnserver.example.org",
+					},
+					{
+						urls: "stun.l.google.com:19302"
+					}
+				]
+				
+			};
+            var AudioTagId = "audioTag";
+			window.addEventListener('load', Init, false);
+			document.ontouchmove  = function(e){ 
+				e.preventDefault(); 
+			}
+    </script>
 </head>
 <body>
+    <audio id="audioTag"></audio>
     <div id="wrapper">
         <canvas id="signal-canvas" width="1240" height="200"></canvas>
-        
+
         <div class="flex-container">
             <div class="panel-90 bg-none">
                 <div class="flex-container">
@@ -33,7 +66,6 @@
                         </h3>
                     </div>
                 </div>
-                
                 
                 <div class="flex-container">
                     <div class="panel-33 hover-brighten" id="pi-code-container">
@@ -58,24 +90,25 @@
                 
                 <div class="flex-container">
                     <div class="panel-33" style="height: 48px;">
-                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+                        <button id="playbutton" class="play-button"><i class="fa-solid fa-play"></i></button>
                     </div>
                     
                     <div class="panel-33 flex-container flex-phone" id="tune-buttons" style="opacity: 1;">
-                        <button id="freq-down">◀</button>
+                        <button id="freq-down"><i class="fa-solid fa-chevron-left"></i></button>
                         <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency">
-                        <button id="freq-up">▶</button>
+                        <button id="freq-up"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     
                     <div class="panel-33" style="height: 48px;">
-                        <label class="toggleSwitch nolabel" onclick="">
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+                        <!--<label class="toggleSwitch nolabel" onclick="">
                             <input id="signal-units-toggle" type="checkbox"/>
                             <a></a>
                             <span>
                                 <span class="left-span">dBf</span>
                                 <span class="right-span">dBµV</span>
                             </span>											
-                        </label>
+                        </label>-->
                     </div>
                 </div>
                 
@@ -134,17 +167,24 @@
             <div class="form-group" style="margin-left: 10px;">
                 <label for="signal" style="margin-top: 50px;"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <select name="signal" style="margin-bottom: 15px;" id="signal-selector">
-                    <option value="dBf">dBf</option>
-                    <option value="dBuV">dBuV</option>
-                    <option value="dBm">dBm</option>
+                    <option value="dbf">dBf</option>
+                    <option value="dbuv">dBuV</option>
+                    <option value="dbm">dBm</option>
                 </select>
             </div>
 
-            <div style="margin-bottom: 20px;">
+            <div class="bottom-20">
                 <label for="themes"><i class="fa-solid fa-user"></i> Users online:</label>
                 <span id="users-online" name="users-online">0</span>
             </div>
-            <p class="text-small" style="margin-bottom: 50px;">FM-DX WebServer uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
+            <div class="flex-container flex-left text-left hover-brighten p-10 br-5">
+                <i class="fa-brands fa-discord"></i>&nbsp;<span>Join our <strong>Discord</strong> community!</span>
+            </div>
+            <div class="flex-container flex-left text-left bottom-20 hover-brighten p-10 br-5">
+                <i class="fa-solid fa-hand-holding-medical"></i>&nbsp;<span><strong>Support</strong> the developer!</span>
+            </div>
+            <p class="text-small">FM-DX WebServer by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
+            <p class="text-small bottom-50">This app uses librdsparser by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a>.</p>
             <button class="button-close" id="closeModalButton">Close</button>
         </div>
     </div>

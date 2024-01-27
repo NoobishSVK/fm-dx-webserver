@@ -44,6 +44,7 @@ body {
     color: white;
     background-color: var(--color-main);
     transition: 0.3s ease-in-out background-color;
+    margin: 0 auto;
 }
 
 #wrapper {

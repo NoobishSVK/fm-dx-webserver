@@ -29,10 +29,6 @@
     min-width: 500px;
 }
 
-.modal-content p {
-    margin: 0;
-}
-
 .modal-title {
     font-size: 20px;
     position: absolute;

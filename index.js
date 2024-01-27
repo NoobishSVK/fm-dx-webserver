@@ -9,26 +9,42 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const crypto = require('crypto');
+const commandExists = require('command-exists-promise')
 const dataHandler = require('./datahandler');
 const consoleCmd = require('./console');
 const config = require('./userconfig');
+const audioStream = require('./stream/index.js');
 
-const { webServerHost, webServerPort, webServerName, xdrdServerHost, xdrdServerPort, xdrdPassword, qthLatitude, qthLongitude } = config;
-const { logInfo, logDebug } = consoleCmd;
+const { webServerHost, webServerPort, webServerName, audioPort, xdrdServerHost, xdrdServerPort, xdrdPassword, qthLatitude, qthLongitude } = config;
+const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
-let receivedSalt = '';
-let receivedPassword = false;
 let currentUsers = 0;
+let streamEnabled = false;
+
+/* Audio Stream */
+commandExists('ffmpeg')
+  .then(exists => {
+    if (exists) {
+      logInfo("An existing installation of ffmpeg found, enabling audio stream.");
+      audioStream.enableAudioStream();
+      streamEnabled = true;
+    } else {
+      logError("No ffmpeg installation found. Audio stream won't be available.");
+    }
+  })
+  .catch(err => {
+    // Should never happen but better handle it just in case
+  })
 
 /* webSocket handlers */
 wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+  logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
 
   ws.on('message', (message) => {
-    consoleCmd.logDebug('Received message from client:', message.toString());
+    logDebug('Received message from client:', message.toString());
     newFreq = message.toString() * 1000; 
     client.write("T" + newFreq + '\n');
   });
@@ -36,7 +52,7 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
-    consoleCmd.logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+    logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 
   ws.on('error', console.error);
@@ -61,7 +77,7 @@ function authenticateWithXdrd(client, salt, password) {
 
 // WebSocket client connection
 client.connect(xdrdServerPort, xdrdServerHost, () => {
-  consoleCmd.logInfo('Connection to xdrd established successfully.');
+  logInfo('Connection to xdrd established successfully.');
 
   const authFlags = {
     authMsg: false,
@@ -82,7 +98,7 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
       } else {
         if (line.startsWith('a')) {
           authFlags.authMsg = true;
-          consoleCmd.logWarn('Authentication with xdrd failed. Is your password set correctly?');
+          logWarn('Authentication with xdrd failed. Is your password set correctly?');
         } else if (line.startsWith('o1,')) {
           authFlags.firstClient = true;
         } else if (line.startsWith('T') && line.length <= 7) {
@@ -90,7 +106,7 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
           dataHandler.dataToSend.freq = freq.toFixed(3);
         } else if (line.startsWith('OK')) {
           authFlags.authMsg = true;
-          consoleCmd.logInfo('Authentication with xdrd successful.');
+          logInfo('Authentication with xdrd successful.');
         }
 
         if (authFlags.authMsg && authFlags.firstClient) {
@@ -119,6 +135,24 @@ client.on('close', () => {
   console.log('Disconnected from xdrd');
 });
 
+client.on('error', (err) => {
+  switch (true) {
+    case err.message.includes("ECONNRESET"):
+      logError("Connection to xdrd lost. Exiting...");
+      break;
+
+    case err.message.includes("ETIMEDOUT"):
+      logError("Connection to xdrd @ " + xdrdServerHost + ":" + xdrdServerPort + " timed out.");
+      break;
+
+    default:
+      logError("Unhandled error: ", err.message);
+  }
+
+  process.exit(1);
+});
+
+
 /* HTTP Server */
 
 httpServer.on('upgrade', (request, socket, head) => {
@@ -128,10 +162,10 @@ httpServer.on('upgrade', (request, socket, head) => {
 });
 
 httpServer.listen(webServerPort, webServerHost, () => {
-  consoleCmd.logInfo(`Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
+  logInfo(`Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
 });
 
 /* Static data are being sent through here on connection - these don't change when the server is running */
 app.get('/static_data', (req, res) => {
-  res.json({ qthLatitude, qthLongitude, webServerName });
+  res.json({ qthLatitude, qthLongitude, webServerName, audioPort, streamEnabled});
 });

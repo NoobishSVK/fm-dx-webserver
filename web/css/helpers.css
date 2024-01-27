@@ -26,6 +26,10 @@
     color: var(--color-4);
 }
 
+.br-5 {
+    border-radius: 5px;
+}
+
 .flex-container {
     display: flex;
 }
@@ -36,9 +40,22 @@
     align-items: center;
 }
 
+.flex-left {
+    display: flex;
+    align-items: center;
+}
+
+.hover-brighten {
+    transition: 0.3s ease-in-out background-color;
+}
+
 .hover-brighten:hover {
     cursor: pointer;
     background-color: var(--color-2);
+}
+
+.text-left {
+    text-align: left;
 }
 
 .text-big {
@@ -66,6 +83,22 @@
 
 .text-uppercase {
     text-transform: uppercase;
+}
+
+.top-10 {
+    margin-top: 10px;
+}
+
+.bottom-20 {
+    margin-bottom: 20px;
+}
+
+.bottom-50 {
+    margin-bottom: 50px;
+}
+
+.p-10 {
+    padding: 10px;
 }
 
 @media only screen and (max-width: 960px) {

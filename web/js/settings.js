@@ -1,3 +1,4 @@
+/* Themes */
 const themes = {
   theme1: ['#1d1838', '#8069fa'],
   theme2: ['#381818', '#ff7070'],
@@ -29,5 +30,25 @@ $(document).ready(() => {
     const selectedTheme = event.target.value;
     setTheme(selectedTheme);
     localStorage.setItem('theme', selectedTheme);
+  });
+});
+
+/* Signal Units */
+const signalUnits = {
+  dbf: ['dBf'],
+  dbuv: ['dBµV'],
+  dbm: ['dBm'],
+};
+
+$(document).ready(() => {
+  const signalSelector = $('#signal-selector');
+
+  if (localStorage.getItem('signalUnit')) {
+    signalSelector.val(localStorage.getItem('signalUnit'));
+  }
+
+  signalSelector.on('change', (event) => {
+    const selectedSignalUnit = event.target.value;
+    localStorage.setItem('signalUnit', selectedSignalUnit);
   });
 });

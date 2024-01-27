@@ -1,10 +1,13 @@
 /* Libraries / Imports */
+const fs = require('fs');
+const https = require('https');
 const koffi = require('koffi');
 const path = require('path');
 const os = require('os');
 const win32 = (os.platform() == "win32");
 const unicode_type = (win32 ? 'int16_t' : 'int32_t');
 const lib = koffi.load(path.join(__dirname, "librdsparser." + (win32 ? "dll" : "so")));
+const config = require('./userconfig');
 
 koffi.proto('void callback_pi(void *rds, void *user_data)');
 koffi.proto('void callback_pty(void *rds, void *user_data)');

@@ -36,6 +36,8 @@ $(document).ready(function() {
                 localStorage.setItem('qthLatitude', data.qthLatitude);
                 localStorage.setItem('qthLongitude', data.qthLongitude);
                 localStorage.setItem('webServerName', data.webServerName);
+                localStorage.setItem('audioPort', data.audioPort);
+                localStorage.setItem('streamEnabled', data.streamEnabled);
                 
                 document.title = 'FM-DX Webserver [' + data.webServerName + ']';
             },
@@ -195,7 +197,26 @@ $(document).ready(function() {
         $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
         $('#data-flag').html('<i title="' + parsedData.country_name + '" class="flag-sm flag-sm-' + parsedData.country_iso + '"></i>');
         
-        const signalValue = signalToggle.is(':checked') ? (parsedData.signal - 11.75) : parsedData.signal;
+        const signalUnit = localStorage.getItem('signalUnit');
+        let signalText = $('#signal-units');
+        let signalValue;
+
+        switch (signalUnit) {
+            case 'dbuv':
+                signalValue = parsedData.signal - 11.75;
+                signalText.text('dBµV');
+                break;
+
+            case 'dbm':
+                signalValue = parsedData.signal - 120;
+                signalText.text('dBm');
+                break;
+            default:
+                signalValue = parsedData.signal;
+                signalText.text('dBf');
+                break;
+        }
+        //const signalValue = signalToggle.is(':checked') ? (parsedData.signal - 11.75) : parsedData.signal;
         const integerPart = Math.floor(signalValue);
         const decimalPart = (signalValue - integerPart).toFixed(1).slice(1); // Adjusted this line
         
@@ -205,11 +226,14 @@ $(document).ready(function() {
     }
     
     signalToggle.on("change", function() {
-        const signalText = $('#signal-units');
-        if (signalToggle.prop('checked')) {
+        const signalText = localStorage.getItem('signalUnit');
+
+        if (signalText == 'dbuv') {
             signalText.text('dBµV');
-        } else {
+        } else if (signalText == 'dbf') {
             signalText.text('dBf');
+        } else {
+            signalText.text('dBm');
         }
     });    
     
