@@ -97,12 +97,9 @@ h3 {
         font-size: 16px;
     }
     ul li {
-        display: inline;
+        display: inline-table;
         margin-right: 5px;
-    }
-    li:not(:last-child)::after {
-        content: " •";
-        color: #aaa;
+        width: 40px;
     }
     #flags-container-desktop {
         display: none;
