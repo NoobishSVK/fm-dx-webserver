@@ -34,16 +34,17 @@ function OnConnectivityCallback(isConnected) {
 
 function OnPlayButtonClick(_ev) {
     try {
-        Stream.Start();
-        $('#playbutton').prop('disabled', true);
-        $('#playbutton').find('.fa-solid').removeClass('fa-play').addClass('fa-pause');
+        if (Stream.ConnectivityFlag) {
+            Stream.Stop();
+            $('#playbutton').find('.fa-solid').removeClass('fa-pause').addClass('fa-play');
+        } else {
+            Stream.Start();
+            $('#playbutton').find('.fa-solid').removeClass('fa-play').addClass('fa-pause');
+        }
     }
     catch (_ex) {
     }
 }
-
 function updateVolume() {
     Stream.Volume = $(this).val();
 }
-
-var lastTapTime = -1;

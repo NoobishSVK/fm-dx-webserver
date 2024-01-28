@@ -54,12 +54,14 @@ wss.on('connection', (ws, request) => {
     response.on('end', () => {
       try {
         const locationInfo = JSON.parse(data);
-        if(locationInfo.country == 'undefined') {
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+        console.log(locationInfo.country);
+        if(locationInfo.country === undefined) {
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+        } else {
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
         }
-        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}] Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
       } catch (error) {
-        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
       }
     });
   });

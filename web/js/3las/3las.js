@@ -80,6 +80,51 @@ var _3LAS = /** @class */ (function () {
             throw new Error();
         }
     };
+    _3LAS.prototype.Stop = function () {
+        try {
+            // Close WebSocket connection
+            if (this.WebSocket) {
+                this.WebSocket.Close();
+                this.WebSocket.OnClose();
+                this.WebSocket = null; 
+                this.Logger.Log("WebSocket connection closed.");
+            }
+    
+            // Stop WakeLock if it exists and is an Android device
+            if (isAndroid && this.WakeLock) {
+                this.WakeLock.End();
+                this.Logger.Log("WakeLock stopped.");
+            }
+    
+            // Reset WebRTC if it exists
+            if (this.WebRTC) {
+                this.WebRTC.OnSocketDisconnect();
+                this.WebRTC.Reset();
+                this.WebRTC.Stop();
+                this.Logger.Log("WebRTC reset.");
+            }
+    
+            // Reset Fallback if it exists
+            if (this.Fallback) {
+                this.Fallback.OnSocketDisconnect();
+                this.Fallback.Stop();
+                this.Fallback.Reset();
+                this.Logger.Log("Fallback reset.");
+            }
+    
+            // Reset connectivity flag
+            if (this.ConnectivityFlag) {
+                this.ConnectivityFlag = null;
+                if (this.ConnectivityCallback) {
+                    this.ConnectivityCallback(null);
+                }
+            }
+    
+            this.Logger.Log("3LAS stopped successfully.");
+        } catch (e) {
+            this.Logger.Log("Error while stopping 3LAS: " + e);
+        }
+    };    
     _3LAS.prototype.OnActivity = function () {
         if (this.ActivityCallback)
             this.ActivityCallback();

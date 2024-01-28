@@ -69,6 +69,11 @@ var WebSocketClient = /** @class */ (function () {
             this.DisconnectCallback();
         }
     };
+    WebSocketClient.prototype.Close = function () {
+        if (this.Socket) {
+            this.Socket.close();
+        }
+    };
     // Handle incomping data
     WebSocketClient.prototype.OnMessage = function (ev) {
         // Trigger callback
