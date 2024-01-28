@@ -168,17 +168,23 @@ rdsparser.register_ptyn(rds, callbacks.ptyn);
 rdsparser.register_ct(rds, callbacks.ct);
 
 const decode_unicode = function(string) {
-    let content = rdsparser.string_get_content(string);
     let length = rdsparser.string_get_length(string);
-    let array = koffi.decode(content, koffi.array(unicode_type, length));
-    return String.fromCodePoint.apply(String, array);
+    if (length) {
+      let content = rdsparser.string_get_content(string);
+      let array = koffi.decode(content, koffi.array(unicode_type, length));
+      return String.fromCodePoint.apply(String, array);
+    }
+    return '';
 };
 
 const decode_errors = function(string) {
-    let errors = rdsparser.string_get_errors(string);
     let length = rdsparser.string_get_length(string);
-    let array = koffi.decode(errors, koffi.array('uint8_t', length));
-    return Uint8Array.from(array).toString();
+    if (length) {
+      let errors = rdsparser.string_get_errors(string);
+      let array = koffi.decode(errors, koffi.array('uint8_t', length));
+      return Uint8Array.from(array).toString();
+    }
+    return '';
 };
 
 const updateInterval = 75;
