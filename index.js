@@ -42,6 +42,7 @@ commandExists('ffmpeg')
 wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
+  dataHandler.showOnlineUsers(currentUsers);
 
   // Use ipinfo.io API to get geolocation information
   https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
