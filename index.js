@@ -55,7 +55,6 @@ wss.on('connection', (ws, request) => {
     response.on('end', () => {
       try {
         const locationInfo = JSON.parse(data);
-        console.log(locationInfo.country);
         if(locationInfo.country === undefined) {
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
         } else {
