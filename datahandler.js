@@ -239,28 +239,18 @@ function handleData(ws, receivedData) {
         break;
         case receivedLine.startsWith('G'):
           if(receivedLine === 'G11') {
-            initialData.eq = 1;
-            initialData.ims = 1;
-            dataToSend.eq = 1;
-            dataToSend.ims = 1;
+            initialData.eq, initialData.ims, dataToSend.eq, dataToSend.ims = 1;
           }
           if(receivedLine === 'G01') {
-            initialData.eq = 0;
-            initialData.ims = 1;
-            dataToSend.eq = 0;
-            dataToSend.ims = 1;
+            initialData.eq, dataToSend.eq = 0;
+            initialData.ims, dataToSend.ims = 1;
           }
           if(receivedLine === 'G10') {
-            initialData.eq = 1;
-            initialData.ims = 0;
-            dataToSend.eq = 1;
-            dataToSend.ims = 0;
+            initialData.eq, dataToSend.eq = 1;
+            initialData.ims, dataToSend.ims = 0;
           }
           if(receivedLine === 'G00') {
-            initialData.eq = 0;
-            initialData.ims = 0;
-            dataToSend.eq = 0;
-            dataToSend.ims = 0;
+            initialData.eq, initialData.ims, dataToSend.eq, dataToSend.ims = 0;
           }
           break;
 
@@ -271,6 +261,7 @@ function handleData(ws, receivedData) {
 
         if (!isNaN(parsedValue)) {
           dataToSend.signal = parsedValue.toFixed(2);
+          initialData.signal = parsedValue.toFixed(2);
         }
         break;
       case receivedData.startsWith('Ss'):
@@ -280,6 +271,7 @@ function handleData(ws, receivedData) {
 
         if (!isNaN(parsedValue)) {
           dataToSend.signal = parsedValue.toFixed(2);
+          initialData.signal = parsedValue.toFixed(2);
         }
         break;
 
