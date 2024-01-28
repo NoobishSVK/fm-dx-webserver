@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const http = require('http');
+const https = require('https');
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
@@ -41,8 +42,27 @@ commandExists('ffmpeg')
 wss.on('connection', (ws, request) => {
   const clientIp = request.connection.remoteAddress;
   currentUsers++;
-  dataHandler.showOnlineUsers(currentUsers);
-  logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+
+  // Use ipinfo.io API to get geolocation information
+  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      try {
+        const locationInfo = JSON.parse(data);
+        if(locationInfo.country == 'undefined') {
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+        }
+        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}] Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
+      } catch (error) {
+        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+      }
+    });
+  });
 
   ws.on('message', (message) => {
     logDebug('Received message from client:', message.toString());
@@ -52,12 +72,10 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', (code, reason) => {
     currentUsers--;
-    dataHandler.showOnlineUsers(currentUsers);
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 
   ws.on('error', console.error);
-
 });
 
 /* Serving of HTML files */
