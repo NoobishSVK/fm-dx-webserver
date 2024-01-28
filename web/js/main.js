@@ -173,18 +173,14 @@ $(document).ready(function() {
     
     document.onkeydown = checkKey;
 
-    $(window).on('wheel', function(e) {
+    $('#freq-container').on('wheel', function(e) {
         var delta = e.originalEvent.deltaY;
-    
-        // Check if the scroll event originated from #af-list
-        if ($(e.target).closest('#af-list').length === 0) {
             if (delta > 0) {
                 tuneDown();
             } else {
                 tuneUp();
             }
             return false;
-        }
     });    
     
     var freqUpButton = $('#freq-up')[0];
