@@ -238,22 +238,32 @@ function handleData(ws, receivedData) {
         }
         break;
         case receivedLine.startsWith('G'):
-          if(receivedLine === 'G11') {
-            initialData.eq, initialData.ims, dataToSend.eq, dataToSend.ims = 1;
+          switch (receivedLine) {
+            case 'G11':
+              initialData.eq = 1;
+              dataToSend.eq = 1;
+              initialData.ims = 1;
+              dataToSend.ims = 1;
+              break;
+            case 'G01':
+              initialData.eq = 0;
+              dataToSend.eq = 0;
+              initialData.ims = 1;
+              dataToSend.ims = 1;
+              break;
+            case 'G10':
+              initialData.eq = 1;
+              dataToSend.eq = 1;
+              initialData.ims = 0;
+              dataToSend.ims = 0;
+              break;
+            case 'G00':
+              initialData.eq = 0;
+              initialData.ims = 0;
+              dataToSend.eq = 0;
+              dataToSend.ims = 0;
+              break;
           }
-          if(receivedLine === 'G01') {
-            initialData.eq, dataToSend.eq = 0;
-            initialData.ims, dataToSend.ims = 1;
-          }
-          if(receivedLine === 'G10') {
-            initialData.eq, dataToSend.eq = 1;
-            initialData.ims, dataToSend.ims = 0;
-          }
-          if(receivedLine === 'G00') {
-            initialData.eq, initialData.ims, dataToSend.eq, dataToSend.ims = 0;
-          }
-          break;
-
       case receivedLine.startsWith('Sm'):
         modifiedData = receivedLine.substring(2);
         parsedValue = parseFloat(modifiedData);
