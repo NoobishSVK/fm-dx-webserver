@@ -7,7 +7,7 @@ const audioPort = 8081;
 
 const xdrdServerHost = '127.0.0.1'; // xdrd server IP (if it's running on the same machine, use 127.0.0.1)
 const xdrdServerPort = 7373; // xdrd server port
-const xdrdPassword = ''; // xdrd password (optional)
+const xdrdPassword = 'password'; // xdrd password (optional)
 
 const qthLatitude = ''; // your latitude, useful for maps.fmdx.pl integration
 const qthLongitude = ''; // your longitude, useful for maps.fmdx.pl integration

@@ -1,4 +1,4 @@
-.play-button {
+button {
     width: 100%;
     height: 100%;
     border: 0;
@@ -6,9 +6,10 @@
     transition: 0.3s ease-in-out background-color;
     background-color: var(--color-4);
     cursor: pointer;
+    font-family: inherit;
 }
 
-.play-button:hover {
+button:hover {
     background-color: var(--color-main-bright);
 }
 

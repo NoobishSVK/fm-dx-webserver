@@ -48,5 +48,12 @@
         margin: auto;
         width: 90%;
         margin-bottom: 20px;
+        background-color: transparent;
+    }
+    .flex-phone {
+        display: flex;
+    }
+    .panel-90 {
+        margin-top: 100px;
     }
 }

@@ -53,18 +53,18 @@
                         <span class="text-big" id="data-ps"></span>
                     </div>
                     
-                    <div class="panel-33">
-                        <h2>
-                            <div id="data-pty" style="color:white;"></div>
+                    <div id="flags-container-desktop" class="panel-33">
+                        <h2 class="show-phone">
+                            <div class="data-pty" style="color:white;"></div>
                         </h2>
                         <h3 style="margin-top:0;margin-bottom:0;" class="flex-center">
-                            <span id="data-tp" class="color-4">TP</span>
-                            <span style="margin-left: 15px;" id="data-ta" class="color-4">TA</span>
+                            <span class="data-tp color-4">TP</span>
+                            <span style="margin-left: 15px;" class="data-ta color-4">TA</span>
                             <div style="display:inline-block">
-                                <span style="margin-left: 20px;display: block;margin-top: 2px;" id="data-flag"></span>
+                                <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                             </div>
-                            <span style="margin-left: 20px; color: #ff5776;" id="data-st"></span>
-                            <span style="margin-left: 15px;" id="data-ms"><span style="color: #ff5776">M</span><span class="text-gray">S</span></span>
+                            <span style="margin-left: 20px; color: #ff5776;" class="data-st"></span>
+                            <span style="margin-left: 15px;" class="data-ms"><span style="color: #ff5776">M</span><span class="text-gray">S</span></span>
                         </h3>
                     </div>
                 </div>
@@ -91,8 +91,18 @@
                 </div>
                 
                 <div class="flex-container">
-                    <div class="panel-33" style="height: 48px;">
-                        <button id="playbutton" class="play-button"><i class="fa-solid fa-play"></i></button>
+                    <div class="panel-33 no-bg" style="height: 48px;">
+                        <div class="flex-container flex-phone h-100">
+                            <div class="panel-75 no-bg h-100 m-0">
+                                <button id="playbutton"><i class="fa-solid fa-play"></i></button>
+                            </div>
+                            <div class="panel-33 no-bg h-100 m-0 m-left-20">
+                                <button id="data-eq" style="border-radius: 30px 0px 0px 30px;"><span class="text-bold">EQ</span><br><span class="text-smaller">(IF+)</span></button>
+                            </div>
+                            <div class="panel-33 no-bg h-100 m-0">
+                                <button id="data-ims" style="border-radius: 0px 30px 30px 0px;"><span class="text-bold">iMS</span><br><span class="text-smaller">(RF+)</span></button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="panel-33 flex-container flex-phone" id="tune-buttons" style="opacity: 1;">
@@ -101,16 +111,8 @@
                         <button id="freq-up"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     
-                    <div class="panel-33" style="height: 48px;">
+                    <div class="panel-33 hide-phone" style="height: 48px;">
                         <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
-                        <!--<label class="toggleSwitch nolabel" onclick="">
-                            <input id="signal-units-toggle" type="checkbox"/>
-                            <a></a>
-                            <span>
-                                <span class="left-span">dBf</span>
-                                <span class="right-span">dBµV</span>
-                            </span>											
-                        </label>-->
                     </div>
                 </div>
                 
@@ -124,7 +126,7 @@
                     
                     <div class="panel-33">
                         <h2>
-                            <div id="data-pty" style="color:white;"></div>
+                            <div style="color:white;"></div>
                         </h2>
                         <h3 style="margin-top:0;" class="flex-center">
                         </h3>
@@ -143,6 +145,20 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div id="flags-container-phone" class="panel-33">
+            <h2 class="show-phone">
+                <div class="data-pty" style="color:white;"></div>
+            </h2>
+            <h3 style="margin-top:0;margin-bottom:0;" class="flex-center">
+                <span class="data-tp color-4">TP</span>
+                <span style="margin-left: 15px;" class="data-ta color-4">TA</span>
+                <div style="display:inline-block">
+                    <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
+                </div>
+                <span style="margin-left: 20px; color: #ff5776;" class="data-st"></span>
+                <span style="margin-left: 15px;" class="data-ms"><span style="color: #ff5776">M</span><span class="text-gray">S</span></span>
+            </h3>
         </div>
     </div>
     

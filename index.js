@@ -9,7 +9,7 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const crypto = require('crypto');
-const commandExists = require('command-exists-promise')
+const commandExists = require('command-exists-promise');
 const dataHandler = require('./datahandler');
 const consoleCmd = require('./console');
 const config = require('./userconfig');
@@ -46,8 +46,8 @@ wss.on('connection', (ws, request) => {
 
   ws.on('message', (message) => {
     logDebug('Received message from client:', message.toString());
-    newFreq = message.toString() * 1000; 
-    client.write("T" + newFreq + '\n');
+    command = message.toString();
+    client.write(command + "\n");
   });
 
   ws.on('close', (code, reason) => {
@@ -112,6 +112,8 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
 
         if (authFlags.authMsg && authFlags.firstClient) {
           client.write('T87500\n');
+          client.write('A0\n');
+          client.write('G11\n');
           client.off('data', authDataHandler);
           return;
         }

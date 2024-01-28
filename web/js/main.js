@@ -3,7 +3,7 @@ var hostname = hostParts[0]; // Extract the hostname
 var port = hostParts[1] || '8080'; // Extract the port or use a default (e.g., 8080)
 var socketAddress = 'ws://' + hostname + ':' + port + '/text'; // Use 'wss' for secure WebSocket connections (recommended for external access)
 var socket = new WebSocket(socketAddress);
-
+var parsedData;
     
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
@@ -42,8 +42,8 @@ $(document).ready(function() {
     
         // Modify the WebSocket onmessage callback
         socket.onmessage = (event) => {
-            const parsedData = JSON.parse(event.data);
-    
+            parsedData = JSON.parse(event.data);
+            
             updatePanels(parsedData);
             // Push the new signal data to the array
             data.push(parsedData.signal);
@@ -117,71 +117,6 @@ $(document).ready(function() {
         };
         requestAnimationFrame(updateCanvas);
     }    
-
-    function updatePanels(parsedData) {
-        const sortedAf = parsedData.af.sort(compareNumbers);
-        const scaledArray = sortedAf.map(element => element / 1000);
-        const listContainer = $('#af-list');
-        const scrollTop = listContainer.scrollTop();
-        let ul = listContainer.find('ul');
-        
-        if (!ul.length) {
-            ul = $('<ul></ul>');
-            listContainer.append(ul);
-        }
-        ul.html('');
-        
-        const listItems = scaledArray.map(element => {
-            return $('<li></li>').text(element.toFixed(1))[0];
-        });
-        
-        ul.append(listItems);
-        listContainer.scrollTop(scrollTop);
-        
-        $('#data-frequency').text(parsedData.freq);
-        $('#data-pi').html(parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi);
-        $('#data-ps').html(parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-        $('#data-tp').html(parsedData.tp === false ? "<span class='text-gray'>TP</span>" : "TP");
-        $('#data-ta').html(parsedData.ta === 0 ? "<span class='text-gray'>TA</span>" : "TA");
-        $('#data-ms').html(parsedData.ms === 0
-            ? "<span class='text-gray'>M</span><span class='text-red'>S</span>"
-            : (parsedData.ms === -1
-                ? "<span class='text-gray'>M</span><span class='text-gray'>S</span>"
-                : "<span class='text-red'>M</span><span class='text-gray'>S</span>"
-              )
-        );        
-        $('#data-pty').html(europe_programmes[parsedData.pty]);
-        $('#data-st').html(parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST");
-        $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
-        $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
-        $('#data-flag').html('<i title="' + parsedData.country_name + '" class="flag-sm flag-sm-' + parsedData.country_iso + '"></i>');
-        
-        const signalUnit = localStorage.getItem('signalUnit');
-        let signalText = $('#signal-units');
-        let signalValue;
-
-        switch (signalUnit) {
-            case 'dbuv':
-                signalValue = parsedData.signal - 11.25;
-                signalText.text('dBµV');
-                break;
-
-            case 'dbm':
-                signalValue = parsedData.signal - 120;
-                signalText.text('dBm');
-                break;
-            default:
-                signalValue = parsedData.signal;
-                signalText.text('dBf');
-                break;
-        }
-        const integerPart = Math.floor(signalValue);
-        const decimalPart = (signalValue - integerPart).toFixed(1).slice(1); // Adjusted this line
-        
-        $('#data-signal').text(integerPart);
-        $('#data-signal-decimal').text(decimalPart);
-        $('#users-online').text(parsedData.users);
-    }
     
     signalToggle.on("change", function() {
         const signalText = localStorage.getItem('signalUnit');
@@ -201,7 +136,7 @@ $(document).ready(function() {
         const inputValue = textInput.val();
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent) && socket.readyState === WebSocket.OPEN) {
-            socket.send(inputValue);
+            socket.send("T" + (inputValue * 1000));
             // Clear the input field if needed
             textInput.val('');
         }
@@ -230,7 +165,7 @@ $(document).ready(function() {
         if (event.key === 'Enter') {
             const inputValue = textInput.val();
             if (socket.readyState === WebSocket.OPEN) {
-                socket.send(inputValue);
+                socket.send("T" + (inputValue * 1000));
             }
             textInput.val('');
         }
@@ -259,6 +194,14 @@ $(document).ready(function() {
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
     
+    $("#data-eq").click(function () {
+        toggleButtonState("eq");
+    });
+
+    $("#data-ims").click(function () {
+        toggleButtonState("ims");
+    });
+
     $(freqUpButton).on("click", tuneUp);
     $(freqDownButton).on("click", tuneDown);
     $(psContainer).on("click", copyPs);
@@ -333,16 +276,16 @@ function checkKey(e) {
     
     if (socket.readyState === WebSocket.OPEN) {
         if (e.keyCode == '38') {
-            socket.send((currentFreq + 0.01).toFixed(2));
+            socket.send("T" + ((currentFreq + 0.01).toFixed(2) * 1000));
         }
         else if (e.keyCode == '40') {
-            socket.send((currentFreq - 0.01).toFixed(2));
+            socket.send("T" + ((currentFreq - 0.01).toFixed(2) * 1000));
         }
         else if (e.keyCode == '37') {
-            socket.send((currentFreq - 0.10).toFixed(1));
+            socket.send("T" + ((currentFreq - 0.10).toFixed(1) * 1000));
         }
         else if (e.keyCode == '39') {
-            socket.send((currentFreq + 0.10).toFixed(1));
+            socket.send("T" + ((currentFreq + 0.10).toFixed(1) * 1000));
         }
     }
 }
@@ -350,14 +293,20 @@ function checkKey(e) {
 function tuneUp() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send((currentFreq + 0.10).toFixed(1));
+        socket.send("T" + ((currentFreq + 0.10).toFixed(1) * 1000));
     }
 }
 
 function tuneDown() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send((currentFreq - 0.10).toFixed(1));
+        socket.send("T" + ((currentFreq - 0.10).toFixed(1) * 1000));
+    }
+}
+
+function tuneTo(freq) {
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send("T" + ((freq).toFixed(1) * 1000));
     }
 }
 
@@ -424,4 +373,122 @@ function findOnMaps() {
     
     var url = "https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi;
     window.open(url, "_blank");
+}
+
+function updateSignalUnits(parsedData) {
+    const signalUnit = localStorage.getItem('signalUnit');
+    let signalText = $('#signal-units');
+    let signalValue;
+
+    switch (signalUnit) {
+        case 'dbuv':
+            signalValue = parsedData.signal - 11.25;
+            signalText.text('dBµV');
+            break;
+
+        case 'dbm':
+            signalValue = parsedData.signal - 120;
+            signalText.text('dBm');
+            break;
+
+        default:
+            signalValue = parsedData.signal;
+            signalText.text('dBf');
+            break;
+    }
+
+    const integerPart = Math.floor(signalValue);
+    const decimalPart = (signalValue - integerPart).toFixed(1).slice(1);
+
+    $('#data-signal').text(integerPart);
+    $('#data-signal-decimal').text(decimalPart);
+}
+
+function updateDataElements(parsedData) {
+    $('#data-frequency').text(parsedData.freq);
+    $('#data-pi').html(parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi);
+    $('#data-ps').html(parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
+    $('.data-tp').html(parsedData.tp === false ? "<span class='text-gray'>TP</span>" : "TP");
+    $('.data-ta').html(parsedData.ta === 0 ? "<span class='text-gray'>TA</span>" : "TA");
+    $('.data-ms').html(parsedData.ms === 0
+        ? "<span class='text-gray'>M</span><span class='text-red'>S</span>"
+        : (parsedData.ms === -1
+            ? "<span class='text-gray'>M</span><span class='text-gray'>S</span>"
+            : "<span class='text-red'>M</span><span class='text-gray'>S</span>"
+          )
+    );        
+    $('.data-pty').html(europe_programmes[parsedData.pty]);
+    $('.data-st').html(parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST");
+    $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
+    $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
+    $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
+}
+
+let isEventListenerAdded = false;
+
+let updateCounter = 0;
+
+function updatePanels(parsedData) {
+    updateCounter++;
+
+    const sortedAf = parsedData.af.sort(compareNumbers);
+    const scaledArray = sortedAf.map(element => element / 1000);
+
+    const listContainer = $('#af-list');
+    const scrollTop = listContainer.scrollTop();
+    let ul = listContainer.find('ul');
+
+    if (!ul.length) {
+        ul = $('<ul></ul>');
+        listContainer.append(ul);
+    }
+
+    if (updateCounter % 3 === 0) {
+        
+        updateButtonState("data-eq", parsedData.eq);
+        updateButtonState("data-ims", parsedData.ims);
+
+        // Only update #af-list on every 3rd call
+        ul.html('');
+        const listItems = scaledArray.map(createListItem);
+        ul.append(listItems);
+
+        // Add the event listener only once
+        if (!isEventListenerAdded) {
+            ul.on('click', 'a', function () {
+                const frequency = parseFloat($(this).text());
+                tuneTo(frequency);
+            });
+            isEventListenerAdded = true;
+        }
+
+        listContainer.scrollTop(scrollTop);
+    }
+
+    // Update other elements every time
+    updateDataElements(parsedData);
+    updateSignalUnits(parsedData);
+    $('#users-online').text(parsedData.users);
+}
+
+function createListItem(element) {
+    return $('<li></li>').html(`<a>${element.toFixed(1)}</a>`)[0];
+}
+
+function updateButtonState(buttonId, value) {
+    var button = $("#" + buttonId);
+    if (value === 0) {
+        button.addClass("bg-gray");
+    } else {
+        button.removeClass("bg-gray");
+    }
+}
+
+function toggleButtonState(buttonId) {
+    parsedData[buttonId] = 1 - parsedData[buttonId]; // Toggle between 0 and 1
+    updateButtonState(buttonId, parsedData[buttonId]);
+    var message = "G";
+    message += parsedData.eq ? "1" : "0";
+    message += parsedData.ims ? "1" : "0";
+    socket.send(message);
 }
