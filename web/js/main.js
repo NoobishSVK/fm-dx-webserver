@@ -43,8 +43,9 @@ $(document).ready(function() {
         // Modify the WebSocket onmessage callback
         socket.onmessage = (event) => {
             parsedData = JSON.parse(event.data);
-            
+    
             updatePanels(parsedData);
+    
             // Push the new signal data to the array
             data.push(parsedData.signal);
             const actualLowestValue = Math.min(...data);
@@ -56,17 +57,27 @@ $(document).ready(function() {
             // Clear the canvas
             context.clearRect(0, 0, canvas.width, canvas.height);
     
-            // Draw the signal graph with zoom
+            // Draw the signal graph with smooth shifting
             context.beginPath();
-            
-            // Start drawing from the rightmost point
-            const startingIndex = Math.max(0, data.length - maxDataPoints);
-            context.moveTo(canvas.width - 40 - (data.length - startingIndex) * pointWidth, canvas.height - (data[startingIndex] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue)));
     
-            for (let i = startingIndex + 1; i < data.length; i++) {
+            const startingIndex = Math.max(0, data.length - maxDataPoints);
+    
+            for (let i = startingIndex; i < data.length; i++) {
                 const x = canvas.width - (data.length - i) * pointWidth - 40;
                 const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-                context.lineTo(x, y);
+    
+                if (i === startingIndex) {
+                    context.moveTo(x, y);
+                } else {
+                    const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
+                    const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
+    
+                    // Interpolate between the current and previous points
+                    const interpolatedX = (x + prevX) / 2;
+                    const interpolatedY = (y + prevY) / 2;
+    
+                    context.quadraticCurveTo(prevX, prevY, interpolatedX, interpolatedY);
+                }
             }
     
             context.strokeStyle = color4;
@@ -74,7 +85,7 @@ $(document).ready(function() {
             context.stroke();
     
             // Draw horizontal lines for lowest, highest, and average values
-            context.strokeStyle = color2; // Set line color
+            context.strokeStyle = color2;
             context.lineWidth = 1;
     
             // Draw the lowest value line
@@ -101,7 +112,17 @@ $(document).ready(function() {
             context.fillStyle = color4;
             context.font = '12px Titillium Web';
     
-            const offset = signalToggle.prop('checked') ? 11.25 : 0;
+            const signalUnit = localStorage.getItem('signalUnit');
+            let offset;
+    
+            if (signalUnit === 'dbuv') {
+                offset = 11.25;
+            } else if (signalUnit === 'dbm') {
+                offset = 120;
+            } else {
+                offset = 0;
+            }
+    
             context.textAlign = 'right';
             context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
             context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
@@ -115,8 +136,10 @@ $(document).ready(function() {
             // Update the data container with the latest data
             dataContainer.html(event.data + '<br>');
         };
+    
         requestAnimationFrame(updateCanvas);
-    }    
+    }
+    
     
     signalToggle.on("change", function() {
         const signalText = localStorage.getItem('signalUnit');
@@ -271,6 +294,9 @@ function checkKey(e) {
     getCurrentFreq();
     
     if (socket.readyState === WebSocket.OPEN) {
+        if (e.keyCode == '82') { // RDS Reset (R key)
+            socket.send("T" + (currentFreq.toFixed(1) * 1000));
+        }
         if (e.keyCode == '38') {
             socket.send("T" + ((currentFreq + 0.01).toFixed(2) * 1000));
         }

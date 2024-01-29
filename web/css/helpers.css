@@ -42,6 +42,10 @@
     margin-left: 20px;
 }
 
+.m-right-20 {
+    margin-right: 20px;
+}
+
 .h-100 {
     height: 100%;
 }
@@ -154,7 +158,19 @@
     .flex-phone {
         display: flex;
     }
+    .flex-phone-column {
+        flex-flow: column;
+    }
     .hide-phone {
+        display: none;
+    }
+    .m-0 {
+        margin: auto;
+    }
+}
+
+@media only screen and (min-width: 769px) {
+    .hide-desktop {
         display: none;
     }
 }

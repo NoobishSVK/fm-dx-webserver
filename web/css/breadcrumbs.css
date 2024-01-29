@@ -59,7 +59,7 @@ h3 {
     display: none;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 768px) {
     canvas, #flags-container {
         display: none;
     }
@@ -80,7 +80,7 @@ h3 {
         padding: 0 !important;
     }
     #data-ps {
-        font-size: 60px;
+        font-size: 54px;
     }
     #data-frequency {
         font-size: 72px;
@@ -109,6 +109,24 @@ h3 {
     }
     #tune-buttons {
         height: 64px;
+        order: 1;
+    }
+    .filter-controls {
+        order: 2;
+    }
+    .button-play-mobile {
+        order: 2;
+        margin: 0 !important;
+        border-radius: 0;
+    }
+    .button-play-mobile .playbutton {
+        border-radius: 0;
+    }
+    .button-eq {
+        order: 1;
+    }
+    .button-ims {
+        order: 3;
     }
 }
 

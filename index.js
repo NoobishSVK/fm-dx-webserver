@@ -67,9 +67,14 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('message', (message) => {
-    logDebug('Received message from client:', message.toString());
+    logDebug('Command received from \x1b[90m' + request.connection.remoteAddress + '\x1b[0m:', message.toString());
     command = message.toString();
-    client.write(command + "\n");
+
+    if(command.startsWith('X')) {
+      logWarn('Remote tuner shutdown attempted by \x1b[90m' + request.connection.remoteAddress + '\x1b[0m. You may consider blocking this user.');
+    } else {
+      client.write(command + "\n");
+    }
   });
 
   ws.on('close', (code, reason) => {

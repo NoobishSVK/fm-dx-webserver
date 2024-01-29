@@ -22,7 +22,7 @@ function Init(_ev) {
         return;
     }
     Stream.ConnectivityCallback = OnConnectivityCallback;
-    document.getElementById("playbutton").onclick = OnPlayButtonClick;
+    $(".playbutton").on('click', OnPlayButtonClick);
     $("#volumeSlider").on("change", updateVolume);
 }
 
@@ -36,10 +36,17 @@ function OnPlayButtonClick(_ev) {
     try {
         if (Stream.ConnectivityFlag) {
             Stream.Stop();
-            $('#playbutton').find('.fa-solid').removeClass('fa-pause').addClass('fa-play');
+            $('.playbutton').find('.fa-solid').removeClass('fa-pause').addClass('fa-play');
         } else {
             Stream.Start();
-            $('#playbutton').find('.fa-solid').removeClass('fa-play').addClass('fa-pause');
+            $('.playbutton').find('.fa-solid').removeClass('fa-play').addClass('fa-stop');
+            $('.playbutton').addClass('bg-gray');
+            $('.playbutton').prop('disabled', true);
+
+            setTimeout(function() {
+                $('.playbutton').removeClass('bg-gray');
+                $('.playbutton').prop('disabled', false);
+            }, 3000);
         }
     }
     catch (_ex) {
