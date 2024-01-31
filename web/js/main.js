@@ -454,7 +454,7 @@ function updateDataElements(parsedData) {
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
-    $('#data-ant').find('input').val($(parsedData.ant).text());
+    $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 }
 
 let isEventListenerAdded = false;

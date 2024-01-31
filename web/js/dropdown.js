@@ -18,10 +18,11 @@ const toggleDropdown = (event) => {
 
 const selectOption = (event) => {
   const $currentDropdown = currentDropdown;
-  $currentDropdown.find('input').val($(event.currentTarget).text());
 
   if($currentDropdown.attr('id') == 'data-ant') {
     socket.send("Z" + $(event.currentTarget).attr('data-value'));
+  } else {
+    $currentDropdown.find('input').val($(event.currentTarget).text());
   }
 
   // Use setTimeout to delay class removal
