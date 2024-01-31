@@ -12,7 +12,7 @@ function enableAudioStream() {
     // Combine all the settings for the ffmpeg command
     if (process.platform === 'win32') {
         // Windows
-        ffmpegCommand = `${flags} -f dshow -i audio="${config.audioDeviceName}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${config.audioPort} -samplerate 44100 -channels 2`;
+        ffmpegCommand = `${flags} -f dshow -i audio="${config.audioDeviceName}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${config.audioPort} -samplerate 48000 -channels 2`;
       } else {
         // Linux
         ffmpegCommand = `${flags} -f alsa -i "${config.audioDeviceName}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${config.audioPort} -samplerate 48000 -channels 2`;

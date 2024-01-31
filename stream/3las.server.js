@@ -335,7 +335,7 @@ class FallbackProviderMp3 extends AFallbackProvider {
     GetFFmpegArguments() {
         return [
             "-fflags", "+nobuffer+flush_packets", "-flags", "low_delay", "-rtbufsize", "32", "-probesize", "32",
-            "-f", "libmp3lame",
+            "-f", "s16le",
             "-ar", this.Server.SampleRate.toString(),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
