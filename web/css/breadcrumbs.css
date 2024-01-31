@@ -31,7 +31,9 @@ h3 {
 
 .form-group {
     float: left;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 #color-settings, #settings {
@@ -89,6 +91,9 @@ h3 {
     }
     h2 {
         display: none;
+    }
+    .form-group {
+        float: none;
     }
     #data-pi {
         font-size: 24px;
