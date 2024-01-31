@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&display=swap');
 @import url("main.css"); /* Root stuff that affects the entire webpage (body, wrapper etc.) */
 @import url("breadcrumbs.css"); /* Stuff that applies to random elements only once/twice */
 @import url("buttons.css"); /* Buttons, inputs, select boxes, checkboxes... */
+@import url("dropdown.css"); /* Custom dropdown menus */
 @import url("panels.css"); /* Different panels and their sizes */
 @import url("modal.css"); /* Modal window */
 @import url("helpers.css"); /* Stuff that is used often such as text changers etc */

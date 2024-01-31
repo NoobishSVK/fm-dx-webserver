@@ -44,13 +44,15 @@
 <body>
     <audio id="audioTag"></audio>
     <div id="wrapper">
-        <canvas id="signal-canvas" width="1240" height="200"></canvas>
+        <div class="canvas-container hide-phone">
+            <canvas id="signal-canvas"></canvas>
+        </div>
 
         <div class="flex-container">
             <div class="panel-90 bg-none">
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
-                        <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;">
+                        <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
                             <button class="playbutton"><i class="fa-solid fa-play fa-lg"></i></button>
                         </div>
                         <div class="panel-100 m-0 hover-brighten flex-center" id="ps-container" style="height: 90px;">
@@ -99,25 +101,34 @@
                     <div class="panel-33 no-bg filter-controls" style="height: 48px;">
                         <div class="flex-container flex-phone h-100">
                             <div class="panel-75 no-bg h-100 m-0 hide-desktop m-right-20 button-play-mobile" style="margin-right: 20px;">
-                                <button class="playbutton"><i class="fa-solid fa-play"></i></button>
+                                <button class="playbutton" aria-label="Play/Stop Button"><i class="fa-solid fa-play"></i></button>
                             </div>
+                                <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
+                                    <input type="text" placeholder="Ant A" readonly />
+                                    <ul class="options">
+                                        <li data-value="0" class="option">Ant A</li>
+                                        <li data-value="1" class="option">Ant B</li>
+                                        <li data-value="2" class="option">Ant C</li>
+                                        <li data-value="3" class="option">Ant D</li>
+                                    </ul>
+                                </div>
                             <div class="panel-100 no-bg h-100 m-0 button-eq">
-                                <button id="data-eq" style="border-radius: 30px 0px 0px 30px;"><span class="text-bold">EQ</span><br><span class="text-smaller">(RF+)</span></button>
+                                <button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="EQ / RF+ Filter"><span class="text-bold">EQ</span><br><span class="text-smaller">(RF+)</span></button>
                             </div>
                             <div class="panel-100 no-bg h-100 m-0 button-ims">
-                                <button id="data-ims" style="border-radius: 0px 30px 30px 0px;"><span class="text-bold">iMS</span><br><span class="text-smaller">(IF+)</span></button>
+                                <button id="data-ims" style="border-radius: 0px 30px 30px 0px;"  aria-label="iMS / IF+ Filter"><span class="text-bold">iMS</span><br><span class="text-smaller">(IF+)</span></button>
                             </div>
                         </div>
                     </div>
                     
                     <div class="panel-33 flex-container flex-phone" id="tune-buttons">
-                        <button id="freq-down"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button id="freq-down" aria-label="Tune down by 100 KHz"><i class="fa-solid fa-chevron-left"></i></button>
                         <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency">
-                        <button id="freq-up"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button id="freq-up" aria-label="Tune up by 100 KHz"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     
                     <div class="panel-33 hide-phone" style="height: 48px;">
-                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
                     </div>
                 </div>
                 
@@ -167,7 +178,7 @@
         </div>
     </div>
     
-    <button id="settings"><i class="fa-solid fa-gear"></i></button>
+    <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
     
     <div id="myModal" class="modal">
         <div class="modal-content">
@@ -176,7 +187,7 @@
             
             <div class="form-group">
                 <label for="themes" style="margin-top: 50px;"><i class="fa-solid fa-palette"></i> Theme:</label>
-                <select name="themes" style="margin-bottom: 15px;" id="theme-selector">
+                <!--<select name="themes" style="margin-bottom: 15px;" id="theme-selector">
                     <option value="theme1">Monochrome</option>
                     <option value="theme2">Red</option>
                     <option value="theme3">Green</option>
@@ -185,16 +196,38 @@
                     <option value="theme6">Pink</option>
                     <option value="theme7">Blurple</option>
                     <option value="theme8">AMOLED</option>
-                </select>
+                </select>-->
+
+                <div class="dropdown" id="theme-selector">
+                    <input type="text" placeholder="Theme" readonly />
+                    <ul class="options">
+                        <li class="option" data-value="theme1">Monochrome</li>
+                        <li class="option" data-value="theme2">Red</li>
+                        <li class="option" data-value="theme3">Green</li>
+                        <li class="option" data-value="theme4">Cyan</li>
+                        <li class="option" data-value="theme5">Orange</li>
+                        <li class="option" data-value="theme6">Pink</li>
+                        <li class="option" data-value="theme7">Blurple</li>
+                        <li class="option" data-value="theme8">AMOLED</li>
+                    </ul>
+                </div>
             </div>
 
             <div class="form-group" style="margin-left: 10px;">
                 <label for="signal" style="margin-top: 50px;"><i class="fa-solid fa-signal"></i> Signal units:</label>
-                <select name="signal" style="margin-bottom: 15px;" id="signal-selector">
+                <!--<select name="signal" style="margin-bottom: 15px;" id="signal-selector">
                     <option value="dbf">dBf</option>
                     <option value="dbuv">dBuV</option>
                     <option value="dbm">dBm</option>
-                </select>
+                </select>-->
+                <div class="dropdown" id="signal-selector">
+                    <input type="text" placeholder="Theme" readonly />
+                    <ul class="options">
+                        <li class="option" data-value="dbf">dBf</li>
+                        <li class="option" data-value="dbuv">dBuV</li>
+                        <li class="option" data-value="dbm">dBm</li>
+                    </ul>
+                </div>
             </div>
 
             <div class="bottom-20">

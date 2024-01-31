@@ -1,0 +1,80 @@
+.dropdown {
+    width: 200px;
+    height: 48px;
+    background: var(--color-4);
+    position: relative;
+    margin-right: 20px;
+    /*border-bottom: 4px solid var(--color-2);*/
+  }
+  @media (max-width: 400px) {
+    .dropdown {
+      width: 240px;
+    }
+  }
+  .dropdown::before {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 18px;
+    z-index: 9999;
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--color-main);
+    border-top: transparent;
+    border-right: transparent;
+    transform: rotate(-45deg);
+    pointer-events: none;
+  }
+  .dropdown ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  .dropdown input {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    cursor: pointer;
+    border: none;
+    user-select: none;
+    background-color: var(--color-4);
+    color: var(--color-main);
+  }
+  .dropdown input:focus {
+    outline: none;
+  }
+  .dropdown input::placeholder {
+    color: var(--color-main);
+    opacity: 1;
+  }
+  .dropdown .options {
+    width: 100%;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    background: var(--color-main);
+    color: var(--color-4);
+    border: 1px solid var(--color-4);
+    position: relative;
+    z-index: 999;
+  }
+  .dropdown .options .option {
+    color: var(--color-4);
+    padding: 7px;
+  }
+  .dropdown .options .option:hover {
+    color: var(--color-main);
+    background: var(--color-4);
+  }
+  .dropdown.opened .options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .dropdown.opened::before {
+    transform: rotate(-225deg);
+    top: 22px;
+  }

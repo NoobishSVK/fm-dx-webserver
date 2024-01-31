@@ -4,6 +4,8 @@ var port = hostParts[1] || '8080'; // Extract the port or use a default (e.g., 8
 var socketAddress = 'ws://' + hostname + ':' + port + '/text'; // Use 'wss' for secure WebSocket connections (recommended for external access)
 var socket = new WebSocket(socketAddress);
 var parsedData;
+var data = [];
+let signalChart;
     
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
@@ -16,130 +18,16 @@ const europe_programmes = [
 ];
 
 $(document).ready(function() {
-    var dataContainer = $('#data-container');
     var canvas = $('#signal-canvas')[0];
-    var context = canvas.getContext('2d');
     
     var signalToggle = $("#signal-units-toggle");
     
     canvas.width = canvas.parentElement.clientWidth;
-    
-    var data = [];
-    var maxDataPoints = 300;
-    var pointWidth = (canvas.width - 80) / maxDataPoints;
+    canvas.height = canvas.parentElement.clientHeight;
     
     getInitialSettings();
     // Start updating the canvas
-    updateCanvas();
-    
-    function updateCanvas() {
-        const color2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
-        const color4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-    
-        while (data.length >= maxDataPoints) {
-            data.shift();
-        }
-    
-        // Modify the WebSocket onmessage callback
-        socket.onmessage = (event) => {
-            parsedData = JSON.parse(event.data);
-    
-            updatePanels(parsedData);
-    
-            // Push the new signal data to the array
-            data.push(parsedData.signal);
-            const actualLowestValue = Math.min(...data);
-            const actualHighestValue = Math.max(...data);
-            zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
-            zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
-            zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
-    
-            // Clear the canvas
-            context.clearRect(0, 0, canvas.width, canvas.height);
-    
-            // Draw the signal graph with smooth shifting
-            context.beginPath();
-    
-            const startingIndex = Math.max(0, data.length - maxDataPoints);
-    
-            for (let i = startingIndex; i < data.length; i++) {
-                const x = canvas.width - (data.length - i) * pointWidth - 40;
-                const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    
-                if (i === startingIndex) {
-                    context.moveTo(x, y);
-                } else {
-                    const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
-                    const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    
-                    // Interpolate between the current and previous points
-                    const interpolatedX = (x + prevX) / 2;
-                    const interpolatedY = (y + prevY) / 2;
-    
-                    context.quadraticCurveTo(prevX, prevY, interpolatedX, interpolatedY);
-                }
-            }
-    
-            context.strokeStyle = color4;
-            context.lineWidth = 1;
-            context.stroke();
-    
-            // Draw horizontal lines for lowest, highest, and average values
-            context.strokeStyle = color2;
-            context.lineWidth = 1;
-    
-            // Draw the lowest value line
-            const lowestY = canvas.height - (zoomMinValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-            context.beginPath();
-            context.moveTo(40, lowestY - 18);
-            context.lineTo(canvas.width - 40, lowestY - 18);
-            context.stroke();
-    
-            // Draw the highest value line
-            const highestY = canvas.height - (zoomMaxValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-            context.beginPath();
-            context.moveTo(40, highestY + 10);
-            context.lineTo(canvas.width - 40, highestY + 10);
-            context.stroke();
-    
-            const avgY = canvas.height / 2;
-            context.beginPath();
-            context.moveTo(40, avgY - 7);
-            context.lineTo(canvas.width - 40, avgY - 7);
-            context.stroke();
-    
-            // Label the lines with their values
-            context.fillStyle = color4;
-            context.font = '12px Titillium Web';
-    
-            const signalUnit = localStorage.getItem('signalUnit');
-            let offset;
-    
-            if (signalUnit === 'dbuv') {
-                offset = 11.25;
-            } else if (signalUnit === 'dbm') {
-                offset = 120;
-            } else {
-                offset = 0;
-            }
-    
-            context.textAlign = 'right';
-            context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
-            context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
-            context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, 35, avgY - 3);
-    
-            context.textAlign = 'left';
-            context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, canvas.width - 35, lowestY - 14);
-            context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
-            context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
-    
-            // Update the data container with the latest data
-            dataContainer.html(event.data + '<br>');
-        };
-    
-        requestAnimationFrame(updateCanvas);
-    }
-    
+    initCanvas();
     
     signalToggle.on("change", function() {
         const signalText = localStorage.getItem('signalUnit');
@@ -250,6 +138,128 @@ function getInitialSettings() {
         }
     });
 }
+
+function initCanvas(parsedData) {
+    signalToggle = $("#signal-units-toggle");
+
+    // Check if signalChart is already initialized
+    if (!signalChart) {
+        signalChart = {
+            canvas: $('#signal-canvas')[0],
+            context: $('#signal-canvas')[0].getContext('2d'),
+            parsedData: parsedData,
+            maxDataPoints: 300,
+        }
+        signalChart.pointWidth = (signalChart.canvas.width - 80) / signalChart.maxDataPoints;
+    }
+
+    updateCanvas(parsedData, signalChart);
+}
+
+function updateCanvas(parsedData, signalChart) {
+    const color2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
+    const color4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
+    const {context, canvas, maxDataPoints, pointWidth} = signalChart;
+
+    while (data.length >= signalChart.maxDataPoints) {
+        data.shift();
+    }
+
+    const actualLowestValue = Math.min(...data);
+    const actualHighestValue = Math.max(...data);
+    zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
+    zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
+    zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
+
+    // Clear the canvas
+    if(context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the signal graph with smooth shifting
+        context.beginPath();
+    }
+
+    const startingIndex = Math.max(0, data.length - maxDataPoints);
+
+    for (let i = startingIndex; i < data.length; i++) {
+        const x = canvas.width - (data.length - i) * pointWidth - 40;
+        const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
+
+        if (i === startingIndex) {
+            context.moveTo(x, y);
+        } else {
+            const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
+            const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
+
+            // Interpolate between the current and previous points
+            const interpolatedX = (x + prevX) / 2;
+            const interpolatedY = (y + prevY) / 2;
+
+            context.quadraticCurveTo(prevX, prevY, interpolatedX, interpolatedY);
+        }
+    }
+
+    context.strokeStyle = color4;
+    context.lineWidth = 1;
+    context.stroke();
+
+    // Draw horizontal lines for lowest, highest, and average values
+    context.strokeStyle = color2;
+    context.lineWidth = 1;
+
+    // Draw the lowest value line
+    const lowestY = canvas.height - (zoomMinValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
+    context.beginPath();
+    context.moveTo(40, lowestY - 18);
+    context.lineTo(canvas.width - 40, lowestY - 18);
+    context.stroke();
+
+    // Draw the highest value line
+    const highestY = canvas.height - (zoomMaxValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
+    context.beginPath();
+    context.moveTo(40, highestY + 10);
+    context.lineTo(canvas.width - 40, highestY + 10);
+    context.stroke();
+
+    const avgY = canvas.height / 2;
+    context.beginPath();
+    context.moveTo(40, avgY - 7);
+    context.lineTo(canvas.width - 40, avgY - 7);
+    context.stroke();
+
+    // Label the lines with their values
+    context.fillStyle = color4;
+    context.font = '12px Titillium Web';
+
+    const signalUnit = localStorage.getItem('signalUnit');
+    let offset;
+
+    if (signalUnit === 'dbuv') {
+        offset = 11.25;
+    } else if (signalUnit === 'dbm') {
+        offset = 120;
+    } else {
+        offset = 0;
+    }
+
+    context.textAlign = 'right';
+    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
+    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
+    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, 35, avgY - 3);
+
+    context.textAlign = 'left';
+    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, canvas.width - 35, lowestY - 14);
+    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
+    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
+
+    requestAnimationFrame(() => updateCanvas(parsedData, signalChart));
+}
+
+socket.onmessage = (event) => {
+    parsedData = JSON.parse(event.data);
+    updatePanels(parsedData);
+    data.push(parsedData.signal);
+};
     
 function compareNumbers(a, b) {
     return a - b;
@@ -444,6 +454,7 @@ function updateDataElements(parsedData) {
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
+    $('#data-ant').find('input').val($(parsedData.ant).text());
 }
 
 let isEventListenerAdded = false;
@@ -500,9 +511,9 @@ function createListItem(element) {
 function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
     if (value === 0) {
-        button.addClass("bg-gray");
+        button.addClass("btn-disabled");
     } else {
-        button.removeClass("bg-gray");
+        button.removeClass("btn-disabled");
     }
 }
 

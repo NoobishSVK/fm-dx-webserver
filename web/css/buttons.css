@@ -14,6 +14,10 @@ button:hover {
     background-color: var(--color-main-bright);
 }
 
+.btn-disabled {
+    opacity: 0.6;
+}
+
 #tune-buttons input[type="text"] {
     width: 50%;
     height: 100%;
@@ -25,10 +29,6 @@ button:hover {
     color: white;
     background-color: var(--color-1);
     font-family: 'Titillium Web', sans-serif;
-  }
-  
-  input[type="text"]:hover {
-      border: 2px solid var(--color-main-bright);
   }
   
   #tune-buttons button {

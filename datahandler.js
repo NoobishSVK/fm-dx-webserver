@@ -206,6 +206,7 @@ var dataToSend = {
   rt1: '',
   ims: 0,
   eq: 0,
+  ant: 0,
   country_name: '',
   country_iso: 'UN',
   users: '',
@@ -243,32 +244,36 @@ function handleData(ws, receivedData) {
           dataToSend.pi = '?';
         }
         break;
-        case receivedLine.startsWith('G'):
-          switch (receivedLine) {
-            case 'G11':
-              initialData.eq = 1;
-              dataToSend.eq = 1;
-              initialData.ims = 1;
-              dataToSend.ims = 1;
-              break;
-            case 'G01':
-              initialData.eq = 0;
-              dataToSend.eq = 0;
-              initialData.ims = 1;
-              dataToSend.ims = 1;
-              break;
-            case 'G10':
-              initialData.eq = 1;
-              dataToSend.eq = 1;
-              initialData.ims = 0;
-              dataToSend.ims = 0;
-              break;
-            case 'G00':
-              initialData.eq = 0;
-              initialData.ims = 0;
-              dataToSend.eq = 0;
-              dataToSend.ims = 0;
-              break;
+      case receivedLine.startsWith('Z'):
+        dataToSend.ant = receivedLine.substring(1);
+        initialData.ant = receivedLine.substring(1);
+        break;
+      case receivedLine.startsWith('G'):
+        switch (receivedLine) {
+          case 'G11':
+            initialData.eq = 1;
+            dataToSend.eq = 1;
+            initialData.ims = 1;
+            dataToSend.ims = 1;
+            break;
+          case 'G01':
+            initialData.eq = 0;
+            dataToSend.eq = 0;
+            initialData.ims = 1;
+            dataToSend.ims = 1;
+            break;
+          case 'G10':
+            initialData.eq = 1;
+            dataToSend.eq = 1;
+            initialData.ims = 0;
+            dataToSend.ims = 0;
+            break;
+          case 'G00':
+            initialData.eq = 0;
+            initialData.ims = 0;
+            dataToSend.eq = 0;
+            dataToSend.ims = 0;
+            break;
           }
       case receivedLine.startsWith('Sm'):
         modifiedData = receivedLine.substring(2);

@@ -52,15 +52,16 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: auto;
+    width: 1180px;
     max-width: 1180px;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1180px) {
     #wrapper {
         position: static;
         transform: none;
         margin: 50px auto;
+        width: 100%;
     }
 }
 

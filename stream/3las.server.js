@@ -335,13 +335,13 @@ class FallbackProviderMp3 extends AFallbackProvider {
     GetFFmpegArguments() {
         return [
             "-fflags", "+nobuffer+flush_packets", "-flags", "low_delay", "-rtbufsize", "32", "-probesize", "32",
-            "-f", "s16le",
+            "-f", "libmp3lame",
             "-ar", this.Server.SampleRate.toString(),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
             "-c:a", "libmp3lame",
             "-b:a", Settings.FallbackMp3Bitrate.toString() + "k",
-            "-ac", "1",
+            "-ac", this.Server.Channels.toString(),
             "-reservoir", "0",
             "-f", "mp3", "-write_xing", "0", "-id3v2_version", "0",
             "-fflags", "+nobuffer", "-flush_packets", "1",
