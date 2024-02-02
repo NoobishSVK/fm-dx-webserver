@@ -13,9 +13,16 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 ##  Features to be added
 Check here for an up to date task list: https://github.com/NoobishSVK/fm-dx-webserver/issues/3
 
+## Community
+Join our **Discord community** to get the latest development update info, share feedback and receive support.
+[<img alt="Join the TEF6686 Discord community!" src="https://i.imgur.com/lI9Tuxf.png" height="120">](https://discord.gg/ZAVNdS74mC)  
+
 ## Getting Started
-Please install **node.js version 21.5.0** or older to make this work. 
+Please install **node.js version 21.5.0** or older to make this work.   
+
 Version >=21.6.0 is currently not working correctly. 
+
+
 
 1. Download or install ffmpeg (optional, but needed if you want the audio stream to work)
 
@@ -34,13 +41,6 @@ Version >=21.6.0 is currently not working correctly.
     ```
 
 3. Nagivate to the fm-dx-webserver folder in your terminal and run this command:
-
-    In case you haven't installed node-pre-gyp yet: 
-    ```bash
-    npm install -g node-pre-gyp
-    ```
-
-    Afterwards:
     ```bash
     npm install
     ```
