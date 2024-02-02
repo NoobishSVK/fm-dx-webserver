@@ -2,7 +2,7 @@ const { spawn, execSync } = require('child_process');
 const config = require('../userconfig.js');
 const consoleCmd = require('../console.js');
 
-function enableAudioStream() { 
+function enableAudioStream() {
     var ffmpegCommand;
     let audioType;
 
