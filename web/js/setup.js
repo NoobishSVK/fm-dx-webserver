@@ -179,7 +179,9 @@ function submitData() {
     const audioChannels = ($('.options .option').filter(function() {
       return $(this).text() === $('#audio-channels').val();
     }).data('value') || 2);
-    const audioBitrate = $('#audio-quality').val() || '192k';
+    const audioBitrate = ($('.options .option').filter(function() {
+      return $(this).text() === $('#audio-quality').val();
+    }).data('value') || "192k");
 
     const tunerName = $('#webserver-name').val() || 'FM Tuner';
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';
