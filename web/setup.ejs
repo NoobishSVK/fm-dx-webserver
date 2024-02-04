@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FM-DX Webserver</title>
+    <link href="css/entry.css" type="text/css" rel="stylesheet">
+    <link href="css/flags.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="icon" type="image/png" href="favicon2.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="wrapper" class="setup-wrapper">
+        <% if (isAdminAuthenticated) { %>
+        <div class="panel-100 no-bg">
+            <h1>FM-DX WebServer</h1>
+            <h2>[ADMIN PANEL]</h2>
+            <p>This web setup allows you to set up your entire tuner. <br>Some settings will only change after a server restart.</p>
+            <p>In case you are setting up the webserver for the first time, we already filled fail-safe defaults for you.</p>
+        </div>
+        <div class="flex-container">
+            <div class="panel-50" style="min-height: 120px;margin-bottom: 0;">
+                <h2>BASIC SETTINGS</h2>
+                <h3>Connection to xdrd:</h3>
+                <div class="form-group">
+                    <label for="xdrd-ip">xdrd ip address:</label>
+                    <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
+                </div>  
+                <div class="form-group">
+                    <label for="xdrd-port">xdrd port:</label>
+                    <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
+                </div> 
+                <div class="form-group">
+                    <label for="xdrd-password">xdrd server password:</label>
+                    <input class="input-text w-150" type="text" name="xdrd-password" id="xdrd-password">
+                </div> 
+                <br>
+                <h3>Webserver connection:</h3>
+                <div class="form-group">
+                    <label for="webserver-ip">Webserver IP:</label>
+                    <input class="input-text w-150" type="text" name="webserver-ip" id="webserver-ip" placeholder="0.0.0.0">
+                </div>  
+                <div class="form-group">
+                    <label for="webserver-port">Webserver port:</label>
+                    <input class="input-text w-100" type="text" name="webserver-port" id="webserver-port" placeholder="8080">
+                </div> 
+                <div class="form-group">
+                    <label for="audio-port">Audio port:</label>
+                    <input class="input-text w-150" type="text" name="audio-port" id="audio-port" placeholder="8081">
+                </div> 
+                <br>
+                <!--tune password, public/private tuner, admin password, verbose mode-->
+            </div>
+            <div class="panel-50" style="min-height: 120px;margin-bottom: 0;">
+                <h2>AUDIO SETTINGS</h2>
+                
+                <div class="panel-100 p-bottom-20">
+                    <div class="form-group">
+                        <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
+                        <div class="dropdown" style="width: 300px;">
+                            <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly />
+                            <ul class="options" id="deviceList">
+                                <% videoDevices.forEach(device => { %>
+                                    <li data-value="<%= device.name %>" class="option"><%= device.name %></li>
+                                <% }); %>
+                                <% audioDevices.forEach(device => { %>
+                                    <li data-value="<%= device.name %>" class="option"><%= device.name %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> AUDIO CHANNELS:</label>
+                        <div class="dropdown" style="width: 300px;">
+                            <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly />
+                            <ul class="options">
+                                <li data-value="2" class="option">Stereo</li>
+                                <li data-value="1" class="option">Mono</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> AUDIO QUALITY:</label>
+                        <div class="dropdown" style="width: 300px;">
+                            <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (saves bandwidth)" readonly />
+                            <ul class="options">
+                                <li data-value="128k" class="option">128k (saves bandwidth)</li>
+                                <li data-value="192k" class="option">192k (higher quality)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex-container bottom-20">
+            <div class="panel-100" style="padding-bottom: 20px;">
+                <h2>TUNER IDENTIFICATION INFO</h2>
+                
+                <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
+                    <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
+                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here.">
+                    <br>
+                    <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
+                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup."></textarea>
+                </div>
+                
+                <h3>Tuner location:</h3>
+                
+                <div class="form-group">
+                    <label for="lat">Latitude:</label>
+                    <input class="input-text" type="text" name="lat" id="lat">
+                </div>  
+                
+                <div class="form-group">
+                    <label for="lng">Longitude:</label>
+                    <input class="input-text" type="text" name="lng" id="lng">
+                </div>
+                
+                <div id="map"></div>
+            </div>
+            
+            <div class="panel-33">
+                <h2>MAINTENANCE</h2>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="tuner-public">
+                    <label for="tuner-public">Public tuner</label>
+                </div><br>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="tuner-lock">
+                    <label for="tuner-lock">Lock to admin</label>
+                </div><br>
+                <div class="form-group">
+                    <label for="tune-pass">Tune password:</label>
+                    <input class="input-text w-150" type="text" name="tune-pass" id="tune-pass">
+                </div>
+                <div class="form-group" style="margin-bottom: 40px;">
+                    <label for="admin-pass">Admin setup password:</label>
+                    <input class="input-text w-150" type="text" name="admin-pass" id="admin-pass">
+                </div><br>
+                <button style="height:48px; width: 200px;margin-bottom:20px;" onclick="submitData();">Save settings</button>
+                <button style="height: 48px; width: 200px;background:var(--color-3)" class="logout-link">Logout</button>
+                <div id="login-message"></div>
+            </div>
+        </div>
+        <div class="panel-100 no-bg">
+            <p>Feel free to contact us on <a href="https://discord.gg/ZAVNdS74mC" target="_blank"><strong><i class="fa-brands fa-discord"></i> Discord</strong></a> for community support.</p>
+        </div>
+        <button onclick="document.location.href='/'" id="back-btn" aria-label="Go back to tuning"><i class="fa-solid fa-arrow-left"></i></button>
+        <% } else { %>
+        <div class="panel-100 no-bg">
+            <h1>FM-DX WebServer</h1>
+            <h2>[ADMIN PANEL]</h2>
+            <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
+            <p>Please login below.</p>
+        </div>
+        <div class="panel-100 p-bottom-20">
+            <h2>LOGIN</h2>
+            <form action="/login" method="post" id="login-form">
+                <input style="background-color: var(--color-2);" type="password" id="password" name="password" required>
+                <button type="submit" class="br-0 w-100" style="height: 44px;">Login</button>
+              </form>
+            <div id="login-message"></div>
+        </div>
+        <% } %>
+    </div>
+    <script src="js/settings.js"></script>
+    <script src="js/dropdown.js"></script>
+    <script src="js/setup.js"></script>
+</body>
+</html>

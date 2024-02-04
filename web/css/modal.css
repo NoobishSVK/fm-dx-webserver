@@ -68,13 +68,6 @@
     background: var(--color-5);
 }
 
-.modal label {
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    display: block;
-}
-
 @media only screen and (max-width: 768px) {
     .modal-content {
         min-width: 90% !important;

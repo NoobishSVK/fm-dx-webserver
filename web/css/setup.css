@@ -1,0 +1,42 @@
+
+.setup-wrapper .form-group, .setup-wrapper textarea {
+    display: inline-block;
+    float: none;
+}
+
+.setup-wrapper .form-group {
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+
+.setup-wrapper textarea {
+    width: 100%;
+    max-width: 768px;
+    background-color: var(--color-2);
+    height: 100px;
+    font-size: 14px;
+    padding-top: 10px;
+}
+
+#map {
+    height:400px;
+    width:100%;
+    overflow: hidden;
+    max-width:800px;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.setup-wrapper h3 {
+    font-weight: 300;
+    margin: 8px;
+}
+
+.w-150 {
+    width: 150px !important
+}
+
+.w-100 {
+    width: 100px !important;
+}

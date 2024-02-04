@@ -55,6 +55,11 @@ body {
     width: 1180px;
     max-width: 1180px;
 }
+#wrapper.setup-wrapper {
+    margin: auto;
+    position: static;
+    transform: none;
+}
 
 @media (max-width: 1180px) {
     #wrapper {

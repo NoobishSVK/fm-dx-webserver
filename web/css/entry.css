@@ -6,4 +6,5 @@
 @import url("dropdown.css"); /* Custom dropdown menus */
 @import url("panels.css"); /* Different panels and their sizes */
 @import url("modal.css"); /* Modal window */
+@import url("setup.css"); /* Web setup interface */
 @import url("helpers.css"); /* Stuff that is used often such as text changers etc */

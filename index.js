@@ -1,27 +1,77 @@
-/* Libraries / Imports */
+/**
+ * LIBRARIES AND IMPORTS
+ */
+
+// Web handling
 const express = require('express');
-const app = express();
+const session = require('express-session');
+const bodyParser = require('body-parser');
 const http = require('http');
 const https = require('https');
+const app = express();
 const httpServer = http.createServer(app);
+const ejs = require('ejs');
+
+// Websocket handling
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
+
+// Other files and libraries
 const crypto = require('crypto');
+const fs = require('fs');
 const commandExists = require('command-exists-promise');
 const dataHandler = require('./datahandler');
 const consoleCmd = require('./console');
-const config = require('./userconfig');
 const audioStream = require('./stream/index.js');
+const { parseAudioDevice } = require('./stream/parser.js');
+const configPath = path.join(__dirname, 'config.json');
 
-const { webServerHost, webServerPort, webServerName, audioPort, xdrdServerHost, xdrdServerPort, xdrdPassword, qthLatitude, qthLongitude } = config;
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
 let currentUsers = 0;
 let streamEnabled = false;
 let incompleteDataBuffer = '';
+let serverConfig = {
+  webserver: {
+    webserverIp: "0.0.0.0",
+    webserverPort: "8080",
+    audioPort: "8081"
+  },
+  xdrd: {
+    xdrdIp: "127.0.0.1",
+    xdrdPort: "7373",
+    xdrdPassword: "password"
+  },
+  identification: {
+    tunerName: "",
+    tunerDesc: "",
+    lat: "",
+    lon: ""
+  },
+  password: {
+    tunePass: "",
+    adminPass: ""
+  },
+  publicTuner: true,
+  lockToAdmin: false
+};
+
+if(fs.existsSync('config.json')) {
+  const configFileContents = fs.readFileSync('config.json', 'utf8');
+  serverConfig = JSON.parse(configFileContents);
+}
+
+app.use(bodyParser.urlencoded({ extended: true }));
+const sessionMiddleware = session({
+  secret: 'GTce3tN6U8odMwoI',
+  resave: false,
+  saveUninitialized: true,
+});
+app.use(sessionMiddleware);
+app.use(bodyParser.json());
 
 /* Audio Stream */
 commandExists('ffmpeg')
@@ -38,56 +88,6 @@ commandExists('ffmpeg')
     // Should never happen but better handle it just in case
   })
 
-/* webSocket handlers */
-wss.on('connection', (ws, request) => {
-  const clientIp = request.connection.remoteAddress;
-  currentUsers++;
-  dataHandler.showOnlineUsers(currentUsers);
-
-  // Use ipinfo.io API to get geolocation information
-  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
-    let data = '';
-
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    response.on('end', () => {
-      try {
-        const locationInfo = JSON.parse(data);
-        if(locationInfo.country === undefined) {
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-        } else {
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
-        }
-      } catch (error) {
-        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-      }
-    });
-  });
-
-  ws.on('message', (message) => {
-    logDebug('Command received from \x1b[90m' + request.connection.remoteAddress + '\x1b[0m:', message.toString());
-    command = message.toString();
-
-    if(command.startsWith('X')) {
-      logWarn('Remote tuner shutdown attempted by \x1b[90m' + request.connection.remoteAddress + '\x1b[0m. You may consider blocking this user.');
-    } else {
-      client.write(command + "\n");
-    }
-  });
-
-  ws.on('close', (code, reason) => {
-    currentUsers--;
-    logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
-  });
-
-  ws.on('error', console.error);
-});
-
-/* Serving of HTML files */
-app.use(express.static(path.join(__dirname, 'web')));
-
 // Function to authenticate with the xdrd server
 function authenticateWithXdrd(client, salt, password) {
   const sha1 = crypto.createHash('sha1');
@@ -101,8 +101,8 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
-// WebSocket client connection
-client.connect(xdrdServerPort, xdrdServerHost, () => {
+// xdrd connection
+client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
   logInfo('Connection to xdrd established successfully.');
 
   const authFlags = {
@@ -119,7 +119,7 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
 
       if (!authFlags.receivedPassword) {
         authFlags.receivedSalt = line.trim();
-        authenticateWithXdrd(client, authFlags.receivedSalt, xdrdPassword);
+        authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
         authFlags.receivedPassword = true;
       } else {
         if (line.startsWith('a')) {
@@ -176,40 +176,237 @@ client.connect(xdrdServerPort, xdrdServerHost, () => {
 });
 
 client.on('close', () => {
-  console.log('Disconnected from xdrd');
+  logWarn('Disconnected from xdrd.');
 });
 
 client.on('error', (err) => {
   switch (true) {
     case err.message.includes("ECONNRESET"):
       logError("Connection to xdrd lost. Exiting...");
-      break;
+      process.exit(1);
 
     case err.message.includes("ETIMEDOUT"):
-      logError("Connection to xdrd @ " + xdrdServerHost + ":" + xdrdServerPort + " timed out.");
+      logError("Connection to xdrd @ " + serverConfig.xdrd.xdrdIp + ":" + serverConfig.xrd.xdrdPort + " timed out.");
+      process.exit(1);
+
+    case err.message.includes("ECONNREFUSED"):
+      logError("Connection to xdrd @ " + serverConfig.xdrd.xdrdIp + ":" + serverConfig.xdrd.xdrdPort + " failed. Is xdrd running?");
       break;
 
     default:
       logError("Unhandled error: ", err.message);
   }
-
-  process.exit(1);
-});
-
-
-/* HTTP Server */
-
-httpServer.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
-  });
-});
-
-httpServer.listen(webServerPort, webServerHost, () => {
-  logInfo(`Web server is running at \x1b[34mhttp://${webServerHost}:${webServerPort}\x1b[0m.`);
 });
 
 /* Static data are being sent through here on connection - these don't change when the server is running */
 app.get('/static_data', (req, res) => {
-  res.json({ qthLatitude, qthLongitude, webServerName, audioPort, streamEnabled});
+  res.json({
+    qthLatitude: serverConfig.identification.lat,
+    qthLongitude: serverConfig.identification.lon,
+    audioPort: serverConfig.webserver.audioPort,
+    streamEnabled: streamEnabled
+  });
 });
+
+
+/**
+ * AUTHENTICATION BLOCK
+ */
+const authenticate = (req, res, next) => {
+  const { password } = req.body;
+
+  // Check if the entered password matches the admin password
+  if (password === serverConfig.password.adminPass) {
+    req.session.isAdminAuthenticated = true;
+    req.session.isTuneAuthenticated = true;
+    logInfo('User from ' + req.connection.remoteAddress + ' logged in as an administrator.');
+    next();
+  } else if (password === serverConfig.password.tunePass) {
+    req.session.isAdminAuthenticated = false;
+    req.session.isTuneAuthenticated = true;
+    logInfo('User from ' + req.connection.remoteAddress + ' logged in with tune permissions.');
+    next();
+  } else {
+    res.status(403).json({ message: 'Login failed. Wrong password?' });
+  }
+};
+
+app.set('view engine', 'ejs'); // Set EJS as the template engine
+app.set('views', path.join(__dirname, '/web'))
+
+app.get('/', (req, res) => {
+  if (!fs.existsSync("config.json")) {
+    parseAudioDevice((result) => {
+      res.render('setup', { 
+        isAdminAuthenticated: true,
+        videoDevices: result.audioDevices,
+        audioDevices: result.videoDevices });
+      });;
+  } else {
+  res.render('index', { 
+    isAdminAuthenticated: req.session.isAdminAuthenticated,
+    isTuneAuthenticated: req.session.isTuneAuthenticated,
+    tunerName: serverConfig.identification.tunerName,
+    tunerDesc: serverConfig.identification.tunerDesc,
+    tunerLock: serverConfig.lockToAdmin
+   })
+  }
+});
+
+app.get('/setup', (req, res) => {
+  parseAudioDevice((result) => {
+  res.render('setup', { 
+    isAdminAuthenticated: req.session.isAdminAuthenticated,
+    videoDevices: result.audioDevices,
+    audioDevices: result.videoDevices });
+  });
+});
+
+
+// Route for login
+app.post('/login', authenticate, (req, res) => {
+  // Redirect to the main page after successful login
+  res.status(200).json({ message: 'Logged in successfully, refreshing the page...' });
+});
+
+app.get('/logout', (req, res) => {
+  // Clear the session and redirect to the main page
+  req.session.destroy(() => {
+    res.status(200).json({ message: 'Logged out successfully, refreshing the page...' });
+  });
+});
+
+app.post('/saveData', (req, res) => {
+  const data = req.body;
+  let firstSetup;
+  if(req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
+    if(!fs.existsSync('config.json')) {
+      firstSetup = true;
+    }
+    // Save data to a JSON file
+    fs.writeFile('config.json', JSON.stringify(data, null, 2), (err) => {
+      if (err) {
+        logError(err);
+        res.status(500).send('Internal Server Error');
+      } else {
+        logInfo('Server config changed successfully.');
+        const configFileContents = fs.readFileSync('config.json', 'utf8');
+        serverConfig = JSON.parse(configFileContents);
+        if(firstSetup === true) {
+          res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
+        } else {
+        res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
+        }
+      }
+    });
+  }
+});
+
+// Serve the data.json file when the /getData endpoint is accessed
+app.get('/getData', (req, res) => {  
+  if(req.session.isAdminAuthenticated) {
+    // Check if the file exists
+    fs.access(configPath, fs.constants.F_OK, (err) => {
+      if (err) {
+        // File does not exist
+        res.status(404).send('Data not found');
+      } else {
+        // File exists, send it as the response
+        res.sendFile(configPath);
+      }
+    });
+  }
+});
+
+app.get('/getDevices', (req, res) => {
+  if (req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
+    parseAudioDevice((result) => {
+        console.log(result);
+        res.json(result);
+    });
+  } else {
+    res.status(403).json({ error: 'Unauthorized' });
+  }
+});
+
+/**
+ * WEBSOCKET BLOCK
+ */
+
+wss.on('connection', (ws, request) => {
+  const clientIp = request.connection.remoteAddress;
+  currentUsers++;
+  dataHandler.showOnlineUsers(currentUsers);
+
+  // Use ipinfo.io API to get geolocation information
+  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      try {
+        const locationInfo = JSON.parse(data);
+        if(locationInfo.country === undefined) {
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+        } else {
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
+        }
+      } catch (error) {
+        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+      }
+    });
+  });
+
+  ws.on('message', (message) => {
+    logDebug('Command received from \x1b[90m' + request.connection.remoteAddress + '\x1b[0m:', message.toString());
+    command = message.toString();
+
+    if(command.startsWith('X')) {
+      logWarn('Remote tuner shutdown attempted by \x1b[90m' + request.connection.remoteAddress + '\x1b[0m. You may consider blocking this user.');
+      return;
+    }
+
+    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
+
+      if(serverConfig.lockToAdmin === true) {
+        if(request.session && request.session.isAdminAuthenticated === true) {
+          client.write(command + "\n");
+        } else {
+          return;
+        }
+      } else {
+        client.write(command + "\n");
+      }
+    }
+  });
+
+  ws.on('close', (code, reason) => {
+    currentUsers--;
+    logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+  });
+
+  ws.on('error', console.error);
+});
+
+
+httpServer.on('upgrade', (request, socket, head) => {
+  sessionMiddleware(request, {}, () => {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+});
+
+/* Serving of HTML files */
+app.use(express.static(path.join(__dirname, 'web')));
+
+httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.webserverIp, () => {
+  logInfo(`Web server is running at \x1b[34mhttp://${serverConfig.webserver.webserverIp}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+});
+
+module.exports = {
+  serverConfig
+}

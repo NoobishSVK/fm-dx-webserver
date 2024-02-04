@@ -4,15 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "debug": "node index.js",
-    "start": "node index.js"
+    "debug": "node index.js --debug",
+    "webserver": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.11",
+    "body-parser": "^1.20.2",
     "command-exists-promise": "^2.0.2",
+    "ejs": "^3.1.9",
     "express": "4.18.2",
+    "express-session": "^1.18.0",
     "http": "^0.0.1-security",
     "https": "1.0.0",
     "koffi": "2.7.2",

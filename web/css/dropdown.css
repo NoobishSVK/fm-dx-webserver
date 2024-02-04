@@ -53,8 +53,7 @@
     border: none;
     font-size: 16px;
     overflow: hidden;
-    opacity: 0;
-    visibility: hidden;
+    display: none;
     background: var(--color-main);
     color: var(--color-4);
     border: 1px solid var(--color-4);
@@ -70,9 +69,9 @@
     background: var(--color-4);
   }
   .dropdown.opened .options {
-    opacity: 1;
-    visibility: visible;
+    display:block;
     transform: translateY(0);
+    position:absolute;
   }
   .dropdown.opened::before {
     transform: rotate(-225deg);

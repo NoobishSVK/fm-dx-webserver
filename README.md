@@ -45,32 +45,11 @@ Version >=21.6.0 is currently not working correctly.
     npm install
     ```
 
-4. Update your config in userconfig.js:
-
-    ```js
-    const webServerHost = '0.0.0.0'; // IP of the web server
-    const webServerPort = 8080; // web server port
-    const webServerName = "Noobish's Server"; // web server name (will be displayed in title, bookmarks...)
-    
-    const audioDeviceName = "Microphone (High Definition Audio Device)"; // Audio device name in your OS 
-    const audioPort = 8081; // Port for the audio stream
-    
-    const xdrdServerHost = '127.0.0.1'; // xdrd server IP (if it's running on the same machine, use 127.0.0.1)
-    const xdrdServerPort = 7373; // xdrd server port
-    const xdrdPassword = 'password'; // xdrd password (optional)
-    
-    const qthLatitude = '50.123456'; // your latitude, useful for maps.fmdx.pl integration
-    const qthLongitude = '15.123456'; // your longitude, useful for maps.fmdx.pl integration
-    
-    const verboseMode = false; // if true, console will display extra messages
-
-    ```
-
 
 4. Start the server:
 
     ```bash
-    node .
+    npm run webserver
     ```
 
 4. Open your web browser and navigate to `http://web-server-ip:web-server-port` to access the web interface.

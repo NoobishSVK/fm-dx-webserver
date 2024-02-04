@@ -1,4 +1,17 @@
 "use strict";
+var fs = require('fs');
+
+let serverConfig = {
+    audio: {
+      audioBitrate: "128k"
+    },
+};
+
+if(fs.existsSync('./config.json')) {
+    const configFileContents = fs.readFileSync('./config.json', 'utf8');
+    serverConfig = JSON.parse(configFileContents);
+}
+
 /*
     Stdin streamer is part of 3LAS (Low Latency Live Audio Streaming)
     https://github.com/JoJoBond/3LAS
@@ -340,7 +353,7 @@ class FallbackProviderMp3 extends AFallbackProvider {
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
             "-c:a", "libmp3lame",
-            "-b:a", Settings.FallbackMp3Bitrate.toString() + "k",
+            "-b:a", serverConfig.audio.audioBitrate,
             "-ac", this.Server.Channels.toString(),
             "-reservoir", "0",
             "-f", "mp3", "-write_xing", "0", "-id3v2_version", "0",

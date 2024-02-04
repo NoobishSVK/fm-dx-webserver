@@ -30,6 +30,10 @@
     color: var(--color-4);
 }
 
+.br-0 {
+    border-radius: 0px;
+}
+
 .br-5 {
     border-radius: 5px;
 }
@@ -135,6 +139,14 @@
 
 .p-10 {
     padding: 10px;
+}
+
+.p-bottom-20 {
+    padding-bottom: 20px;
+}
+
+.input-text {
+    background-color: var(--color-2) !important;
 }
 
 @media only screen and (max-width: 960px) {

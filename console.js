@@ -1,4 +1,4 @@
-const { verboseMode } = require('./userconfig');
+const verboseMode = process.argv.includes('--debug');
 
 const getCurrentTime = () => {
     const currentTime = new Date();

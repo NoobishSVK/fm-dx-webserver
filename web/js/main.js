@@ -127,11 +127,8 @@ function getInitialSettings() {
             // Use the received data (data.qthLatitude, data.qthLongitude) as needed
             localStorage.setItem('qthLatitude', data.qthLatitude);
             localStorage.setItem('qthLongitude', data.qthLongitude);
-            localStorage.setItem('webServerName', data.webServerName);
             localStorage.setItem('audioPort', data.audioPort);
             localStorage.setItem('streamEnabled', data.streamEnabled);
-            
-            document.title = 'FM-DX Webserver [' + data.webServerName + ']';
         },
         error: function(error) {
             console.error('Error:', error);
