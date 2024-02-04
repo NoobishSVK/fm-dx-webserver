@@ -1,9 +1,15 @@
 'use strict';
 
 const exec = require('child_process').exec;
+const fs = require('fs');
+const filePath = '/proc/asound/cards';
 const platform = process.platform;
 
 function parseAudioDevice(options, callback) {
+    let videoDevices = [];
+    let audioDevices = [];
+    let isVideo = true;
+
     if (typeof options === 'function') {
         callback = options;
         options = null;
@@ -28,15 +34,29 @@ function parseAudioDevice(options, callback) {
         deviceParams = /^\[AVFoundation.*?\]\s\[(\d*?)\]\s(.*)$/;
         break;
         case 'linux':
-            exec("cat /proc/asound/cards | sed -r 's/^ *([0-9]+) \\[(.*) *\\]: (.*)/hw:\\2/' | grep -E '^hw:'", (err, stdout) => {
-                audioDevices = stdout.trim().split('\n').map(device => ({ name: device }));
-                const result = { audioDevices };
-                if (callbackExists) {
-                    callback(result);
-                } else {
-                    Promise.resolve(result);
-                }
-            });
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if (err) {
+                console.error(`Error reading file: ${err.message}`);
+                return;
+            }
+            
+            // Extract values between square brackets, trim whitespace, and prefix with 'hw:'
+            const regex = /\[([^\]]+)\]/g;
+            const matches = (data.match(regex) || []).map(match => 'hw:' + match.replace(/\s+/g, '').slice(1, -1));
+            
+            if (matches.length > 0) {
+                // Process the extracted values
+                matches.forEach(function(match) {
+                    if (typeof match === 'string') {
+                        audioDevices.push({ name: match });
+                    } else if (typeof match === 'object' && match.name) {
+                        audioDevices.push(match);
+                    }
+                });
+            } else {
+                console.log('No matches found.');
+            }
+        });
         break;
     }
         
@@ -44,10 +64,7 @@ function parseAudioDevice(options, callback) {
     const searchPrefix = (line) => (line.search(prefix) > -1);
     const searchAudioSeparator = (line) => isVideo && (line.search(audioSeparator) > -1);
     const searchAlternativeName = (line) => (platform === 'win32') && (line.search(/Alternative\sname/) > -1);
-    
-    let videoDevices = [];
-    let audioDevices = [];
-    let isVideo = true;
+
     
     const execute = (fulfill, reject) => {
         exec(`${ffmpegPath} -f ${inputDevice} -list_devices true -i ""`, (err, stdout, stderr) => {
@@ -88,6 +105,7 @@ function parseAudioDevice(options, callback) {
                     deviceList.push(device);
                 }
             });
+            audioDevices = audioDevices.filter(device => device.name !== undefined);
             const result = { videoDevices, audioDevices };
             if (callbackExists) {
                 callback(result);
