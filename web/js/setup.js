@@ -1,7 +1,7 @@
 var map;
 var pin;
-var tilesURL='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png';
-var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles by <a href="http://stadiamaps.com/" target="_blank">Stadiamaps</a>';
+var tilesURL=' https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 // add map container
 
