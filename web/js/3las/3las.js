@@ -71,7 +71,12 @@ var _3LAS = /** @class */ (function () {
         if (this.WakeLock)
             this.WakeLock.Begin();
         try {
-            this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + this.Settings.SocketPort.toString() + this.Settings.SocketPath, this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
+            if (window.location.protocol === 'https:') {
+                this.WebSocket = new WebSocketClient(this.Logger, 'wss://' + this.Settings.SocketHost + ':' + '/stream' + this.Settings.SocketPath, this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
+            }
+            else {
+                this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + this.Settings.SocketPort.toString() + this.Settings.SocketPath, this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
+            }
             this.Logger.Log("Init of WebSocketClient succeeded");
             this.Logger.Log("Trying to connect to server.");
         }
@@ -86,16 +91,16 @@ var _3LAS = /** @class */ (function () {
             if (this.WebSocket) {
                 this.WebSocket.Close();
                 this.WebSocket.OnClose();
-                this.WebSocket = null; 
+                this.WebSocket = null;
                 this.Logger.Log("WebSocket connection closed.");
             }
-    
+
             // Stop WakeLock if it exists and is an Android device
             if (isAndroid && this.WakeLock) {
                 this.WakeLock.End();
                 this.Logger.Log("WakeLock stopped.");
             }
-    
+
             // Reset WebRTC if it exists
             if (this.WebRTC) {
                 this.WebRTC.OnSocketDisconnect();
@@ -103,7 +108,7 @@ var _3LAS = /** @class */ (function () {
                 this.WebRTC.Stop();
                 this.Logger.Log("WebRTC reset.");
             }
-    
+
             // Reset Fallback if it exists
             if (this.Fallback) {
                 this.Fallback.OnSocketDisconnect();
@@ -111,7 +116,7 @@ var _3LAS = /** @class */ (function () {
                 this.Fallback.Reset();
                 this.Logger.Log("Fallback reset.");
             }
-    
+
             // Reset connectivity flag
             if (this.ConnectivityFlag) {
                 this.ConnectivityFlag = null;
@@ -119,12 +124,12 @@ var _3LAS = /** @class */ (function () {
                     this.ConnectivityCallback(null);
                 }
             }
-    
+
             this.Logger.Log("3LAS stopped successfully.");
         } catch (e) {
             this.Logger.Log("Error while stopping 3LAS: " + e);
         }
-    };    
+    };
     _3LAS.prototype.OnActivity = function () {
         if (this.ActivityCallback)
             this.ActivityCallback();
