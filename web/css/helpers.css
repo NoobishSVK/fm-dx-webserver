@@ -58,6 +58,14 @@
     background-color: transparent;
 }
 
+.opacity-full {
+    opacity: 1;
+}
+
+.opacity-half {
+    opacity: 0.5;
+}
+
 .flex-container {
     display: flex;
 }

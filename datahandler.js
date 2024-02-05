@@ -7,6 +7,7 @@ const os = require('os');
 const win32 = (os.platform() == "win32");
 const unicode_type = (win32 ? 'int16_t' : 'int32_t');
 const lib = koffi.load(path.join(__dirname, "librdsparser." + (win32 ? "dll" : "so")));
+const { fetchTx } = require('./tx_search.js');
 
 koffi.proto('void callback_pi(void *rds, void *user_data)');
 koffi.proto('void callback_pty(void *rds, void *user_data)');
@@ -206,6 +207,15 @@ var dataToSend = {
   ims: 0,
   eq: 0,
   ant: 0,
+  txInfo: {
+    station: '',
+    pol: '',
+    erp: '',
+    city: '',
+    itu: '',
+    distance: '',
+    azimuth: ''
+  },
   country_name: '',
   country_iso: 'UN',
   users: '',
@@ -214,6 +224,7 @@ var dataToSend = {
 var legacyRdsPiBuffer = null;
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
+
 
 function handleData(ws, receivedData) {
   // Retrieve the last update time for this client
@@ -326,6 +337,20 @@ function handleData(ws, receivedData) {
         rdsparser.parse_string(rds, modifiedData);
         legacyRdsPiBuffer = null;
         break;
+    }
+  }
+
+  // Get the received TX info
+  const currentTx = fetchTx(dataToSend.freq, dataToSend.pi, dataToSend.ps);
+  if(currentTx.station !== undefined) {
+    dataToSend.txInfo = {
+      station: currentTx.station,
+      pol: currentTx.pol,
+      erp: currentTx.erp,
+      city: currentTx.city,
+      itu: currentTx.itu,
+      distance: currentTx.distance,
+      azimuth: currentTx.azimuth
     }
   }
 

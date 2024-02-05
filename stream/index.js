@@ -23,15 +23,15 @@ function enableAudioStream() {
     // Specify the command and its arguments
     const command = 'ffmpeg';
     const flags = `-fflags +nobuffer+flush_packets -flags low_delay -rtbufsize 6192 -probesize 32`;
-    const codec = `-acodec pcm_s16le -ar 32000 -ac ${serverConfig.audio.audioChannels}`;
+    const codec = `-acodec pcm_s16le -ar 48000 -ac ${serverConfig.audio.audioChannels}`;
     const output = `-f s16le -fflags +nobuffer+flush_packets -packetsize 384 -flush_packets 1 -bufsize 960`;
     // Combine all the settings for the ffmpeg command
     if (process.platform === 'win32') {
         // Windows
-        ffmpegCommand = `${flags} -f dshow -i audio="${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 32000 -channels ${serverConfig.audio.audioChannels}`;
+        ffmpegCommand = `${flags} -f dshow -i audio="${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
       } else {
         // Linux
-        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 32000 -channels ${serverConfig.audio.audioChannels}`;
+        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
     } 
 
     consoleCmd.logInfo("Using audio device: " + serverConfig.audio.audioDevice);

@@ -99,6 +99,7 @@ $(document).ready(function() {
     var rtContainer = $('#rt-container')[0];
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
+    var txContainer = $('#data-station-container')[0];
     
     $("#data-eq").click(function () {
         toggleButtonState("eq");
@@ -112,6 +113,7 @@ $(document).ready(function() {
     $(freqDownButton).on("click", tuneDown);
     $(psContainer).on("click", copyPs);
     $(rtContainer).on("click", copyRt);
+    $(txContainer).on("click", copyTx);
     $(piCodeContainer).on("click", findOnMaps);
     $(freqContainer).on("click", function() {
         textInput.focus();
@@ -353,6 +355,22 @@ async function copyPs() {
     }
 }
 
+async function copyTx() {
+    const frequency = $('#data-frequency').text();
+    const pi = $('#data-pi').text();
+    const stationName = $('#data-station-name').text();
+    const stationCity = $('#data-station-city').text();
+    const stationItu = $('#data-station-itu').text();
+    const stationDistance = $('#data-station-distance').text();
+    const stationErp = $('#data-station-erp').text();
+    
+    try {
+        await copyToClipboard(frequency + " - " + pi + " | " + stationName +  " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " km | " + stationErp + " kW");
+    } catch(error) {
+        console.error(error);
+    }
+}
+
 async function copyRt() {
     var rt0 = $('#data-rt0').text();
     var rt1 = $('#data-rt1').text();
@@ -434,15 +452,15 @@ function updateSignalUnits(parsedData) {
 
 function updateDataElements(parsedData) {
     $('#data-frequency').text(parsedData.freq);
-    $('#data-pi').html(parsedData.pi === '?' ? "<span class='text-gray'>?</span>" : parsedData.pi);
-    $('#data-ps').html(parsedData.ps === '?' ? "<span class='text-gray'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-    $('.data-tp').html(parsedData.tp === false ? "<span class='text-gray'>TP</span>" : "TP");
-    $('.data-ta').html(parsedData.ta === 0 ? "<span class='text-gray'>TA</span>" : "TA");
+    $('#data-pi').html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+    $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
+    $('.data-tp').html(parsedData.tp === false ? "<span class='opacity-half'>TP</span>" : "TP");
+    $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
     $('.data-ms').html(parsedData.ms === 0
-        ? "<span class='text-gray'>M</span><span class='text-red'>S</span>"
+        ? "<span class='opacity-half'>M</span><span class='opacity-full'>S</span>"
         : (parsedData.ms === -1
-            ? "<span class='text-gray'>M</span><span class='text-gray'>S</span>"
-            : "<span class='text-red'>M</span><span class='text-gray'>S</span>"
+            ? "<span class='opacity-half'>M</span><span class='opacity-half'>S</span>"
+            : "<span class='opacity-full'>M</span><span class='opacity-half'>S</span>"
           )
     );        
     $('.data-pty').html(europe_programmes[parsedData.pty]);
@@ -451,6 +469,19 @@ function updateDataElements(parsedData) {
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
+
+    if(parsedData.txInfo.station.length > 1) {
+        $('#data-station-name').text(decodeURIComponent(parsedData.txInfo.station.replace(/\u009e/g, '\u017E')));
+        $('#data-station-erp').text(parsedData.txInfo.erp);
+        $('#data-station-city').text(parsedData.txInfo.city);
+        $('#data-station-itu').text(parsedData.txInfo.itu);
+        $('#data-station-pol').text(parsedData.txInfo.pol);
+        $('#data-station-distance').text(parsedData.txInfo.distance);
+        $('#data-station-azimuth').text(parsedData.txInfo.azimuth);
+        $('#data-station-container').css('display', 'block');
+    } else {
+        $('#data-station-container').removeAttr('style');
+    }
 }
 
 let isEventListenerAdded = false;
