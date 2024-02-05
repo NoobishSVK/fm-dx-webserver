@@ -2,10 +2,6 @@ var map;
 var pin;
 var tilesURL='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png';
 var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles by <a href="http://stadiamaps.com/" target="_blank">Stadiamaps</a>';
-var hostParts = window.location.host.split(':');
-var hostname = hostParts[0]; // Extract the hostname
-var port = hostParts[1] || '80'; // Extract the port or use a default (e.g., 8080)
-var serverAddress = 'http://' + hostname + ':' + port;
 
 // add map container
 
@@ -36,7 +32,7 @@ $(document).ready(function() {
     // Perform an AJAX request to the /login endpoint
     $.ajax({
       type: 'POST',
-      url: '/login',
+      url: './login',
       data: $(this).serialize(),
       success: function (data) {
         // Update the content on the page with the message from the response
@@ -65,7 +61,7 @@ $(document).ready(function() {
     // Perform an AJAX request to the /logout endpoint
     $.ajax({
       type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
-      url: '/logout',
+      url: './logout',
       success: function (data) {
         // Update the content on the page with the message from the response
         $('#login-message').text(data.message);
@@ -108,7 +104,7 @@ function MapCreate() {
 
 function fetchData() {
     // Make a GET request to retrieve the data.json file
-    fetch(serverAddress + "/getData")
+    fetch("./getData")
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -231,7 +227,7 @@ function submitData() {
     }
     // Send data to the server using jQuery
     $.ajax({
-      url: serverAddress + '/saveData',
+      url: './saveData',
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(data),

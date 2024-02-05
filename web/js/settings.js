@@ -54,7 +54,7 @@
         // Perform an AJAX request to the /login endpoint
         $.ajax({
             type: 'POST',
-            url: '/login',
+            url: './login',
             data: $(this).serialize(),
             success: function (data) {
                 // Update the content on the page with the message from the response
@@ -83,7 +83,7 @@
         // Perform an AJAX request to the /logout endpoint
         $.ajax({
             type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
-            url: '/logout',
+            url: './logout',
             success: function (data) {
                 // Update the content on the page with the message from the response
                 $('#login-message').text(data.message);

@@ -11,7 +11,7 @@
 
     <meta property="og:title" content="FM-DX WebServer">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="/favicon2.png">
+    <meta property="og:image" content="favicon2.png">
     <meta property="og:description" content="This server us running the FM-DX Webserver software by Noobish.">
 
     <!-- 3LAS Scripts for Audio streaming -->
@@ -230,11 +230,11 @@
             </div>
 
             <% if (isAdminAuthenticated) { %>
-                <p>You are logged in as an adminstrator.  <a href="/setup">Setup</a> | <a class="logout-link" href="#">Logout</a></p>
+                <p>You are logged in as an adminstrator.  <a href="./setup">Setup</a> | <a class="logout-link" href="#">Logout</a></p>
             <% } else if (isTuneAuthenticated) { %>
                 <p>You are logged in and can control the receiver. <a class="logout-link" href="#">Logout</a></p>
             <% } else { %>
-                <form action="/login" method="post" id="login-form">
+                <form action="./login" method="post" id="login-form">
                   <label for="password">Password:</label>
                   <input type="password" id="password" name="password" required>
                   <button type="submit" class="br-0 w-100" style="height: 44px">Login</button>

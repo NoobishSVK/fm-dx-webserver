@@ -1,7 +1,6 @@
-var hostParts = window.location.host.split(':');
-var hostname = hostParts[0]; // Extract the hostname
-var port = hostParts[1] || '8080'; // Extract the port or use a default (e.g., 8080)
-var socketAddress = 'ws://' + hostname + ':' + port + '/text'; // Use 'wss' for secure WebSocket connections (recommended for external access)
+var url = new URL('text', window.location.href);
+url.protocol = url.protocol.replace('http', 'ws');
+var socketAddress = url.href;
 var socket = new WebSocket(socketAddress);
 var parsedData;
 var data = [];
@@ -121,7 +120,7 @@ $(document).ready(function() {
 
 function getInitialSettings() {
     $.ajax({
-        url: '/static_data',
+        url: './static_data',
         dataType: 'json',
         success: function(data) {
             // Use the received data (data.qthLatitude, data.qthLongitude) as needed
