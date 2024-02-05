@@ -334,7 +334,7 @@ app.get('/getDevices', (req, res) => {
  */
 
 wss.on('connection', (ws, request) => {
-  const clientIp = request.connection.remoteAddress;
+  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
 
