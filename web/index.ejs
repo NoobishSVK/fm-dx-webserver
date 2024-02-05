@@ -27,6 +27,17 @@
     <script src="js/3las/3las.js"></script>
     <script src="js/3las/main.js"></script>
     <script type="text/javascript">
+            var RtcConfig = {	
+				iceServers: [
+					{
+						urls: "turns:turnserver.example.org",
+					},
+					{
+						urls: "stun.l.google.com:19302"
+					}
+				]
+				
+			};
             var AudioTagId = "audioTag";
 			window.addEventListener('load', Init, false);
 			document.ontouchmove  = function(e){ 
