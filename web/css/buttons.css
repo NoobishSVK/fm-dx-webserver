@@ -84,6 +84,13 @@ input[type="range"] {
     background: transparent;
 }
 
+input[type="range"]::after {
+
+    width: 100px;
+    height: 100px;
+    background: blue;
+}
+
 /* Track: Mozilla Firefox */
 input[type="range"]::-moz-range-track {
     height: 48px;

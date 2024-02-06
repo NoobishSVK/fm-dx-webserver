@@ -452,6 +452,7 @@ function updateSignalUnits(parsedData) {
 
 function updateDataElements(parsedData) {
     $('#data-frequency').text(parsedData.freq);
+    $("#commandinput").attr("aria-label", "Current frequency: " + parsedData.freq);
     $('#data-pi').html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
     $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
     $('.data-tp').html(parsedData.tp === false ? "<span class='opacity-half'>TP</span>" : "TP");
@@ -528,7 +529,7 @@ function updatePanels(parsedData) {
     // Update other elements every time
     updateDataElements(parsedData);
     updateSignalUnits(parsedData);
-    $('#users-online').text(parsedData.users);
+    $('.users-online').text(parsedData.users);
 }
 
 function createListItem(element) {

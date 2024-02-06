@@ -14,11 +14,48 @@ const MESSAGE_PREFIX = {
     WARN: "\x1b[33m[WARN]\x1b[0m",
 };
 
-const logDebug = (...messages) => verboseMode ? console.log(getCurrentTime(), MESSAGE_PREFIX.DEBUG, ...messages) : '';
-const logError = (...messages) => console.log(getCurrentTime(), MESSAGE_PREFIX.ERROR, ...messages);
-const logInfo = (...messages) => console.log(getCurrentTime(), MESSAGE_PREFIX.INFO, ...messages);
-const logWarn = (...messages) => console.log(getCurrentTime(), MESSAGE_PREFIX.WARN, ...messages);
+// Initialize an array to store logs
+const logs = [];
+const maxLogLines = 100;
+
+const logDebug = (...messages) => {
+    if (verboseMode) {
+        const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.DEBUG} ${messages.join(' ')}`;
+        logs.push(logMessage);
+        if (logs.length > maxLogLines) {
+            logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+        }
+        console.log(logMessage);
+    }
+};
+
+const logError = (...messages) => {
+    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.ERROR} ${messages.join(' ')}`;
+    logs.push(logMessage);
+    if (logs.length > maxLogLines) {
+        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+    }
+    console.log(logMessage);
+};
+
+const logInfo = (...messages) => {
+    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.INFO} ${messages.join(' ')}`;
+    logs.push(logMessage);
+    if (logs.length > maxLogLines) {
+        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+    }
+    console.log(logMessage);
+};
+
+const logWarn = (...messages) => {
+    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.WARN} ${messages.join(' ')}`;
+    logs.push(logMessage);
+    if (logs.length > maxLogLines) {
+        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+    }
+    console.log(logMessage);
+};
 
 module.exports = {
-    logError, logDebug, logInfo, logWarn
+    logError, logDebug, logInfo, logWarn, logs
 };

@@ -64,6 +64,10 @@ label {
     display: none;
 }
 
+#data-station-name {
+    font-size: 20px;
+}
+
 .form-group {
     float: left;
     margin-bottom: 10px;
@@ -71,7 +75,7 @@ label {
     margin-right: 5px;
 }
 
-#settings, #back-btn {
+#settings, #back-btn, #users-online-container {
     background: transparent;
     border: 0;
     color: white;
@@ -88,8 +92,12 @@ label {
     cursor: pointer;
 }
 
-#settings:hover, #back-btn:hover {
+#settings:hover, #back-btn:hover, #users-online-container:hover {
     background: var(--color-3);
+}
+
+#users-online-container {
+    top: 80px;
 }
 
 #back-btn {
@@ -113,6 +121,10 @@ label {
 
 #flags-container-phone {
     display: none;
+}
+
+#login-form {
+    padding: 5px;
 }
 
 .checkbox input[type="checkbox"] {
