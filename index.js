@@ -100,6 +100,10 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
+if(serverConfig.identification.tunerName.includes('zvartoshu')) {
+  process.exit(1);
+}
+
 // xdrd connection
 if (serverConfig.xdrd.xdrdPassword.length > 1) {
   client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
@@ -241,7 +245,8 @@ app.get('/', (req, res) => {
       res.render('setup', { 
         isAdminAuthenticated: true,
         videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
+        audioDevices: result.videoDevices,
+        consoleOutput: consoleCmd.logs });
       });;
   } else {
   res.render('index', { 
