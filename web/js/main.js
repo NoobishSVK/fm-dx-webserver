@@ -312,10 +312,10 @@ function checkKey(e) {
             socket.send("T" + ((currentFreq - 0.01).toFixed(2) * 1000));
         }
         else if (e.keyCode == '37') {
-            socket.send("T" + ((currentFreq - 0.10).toFixed(1) * 1000));
+            tuneDown();
         }
         else if (e.keyCode == '39') {
-            socket.send("T" + ((currentFreq + 0.10).toFixed(1) * 1000));
+            tuneUp();
         }
     }
 }
@@ -323,14 +323,40 @@ function checkKey(e) {
 function tuneUp() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send("T" + ((currentFreq + 0.10).toFixed(1) * 1000));
+        let addVal = 0;
+        if (currentFreq < 0.52) {
+            addVal = 9 - ((currentFreq*1000) % 9);
+        } else if (currentFreq < 1.71) {
+            // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
+            addVal = 9 - ((currentFreq*1000) % 9);
+        } else if (currentFreq < 29.6) {
+            addVal = 5 - ((currentFreq*1000) % 5);
+        } else if (currentFreq >= 65.9 && currentFreq < 74) {
+            addVal = ((currentFreq*1000) % 30 == 20) ? 30 : (20 - ((currentFreq*1000) % 30));
+        } else {
+            addVal = 100 - ((currentFreq*1000) % 100);
+        }
+        socket.send("T" + ((currentFreq*1000) + addVal));
     }
 }
-
+  
 function tuneDown() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
-        socket.send("T" + ((currentFreq - 0.10).toFixed(1) * 1000));
+        let subVal = 0;
+        if (currentFreq < 0.52) {
+            subVal = ((currentFreq*1000) % 9 == 0) ? 9 : ((currentFreq*1000) % 9);
+        } else if (currentFreq < 1.71) {
+            // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
+            subVal = ((currentFreq*1000) % 9 == 0) ? 9 : ((currentFreq*1000) % 9);
+        } else if (currentFreq < 29.6) {
+            subVal = ((currentFreq*1000) % 5 == 0) ? 5 : ((currentFreq*1000) % 5);
+        } else if (currentFreq >= 65.9 && currentFreq < 74) {
+            subVal = ((currentFreq*1000) % 30 == 20) ? 30 : (10 + ((currentFreq*1000) % 30));
+        } else {
+            subVal = ((currentFreq*1000) % 100 == 0) ? 100 : ((currentFreq*1000) % 100);
+        }
+        socket.send("T" + ((currentFreq*1000) - subVal));
     }
 }
 
