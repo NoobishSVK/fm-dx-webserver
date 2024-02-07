@@ -43,21 +43,21 @@ function enableAudioStream() {
 
         // Handle the output of the child process (optional)
         childProcess.stdout.on('data', (data) => {
-            consoleCmd.logDebug(`stdout: ${data}`);
+            consoleCmd.logFfmpeg(`stdout: ${data}`);
         });
 
         childProcess.stderr.on('data', (data) => {
-            consoleCmd.logDebug(`stderr: ${data}`);
+            consoleCmd.logFfmpeg(`stderr: ${data}`);
         });
     
         // Handle the child process exit event
         childProcess.on('close', (code) => {
-            consoleCmd.logDebug(`Child process exited with code ${code}`);
+            consoleCmd.logFfmpeg(`Child process exited with code ${code}`);
         });
     
         // You can also listen for the 'error' event in case the process fails to start
         childProcess.on('error', (err) => {
-            consoleCmd.logError(`Error starting child process: ${err}`);
+            consoleCmd.logFfmpeg(`Error starting child process: ${err}`);
         });
     }
 }

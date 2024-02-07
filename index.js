@@ -100,106 +100,117 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
-if(serverConfig.identification.tunerName.includes('zvartoshu')) {
-  process.exit(1);
-}
+connectToXdrd();
 
 // xdrd connection
-if (serverConfig.xdrd.xdrdPassword.length > 1) {
-  client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
-    logInfo('Connection to xdrd established successfully.');
-    
-    const authFlags = {
-      authMsg: false,
-      firstClient: false,
-      receivedPassword: false
-    };
-    
-    const authDataHandler = (data) => {
-      const receivedData = data.toString();
-      const lines = receivedData.split('\n');
+function connectToXdrd() {
+  if (serverConfig.xdrd.xdrdPassword.length > 1) {
+    client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
+      logInfo('Connection to xdrd established successfully.');
       
-      for (const line of lines) {
+      const authFlags = {
+        authMsg: false,
+        firstClient: false,
+        receivedPassword: false
+      };
+      
+      const authDataHandler = (data) => {
+        const receivedData = data.toString();
+        const lines = receivedData.split('\n');
         
-        if (!authFlags.receivedPassword) {
-          authFlags.receivedSalt = line.trim();
-          authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
-          authFlags.receivedPassword = true;
-        } else {
-          if (line.startsWith('a')) {
-            authFlags.authMsg = true;
-            logWarn('Authentication with xdrd failed. Is your password set correctly?');
-          } else if (line.startsWith('o1,')) {
-            authFlags.firstClient = true;
-          } else if (line.startsWith('T') && line.length <= 7) {
-            const freq = line.slice(1) / 1000;
-            dataHandler.dataToSend.freq = freq.toFixed(3);
-          } else if (line.startsWith('OK')) {
-            authFlags.authMsg = true;
-            logInfo('Authentication with xdrd successful.');
-          }
+        for (const line of lines) {
           
-          if (authFlags.authMsg && authFlags.firstClient) {
-            client.write('T87500\n');
-            client.write('A0\n');
-            client.write('G11\n');
-            client.off('data', authDataHandler);
-            return;
+          if (!authFlags.receivedPassword) {
+            authFlags.receivedSalt = line.trim();
+            authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
+            authFlags.receivedPassword = true;
+          } else {
+            if (line.startsWith('a')) {
+              authFlags.authMsg = true;
+              logWarn('Authentication with xdrd failed. Is your password set correctly?');
+            } else if (line.startsWith('o1,')) {
+              authFlags.firstClient = true;
+            } else if (line.startsWith('T') && line.length <= 7) {
+              const freq = line.slice(1) / 1000;
+              dataHandler.dataToSend.freq = freq.toFixed(3);
+            } else if (line.startsWith('OK')) {
+              authFlags.authMsg = true;
+              logInfo('Authentication with xdrd successful.');
+            }
+            
+            if (authFlags.authMsg && authFlags.firstClient) {
+              client.write('T87500\n');
+              client.write('A0\n');
+              client.write('G11\n');
+              client.off('data', authDataHandler);
+              return;
+            }
           }
         }
-      }
-    };
-    
-    client.on('data', (data) => {
-      var receivedData = incompleteDataBuffer + data.toString();
-      const isIncomplete = (receivedData.slice(-1) != '\n');
+      };
       
-      if (isIncomplete) {
-        const position = receivedData.lastIndexOf('\n');
-        if (position < 0) {
-          incompleteDataBuffer = receivedData;
-          receivedData = '';
+      client.on('data', (data) => {
+        var receivedData = incompleteDataBuffer + data.toString();
+        const isIncomplete = (receivedData.slice(-1) != '\n');
+        
+        if (isIncomplete) {
+          const position = receivedData.lastIndexOf('\n');
+          if (position < 0) {
+            incompleteDataBuffer = receivedData;
+            receivedData = '';
+          } else {
+            incompleteDataBuffer = receivedData.slice(position + 1);
+            receivedData = receivedData.slice(0, position + 1);
+          }
         } else {
-          incompleteDataBuffer = receivedData.slice(position + 1);
-          receivedData = receivedData.slice(0, position + 1);
+          incompleteDataBuffer = '';
         }
-      } else {
-        incompleteDataBuffer = '';
-      }
+        
+        if (receivedData.length) {
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              dataHandler.handleData(client, receivedData);
+            }
+          });
+        }
+      });
       
-      if (receivedData.length) {
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            dataHandler.handleData(client, receivedData);
-          }
-        });
-      }
+      client.on('data', authDataHandler);
     });
-    
-    client.on('data', authDataHandler);
-  });
+  }
 }
 
 client.on('close', () => {
-  logWarn('Disconnected from xdrd.');
+  logWarn('Disconnected from xdrd. Attempting to reconnect.');
+  setTimeout(function () {
+    connectToXdrd();
+  }, 2000)
 });
 
 client.on('error', (err) => {
+  setTimeout(function () {
+    connectToXdrd();
+  }, 2000)
   switch (true) {
     case err.message.includes("ECONNRESET"):
-      logError("Connection to xdrd lost. Exiting...");
-      process.exit(1);
+      logError("Connection to xdrd lost. Reconnecting...");
+      break;
 
     case err.message.includes("ETIMEDOUT"):
-      logError("Connection to xdrd @ " + serverConfig.xdrd.xdrdIp + ":" + serverConfig.xrd.xdrdPort + " timed out.");
-      process.exit(1);
+      logError("Connection to xdrd @ " + serverConfig.xdrd.xdrdIp + ":" + serverConfig.xdrd.xdrdPort + " timed out.");
+      break;
 
     case err.message.includes("ECONNREFUSED"):
       logError("Connection to xdrd @ " + serverConfig.xdrd.xdrdIp + ":" + serverConfig.xdrd.xdrdPort + " failed. Is xdrd running?");
       break;
 
+    case err.message.includes("EINVAL"):
+      logError("Attempts to reconnect are failing repeatedly. Consider checking your settings or restarting xdrd.");
+      break;
+
     default:
       logError("Unhandled error: ", err.message);
+      break;
   }
 });
 

@@ -341,7 +341,7 @@ function handleData(ws, receivedData) {
   }
 
   // Get the received TX info
-  const currentTx = fetchTx(dataToSend.freq, dataToSend.pi, dataToSend.ps);
+  const currentTx = fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps);
   if(currentTx && currentTx.station !== undefined) {
     dataToSend.txInfo = {
       station: currentTx.station,
