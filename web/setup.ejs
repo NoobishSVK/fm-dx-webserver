@@ -147,9 +147,22 @@
                 <div id="login-message"></div>
             </div>
         </div>
+        <div class="panel-100 p-bottom-20">
+            <h2>CONSOLE OUTPUT</h2>
+            <% if (consoleOutput && consoleOutput.length > 0) { %>
+                <div class="panel-100 br-5 p-10 text-small text-left top-10" id="console-output" style="background-color: var(--color-main);height: 300px;overflow-y:auto;">
+                    <% consoleOutput.forEach(function(log) { %>
+                        <pre class="m-0" style="white-space:pre-wrap;"><%= log %></pre>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <p>No console output available.</p>
+            <% } %>
+        </div>
         <div class="panel-100 no-bg">
             <p>Feel free to contact us on <a href="https://discord.gg/ZAVNdS74mC" target="_blank"><strong><i class="fa-brands fa-discord"></i> Discord</strong></a> for community support.</p>
         </div>
+
         <button onclick="document.location.href='./'" id="back-btn" aria-label="Go back to tuning"><i class="fa-solid fa-arrow-left"></i></button>
         <% } else { %>
         <div class="panel-100 no-bg">
@@ -168,6 +181,34 @@
         </div>
         <% } %>
     </div>
+    <script>
+        $(document).ready(function() {
+            function stripAnsi(str) {
+                return str.replace(/\u001b\[\d+m/g, '');
+            }
+        
+            $("pre").html(function(_, html) {
+                html = stripAnsi(html);
+                return html.replace(/\[(\d{2}:\d{2})\]|\[(INFO|DEBUG|WARN|ERROR)\]/g, function(match, time, level) {
+                    if (time) {
+                        return "<span style='color: gray;'>" + match + "</span>";
+                    } else if (level === "INFO") {
+                        return "<span style='color: lime;'>" + match + "</span>";
+                    } else if (level === "DEBUG") {
+                        return "<span style='color: cyan;'>" + match + "</span>";
+                    } else if (level === "WARN") {
+                        return "<span style='color: yellow;'>" + match + "</span>";
+                    } else if (level === "ERROR") {
+                        return "<span style='color: red;'>" + match + "</span>";
+                    } else {
+                        return "<span style='color: white;'>" + match + "</span>";
+                    }
+                });
+            });
+
+            $("#console-output").scrollTop($("#console-output")[0].scrollHeight);
+        });
+        </script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>

@@ -59,7 +59,7 @@ function processData(data, piCode, rdsPs) {
         const city = data.locations[cityId];
         if (city.stations) {
             for (const station of city.stations) {
-                if (station.pi === piCode && station.ps && station.ps.includes(rdsPs.replace(/ /g, '_'))) {
+                if (station.pi === piCode && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                     if (distance.distanceKm < minDistance) {
                         minDistance = distance.distanceKm;

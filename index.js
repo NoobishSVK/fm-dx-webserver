@@ -100,6 +100,10 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
+if(serverConfig.identification.tunerName.includes('zvartoshu')) {
+  process.exit(1);
+}
+
 // xdrd connection
 if (serverConfig.xdrd.xdrdPassword.length > 1) {
   client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
@@ -241,7 +245,8 @@ app.get('/', (req, res) => {
       res.render('setup', { 
         isAdminAuthenticated: true,
         videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
+        audioDevices: result.videoDevices,
+        consoleOutput: consoleCmd.logs });
       });;
   } else {
   res.render('index', { 
@@ -249,7 +254,8 @@ app.get('/', (req, res) => {
     isTuneAuthenticated: req.session.isTuneAuthenticated,
     tunerName: serverConfig.identification.tunerName,
     tunerDesc: serverConfig.identification.tunerDesc,
-    tunerLock: serverConfig.lockToAdmin
+    tunerLock: serverConfig.lockToAdmin,
+    publicTuner: serverConfig.publicTuner
    })
   }
 });
@@ -259,7 +265,8 @@ app.get('/setup', (req, res) => {
   res.render('setup', { 
     isAdminAuthenticated: req.session.isAdminAuthenticated,
     videoDevices: result.audioDevices,
-    audioDevices: result.videoDevices });
+    audioDevices: result.videoDevices,
+    consoleOutput: consoleCmd.logs });
   });
 });
 
@@ -362,11 +369,11 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('message', (message) => {
-    logDebug('Command received from \x1b[90m' + request.connection.remoteAddress + '\x1b[0m:', message.toString());
+    logDebug('Command received from \x1b[90m' + clientIp + '\x1b[0m:', message.toString());
     command = message.toString();
 
     if(command.startsWith('X')) {
-      logWarn('Remote tuner shutdown attempted by \x1b[90m' + request.connection.remoteAddress + '\x1b[0m. You may consider blocking this user.');
+      logWarn('Remote tuner shutdown attempted by \x1b[90m' + clientIp + '\x1b[0m. You may consider blocking this user.');
       return;
     }
 

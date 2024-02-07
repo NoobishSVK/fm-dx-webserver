@@ -49,7 +49,8 @@
     <audio id="audioTag"></audio>
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
-            <h1 id="tuner-name"><%= tunerName %> <% if (tunerLock) { %><i class="fa-solid fa-lock" title="Tuner is currently locked to admin."></i><% } %></h1>
+            <h1 id="tuner-name"><%= tunerName %> <% if (!publicTuner) { %><i class="fa-solid fa-key pointer" title="Only people with tune password can tune."></i>
+                <% } else if (tunerLock) { %><i class="fa-solid fa-lock pointer" title="Tuner is currently locked to admin."></i><% } %></h1>
             <p id="tuner-desc"><%= tunerDesc %></p>
             <div style="clear: both"></div>
         </div>
@@ -192,7 +193,8 @@
     </div>
     
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
-    
+    <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
+
     <div id="myModal" class="modal">
         <div class="modal-content">
             <span class="modal-title">Settings</span>
@@ -227,9 +229,9 @@
                 </div>
             </div>
 
-            <div class="form-group bottom-20" style="float: none;">
+            <div class="form-group bottom-20 hide-desktop" style="float: none;">
                 <label for="themes"><i class="fa-solid fa-user"></i> Users online:</label>
-                <span id="users-online" name="users-online">0</span>
+                <span class="users-online" name="users-online">0</span>
             </div>
 
             <% if (isAdminAuthenticated) { %>
@@ -251,7 +253,7 @@
             <div class="flex-container flex-left text-left bottom-20 hover-brighten p-10 br-5" onclick="window.open('https://buymeacoffee.com/noobish')">
                 <i class="fa-solid fa-hand-holding-medical"></i>&nbsp;<span><strong>Support</strong> the developer!</span>
             </div>
-            <p class="text-small">FM-DX WebServer <span style="color: var(--color-3);">v1.0.1 [5/2/2024]</span> by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
+            <p class="text-small">FM-DX WebServer <span style="color: var(--color-3);">v1.0.2 [6/2/2024]</span> by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
             <p class="text-small bottom-50">This app works thanks to these amazing projects: <br>
                 <span class="text-smaller">- librdsparser & maps.fmdx.pl by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a></span><br>
                 <span class="text-smaller">- 3LAS by <a href="https://github.com/JoJoBond/3LAS" target="_blank">JoJoBond</a></span><br>

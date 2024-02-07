@@ -157,6 +157,10 @@
     background-color: var(--color-2) !important;
 }
 
+.pointer {
+    cursor: pointer;
+}
+
 @media only screen and (max-width: 960px) {
     .text-medium-big {
         font-size: 32px;
