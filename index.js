@@ -48,7 +48,9 @@ let serverConfig = {
     tunerName: "",
     tunerDesc: "",
     lat: "0",
-    lon: "0"
+    lon: "0",
+    broadcastTuner: false,
+    proxyIp: "",
   },
   password: {
     tunePass: "",
@@ -404,6 +406,7 @@ wss.on('connection', (ws, request) => {
 
   ws.on('close', (code, reason) => {
     currentUsers--;
+    dataHandler.showOnlineUsers(currentUsers);
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 

@@ -106,7 +106,18 @@
                     <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here.">
                     <br>
                     <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup."></textarea>
+                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown."></textarea>
+                </div>
+
+                <h3>Map broadcast:</h3>
+                <p>If your tuner is set to public and other information is filled, you can add your tuner to a public map.</p>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="broadcast-tuner">
+                    <label for="broadcast-tuner">Broadcast to map</label>
+                </div><br>
+                <div class="form-group">
+                    <label for="broadcast-address">Broadcast address (if using a proxy):</label>
+                    <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
                 </div>
                 
                 <h3>Tuner location:</h3>
@@ -181,34 +192,6 @@
         </div>
         <% } %>
     </div>
-    <script>
-        $(document).ready(function() {
-            function stripAnsi(str) {
-                return str.replace(/\u001b\[\d+m/g, '');
-            }
-        
-            $("pre").html(function(_, html) {
-                html = stripAnsi(html);
-                return html.replace(/\[(\d{2}:\d{2})\]|\[(INFO|DEBUG|WARN|ERROR)\]/g, function(match, time, level) {
-                    if (time) {
-                        return "<span style='color: gray;'>" + match + "</span>";
-                    } else if (level === "INFO") {
-                        return "<span style='color: lime;'>" + match + "</span>";
-                    } else if (level === "DEBUG") {
-                        return "<span style='color: cyan;'>" + match + "</span>";
-                    } else if (level === "WARN") {
-                        return "<span style='color: yellow;'>" + match + "</span>";
-                    } else if (level === "ERROR") {
-                        return "<span style='color: red;'>" + match + "</span>";
-                    } else {
-                        return "<span style='color: white;'>" + match + "</span>";
-                    }
-                });
-            });
-
-            $("#console-output").scrollTop($("#console-output")[0].scrollHeight);
-        });
-        </script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>

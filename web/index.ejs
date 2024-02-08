@@ -195,13 +195,15 @@
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
     <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
 
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <span class="modal-title">Settings</span>
-            <span class="close" id="closeModal"><i class="fa-solid fa-xmark"></i></span>
+<div id="myModal" class="modal">
+    <div class="modal-panel">
+        <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big" id="closeModal"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="modal-panel-content">
+            <h1 class="top-25">Settings</h1>
             
-            <div class="form-group">
-                <label for="themes" style="margin-top: 50px;"><i class="fa-solid fa-palette"></i> Theme:</label>
+            <div class="form-group top-25">
+                <label for="themes"><i class="fa-solid fa-palette"></i> Theme:</label>
                 <div class="dropdown" id="theme-selector">
                     <input type="text" placeholder="Theme" readonly />
                     <ul class="options">
@@ -216,9 +218,9 @@
                     </ul>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="signal" style="margin-top: 50px;"><i class="fa-solid fa-signal"></i> Signal units:</label>
+            
+            <div class="form-group top-25">
+                <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <div class="dropdown" id="signal-selector">
                     <input type="text" placeholder="Signal Units" readonly />
                     <ul class="options">
@@ -228,39 +230,60 @@
                     </ul>
                 </div>
             </div>
-
+            
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
                 <label for="themes"><i class="fa-solid fa-user"></i> Users online:</label>
                 <span class="users-online" name="users-online">0</span>
             </div>
-
+            
             <% if (isAdminAuthenticated) { %>
-                <p>You are logged in as an adminstrator.  <a href="./setup">Setup</a> | <a class="logout-link" href="#">Logout</a></p>
-            <% } else if (isTuneAuthenticated) { %>
-                <p>You are logged in and can control the receiver. <a class="logout-link" href="#">Logout</a></p>
-            <% } else { %>
-                <form action="./login" method="post" id="login-form">
-                  <label for="password">Password:</label>
-                  <input type="password" id="password" name="password" required>
-                  <button type="submit" class="br-0 w-100" style="height: 44px">Login</button>
-                </form>
-              <% } %>
-              <div id="login-message"></div>
-
-            <div class="flex-container flex-left text-left hover-brighten p-10 br-5" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
-                <i class="fa-brands fa-discord"></i>&nbsp;<span>Join our <strong>OpenRadio Discord</strong> community!</span>
-            </div>
-            <div class="flex-container flex-left text-left bottom-20 hover-brighten p-10 br-5" onclick="window.open('https://buymeacoffee.com/noobish')">
-                <i class="fa-solid fa-hand-holding-medical"></i>&nbsp;<span><strong>Support</strong> the developer!</span>
-            </div>
-            <p class="text-small">FM-DX WebServer <span style="color: var(--color-3);">v1.0.3 [7/2/2024]</span> by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
-            <p class="text-small bottom-50">This app works thanks to these amazing projects: <br>
-                <span class="text-smaller">- librdsparser & maps.fmdx.pl by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a></span><br>
-                <span class="text-smaller">- 3LAS by <a href="https://github.com/JoJoBond/3LAS" target="_blank">JoJoBond</a></span><br>
-                <span class="text-smaller">- flat-flags by <a href="https://github.com/luishdez/flat-flags/tree/master" target="_blank">luishdez</a></span><br></p>
-            <button class="button-close" id="closeModalButton">Close</button>
+                <p>You are logged in as an adminstrator.<br>
+                    <a href="./setup">Setup</a> • <a class="logout-link" href="#">Logout</a>
+                </p>
+                <% } else if (isTuneAuthenticated) { %>
+                    <p>You are logged in and can control the receiver. <a class="logout-link" href="#">Logout</a></p>
+                    <% } else { %>
+                        <form action="./login" method="post" id="login-form" class="top-25">
+                            <label for="password">Password:</label>
+                            <input type="password" id="password" name="password" style="width: 200px;" required><br>
+                            <button type="submit" class="br-0 w-100 top-10" style="height: 44px">Login</button>
+                        </form>
+                        <% } %>
+                        <div id="login-message"></div>
+                        
+                        <div class="version-info">
+                            <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
+                            <span style="color: var(--color-3);">v1.0.4 [8/2/2024]</span> 
+                            <p class="text-small bottom-50">
+                                <span class="text-smaller">librds & maps.fmdx.pl by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a></span><br>
+                                <span class="text-smaller">3LAS by <a href="https://github.com/JoJoBond/3LAS" target="_blank">JoJoBond</a></span><br>
+                                <span class="text-smaller">flat-flags by <a href="https://github.com/luishdez/flat-flags/tree/master" target="_blank">luishdez</a></span><br>
+                            </p>
+                        </div>
         </div>
     </div>
-    <script src="js/webserver.js"></script>
+    <div class="modal-panel-footer flex-container flex-phone">
+        <div class="modal-panel-sidebar" style="font-size: 22px;">
+            <div class="flex-center" style="height: 50px">
+                <i class="fa-solid fa-hand-holding-medical"></i>
+            </div>
+            <div class="flex-center" style="height: 50px">
+                <i class="fa-brands fa-discord"></i>
+            </div>
+        </div>
+        <div class="modal-panel-content">
+            <div class="hover-brighten br-0" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
+                <strong>Support</strong> the developer!
+            </div>
+            <div class="hover-brighten br-0" style="height: 50px;padding:12px;"onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
+                Join our <strong>OpenRadio Discord</strong> community!
+            </div>
+        </div>
+    </div>
+    </div>
+                    
+</div>
+
+<script src="js/webserver.js"></script>
 </body>
 </html>

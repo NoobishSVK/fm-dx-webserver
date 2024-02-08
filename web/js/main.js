@@ -39,6 +39,23 @@ $(document).ready(function() {
             signalText.text('dBm');
         }
     });    
+
+    var input = $("#tuner-desc").text();
+    var parsed = input;
+    
+    var grayTextRegex = /--(.*?)--/g;
+    parsed = parsed.replace(grayTextRegex, '<span class="text-gray">$1</span>');
+    
+    var boldRegex = /\*\*(.*?)\*\*/g;
+    parsed = parsed.replace(boldRegex, '<strong>$1</strong>');
+    
+    var italicRegex = /\*(.*?)\*/g;
+    parsed = parsed.replace(italicRegex, '<em>$1</em>');
+
+    var breakLineRegex = /\\n/g;
+    parsed = parsed.replace(breakLineRegex, '<br>');
+    
+    $("#tuner-desc").html(parsed);
     
     const textInput = $('#commandinput');
     
@@ -298,24 +315,34 @@ function getCurrentFreq() {
 
 function checkKey(e) {
     e = e || window.event;
-    
+
+    // Check if any input element is focused using jQuery
+    if ($('input:focus').length > 0) {
+        return; // Do nothing if an input is focused
+    }
+
     getCurrentFreq();
-    
+
     if (socket.readyState === WebSocket.OPEN) {
-        if (e.keyCode == '82') { // RDS Reset (R key)
-            socket.send("T" + (currentFreq.toFixed(1) * 1000));
-        }
-        if (e.keyCode == '38') {
-            socket.send("T" + ((currentFreq + 0.01).toFixed(2) * 1000));
-        }
-        else if (e.keyCode == '40') {
-            socket.send("T" + ((currentFreq - 0.01).toFixed(2) * 1000));
-        }
-        else if (e.keyCode == '37') {
-            tuneDown();
-        }
-        else if (e.keyCode == '39') {
-            tuneUp();
+        switch (e.keyCode) {
+            case 82: // RDS Reset (R key)
+                socket.send("T" + (currentFreq.toFixed(1) * 1000));
+                break;
+            case 38:
+                socket.send("T" + ((currentFreq + 0.01).toFixed(2) * 1000));
+                break;
+            case 40:
+                socket.send("T" + ((currentFreq - 0.01).toFixed(2) * 1000));
+                break;
+            case 37:
+                tuneDown();
+                break;
+            case 39:
+                tuneUp();
+                break;
+            default:
+                // Handle default case if needed
+                break;
         }
     }
 }

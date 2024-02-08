@@ -6,14 +6,14 @@ var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStree
 // add map container
 
 $(document).ready(function() {
-    MapCreate();
-    fetchData();
-
-    
-    map.on('click', function(ev) {
+  MapCreate();
+  fetchData();
+  
+  
+  map.on('click', function(ev) {
     $('#lat').val((ev.latlng.lat).toFixed(6));
     $('#lng').val((ev.latlng.lng).toFixed(6));
-  
+    
     if (typeof pin == "object") {
       pin.setLatLng(ev.latlng);
     } else {
@@ -81,7 +81,31 @@ $(document).ready(function() {
       }
     });
   });
-
+  
+  function stripAnsi(str) {
+    return str.replace(/\u001b\[\d+m/g, '');
+  }
+  
+  $("pre").html(function(_, html) {
+    html = stripAnsi(html);
+    return html.replace(/\[(\d{2}:\d{2})\]|\[(INFO|DEBUG|WARN|ERROR)\]/g, function(match, time, level) {
+      if (time) {
+        return "<span style='color: gray;'>" + match + "</span>";
+      } else if (level === "INFO") {
+        return "<span style='color: lime;'>" + match + "</span>";
+      } else if (level === "DEBUG") {
+        return "<span style='color: cyan;'>" + match + "</span>";
+      } else if (level === "WARN") {
+        return "<span style='color: yellow;'>" + match + "</span>";
+      } else if (level === "ERROR") {
+        return "<span style='color: red;'>" + match + "</span>";
+      } else {
+        return "<span style='color: white;'>" + match + "</span>";
+      }
+    });
+  });
+  
+  $("#console-output").scrollTop($("#console-output")[0].scrollHeight);
 });
 
 function MapCreate() {
@@ -112,9 +136,6 @@ function fetchData() {
         return response.json();
       })
       .then(data => {
-        // Save the received JSON data to a local variable (you may want to handle this differently on the client)
-        console.log('Received data:', data);
-        
         $('#webserver-ip').val(data.webserver.webserverIp);
         $('#webserver-port').val(data.webserver.webserverPort);
         $('#audio-port').val(data.webserver.audioPort);
@@ -131,6 +152,8 @@ function fetchData() {
         $('#webserver-desc').val(data.identification.tunerDesc);
         $('#lat').val(data.identification.lat);
         $('#lng').val(data.identification.lon);
+        $("#broadcast-tuner").prop("checked", data.identification.broadcastTuner);
+        $("#broadcast-address").val(data.identification.proxyIp);
 
         $('#tune-pass').val(data.password.tunePass);
         $('#admin-pass').val(data.password.adminPass);
@@ -183,6 +206,8 @@ function submitData() {
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';
     const lat = $('#lat').val();
     const lon = $('#lng').val();
+    const broadcastTuner = $("#broadcast-tuner").is(":checked");
+    const proxyIp = $("#broadcast-address").val();
 
     const tunePass = $('#tune-pass').val();
     const adminPass = $('#admin-pass').val();
@@ -211,6 +236,8 @@ function submitData() {
         tunerDesc,
         lat,
         lon,
+        broadcastTuner,
+        proxyIp
       },
       password: {
         tunePass,
@@ -239,3 +266,6 @@ function submitData() {
       }
     });
   }
+
+
+  
