@@ -315,26 +315,36 @@ function getCurrentFreq() {
 
 function checkKey(e) {
     e = e || window.event;
-    
+
+    // Check if any input element is focused using jQuery
+    if ($('input:focus').length > 0) {
+        return; // Do nothing if an input is focused
+    }
+
     getCurrentFreq();
-    
+
     if (socket.readyState === WebSocket.OPEN) {
-        if (e.keyCode == '82') { // RDS Reset (R key)
-            socket.send("T" + (currentFreq.toFixed(1) * 1000));
-        }
-        if (e.keyCode == '38') {
-            let smallStep = (currentFreq > 30) ? 10 : 1;
-            socket.send("T" + (Math.round(currentFreq*1000) + smallStep));
-        }
-        else if (e.keyCode == '40') {
-            let smallStep = (currentFreq > 30) ? 10 : 1;
-            socket.send("T" + (Math.round(currentFreq*1000) - smallStep));
-        }
-        else if (e.keyCode == '37') {
-            tuneDown();
-        }
-        else if (e.keyCode == '39') {
-            tuneUp();
+        switch (e.keyCode) {
+            case 82: // RDS Reset (R key)
+                socket.send("T" + (currentFreq.toFixed(1) * 1000));
+                break;
+            case 38:
+                let smallStep = (currentFreq > 30) ? 10 : 1;
+				socket.send("T" + (Math.round(currentFreq*1000) + smallStep));
+                break;
+            case 40:
+                let smallStep = (currentFreq > 30) ? 10 : 1;
+				socket.send("T" + (Math.round(currentFreq*1000) - smallStep));
+                break;
+            case 37:
+                tuneDown();
+                break;
+            case 39:
+                tuneUp();
+                break;
+            default:
+                // Handle default case if needed
+                break;
         }
     }
 }
