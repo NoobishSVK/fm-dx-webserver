@@ -329,12 +329,10 @@ function checkKey(e) {
                 socket.send("T" + (currentFreq.toFixed(1) * 1000));
                 break;
             case 38:
-                let smallStep = (currentFreq > 30) ? 10 : 1;
-				socket.send("T" + (Math.round(currentFreq*1000) + smallStep));
+		socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
                 break;
             case 40:
-                let smallStep = (currentFreq > 30) ? 10 : 1;
-				socket.send("T" + (Math.round(currentFreq*1000) - smallStep));
+                socket.send("T" + (Math.round(currentFreq*1000) - ((currentFreq > 30) ? 10 : 1)));
                 break;
             case 37:
                 tuneDown();
