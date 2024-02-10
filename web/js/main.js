@@ -5,7 +5,7 @@ var socket = new WebSocket(socketAddress);
 var parsedData;
 var data = [];
 let signalChart;
-    
+
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
     "Sport", "Education", "Drama", "Culture", "Science", "Varied",
@@ -16,19 +16,19 @@ const europe_programmes = [
     "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
 ];
 
-$(document).ready(function() {
+$(document).ready(function () {
     var canvas = $('#signal-canvas')[0];
-    
+
     var signalToggle = $("#signal-units-toggle");
-    
+
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
-    
+
     getInitialSettings();
     // Start updating the canvas
     initCanvas();
-    
-    signalToggle.on("change", function() {
+
+    signalToggle.on("change", function () {
         const signalText = localStorage.getItem('signalUnit');
 
         if (signalText == 'dbuv') {
@@ -38,27 +38,27 @@ $(document).ready(function() {
         } else {
             signalText.text('dBm');
         }
-    });    
+    });
 
     var input = $("#tuner-desc").text();
     var parsed = input;
-    
+
     var grayTextRegex = /--(.*?)--/g;
     parsed = parsed.replace(grayTextRegex, '<span class="text-gray">$1</span>');
-    
+
     var boldRegex = /\*\*(.*?)\*\*/g;
     parsed = parsed.replace(boldRegex, '<strong>$1</strong>');
-    
+
     var italicRegex = /\*(.*?)\*/g;
     parsed = parsed.replace(italicRegex, '<em>$1</em>');
 
     var breakLineRegex = /\\n/g;
     parsed = parsed.replace(breakLineRegex, '<br>');
-    
+
     $("#tuner-desc").html(parsed);
-    
+
     const textInput = $('#commandinput');
-    
+
     textInput.on('change', function (event) {
         const inputValue = textInput.val();
         // Check if the user agent contains 'iPhone'
@@ -68,17 +68,17 @@ $(document).ready(function() {
             textInput.val('');
         }
     });
-    
+
     textInput.on('keyup', function (event) {
         if (event.key !== 'Backspace') {
             let inputValue = textInput.val();
             inputValue = inputValue.replace(/[^0-9.]/g, '');
-            
+
             if (inputValue.includes("..")) {
                 inputValue = inputValue.slice(0, inputValue.lastIndexOf('.')) + inputValue.slice(inputValue.lastIndexOf('.') + 1);
                 textInput.val(inputValue);
             }
-            
+
             if (!inputValue.includes(".")) {
                 if (inputValue.startsWith('10') && inputValue.length > 2) {
                     inputValue = inputValue.slice(0, 3) + '.' + inputValue.slice(3);
@@ -97,19 +97,32 @@ $(document).ready(function() {
             textInput.val('');
         }
     });
-    
+
     document.onkeydown = checkKey;
 
-    $('#freq-container').on('wheel', function(e) {
+    $('#freq-container').on('wheel keypress', function (e) {
+        getCurrentFreq();
         var delta = e.originalEvent.deltaY;
+        var adjustment = 0;
+    
+        if (e.shiftKey) {
+            adjustment = e.altKey ? 1 : 0.01;
+        } else if (e.ctrlKey) {
+            adjustment = 1;
+        } else {
             if (delta > 0) {
                 tuneDown();
             } else {
                 tuneUp();
             }
             return false;
-    });    
+        }
     
+        var newFreq = currentFreq + (delta > 0 ? -adjustment : adjustment);
+        socket.send("T" + (newFreq.toFixed(2) * 1000));
+        return false;
+    });
+
     var freqUpButton = $('#freq-up')[0];
     var freqDownButton = $('#freq-down')[0];
     var psContainer = $('#ps-container')[0];
@@ -117,7 +130,7 @@ $(document).ready(function() {
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
     var txContainer = $('#data-station-container')[0];
-    
+
     $("#data-eq").click(function () {
         toggleButtonState("eq");
     });
@@ -132,7 +145,7 @@ $(document).ready(function() {
     $(rtContainer).on("click", copyRt);
     $(txContainer).on("click", copyTx);
     $(piCodeContainer).on("click", findOnMaps);
-    $(freqContainer).on("click", function() {
+    $(freqContainer).on("click", function () {
         textInput.focus();
     });
 });
@@ -141,14 +154,14 @@ function getInitialSettings() {
     $.ajax({
         url: './static_data',
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
             // Use the received data (data.qthLatitude, data.qthLongitude) as needed
             localStorage.setItem('qthLatitude', data.qthLatitude);
             localStorage.setItem('qthLongitude', data.qthLongitude);
             localStorage.setItem('audioPort', data.audioPort);
             localStorage.setItem('streamEnabled', data.streamEnabled);
         },
-        error: function(error) {
+        error: function (error) {
             console.error('Error:', error);
         }
     });
@@ -174,7 +187,7 @@ function initCanvas(parsedData) {
 function updateCanvas(parsedData, signalChart) {
     const color2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
     const color4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-    const {context, canvas, maxDataPoints, pointWidth} = signalChart;
+    const { context, canvas, maxDataPoints, pointWidth } = signalChart;
 
     while (data.length >= signalChart.maxDataPoints) {
         data.shift();
@@ -187,7 +200,7 @@ function updateCanvas(parsedData, signalChart) {
     zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
 
     // Clear the canvas
-    if(context) {
+    if (context) {
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw the signal graph with smooth shifting
@@ -275,7 +288,7 @@ socket.onmessage = (event) => {
     updatePanels(parsedData);
     data.push(parsedData.signal);
 };
-    
+
 function compareNumbers(a, b) {
     return a - b;
 }
@@ -292,7 +305,7 @@ function processString(string, errors) {
     const alpha_range = 50;
     const max_error = 10;
     errors = errors?.split(',');
-    
+
     for (let i = 0; i < string.length; i++) {
         alpha = parseInt(errors[i]) * (alpha_range / (max_error + 1));
         if (alpha) {
@@ -301,7 +314,7 @@ function processString(string, errors) {
             output += escapeHTML(string[i]);
         }
     }
-    
+
     return output;
 }
 
@@ -309,7 +322,7 @@ function getCurrentFreq() {
     currentFreq = $('#data-frequency').text();
     currentFreq = parseFloat(currentFreq).toFixed(3);
     currentFreq = parseFloat(currentFreq);
-    
+
     return currentFreq;
 }
 
@@ -352,38 +365,38 @@ function tuneUp() {
         getCurrentFreq();
         let addVal = 0;
         if (currentFreq < 0.52) {
-            addVal = 9 - ((currentFreq*1000) % 9);
+            addVal = 9 - ((currentFreq * 1000) % 9);
         } else if (currentFreq < 1.71) {
             // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
-            addVal = 9 - ((currentFreq*1000) % 9);
+            addVal = 9 - ((currentFreq * 1000) % 9);
         } else if (currentFreq < 29.6) {
-            addVal = 5 - ((currentFreq*1000) % 5);
+            addVal = 5 - ((currentFreq * 1000) % 5);
         } else if (currentFreq >= 65.9 && currentFreq < 74) {
-            addVal = ((currentFreq*1000) % 30 == 20) ? 30 : (20 - ((currentFreq*1000) % 30));
+            addVal = ((currentFreq * 1000) % 30 == 20) ? 30 : (20 - ((currentFreq * 1000) % 30));
         } else {
-            addVal = 100 - ((currentFreq*1000) % 100);
+            addVal = 100 - ((currentFreq * 1000) % 100);
         }
-        socket.send("T" + ((currentFreq*1000) + addVal));
+        socket.send("T" + ((currentFreq * 1000) + addVal));
     }
 }
-  
+
 function tuneDown() {
     if (socket.readyState === WebSocket.OPEN) {
         getCurrentFreq();
         let subVal = 0;
         if (currentFreq < 0.52) {
-            subVal = ((currentFreq*1000) % 9 == 0) ? 9 : ((currentFreq*1000) % 9);
+            subVal = ((currentFreq * 1000) % 9 == 0) ? 9 : ((currentFreq * 1000) % 9);
         } else if (currentFreq < 1.71) {
             // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
-            subVal = ((currentFreq*1000) % 9 == 0) ? 9 : ((currentFreq*1000) % 9);
+            subVal = ((currentFreq * 1000) % 9 == 0) ? 9 : ((currentFreq * 1000) % 9);
         } else if (currentFreq < 29.6) {
-            subVal = ((currentFreq*1000) % 5 == 0) ? 5 : ((currentFreq*1000) % 5);
+            subVal = ((currentFreq * 1000) % 5 == 0) ? 5 : ((currentFreq * 1000) % 5);
         } else if (currentFreq >= 65.9 && currentFreq < 74) {
-            subVal = ((currentFreq*1000) % 30 == 20) ? 30 : (10 + ((currentFreq*1000) % 30));
+            subVal = ((currentFreq * 1000) % 30 == 20) ? 30 : (10 + ((currentFreq * 1000) % 30));
         } else {
-            subVal = ((currentFreq*1000) % 100 == 0) ? 100 : ((currentFreq*1000) % 100);
+            subVal = ((currentFreq * 1000) % 100 == 0) ? 100 : ((currentFreq * 1000) % 100);
         }
-        socket.send("T" + ((currentFreq*1000) - subVal));
+        socket.send("T" + ((currentFreq * 1000) - subVal));
     }
 }
 
@@ -400,10 +413,10 @@ async function copyPs() {
     var signal = $('#data-signal').text();
     var signalDecimal = $('#data-signal-decimal').text();
     var signalUnit = $('#signal-units').text();
-    
+
     try {
-        await copyToClipboard(frequency + " - " + pi + " | " + ps +  " [" + signal + signalDecimal + " " + signalUnit + "]");
-    } catch(error) {
+        await copyToClipboard(frequency + " - " + pi + " | " + ps + " [" + signal + signalDecimal + " " + signalUnit + "]");
+    } catch (error) {
         console.error(error);
     }
 }
@@ -416,10 +429,10 @@ async function copyTx() {
     const stationItu = $('#data-station-itu').text();
     const stationDistance = $('#data-station-distance').text();
     const stationErp = $('#data-station-erp').text();
-    
+
     try {
-        await copyToClipboard(frequency + " - " + pi + " | " + stationName +  " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " km | " + stationErp + " kW");
-    } catch(error) {
+        await copyToClipboard(frequency + " - " + pi + " | " + stationName + " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " km | " + stationErp + " kW");
+    } catch (error) {
         console.error(error);
     }
 }
@@ -427,10 +440,10 @@ async function copyTx() {
 async function copyRt() {
     var rt0 = $('#data-rt0').text();
     var rt1 = $('#data-rt1').text();
-    
+
     try {
         await copyToClipboard("[0] RT: " + rt0 + "\n[1] RT: " + rt1);
-    } catch(error) {
+    } catch (error) {
         console.error(error);
     }
 }
@@ -439,9 +452,9 @@ function copyToClipboard(textToCopy) {
     // Navigator clipboard api needs a secure context (https)
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(textToCopy)
-        .catch(function(err) {
-            console.error('Error:', err);
-        });
+            .catch(function (err) {
+                console.error('Error:', err);
+            });
     } else {
         var textArea = $('<textarea></textarea>');
         textArea.val(textToCopy);
@@ -449,10 +462,10 @@ function copyToClipboard(textToCopy) {
             'position': 'absolute',
             'left': '-999999px'
         });
-        
+
         $('body').prepend(textArea);
         textArea.select();
-        
+
         try {
             document.execCommand('copy');
         } catch (error) {
@@ -469,7 +482,7 @@ function findOnMaps() {
     var latitude = localStorage.getItem('qthLongitude');
     var longitude = localStorage.getItem('qthLatitude');
     frequency = parseFloat(frequency).toFixed(1);
-    
+
     var url = "https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi;
     window.open(url, "_blank");
 }
@@ -515,8 +528,8 @@ function updateDataElements(parsedData) {
         : (parsedData.ms === -1
             ? "<span class='opacity-half'>M</span><span class='opacity-half'>S</span>"
             : "<span class='opacity-full'>M</span><span class='opacity-half'>S</span>"
-          )
-    );        
+        )
+    );
     $('.data-pty').html(europe_programmes[parsedData.pty]);
     $('.data-st').html(parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST");
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
@@ -524,7 +537,7 @@ function updateDataElements(parsedData) {
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 
-    if(parsedData.txInfo.station.length > 1) {
+    if (parsedData.txInfo.station.length > 1) {
         $('#data-station-name').text(decodeURIComponent(parsedData.txInfo.station.replace(/\u009e/g, '\u017E')));
         $('#data-station-erp').text(parsedData.txInfo.erp);
         $('#data-station-city').text(parsedData.txInfo.city);
@@ -558,7 +571,7 @@ function updatePanels(parsedData) {
     }
 
     if (updateCounter % 3 === 0) {
-        
+
         updateButtonState("data-eq", parsedData.eq);
         updateButtonState("data-ims", parsedData.ims);
 
