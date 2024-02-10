@@ -496,11 +496,11 @@ function updateSignalUnits(parsedData) {
             break;
     }
 
-    const integerPart = Math.floor(signalValue);
-    const decimalPart = (signalValue - integerPart).toFixed(1).slice(1);
+    const formatted = (Math.round(signalValue * 10) / 10).toFixed(1);
+    const [integerPart, decimalPart] = formatted.split('.');
 
     $('#data-signal').text(integerPart);
-    $('#data-signal-decimal').text(decimalPart);
+    $('#data-signal-decimal').text('.' + decimalPart);
 }
 
 function updateDataElements(parsedData) {
