@@ -23,47 +23,18 @@ const crypto = require('crypto');
 const fs = require('fs');
 const commandExists = require('command-exists-promise');
 const dataHandler = require('./datahandler');
+const fmdxList = require('./fmdx_list');
 const consoleCmd = require('./console');
 const audioStream = require('./stream/index.js');
 const { parseAudioDevice } = require('./stream/parser.js');
 const configPath = path.join(__dirname, 'config.json');
+const { serverConfig, configUpdate, configSave } = require('./server_config')
 
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
 let currentUsers = 0;
 let streamEnabled = false;
 let incompleteDataBuffer = '';
-let serverConfig = {
-  webserver: {
-    webserverIp: "0.0.0.0",
-    webserverPort: "8080",
-    audioPort: "8081"
-  },
-  xdrd: {
-    xdrdIp: "127.0.0.1",
-    xdrdPort: "7373",
-    xdrdPassword: ""
-  },
-  identification: {
-    tunerName: "",
-    tunerDesc: "",
-    lat: "0",
-    lon: "0",
-    broadcastTuner: false,
-    proxyIp: "",
-  },
-  password: {
-    tunePass: "",
-    adminPass: ""
-  },
-  publicTuner: true,
-  lockToAdmin: false
-};
-
-if(fs.existsSync('config.json')) {
-  const configFileContents = fs.readFileSync('config.json', 'utf8');
-  serverConfig = JSON.parse(configFileContents);
-}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -119,8 +90,9 @@ function connectToXdrd() {
       const authDataHandler = (data) => {
         const receivedData = data.toString();
         const lines = receivedData.split('\n');
-        
+
         for (const line of lines) {
+
           if (!authFlags.receivedPassword) {
             authFlags.receivedSalt = line.trim();
             authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
@@ -311,18 +283,21 @@ app.post('/saveData', (req, res) => {
   const data = req.body;
   let firstSetup;
   if(req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
+    configUpdate(data);
+    fmdxList.update();
+
     if(!fs.existsSync('config.json')) {
       firstSetup = true;
     }
+
+    /* TODO: Refactor to server_config.js */
     // Save data to a JSON file
-    fs.writeFile('config.json', JSON.stringify(data, null, 2), (err) => {
+    fs.writeFile('config.json', JSON.stringify(serverConfig, null, 2), (err) => {
       if (err) {
         logError(err);
         res.status(500).send('Internal Server Error');
       } else {
         logInfo('Server config changed successfully.');
-        const configFileContents = fs.readFileSync('config.json', 'utf8');
-        serverConfig = JSON.parse(configFileContents);
         if(firstSetup === true) {
           res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
         } else {
@@ -438,6 +413,4 @@ httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.w
   logInfo(`Web server is running at \x1b[34mhttp://${serverConfig.webserver.webserverIp}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
 });
 
-module.exports = {
-  serverConfig
-}
+fmdxList.update();
