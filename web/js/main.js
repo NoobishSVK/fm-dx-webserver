@@ -119,7 +119,7 @@ $(document).ready(function () {
         }
     
         var newFreq = currentFreq + (delta > 0 ? -adjustment : adjustment);
-        socket.send("T" + (newFreq.toFixed(2) * 1000));
+        socket.send("T" + (Math.round(newFreq * 1000)));
         return false;
     });
 
