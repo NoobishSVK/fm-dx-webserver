@@ -62,7 +62,9 @@ function sendUpdate() {
     status: (serverConfig.lockToAdmin ? 2 : 1),
     coords: [serverConfig.identification.lat, serverConfig.identification.lon],
     name: serverConfig.identification.tunerName,
-    desc: serverConfig.identification.tunerDesc
+    desc: serverConfig.identification.tunerDesc,
+    audioChannels: serverConfig.audio.audioChannels,
+    audioQuality: serverConfig.audio.audioBitrate,
   };
 
   if (serverConfig.identification.token)
