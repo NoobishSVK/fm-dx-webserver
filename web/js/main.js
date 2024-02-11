@@ -180,7 +180,7 @@ function getLocalizedTime(serverTime) {
     const localOffset = serverDate.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
 
     // Calculate local time by adding the offset
-    const localTime = new Date(serverDate.getTime() - localOffset);
+    const localTime = new Date(serverDate.getTime());
 
     // Format local time
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
