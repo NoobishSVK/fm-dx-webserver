@@ -25,9 +25,9 @@ const logDebug = (...messages) => {
         const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.DEBUG} ${messages.join(' ')}`;
         logs.push(logMessage);
         if (logs.length > maxLogLines) {
-            logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+            logs.shift();
         }
-        console.log(logMessage);
+    console.log(logMessage);
     }
 };
 
@@ -35,7 +35,7 @@ const logError = (...messages) => {
     const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.ERROR} ${messages.join(' ')}`;
     logs.push(logMessage);
     if (logs.length > maxLogLines) {
-        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+        logs.shift();
     }
     console.log(logMessage);
 };
@@ -45,9 +45,9 @@ const logFfmpeg = (...messages) => {
         const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.FFMPEG} ${messages.join(' ')}`;
         logs.push(logMessage);
         if (logs.length > maxLogLines) {
-            logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+            logs.shift(); 
         }
-        console.log(logMessage);
+    console.log(logMessage);
     }
 };
 
@@ -55,7 +55,7 @@ const logInfo = (...messages) => {
     const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.INFO} ${messages.join(' ')}`;
     logs.push(logMessage);
     if (logs.length > maxLogLines) {
-        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+        logs.shift(); 
     }
     console.log(logMessage);
 };
@@ -64,7 +64,7 @@ const logWarn = (...messages) => {
     const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.WARN} ${messages.join(' ')}`;
     logs.push(logMessage);
     if (logs.length > maxLogLines) {
-        logs.shift(); // Remove the oldest log if the array exceeds the maximum number of lines
+        logs.shift(); 
     }
     console.log(logMessage);
 };

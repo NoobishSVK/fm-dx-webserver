@@ -121,7 +121,6 @@ function connectToXdrd() {
         const lines = receivedData.split('\n');
         
         for (const line of lines) {
-          
           if (!authFlags.receivedPassword) {
             authFlags.receivedSalt = line.trim();
             authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
@@ -143,7 +142,7 @@ function connectToXdrd() {
             if (authFlags.authMsg && authFlags.firstClient) {
               client.write('T87500\n');
               client.write('A0\n');
-              client.write('G11\n');
+              client.write('G00\n');
               client.off('data', authDataHandler);
               return;
             }
@@ -224,6 +223,17 @@ app.get('/static_data', (req, res) => {
     audioPort: serverConfig.webserver.audioPort,
     streamEnabled: streamEnabled
   });
+});
+
+app.get('/server_time', (req, res) => {
+  const serverTime = new Date().toISOString();
+  res.json({
+    serverTime
+  });
+});
+
+app.get('/ping', (req, res) => {
+  res.send('pong');
 });
 
 
@@ -342,7 +352,6 @@ app.get('/getData', (req, res) => {
 app.get('/getDevices', (req, res) => {
   if (req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
     parseAudioDevice((result) => {
-        console.log(result);
         res.json(result);
     });
   } else {

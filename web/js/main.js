@@ -123,6 +123,11 @@ $(document).ready(function () {
         return false;
     });
 
+    setInterval(getServerTime, 10000);
+    getServerTime();
+    setInterval(sendPingRequest, 5000);
+    sendPingRequest();
+
     var freqUpButton = $('#freq-up')[0];
     var freqDownButton = $('#freq-down')[0];
     var psContainer = $('#ps-container')[0];
@@ -165,6 +170,55 @@ function getInitialSettings() {
             console.error('Error:', error);
         }
     });
+}
+
+function getLocalizedTime(serverTime) {
+    // Convert server time to a Date object
+    const serverDate = new Date(serverTime);
+
+    // Get local time zone offset
+    const localOffset = serverDate.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
+
+    // Calculate local time by adding the offset
+    const localTime = new Date(serverDate.getTime() - localOffset);
+
+    // Format local time
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    const formattedLocalTime = localTime.toLocaleString('en-US', options);
+
+    return formattedLocalTime;
+}
+
+function getServerTime() {
+    $.ajax({
+        url: './server_time',
+        dataType: 'json',
+        success: function (data) {
+            // Convert server time to local time format
+            const localizedTimeServer = getLocalizedTime(data.serverTime);
+            const localizedTimeClient = getLocalizedTime(new Date().toISOString());
+
+            $('#server-time').text(localizedTimeServer);
+            $('#client-time').text(localizedTimeClient);
+        },
+        error: function (error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+function sendPingRequest() {
+    const startTime = new Date().getTime();
+
+    fetch('/ping')
+        .then(response => {
+            const endTime = new Date().getTime();
+            const pingTime = endTime - startTime;
+            $('#current-ping').text(`Ping: ${pingTime}ms`);
+        })
+        .catch(error => {
+            console.error('Error fetching ping:', error);
+        });
 }
 
 function initCanvas(parsedData) {
@@ -329,9 +383,8 @@ function getCurrentFreq() {
 function checkKey(e) {
     e = e || window.event;
 
-    // Check if any input element is focused using jQuery
-    if ($('input:focus').length > 0) {
-        return; // Do nothing if an input is focused
+    if ($('#password:focus').length > 0) {
+        return; 
     }
 
     getCurrentFreq();
@@ -538,7 +591,8 @@ function updateDataElements(parsedData) {
     $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
-        $('#data-station-name').text(decodeURIComponent(parsedData.txInfo.station.replace(/\u009e/g, '\u017E')));
+        const sanitizedStation = parsedData.txInfo.station.replace(/%/g, '%25');
+        $('#data-station-name').text(decodeURIComponent(sanitizedStation.replace(/\u009e/g, '\u017E')));
         $('#data-station-erp').text(parsedData.txInfo.erp);
         $('#data-station-city').text(parsedData.txInfo.city);
         $('#data-station-itu').text(parsedData.txInfo.itu);
