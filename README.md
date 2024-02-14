@@ -11,7 +11,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 - **Low-latency streaming**: Built in directly into the webserver, no external apps needed for users
 
 ##  Features to be added
-Check here for an up to date task list: https://github.com/NoobishSVK/fm-dx-webserver/issues/3
+Check [here](https://trello.com/b/OAKo7n0Q/fm-dx-webserver) for an up to date task list
 
 ## Community
 Join our **Discord community** to get the latest development update info, share feedback and receive support.
