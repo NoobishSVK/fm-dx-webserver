@@ -4,9 +4,20 @@ const https = require('https');
 const koffi = require('koffi');
 const path = require('path');
 const os = require('os');
-const win32 = (os.platform() == "win32");
-const unicode_type = (win32 ? 'int16_t' : 'int32_t');
-const lib = koffi.load(path.join(__dirname, "librdsparser." + (win32 ? "dll" : "so")));
+const platform = os.platform();
+const cpuArchitecture = os.arch();
+let unicode_type;
+let shared_Library;
+
+if (platform === 'win32') {
+  unicode_type = 'int16_t';
+  shared_Library=path.join(__dirname, "libraries", "librdsparser.dll");
+} else if (platform === 'linux') {
+  unicode_type = 'int32_t';
+  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so");
+} 
+
+const lib = koffi.load(shared_Library);
 const { fetchTx } = require('./tx_search.js');
 
 koffi.proto('void callback_pi(void *rds, void *user_data)');
