@@ -210,7 +210,7 @@ function getServerTime() {
 function sendPingRequest() {
     const startTime = new Date().getTime();
 
-    fetch('/ping')
+    fetch('./ping')
         .then(response => {
             const endTime = new Date().getTime();
             const pingTime = endTime - startTime;
