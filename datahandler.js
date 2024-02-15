@@ -50,18 +50,18 @@ const rdsparser = {
   get_ps: lib.func('void* rdsparser_get_ps(void *rds)'),
   get_rt: lib.func('void* rdsparser_get_rt(void *rds, int flag)'),
   get_ptyn: lib.func('void* rdsparser_get_ptyn(void *rds)'),
-  register_pi: lib.func('void rdsparser_register_pi(void *rds, callback_pi *cb)'),
-  register_pty: lib.func('void rdsparser_register_pty(void *rds, callback_pty *cb)'),
-  register_tp: lib.func('void rdsparser_register_tp(void *rds, callback_tp *cb)'),
-  register_ta: lib.func('void rdsparser_register_ta(void *rds, callback_ta *cb)'),
-  register_ms: lib.func('void rdsparser_register_ms(void *rds, callback_ms *cb)'),
-  register_ecc: lib.func('void rdsparser_register_ecc(void *rds, callback_ecc *cb)'),
-  register_country: lib.func('void rdsparser_register_country(void *rds, callback_country *cb)'),
-  register_af: lib.func('void rdsparser_register_af(void *rds, callback_af *cb)'),
-  register_ps: lib.func('void rdsparser_register_ps(void *rds, callback_ps *cb)'),
-  register_rt: lib.func('void rdsparser_register_rt(void *rds, callback_rt *cb)'),
-  register_ptyn: lib.func('void rdsparser_register_ptyn(void *rds, callback_ptyn *cb)'),
-  register_ct: lib.func('void rdsparser_register_ct(void *rds, callback_ct *cb)'),
+  register_pi: lib.func('void rdsparser_register_pi(void *rds, void *cb)'),
+  register_pty: lib.func('void rdsparser_register_pty(void *rds, void *cb)'),
+  register_tp: lib.func('void rdsparser_register_tp(void *rds, void *cb)'),
+  register_ta: lib.func('void rdsparser_register_ta(void *rds, void *cb)'),
+  register_ms: lib.func('void rdsparser_register_ms(void *rds, void *cb)'),
+  register_ecc: lib.func('void rdsparser_register_ecc(void *rds, void *cb)'),
+  register_country: lib.func('void rdsparser_register_country(void *rds, void *cb)'),
+  register_af: lib.func('void rdsparser_register_af(void *rds, void *cb)'),
+  register_ps: lib.func('void rdsparser_register_ps(void *rds, void *cb)'),
+  register_rt: lib.func('void rdsparser_register_rt(void *rds, void *cb)'),
+  register_ptyn: lib.func('void rdsparser_register_ptyn(void *rds, void *cb)'),
+  register_ct: lib.func('void rdsparser_register_ct(void *rds, void *cb)'),
   string_get_content: lib.func(unicode_type + '* rdsparser_string_get_content(void *string)'),
   string_get_errors: lib.func('uint8_t* rdsparser_string_get_errors(void *string)'),
   string_get_length: lib.func('uint8_t rdsparser_string_get_length(void *string)'),
@@ -182,7 +182,7 @@ const decode_unicode = function(string) {
     let length = rdsparser.string_get_length(string);
     if (length) {
       let content = rdsparser.string_get_content(string);
-      let array = koffi.decode(content, koffi.array(unicode_type, length));
+      let array = koffi.decode(content, unicode_type + ' [' + length + ']');
       return String.fromCodePoint.apply(String, array);
     }
     return '';
@@ -192,7 +192,7 @@ const decode_errors = function(string) {
     let length = rdsparser.string_get_length(string);
     if (length) {
       let errors = rdsparser.string_get_errors(string);
-      let array = koffi.decode(errors, koffi.array('uint8_t', length));
+      let array = koffi.decode(errors, 'uint8_t [' + length + ']');
       return Uint8Array.from(array).toString();
     }
     return '';
