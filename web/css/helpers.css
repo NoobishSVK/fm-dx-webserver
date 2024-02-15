@@ -117,8 +117,16 @@
     font-size: 11px;
 }
 
+.text-light {
+    font-weight: 300;
+}
+
 .text-bold {
     font-weight: bold;
+}
+
+.text-monospace {
+    font-family: "Roboto Mono", monospace;
 }
 
 .text-gray {

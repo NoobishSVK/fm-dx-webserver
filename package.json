@@ -1,10 +1,12 @@
 {
   "name": "fm-dx-webserver",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "description": "",
   "main": "index.js",
   "scripts": {
     "debug": "node index.js --debug",
+    "debug_ffmpeg": "node index.js --ffmpegdebug",
+    "debug_full": "node index.js --debug --ffmpegdebug",
     "webserver": "node index.js"
   },
   "author": "",
@@ -19,7 +21,6 @@
     "http": "^0.0.1-security",
     "https": "1.0.0",
     "koffi": "2.7.2",
-    "lamejs": "^1.2.1",
     "net": "1.0.2",
     "websocket": "1.0.34",
     "wrtc": "^0.4.7",

@@ -1,20 +1,8 @@
 const fetch = require('node-fetch');
 var fs = require('fs');
+const { serverConfig } = require('./server_config')
 
 let cachedData = {};
-
-let serverConfig = {
-    identification: {
-      lat: 0,
-      lon: 0
-    },
-  };
-  
-
-if(fs.existsSync('config.json')) {
-    const configFileContents = fs.readFileSync('config.json', 'utf8');
-    serverConfig = JSON.parse(configFileContents);
-  }
 
 let lastFetchTime = 0;
 const fetchInterval = 3000;

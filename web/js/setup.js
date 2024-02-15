@@ -160,6 +160,7 @@ function fetchData() {
 
         $("#tuner-public").prop("checked", data.publicTuner);
         $("#tuner-lock").prop("checked", data.lockToAdmin);
+        $("#shutdown-tuner").prop("checked", data.autoShutdown);
 
         // Check if latitude and longitude are present in the data
         if (data.identification.lat && data.identification.lon) {
@@ -214,6 +215,7 @@ function submitData() {
 
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
+    const autoShutdown = $("#shutdown-tuner").is(":checked");
   
     const data = {
       webserver: {
@@ -244,7 +246,8 @@ function submitData() {
         adminPass,
       },
       publicTuner, 
-      lockToAdmin
+      lockToAdmin,
+      autoShutdown
     };
   
 

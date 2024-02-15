@@ -379,5 +379,5 @@ function showOnlineUsers(currentUsers) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers, dataToSend
+  handleData, showOnlineUsers, dataToSend, initialData
 };

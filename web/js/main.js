@@ -5,6 +5,7 @@ var socket = new WebSocket(socketAddress);
 var parsedData;
 var data = [];
 let signalChart;
+let updateCounter = 0;
 
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
@@ -176,15 +177,12 @@ function getLocalizedTime(serverTime) {
     // Convert server time to a Date object
     const serverDate = new Date(serverTime);
 
-    // Get local time zone offset
-    const localOffset = serverDate.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
-
     // Calculate local time by adding the offset
     const localTime = new Date(serverDate.getTime());
 
     // Format local time
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-    const formattedLocalTime = localTime.toLocaleString('en-US', options);
+    const formattedLocalTime = localTime.toLocaleString(navigator.language ? navigator.language : 'en-US', options);
 
     return formattedLocalTime;
 }
@@ -603,11 +601,16 @@ function updateDataElements(parsedData) {
     } else {
         $('#data-station-container').removeAttr('style');
     }
+
+    updateCounter++;
+    if (updateCounter % 30 === 0) {
+        $('#data-ps').attr('aria-label', parsedData.ps);
+        $('#data-rt0').attr('aria-label', parsedData.rt0);
+        $('#data-rt1').attr('aria-label', parsedData.rt1);
+    }
 }
 
 let isEventListenerAdded = false;
-
-let updateCounter = 0;
 
 function updatePanels(parsedData) {
     updateCounter++;

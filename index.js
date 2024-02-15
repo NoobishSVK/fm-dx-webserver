@@ -27,8 +27,7 @@ const fmdxList = require('./fmdx_list');
 const consoleCmd = require('./console');
 const audioStream = require('./stream/index.js');
 const { parseAudioDevice } = require('./stream/parser.js');
-const configPath = path.join(__dirname, 'config.json');
-const { serverConfig, configUpdate, configSave } = require('./server_config')
+const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
@@ -109,6 +108,33 @@ function connectToXdrd() {
             } else if (line.startsWith('OK')) {
               authFlags.authMsg = true;
               logInfo('Authentication with xdrd successful.');
+            } else if (line.startsWith('G')) {
+                switch (line) {
+                  case 'G11':
+                    dataHandler.initialData.eq = 1;
+                    dataHandler.dataToSend.eq = 1;
+                    dataHandler.initialData.ims = 1;
+                    dataHandler.dataToSend.ims = 1;
+                    break;
+                  case 'G01':
+                    dataHandler.initialData.eq = 0;
+                    dataHandler.dataToSend.eq = 0;
+                    dataHandler.initialData.ims = 1;
+                    dataHandler.dataToSend.ims = 1;
+                    break;
+                  case 'G10':
+                    dataHandler.initialData.eq = 1;
+                    dataHandler.dataToSend.eq = 1;
+                    dataHandler.initialData.ims = 0;
+                    dataHandler.dataToSend.ims = 0;
+                    break;
+                  case 'G00':
+                    dataHandler.initialData.eq = 0;
+                    dataHandler.initialData.ims = 0;
+                    dataHandler.dataToSend.eq = 0;
+                    dataHandler.dataToSend.ims = 0;
+                    break;
+                  }
             }
             
             if (authFlags.authMsg && authFlags.firstClient) {
@@ -155,9 +181,11 @@ function connectToXdrd() {
 
 client.on('close', () => {
   logWarn('Disconnected from xdrd. Attempting to reconnect.');
-  setTimeout(function () {
-    connectToXdrd();
-  }, 2000)
+  if(serverConfig.autoShutdown === false) {
+    setTimeout(function () {
+      connectToXdrd();
+    }, 2000)
+  }
 });
 
 client.on('error', (err) => {
@@ -235,7 +263,7 @@ app.set('view engine', 'ejs'); // Set EJS as the template engine
 app.set('views', path.join(__dirname, '/web'))
 
 app.get('/', (req, res) => {
-  if (!fs.existsSync("config.json")) {
+  if (!fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
       res.render('setup', { 
         isAdminAuthenticated: true,
@@ -282,17 +310,17 @@ app.get('/logout', (req, res) => {
 app.post('/saveData', (req, res) => {
   const data = req.body;
   let firstSetup;
-  if(req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
+  if(req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
     configUpdate(data);
     fmdxList.update();
 
-    if(!fs.existsSync('config.json')) {
+    if(!fs.existsSync(configName + '.json')) {
       firstSetup = true;
     }
 
     /* TODO: Refactor to server_config.js */
     // Save data to a JSON file
-    fs.writeFile('config.json', JSON.stringify(serverConfig, null, 2), (err) => {
+    fs.writeFile(configName + '.json', JSON.stringify(serverConfig, null, 2), (err) => {
       if (err) {
         logError(err);
         res.status(500).send('Internal Server Error');
@@ -312,20 +340,20 @@ app.post('/saveData', (req, res) => {
 app.get('/getData', (req, res) => {  
   if(req.session.isAdminAuthenticated) {
     // Check if the file exists
-    fs.access(configPath, fs.constants.F_OK, (err) => {
+    fs.access(configName + '.json', fs.constants.F_OK, (err) => {
       if (err) {
         // File does not exist
         res.status(404).send('Data not found');
       } else {
         // File exists, send it as the response
-        res.sendFile(configPath);
+        res.sendFile(path.join(__dirname) + '/' + configName + '.json');
       }
     });
   }
 });
 
 app.get('/getDevices', (req, res) => {
-  if (req.session.isAdminAuthenticated || !fs.existsSync('config.json')) {
+  if (req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
         res.json(result);
     });
@@ -342,6 +370,9 @@ wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
+  if(currentUsers > 0 && serverConfig.autoShutdown === true) {
+    client.write('x\n'); 
+  }
 
   // Use ipinfo.io API to get geolocation information
   https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
@@ -391,6 +422,9 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
+    if(currentUsers === 0 && serverConfig.autoShutdown === true) {
+      client.write('X\n'); 
+    }
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });
 
@@ -410,7 +444,9 @@ httpServer.on('upgrade', (request, socket, head) => {
 app.use(express.static(path.join(__dirname, 'web')));
 
 httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.webserverIp, () => {
-  logInfo(`Web server is running at \x1b[34mhttp://${serverConfig.webserver.webserverIp}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+  let currentAddress = serverConfig.webserver.webserverIp;
+  currentAddress == '0.0.0.0' ? currentAddress = 'localhost' : currentAddress = serverConfig.webserver.webserverIp; 
+  logInfo(`Web server is running at \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
 });
 
 fmdxList.update();

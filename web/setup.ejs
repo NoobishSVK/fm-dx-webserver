@@ -16,7 +16,7 @@
         <% if (isAdminAuthenticated) { %>
         <div class="panel-100 no-bg">
             <h1>FM-DX WebServer</h1>
-            <h2>[ADMIN PANEL]</h2>
+            <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
             <p>This web setup allows you to set up your entire tuner. <br>Some settings will only change after a server restart.</p>
             <p>In case you are setting up the webserver for the first time, we already filled fail-safe defaults for you.</p>
         </div>
@@ -51,7 +51,6 @@
                     <input class="input-text w-150" type="text" name="audio-port" id="audio-port" placeholder="8081">
                 </div> 
                 <br>
-                <!--tune password, public/private tuner, admin password, verbose mode-->
             </div>
             <div class="panel-50" style="min-height: 120px;margin-bottom: 0;">
                 <h2>AUDIO SETTINGS</h2>
@@ -147,6 +146,10 @@
                     <input type="checkbox" id="tuner-lock">
                     <label for="tuner-lock">Lock to admin</label>
                 </div><br>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="shutdown-tuner">
+                    <label for="shutdown-tuner">Auto-shutdown on empty server</label>
+                </div><br>
                 <div class="form-group">
                     <label for="tune-pass">Tune password:</label>
                     <input class="input-text w-150" type="password" name="tune-pass" id="tune-pass">
@@ -179,8 +182,9 @@
         <button onclick="document.location.href='./'" id="back-btn" aria-label="Go back to tuning"><i class="fa-solid fa-arrow-left"></i></button>
         <% } else { %>
         <div class="panel-100 no-bg">
+            <img src="../favicon2.png">
             <h1>FM-DX WebServer</h1>
-            <h2>[ADMIN PANEL]</h2>
+            <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
             <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
             <p>Please login below.</p>
         </div>

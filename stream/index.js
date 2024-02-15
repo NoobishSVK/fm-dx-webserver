@@ -1,22 +1,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const consoleCmd = require('../console.js');
-
-let serverConfig = {
-    webserver: {
-        audioPort: "8081"
-    },
-    audio: {
-      audioDevice: "Microphone (High Definition Audio Device)",
-      audioChannels: 2,
-      audioBitrate: "128k"
-    },
-};
-
-if(fs.existsSync('./config.json')) {
-    const configFileContents = fs.readFileSync('./config.json', 'utf8');
-    serverConfig = JSON.parse(configFileContents);
-}
+const { configName, serverConfig, configUpdate, configSave } = require('../server_config');
 
 function enableAudioStream() {
     var ffmpegCommand;

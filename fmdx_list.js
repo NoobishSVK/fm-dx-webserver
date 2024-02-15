@@ -25,13 +25,13 @@ function send(request) {
         {
           if (!serverConfig.identification.token)
           {
-            logInfo("Succesfully registered in FM-DX Server Map.");
+            logInfo("Registered to FM-DX Server Map successfully.");
             serverConfig.identification.token = data.token;
             configSave();
           }
           else
           {
-            logInfo("Succesfully updated FM-DX Server Map.");
+            logInfo("FM-DX Server Map update successful.");
           }
         }
         else
