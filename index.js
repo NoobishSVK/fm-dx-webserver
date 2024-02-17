@@ -189,9 +189,6 @@ client.on('close', () => {
 });
 
 client.on('error', (err) => {
-  setTimeout(function () {
-    connectToXdrd();
-  }, 2000)
   switch (true) {
     case err.message.includes("ECONNRESET"):
       logError("Connection to xdrd lost. Reconnecting...");
