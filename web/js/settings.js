@@ -104,6 +104,28 @@
         });
     });
 
+    var extendedFreqRange = localStorage.getItem("extendedFreqRange");
+    if (extendedFreqRange === "true") {
+        $("#extended-frequency-range").prop("checked", true);
+    }
+
+    // Save the value of the checkbox into local storage when its state changes
+    $("#extended-frequency-range").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("extendedFreqRange", isChecked);
+    });
+
+    var extendedFreqRange = localStorage.getItem("psUnderscores");
+    if (extendedFreqRange === "true") {
+        $("#ps-underscores").prop("checked", true);
+    }
+
+    // Save the value of the checkbox into local storage when its state changes
+    $("#ps-underscores").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("psUnderscores", isChecked);
+    });
+
 });
 
 

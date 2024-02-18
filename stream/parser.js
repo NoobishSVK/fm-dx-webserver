@@ -54,7 +54,7 @@ function parseAudioDevice(options, callback) {
                     }
                 });
             } else {
-                console.log('No matches found.');
+                logWarn('No audio devices have been found.');
             }
         });
         break;

@@ -23,7 +23,7 @@ function fetchTx(freq, piCode, rdsPs) {
         return processData(cachedData[freq], piCode, rdsPs);
     }
 
-    const url = "https://maps.fmdx.pl/controller.php?freq=" + freq;
+    const url = "https://maps.fmdx.pl/api?freq=" + freq;
 
     return fetch(url)
         .then(response => response.json())
@@ -40,8 +40,9 @@ function fetchTx(freq, piCode, rdsPs) {
 function processData(data, piCode, rdsPs) {
     let matchingStation = null;
     let matchingCity = null;
-    let minDistance = Infinity;
+    let maxScore = -Infinity; // Initialize maxScore with a very low value
     let txAzimuth;
+    let maxDistance;
 
     for (const cityId in data.locations) {
         const city = data.locations[cityId];
@@ -49,11 +50,13 @@ function processData(data, piCode, rdsPs) {
             for (const station of city.stations) {
                 if (station.pi === piCode && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
-                    if (distance.distanceKm < minDistance) {
-                        minDistance = distance.distanceKm;
+                    const score = station.erp / distance.distanceKm; // Calculate score
+                    if (score > maxScore) {
+                        maxScore = score;
                         txAzimuth = distance.azimuth;
                         matchingStation = station;
                         matchingCity = city;
+                        maxDistance = distance.distanceKm;
                     }
                 }
             }
@@ -67,7 +70,7 @@ function processData(data, piCode, rdsPs) {
             erp: matchingStation.erp,
             city: matchingCity.name,
             itu: matchingCity.itu,
-            distance: minDistance.toFixed(0),
+            distance: maxDistance.toFixed(0),
             azimuth: txAzimuth.toFixed(0),
             foundStation: true
         };

@@ -2,9 +2,8 @@ var url = new URL('text', window.location.href);
 url.protocol = url.protocol.replace('http', 'ws');
 var socketAddress = url.href;
 var socket = new WebSocket(socketAddress);
-var parsedData;
+var parsedData, signalChart, previousFreq;
 var data = [];
-let signalChart;
 let updateCounter = 0;
 
 const europe_programmes = [
@@ -71,7 +70,8 @@ $(document).ready(function () {
     });
 
     textInput.on('keyup', function (event) {
-        if (event.key !== 'Backspace') {
+
+        if (event.key !== 'Backspace' && localStorage.getItem('extendedFreqRange') != "true") {
             let inputValue = textInput.val();
             inputValue = inputValue.replace(/[^0-9.]/g, '');
 
@@ -174,17 +174,13 @@ function getInitialSettings() {
 }
 
 function getLocalizedTime(serverTime) {
-    // Convert server time to a Date object
     const serverDate = new Date(serverTime);
-
-    // Calculate local time by adding the offset
-    const localTime = new Date(serverDate.getTime());
-
-    // Format local time
+    
+    // Format server time using options for local time formatting
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-    const formattedLocalTime = localTime.toLocaleString(navigator.language ? navigator.language : 'en-US', options);
+    const formattedServerTime = serverDate.toLocaleString(navigator.language ? navigator.language : 'en-US', options);
 
-    return formattedLocalTime;
+    return formattedServerTime;
 }
 
 function getServerTime() {
@@ -192,12 +188,8 @@ function getServerTime() {
         url: './server_time',
         dataType: 'json',
         success: function (data) {
-            // Convert server time to local time format
-            const localizedTimeServer = getLocalizedTime(data.serverTime);
-            const localizedTimeClient = getLocalizedTime(new Date().toISOString());
-
-            $('#server-time').text(localizedTimeServer);
-            $('#client-time').text(localizedTimeClient);
+            $('#server-time').text(getLocalizedTime(data.serverTime));
+            $('#client-time').text(getLocalizedTime(new Date()));
         },
         error: function (error) {
             console.error('Error:', error);
@@ -389,6 +381,9 @@ function checkKey(e) {
 
     if (socket.readyState === WebSocket.OPEN) {
         switch (e.keyCode) {
+            case 66: // Back to previous frequency
+                socket.send("T" + (previousFreq * 1000));
+                break;
             case 82: // RDS Reset (R key)
                 socket.send("T" + (currentFreq.toFixed(1) * 1000));
                 break;
@@ -408,6 +403,7 @@ function checkKey(e) {
                 // Handle default case if needed
                 break;
         }
+        previousFreq = currentFreq;
     }
 }
 
@@ -571,6 +567,9 @@ function updateDataElements(parsedData) {
     $('#data-frequency').text(parsedData.freq);
     $("#commandinput").attr("aria-label", "Current frequency: " + parsedData.freq);
     $('#data-pi').html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+    if (localStorage.getItem('psUnderscores') === 'true') {
+        parsedData.ps = parsedData.ps.replace(/\s/g, '_');
+    }
     $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
     $('.data-tp').html(parsedData.tp === false ? "<span class='opacity-half'>TP</span>" : "TP");
     $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
@@ -582,15 +581,30 @@ function updateDataElements(parsedData) {
         )
     );
     $('.data-pty').html(europe_programmes[parsedData.pty]);
-    $('.data-st').html(parsedData.st === false ? "<span class='text-gray'>ST</span>" : "ST");
+
+
+    if(parsedData.st === true) {
+        if (parsedData.st_forced == true) {
+            $('.data-st').html("<span class='opacity-full'>MO</span>");
+        } else {
+            $('.data-st').html("<span class='opacity-full'>ST</span>");
+        }
+    } else {
+        if (parsedData.st_forced == true) {
+            $('.data-st').html("<span class='opacity-half'>MO</span>");
+        } else {
+            $('.data-st').html("<span class='opacity-half'>ST</span>");
+        }
+    }
+    console.log(parsedData.st, parsedData.st_forced);
+
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
-        const sanitizedStation = parsedData.txInfo.station.replace(/%/g, '%25');
-        $('#data-station-name').text(decodeURIComponent(sanitizedStation.replace(/\u009e/g, '\u017E')));
+        $('#data-station-name').text(parsedData.txInfo.station.replace(/%/g, '%25'));
         $('#data-station-erp').text(parsedData.txInfo.erp);
         $('#data-station-city').text(parsedData.txInfo.city);
         $('#data-station-itu').text(parsedData.txInfo.itu);

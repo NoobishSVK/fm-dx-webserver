@@ -204,9 +204,11 @@ const clientUpdateIntervals = new Map(); // Store update intervals for each clie
 // Initialize the data object
 var dataToSend = {
   pi: '?',
-  freq: 87.500.toFixed(3),
+  freq: 87.500,
+  previousFreq: 87.500,
   signal: 0,
   st: false,
+  st_forced: false,
   ps: '',
   tp: false,
   ta: 0,
@@ -243,7 +245,6 @@ function handleData(ws, receivedData) {
   const currentTime = Date.now();
   let modifiedData, parsedValue;
   const receivedLines = receivedData.split('\n');
-
   for (const receivedLine of receivedLines) {
     switch (true) {
       case receivedLine.startsWith('P'):
@@ -261,6 +262,7 @@ function handleData(ws, receivedData) {
         parsedValue = parseFloat(modifiedData);
 
         if (!isNaN(parsedValue)) {
+          initialData.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.pi = '?';
         }
@@ -300,6 +302,9 @@ function handleData(ws, receivedData) {
         modifiedData = receivedLine.substring(2);
         parsedValue = parseFloat(modifiedData);
         dataToSend.st = false;
+        dataToSend.st_forced = false;
+        initialData.st = false;
+        initialData.st_forced = false;
 
         if (!isNaN(parsedValue)) {
           dataToSend.signal = parsedValue.toFixed(2);
@@ -310,13 +315,41 @@ function handleData(ws, receivedData) {
         modifiedData = receivedData.substring(2);
         parsedValue = parseFloat(modifiedData);
         dataToSend.st = true;
+        dataToSend.st_forced = false;
+        initialData.st = true;
+        initialData.st_forced = false;
 
         if (!isNaN(parsedValue)) {
           dataToSend.signal = parsedValue.toFixed(2);
           initialData.signal = parsedValue.toFixed(2);
         }
         break;
-
+      case receivedData.startsWith('SS'):
+        modifiedData = receivedData.substring(2);
+        parsedValue = parseFloat(modifiedData);
+        dataToSend.st = true;
+        dataToSend.st_forced = true;
+        initialData.st = true;
+        initialData.st_forced = true;
+  
+        if (!isNaN(parsedValue)) {
+          dataToSend.signal = parsedValue.toFixed(2);
+          initialData.signal = parsedValue.toFixed(2);
+        }
+        break;
+      case receivedData.startsWith('SM'):
+        modifiedData = receivedData.substring(2);
+        parsedValue = parseFloat(modifiedData);
+        dataToSend.st = false;
+        dataToSend.st_forced = true;
+        initialData.st = false;
+        initialData.st_forced = true;
+    
+        if (!isNaN(parsedValue)) {
+          dataToSend.signal = parsedValue.toFixed(2);
+          initialData.signal = parsedValue.toFixed(2);
+        }
+        break;
       case receivedLine.startsWith('R'):
         modifiedData = receivedLine.slice(1);
 
