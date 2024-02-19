@@ -157,7 +157,7 @@ $(document).ready(function () {
 
 function getServerTime() {
     $.ajax({
-      url: "/server_time",
+      url: "./server_time",
       dataType: "json",
       success: function(data) {
         const serverTimeUtc = data.serverTime;
