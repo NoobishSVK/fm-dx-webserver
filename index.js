@@ -19,13 +19,6 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 
-// Create a WebSocket proxy instance
-const proxy = httpProxy.createProxyServer({
-  target: 'ws://localhost:8081', // WebSocket httpServer's address
-  ws: true, // Enable WebSocket proxying
-  changeOrigin: true // Change the origin of the host header to the target URL
-});
-
 // Other files and libraries
 const crypto = require('crypto');
 const fs = require('fs');
@@ -36,8 +29,14 @@ const consoleCmd = require('./console');
 const audioStream = require('./stream/index.js');
 const { parseAudioDevice } = require('./stream/parser.js');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
-
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
+
+// Create a WebSocket proxy instance
+const proxy = httpProxy.createProxyServer({
+  target: 'ws://localhost:'+ serverConfig.webserver.audioPort, // WebSocket httpServer's address
+  ws: true, // Enable WebSocket proxying
+  changeOrigin: true // Change the origin of the host header to the target URL
+});
 
 let currentUsers = 0;
 let streamEnabled = false;
