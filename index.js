@@ -446,7 +446,7 @@ httpServer.on('upgrade', (request, socket, head) => {
         wss.emit('connection', ws, request);
       });
     });
-  } else if (request.url === '/audio/') {
+  } else if (request.url === '/audio') {
     proxy.ws(request, socket, head);
   } else {
     socket.destroy();
