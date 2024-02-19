@@ -438,8 +438,6 @@ wss.on('connection', (ws, request) => {
 
 // Handle upgrade requests to proxy WebSocket connections
 httpServer.on('upgrade', (request, socket, head) => {
-
-  logInfo(request.url);
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {
       wss.handleUpgrade(request, socket, head, (ws) => {
