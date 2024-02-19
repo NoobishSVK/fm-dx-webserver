@@ -24,7 +24,6 @@ $(document).ready(function () {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
 
-    getInitialSettings();
     // Start updating the canvas
     initCanvas();
 
@@ -156,47 +155,45 @@ $(document).ready(function () {
     });
 });
 
-function getInitialSettings() {
-    $.ajax({
-        url: './static_data',
-        dataType: 'json',
-        success: function (data) {
-            // Use the received data (data.qthLatitude, data.qthLongitude) as needed
-            localStorage.setItem('qthLatitude', data.qthLatitude);
-            localStorage.setItem('qthLongitude', data.qthLongitude);
-            localStorage.setItem('audioPort', data.audioPort);
-            localStorage.setItem('streamEnabled', data.streamEnabled);
-        },
-        error: function (error) {
-            console.error('Error:', error);
-        }
-    });
-}
-
-function getLocalizedTime(serverTime) {
-    const serverDate = new Date(serverTime);
-    
-    // Format server time using options for local time formatting
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-    const formattedServerTime = serverDate.toLocaleString(navigator.language ? navigator.language : 'en-US', options);
-
-    return formattedServerTime;
-}
-
 function getServerTime() {
     $.ajax({
-        url: './server_time',
-        dataType: 'json',
-        success: function (data) {
-            $('#server-time').text(getLocalizedTime(data.serverTime));
-            $('#client-time').text(getLocalizedTime(new Date()));
-        },
-        error: function (error) {
-            console.error('Error:', error);
-        }
+      url: "/server_time",
+      dataType: "json",
+      success: function(data) {
+        const serverTimeUtc = data.serverTime;
+  
+        const options = {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        };
+  
+        const serverOptions = {
+          ...options,
+          timeZone: 'Etc/UTC' // Add timeZone only for server time
+        };
+  
+        const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
+        
+        $("#server-time").text(formattedServerTime);        
+  
+        // Get and format user's local time directly without specifying timeZone:
+        const localTime = new Date();
+        const formattedLocalTime = new Date(localTime).toLocaleString(navigator.language ? navigator.language : 'en-US', options);
+  
+        // Display client time:
+        $("#client-time").text(formattedLocalTime);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error("Error fetching server time:", errorThrown);
+        // Handle error gracefully (e.g., display a fallback message)
+      }
     });
-}
-
+  }  
+  
 function sendPingRequest() {
     const startTime = new Date().getTime();
 
@@ -596,7 +593,6 @@ function updateDataElements(parsedData) {
             $('.data-st').html("<span class='opacity-half'>ST</span>");
         }
     }
-    console.log(parsedData.st, parsedData.st_forced);
 
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));

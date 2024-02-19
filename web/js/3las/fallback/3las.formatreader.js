@@ -150,7 +150,7 @@ var AudioFormatReader = /** @class */ (function () {
         // Theoretical minimum is 2.
         // Recommended value is 3 or higher.
         if (isAndroid)
-            settings["mpeg"]["MinDecodeFrames"] = 17;
+            settings["mpeg"]["MinDecodeFrames"] = 3;
         else
             settings["mpeg"]["MinDecodeFrames"] = 3;
         return settings;

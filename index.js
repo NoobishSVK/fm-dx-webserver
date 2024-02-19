@@ -146,6 +146,7 @@ function connectToXdrd() {
             }
             
             if (authFlags.authMsg && authFlags.firstClient) {
+              client.write('x\n');
               client.write('T87500\n');
               client.write('A0\n');
               client.write('G00\n');
@@ -231,9 +232,13 @@ app.get('/static_data', (req, res) => {
 });
 
 app.get('/server_time', (req, res) => {
-  const serverTime = new Date().toISOString();
+  /*const serverTime = new Date().toISOString(); // Get server time in ISO format
+  const serverTimezoneOffset = new Date().getTimezoneOffset(); // Get server timezone offset in minutes*/
+
+  const serverTime = new Date(); // Get current server time
+  const serverTimeUTC = new Date(serverTime.getTime() - (serverTime.getTimezoneOffset() * 60000)); // Adjust server time to UTC
   res.json({
-    serverTime
+      serverTime: serverTimeUTC,
   });
 });
 
