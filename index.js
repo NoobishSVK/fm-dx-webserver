@@ -436,7 +436,7 @@ wss.on('connection', (ws, request) => {
   ws.on('error', console.error);
 });
 
-// Handle upgrade requests to proxy WebSocket connections
+// Handle upgrade requests to /text and proxy /audio WebSocket connections
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {
