@@ -7,6 +7,7 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const http = require('http');
+const httpProxy = require('http-proxy');
 const https = require('https');
 const app = express();
 const httpServer = http.createServer(app);
@@ -28,8 +29,14 @@ const consoleCmd = require('./console');
 const audioStream = require('./stream/index.js');
 const { parseAudioDevice } = require('./stream/parser.js');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
-
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
+
+// Create a WebSocket proxy instance
+const proxy = httpProxy.createProxyServer({
+  target: 'ws://localhost:'+ serverConfig.webserver.audioPort, // WebSocket httpServer's address
+  ws: true, // Enable WebSocket proxying
+  changeOrigin: true // Change the origin of the host header to the target URL
+});
 
 let currentUsers = 0;
 let streamEnabled = false;
@@ -433,7 +440,7 @@ wss.on('connection', (ws, request) => {
   ws.on('error', console.error);
 });
 
-
+// Handle upgrade requests to /text and proxy /audio WebSocket connections
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {
@@ -441,10 +448,13 @@ httpServer.on('upgrade', (request, socket, head) => {
         wss.emit('connection', ws, request);
       });
     });
+  } else if (request.url === '/audio') {
+    proxy.ws(request, socket, head);
   } else {
     socket.destroy();
   }
-});
+}
+);
 
 /* Serving of HTML files */
 app.use(express.static(path.join(__dirname, 'web')));
