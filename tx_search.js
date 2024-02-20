@@ -50,7 +50,7 @@ function processData(data, piCode, rdsPs) {
             for (const station of city.stations) {
                 if (station.pi === piCode && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
-                    const score = station.erp / distance.distanceKm; // Calculate score
+                    const score =  (10*Math.log10(station.erp*1000)) / distance.distanceKm; // Calculate score
                     if (score > maxScore) {
                         maxScore = score;
                         txAzimuth = distance.azimuth;
