@@ -204,8 +204,8 @@ const clientUpdateIntervals = new Map(); // Store update intervals for each clie
 // Initialize the data object
 var dataToSend = {
   pi: '?',
-  freq: 87.500,
-  previousFreq: 87.500,
+  freq: 87.500.toFixed(3),
+  previousFreq: 87.500.toFixed(3),
   signal: 0,
   st: false,
   st_forced: false,

@@ -271,6 +271,48 @@ const authenticate = (req, res, next) => {
 app.set('view engine', 'ejs'); // Set EJS as the template engine
 app.set('views', path.join(__dirname, '/web'))
 
+function parseMarkdown(parsed) {
+  parsed = parsed.replace(/<\/?[^>]+(>|$)/g, '');
+
+  var grayTextRegex = /--(.*?)--/g;
+  parsed = parsed.replace(grayTextRegex, '<span class="text-gray">$1</span>');
+
+  var boldRegex = /\*\*(.*?)\*\*/g;
+  parsed = parsed.replace(boldRegex, '<strong>$1</strong>');
+
+  var italicRegex = /\*(.*?)\*/g;
+  parsed = parsed.replace(italicRegex, '<em>$1</em>');
+
+  var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
+  parsed = parsed.replace(linkRegex, '<a href="$2">$1</a>');
+
+  var breakLineRegex = /\\n/g;
+  parsed = parsed.replace(breakLineRegex, '<br>');
+
+  return parsed;
+}
+
+function removeMarkdown(parsed) {
+  parsed = parsed.replace(/<\/?[^>]+(>|$)/g, '');
+
+  var grayTextRegex = /--(.*?)--/g;
+  parsed = parsed.replace(grayTextRegex, '$1');
+
+  var boldRegex = /\*\*(.*?)\*\*/g;
+  parsed = parsed.replace(boldRegex, '$1');
+
+  var italicRegex = /\*(.*?)\*/g;
+  parsed = parsed.replace(italicRegex, '$1');
+
+  var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
+  parsed = parsed.replace(linkRegex, '$1');
+
+  var breakLineRegex = /\\n/g;
+  parsed = parsed.replace(breakLineRegex, '');
+
+  return parsed;
+}
+
 app.get('/', (req, res) => {
   if (!fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
@@ -285,7 +327,8 @@ app.get('/', (req, res) => {
     isAdminAuthenticated: req.session.isAdminAuthenticated,
     isTuneAuthenticated: req.session.isTuneAuthenticated,
     tunerName: serverConfig.identification.tunerName,
-    tunerDesc: serverConfig.identification.tunerDesc,
+    tunerDesc: parseMarkdown(serverConfig.identification.tunerDesc),
+    tunerDescMeta: removeMarkdown(serverConfig.identification.tunerDesc),
     tunerLock: serverConfig.lockToAdmin,
     publicTuner: serverConfig.publicTuner
    })

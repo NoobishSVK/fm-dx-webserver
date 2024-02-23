@@ -1,14 +1,20 @@
-    // Themes
+    /**
+     * Themes
+     * @param first color
+     * @param second color
+     * @param text color
+     */
     const themes = {
-      theme1: ['#111', '#aaa'],
-      theme2: ['#1f0c0c', '#ff7070'],
-      theme3: ['#121c0c', '#a9ff70'],
-      theme4: ['#0c1c1b', '#68f7ee'],
-      theme5: ['#171106', '#f5b642'],
-      theme6: ['#21091d', '#ed51d3'],
-      theme7: ['#0d0b1a', '#8069fa'],
-      theme8: ['#000', '#888'],
-  };
+        theme1: [ 'rgba(0, 0, 0, 1)', 'rgba(204, 204, 204, 1)', 'rgba(255, 255, 255, 1)' ], // Monochrome (Default)
+        theme2: [ 'rgba(31, 12, 12, 1)', 'rgba(255, 112, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Red
+        theme3: [ 'rgba(18, 28, 12, 1)', 'rgba(169, 255, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Green
+        theme4: [ 'rgba(12, 28, 27, 1)', 'rgba(104, 247, 238, 1)', 'rgba(255, 255, 255, 1)' ], // Cyan
+        theme5: [ 'rgba(23, 17, 6, 1)', 'rgba(245, 182, 66, 1)', 'rgba(255, 255, 255, 1)' ], // Orange
+        theme6: [ 'rgba(33, 9, 29, 1)', 'rgba(237, 81, 211, 1)', 'rgba(255, 255, 255, 1)' ], // Pink
+        theme7: [ 'rgba(13, 11, 26, 1)', 'rgba(128, 105, 250, 1)', 'rgba(255, 255, 255, 1)' ], // Blurple
+        theme8: [ 'rgba(252, 186, 3, 1)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)' ], // Sunny
+        theme9: ['rgba(32, 34, 40, 1)', 'rgba(88, 219, 171, 1)', 'rgba(255, 255, 255, 1)' ] // Retro
+      };      
 
   // Signal Units
   const signalUnits = {
@@ -129,10 +135,21 @@
 });
 
 
-  function setTheme(themeName) {
-      const themeColors = themes[themeName];
-      if (themeColors) {
-          $(':root').css('--color-main', themeColors[0]);
-          $(':root').css('--color-main-bright', themeColors[1]);
-      }
-  }
+function setTheme(themeName) {
+    const themeColors = themes[themeName];
+    if (themeColors) {
+        // Extracting the RGBA components and opacity value
+        const rgbaComponents = themeColors[2].match(/(\d+(\.\d+)?)/g);
+        const opacity = parseFloat(rgbaComponents[3]);
+        // Calculating 80% of the opacity
+        const newOpacity = opacity * 0.75;
+        // Constructing the new RGBA string with the adjusted opacity
+        const textColor2 = `rgba(${rgbaComponents[0]}, ${rgbaComponents[1]}, ${rgbaComponents[2]}, ${newOpacity})`;
+        
+        $(':root').css('--color-main', themeColors[0]);
+        $(':root').css('--color-main-bright', themeColors[1]);
+        $(':root').css('--color-text', themeColors[2]);
+        $(':root').css('--color-text-2', textColor2);
+    }
+}
+

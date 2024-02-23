@@ -25,7 +25,7 @@ input[type="text"], textarea, input[type="password"] {
     box-sizing: border-box;
     border: 2px solid transparent;
     outline: 0;
-    color: white;
+    color: var(--color-text);
     background-color: var(--color-1);
     font-family: 'Titillium Web', sans-serif;
 }
@@ -38,7 +38,7 @@ input[type="text"], textarea, input[type="password"] {
     box-sizing: border-box;
     border: 2px solid transparent;
     outline: 0;
-    color: white;
+    color: var(--color-text);
     background-color: var(--color-1);
     font-family: 'Titillium Web', sans-serif;
   }
@@ -112,10 +112,12 @@ input[type="range"]::-moz-range-thumb {
     box-sizing: border-box;
     height: 48px;
     width: 48px;
-    background-color: var(--color-4);
-    border-radius: 0px 30px 30px 0px;
-    border: 0;
-    outline: none;
+    background: url('../images/speaker.svg') center no-repeat, var(--color-5);
+    background-position: center;
+    background-size: 20px;
+    border-radius: 30px;
+    outline: 4px solid var(--color-5);
+    outline-offset: -3px;
     /*  slider progress trick  */
     box-shadow: -420px 0 0 400px var(--color-4);
 }

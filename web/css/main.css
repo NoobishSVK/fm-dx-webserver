@@ -1,13 +1,16 @@
 
 :root {
-    --color-main: #111;
-    --color-main-bright: #aaa;
+    --color-main: #000;
+    --color-main-bright: #ccc;
+    --color-text: white;
     
-    --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright));
-    --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright));
-    --color-3: color-mix(in srgb, var(--color-main) 50%, var(--color-main-bright));
-    --color-4: color-mix(in srgb, var(--color-main) 20%, var(--color-main-bright));
-    --color-5: color-mix(in srgb, var(--color-main) 0%, var(--color-main-bright));
+    --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright)); /* 5% Brightness */
+    --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright)); /* 25% Brightness */
+    --color-3: color-mix(in srgb, var(--color-main) 50%, var(--color-main-bright)); /* 50% Brightness */
+    --color-4: color-mix(in srgb, var(--color-main) 20%, var(--color-main-bright)); /* 80% Brightness */
+    --color-5: color-mix(in srgb, var(--color-main) 5%, var(--color-main-bright)); /* 95% Brightness */
+
+    --color-text-2: #ccc;
 }
 
 * {
@@ -41,7 +44,7 @@
 
 body {
     font-family: 'Titillium Web', sans-serif;
-    color: white;
+    color: var(--color-text);
     background-color: var(--color-main);
     transition: 0.3s ease-in-out background-color;
     margin: 0 auto;
@@ -72,5 +75,9 @@ body {
 
 a {
     text-decoration: none;
-    color: white;
+    color: var(--color-text-2);
+}
+
+a:hover {
+    border-bottom: 1px solid var(--color-4);
 }

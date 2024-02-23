@@ -47,7 +47,7 @@
 }
 
 .close:hover {
-    color: white;
+    color: var(--color-text);
 }
 
 .modal-content .button-close {

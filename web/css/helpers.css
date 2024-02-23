@@ -99,10 +99,14 @@
     font-weight: 300;
 }
 
+.text-color-default {
+    color: var(--color-text);
+}
+
 .text-medium {
     font-size: 24px;
-    color: #aaa;
     font-weight: 300;
+    opacity: 0.6;
 }
 
 .text-medium-big {

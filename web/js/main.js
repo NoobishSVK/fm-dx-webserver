@@ -39,23 +39,6 @@ $(document).ready(function () {
         }
     });
 
-    var input = $("#tuner-desc").text();
-    var parsed = input;
-
-    var grayTextRegex = /--(.*?)--/g;
-    parsed = parsed.replace(grayTextRegex, '<span class="text-gray">$1</span>');
-
-    var boldRegex = /\*\*(.*?)\*\*/g;
-    parsed = parsed.replace(boldRegex, '<strong>$1</strong>');
-
-    var italicRegex = /\*(.*?)\*/g;
-    parsed = parsed.replace(italicRegex, '<em>$1</em>');
-
-    var breakLineRegex = /\\n/g;
-    parsed = parsed.replace(breakLineRegex, '<br>');
-
-    $("#tuner-desc").html(parsed);
-
     const textInput = $('#commandinput');
 
     textInput.on('change', function (event) {
@@ -568,7 +551,7 @@ function updateDataElements(parsedData) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
     $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-    $('.data-tp').html(parsedData.tp === false ? "<span class='opacity-half'>TP</span>" : "TP");
+    $('.data-tp').html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
     $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
     $('.data-ms').html(parsedData.ms === 0
         ? "<span class='opacity-half'>M</span><span class='opacity-full'>S</span>"

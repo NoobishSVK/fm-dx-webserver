@@ -78,7 +78,7 @@ label {
 #settings, #back-btn, #users-online-container {
     background: transparent;
     border: 0;
-    color: white;
+    color: var(--color-text);
     position: absolute;
     top: 15px;
     right: 15px;
@@ -189,7 +189,7 @@ label {
     #data-pi {
         font-size: 24px;
         margin-top: 50px;
-        color: #aaa;
+        color: var(--color-text-2)
     }
     h2.show-phone {
         display: inline;
@@ -271,5 +271,13 @@ label {
     h2 {
         margin-bottom: 10px;
         font-size: 18px;
+    }
+
+    h2.mb-0 {
+        margin-bottom: 0;
+        margin-top: 2px !important;
+    }
+    #af-list ul {
+        max-height: 330px;
     }
 }

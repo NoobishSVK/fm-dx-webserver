@@ -12,7 +12,7 @@
     <meta property="og:title" content="FM-DX WebServer [<%= tunerName %>]">
     <meta property="og:type" content="website">
     <meta property="og:image" content="favicon2.png">
-    <meta property="og:description" content="Server description: <%= tunerDesc %>.">
+    <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
     
     <script src="js/init.js"></script>
     
@@ -53,7 +53,7 @@
         <div class="panel-100 no-bg tuner-info">
             <h1 id="tuner-name"><%= tunerName %> <% if (!publicTuner) { %><i class="fa-solid fa-key pointer" title="Only people with tune password can tune."></i>
                 <% } else if (tunerLock) { %><i class="fa-solid fa-lock pointer" title="Tuner is currently locked to admin."></i><% } %></h1>
-            <p id="tuner-desc"><%= tunerDesc %></p>
+            <p id="tuner-desc"><%- tunerDesc %></p>
             <div style="clear: both"></div>
         </div>
         <div class="canvas-container hide-phone">
@@ -74,7 +74,7 @@
                     
                     <div id="flags-container-desktop" class="panel-33">
                         <h2 class="show-phone">
-                            <div class="data-pty" style="color:white;"></div>
+                            <div class="data-pty text-color-default"></div>
                         </h2>
                         <h3 style="margin-top:0;margin-bottom:0;" class="color-4 flex-center">
                             <span class="data-tp">TP</span>
@@ -103,7 +103,7 @@
                         <h2>SIGNAL</h2>
                         <span class="text-big">
                             <span id="data-signal"></span><!--
-                        --><span id="data-signal-decimal" class="text-medium-big" style="color: #ccc;"></span>
+                        --><span id="data-signal-decimal" class="text-medium-big" style="opacity:0.7;"></span>
                             <span id="signal-units" class="text-medium">dBf</span>
                         </span>
                     </div>
@@ -154,13 +154,15 @@
                     
                     <div class="panel-33 hover-brighten">
                         <div id="data-station-container">
-                            <h2 style="margin-top: 4px;">
+                            <h2 style="margin-top: 4px;" class="mb-0">
                                 <span id="data-station-name"></span>
                             </h2>
                             <h4 class="m-0">
                                 <span id="data-station-city"></span>, <span id="data-station-itu"></span>
                             </h4>
-                            <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> km <span class="text-gray">•</span> <span id="data-station-azimuth"></span>°
+                            <span class="text-small">
+                                <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> km <span class="text-gray">•</span> <span id="data-station-azimuth"></span>°
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -180,7 +182,7 @@
         </div>
         <div id="flags-container-phone" class="panel-33">
             <h2 class="show-phone">
-                <div class="data-pty" style="color:white;"></div>
+                <div class="data-pty text-color-default"></div>
             </h2>
             <h3 style="margin-top:0;margin-bottom:0;" class="color-4 flex-center">
                 <span class="data-tp">TP</span>
@@ -216,7 +218,8 @@
                         <li class="option" data-value="theme5">Orange</li>
                         <li class="option" data-value="theme6">Pink</li>
                         <li class="option" data-value="theme7">Blurple</li>
-                        <li class="option" data-value="theme8">AMOLED</li>
+                        <li class="option" data-value="theme8">Bee</li>
+                        <li class="option" data-value="theme9">Retro</li>
                     </ul>
                 </div>
             </div>
@@ -269,13 +272,8 @@
                         <p class="text-small" id="current-ping"></p>
                         
                         <div class="version-info">
-                            <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a> & the OpenRadio community.</p>
-                            <span style="color: var(--color-3);">v1.0.8 [19/2/2024]</span> 
-                            <p class="text-small bottom-50">
-                                <span class="text-smaller">librds & maps.fmdx.pl by <a href="https://fmdx.pl" target="_blank">Konrad Kosmatka</a></span><br>
-                                <span class="text-smaller">3LAS by <a href="https://github.com/JoJoBond/3LAS" target="_blank">JoJoBond</a></span><br>
-                                <span class="text-smaller">flat-flags by <a href="https://github.com/luishdez/flat-flags/tree/master" target="_blank">luishdez</a></span><br>
-                            </p>
+                            <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
+                            <span style="color: var(--color-3);">v1.0.9 [23/2/2024]</span> 
                         </div>
         </div>
     </div>

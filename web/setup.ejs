@@ -85,10 +85,13 @@
                     <div class="form-group">
                         <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> AUDIO QUALITY:</label>
                         <div class="dropdown" style="width: 300px;">
-                            <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (saves bandwidth)" readonly />
+                            <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly />
                             <ul class="options">
-                                <li data-value="128k" class="option">128k (saves bandwidth)</li>
+                                <li data-value="64k" class="option">64k (lowest quality)</li>
+                                <li data-value="96k" class="option">96k (low quality)</li>
+                                <li data-value="128k" class="option">128k (standard)</li>
                                 <li data-value="192k" class="option">192k (higher quality)</li>
+                                <li data-value="256k" class="option">256k (highest quality)</li>
                             </ul>
                         </div>
                     </div>
@@ -138,18 +141,20 @@
             
             <div class="panel-33">
                 <h2>MAINTENANCE</h2>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="tuner-public">
-                    <label for="tuner-public">Public tuner</label>
-                </div><br>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="tuner-lock">
-                    <label for="tuner-lock">Lock to admin</label>
-                </div><br>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="shutdown-tuner">
-                    <label for="shutdown-tuner">Auto-shutdown on empty server</label>
-                </div><br>
+                <div class="text-left top-25 bottom-20" style="padding-left: 40px;">
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="tuner-public">
+                        <label for="tuner-public">Public tuner</label>
+                    </div><br>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="tuner-lock">
+                        <label for="tuner-lock">Lock to admin</label>
+                    </div><br>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="shutdown-tuner">
+                        <label for="shutdown-tuner">Auto-shutdown [XDR Only]</label>
+                    </div><br>
+                </div>
                 <div class="form-group">
                     <label for="tune-pass">Tune password:</label>
                     <input class="input-text w-150" type="password" name="tune-pass" id="tune-pass">

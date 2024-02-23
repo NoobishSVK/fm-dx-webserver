@@ -54,10 +54,14 @@ Join our **Discord community** to get the latest development update info, share 
 
 5. Open your web browser and navigate to `http:/localhost:8080` to access the web interface.
 
-## Dependencies
+## Utilized projects
 
-This project utilizes the [librdsparser](https://github.com/kkonradpl/librdsparser) library for RDS parsing. Make sure to check out the library for more information.
-Pre-built version of this library is bundled with the webserver.
+This project utilizes these libraries:
+- [librdsparser](https://github.com/kkonradpl/librdsparser) library by Konrad Kosmatka for RDS parsing
+- [3LAS](https://github.com/jojobond/3LAS) library by JoJoBond for Low Latency Audio Streaming
+- [flat-flags](https://github.com/luishdez/flat-flags) library by luishdez for RDS country flags
+
+All of these libraries are already bundled with the webserver.
 
 ## Contributing
 
