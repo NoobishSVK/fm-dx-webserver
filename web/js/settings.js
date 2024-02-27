@@ -1,4 +1,4 @@
-    var currentVersion = 'v1.1.0 [29.2.2024]';
+    var currentVersion = 'v1.1.0 [27.2.2024]';
     
     /**
     * Themes
