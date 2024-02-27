@@ -1,8 +1,8 @@
 
 :root {
-    --color-main: #000;
-    --color-main-bright: #ccc;
-    --color-text: white;
+    --color-main: rgba(32, 34, 40, 1);
+    --color-main-bright: rgba(88, 219, 171, 1);
+    --color-text: rgba(255, 255, 255, 1);
     
     --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright)); /* 5% Brightness */
     --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright)); /* 25% Brightness */
