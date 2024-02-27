@@ -357,17 +357,17 @@ app.get('/setup', (req, res) => {
 });
 
 app.get('/api', (req, res) => {
-    let data = dataHandler.dataToSend;
-    delete data.ps_errors;
-    delete data.rt0_errors;
-    delete data.rt1_errors;
-    delete data.ims;
-    delete data.eq;
-    delete data.ant;
-    delete data.st_forced;
-    delete data.previousFreq;
-    delete data.txInfo;
-    res.json(data)
+  let data = { ...dataHandler.dataToSend };
+  delete data.ps_errors;
+  delete data.rt0_errors;
+  delete data.rt1_errors;
+  delete data.ims;
+  delete data.eq;
+  delete data.ant;
+  delete data.st_forced;
+  delete data.previousFreq;
+  delete data.txInfo;
+  res.json(data);
 });
 
 function formatUptime(uptimeInSeconds) {
