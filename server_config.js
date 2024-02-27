@@ -13,12 +13,11 @@ if (index !== -1 && index + 1 < process.argv.length) {
 let serverConfig = {
   webserver: {
     webserverIp: "0.0.0.0",
-    webserverPort: "8080",
-    audioPort: "8081"
+    webserverPort: 8080
   },
   xdrd: {
     xdrdIp: "127.0.0.1",
-    xdrdPort: "7373",
+    xdrdPort: 7373,
     xdrdPassword: ""
   },
   audio: {

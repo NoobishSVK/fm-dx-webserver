@@ -14,6 +14,22 @@
     background: transparent !important;
 }
 
+.bg-color-1 {
+    background-color: var(--color-1);
+}
+
+.bg-color-2 {
+    background-color: var(--color-2);
+}
+
+.bg-color-3 {
+    background-color: var(--color-3);
+}
+
+.bg-color-4 {
+    background-color: var(--color-4);
+}
+
 .color-1 {
     color: var(--color-1);
 }
@@ -29,6 +45,11 @@
 .color-4 {
     color: var(--color-4);
 }
+
+.color-5 {
+    color: var(--color-5);
+}
+
 
 .br-0 {
     border-radius: 0px;
@@ -126,7 +147,7 @@
 }
 
 .text-bold {
-    font-weight: bold;
+    font-weight: bold !important;
 }
 
 .text-monospace {
@@ -134,7 +155,7 @@
 }
 
 .text-gray {
-    color: #666;
+    opacity: 0.7;
 }
 
 .text-red {
@@ -175,6 +196,10 @@
 
 .pointer {
     cursor: pointer;
+}
+
+.hidden {
+    display: none;
 }
 
 @media only screen and (max-width: 960px) {

@@ -18,6 +18,57 @@ button:hover {
     opacity: 0.6;
 }
 
+.btn-next {
+    width: 200px;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--color-main);
+    margin: 30px 5px;
+    text-transform: uppercase;
+}
+
+.btn-prev {
+    width: 48px;
+    padding: 10px;
+    color: var(--color-main);
+    background-color: var(--color-3);
+    margin: 30px 5px;
+}
+
+.btn-rounded-cube {
+    width: 64px;
+    height: 64px;
+    background: var(--color-2);
+    color: var(--color-main);
+    border-radius: 30px;
+    margin-right: 10px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 24px;
+    font-weight: 300;
+    cursor: default;
+}
+
+.btn-rounded-cube:not(:first-child)::before {
+    content: "";
+    width: 20px;
+    height: 2px;
+    background: var(--color-2);
+    position: absolute;
+    right: 64px;
+}
+
+.btn-rounded-cube.activated {
+    background-color: var(--color-4);
+}
+
+.btn-rounded-cube.activated::before {
+    background-color: var(--color-4);
+}
+
 input[type="text"], textarea, input[type="password"] {
     width: 300px;
     min-height: 46px;

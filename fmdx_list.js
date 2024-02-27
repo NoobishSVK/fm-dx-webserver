@@ -31,7 +31,7 @@ function send(request) {
           }
           else
           {
-            logInfo("FM-DX Server Map update successful.");
+            logDebug("FM-DX Server Map update successful.");
           }
         }
         else
@@ -66,6 +66,7 @@ function sendUpdate() {
     desc: serverConfig.identification.tunerDesc,
     audioChannels: serverConfig.audio.audioChannels,
     audioQuality: serverConfig.audio.audioBitrate,
+    contact: serverConfig.identification.contact || ''
   };
 
   if (serverConfig.identification.token)

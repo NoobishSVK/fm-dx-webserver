@@ -82,7 +82,7 @@
                             <div style="display:inline-block">
                                 <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                             </div>
-                            <span style="margin-left: 20px;" class="data-st">ST</span>
+                            <span id="stereo-container" class="pointer"><span style="margin-left: 20px;" class="data-st">ST</span></span>
                             <span style="margin-left: 15px;" class="data-ms">MS</span>
                         </h3>
                     </div>
@@ -115,6 +115,8 @@
                             <div class="panel-75 no-bg h-100 m-0 hide-desktop m-right-20 button-play-mobile" style="margin-right: 20px;">
                                 <button class="playbutton" aria-label="Play/Stop Button"><i class="fa-solid fa-play"></i></button>
                             </div>
+                            
+                            <% if (antennaSwitch) { %>
                                 <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
                                     <input type="text" placeholder="Ant A" readonly />
                                     <ul class="options">
@@ -124,6 +126,8 @@
                                         <li data-value="3" class="option">Ant D</li>
                                     </ul>
                                 </div>
+                            <% } %>
+                            
                             <div class="panel-100 no-bg h-100 m-0 button-eq">
                                 <button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="EQ / RF+ Filter"><span class="text-bold">EQ</span><br><span class="text-smaller">(RF+)</span></button>
                             </div>
@@ -211,7 +215,7 @@
                 <div class="dropdown" id="theme-selector">
                     <input type="text" placeholder="Theme" readonly />
                     <ul class="options">
-                        <li class="option" data-value="theme1">Monochrome</li>
+                        <li class="option" data-value="theme1">Default</li>
                         <li class="option" data-value="theme2">Red</li>
                         <li class="option" data-value="theme3">Green</li>
                         <li class="option" data-value="theme4">Cyan</li>
@@ -219,7 +223,7 @@
                         <li class="option" data-value="theme6">Pink</li>
                         <li class="option" data-value="theme7">Blurple</li>
                         <li class="option" data-value="theme8">Bee</li>
-                        <li class="option" data-value="theme9">Retro</li>
+                        <li class="option" data-value="theme9">AMOLED</li>
                     </ul>
                 </div>
             </div>
@@ -243,6 +247,10 @@
             <div class="form-group checkbox">
                 <input type="checkbox" id="ps-underscores">
                 <label for="ps-underscores">Add underscores to RDS PS</label>
+            </div>
+            <div class="form-group checkbox">
+                <input type="checkbox" id="smooth-signal">
+                <label for="smooth-signal">Smooth signal</label>
             </div>
 
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
@@ -273,7 +281,8 @@
                         
                         <div class="version-info">
                             <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
-                            <span style="color: var(--color-3);">v1.0.9 [23/2/2024]</span> 
+                            <span style="color: var(--color-3);" class="version-string"></span><br>
+                            <span class="text-small" style="color: var(--color-3);">[<a href="https://list.fmdx.pl" target="_blank">Receiver Map</a>]</span>
                         </div>
         </div>
     </div>

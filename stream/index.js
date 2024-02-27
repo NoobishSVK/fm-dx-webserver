@@ -5,6 +5,7 @@ const { configName, serverConfig, configUpdate, configSave } = require('../serve
 
 function enableAudioStream() {
     var ffmpegCommand;
+    serverConfig.webserver.webserverPort = Number(serverConfig.webserver.webserverPort);
     // Specify the command and its arguments
     const command = 'ffmpeg';
     const flags = `-fflags +nobuffer+flush_packets -flags low_delay -rtbufsize 6192 -probesize 32`;
@@ -13,14 +14,14 @@ function enableAudioStream() {
     // Combine all the settings for the ffmpeg command
     if (process.platform === 'win32') {
         // Windows
-        ffmpegCommand = `${flags} -f dshow -i audio="${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
+        ffmpegCommand = `${flags} -f dshow -i audio="${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.webserverPort + 10} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
       } else {
         // Linux
-        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.audioPort} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
+        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.webserverPort + 10} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
     } 
 
     consoleCmd.logInfo("Using audio device: " + serverConfig.audio.audioDevice);
-    consoleCmd.logInfo("Launching audio stream on port " + serverConfig.webserver.audioPort + ".");
+    consoleCmd.logInfo(`Launching audio stream on internal port ${serverConfig.webserver.webserverPort + 10}.`);
     // Spawn the child process
 
     if(serverConfig.audio.audioDevice.length > 2) {

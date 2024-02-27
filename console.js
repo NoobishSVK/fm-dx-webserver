@@ -18,7 +18,7 @@ const MESSAGE_PREFIX = {
 
 // Initialize an array to store logs
 const logs = [];
-const maxLogLines = 100;
+const maxLogLines = 250;
 
 const logDebug = (...messages) => {
     if (verboseMode) {

@@ -48,7 +48,7 @@ function processData(data, piCode, rdsPs) {
         const city = data.locations[cityId];
         if (city.stations) {
             for (const station of city.stations) {
-                if (station.pi === piCode && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
+                if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                     const score =  (10*Math.log10(station.erp*1000)) / distance.distanceKm; // Calculate score
                     if (score > maxScore) {

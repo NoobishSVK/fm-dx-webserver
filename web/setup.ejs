@@ -15,15 +15,63 @@
     <div id="wrapper" class="setup-wrapper">
         <% if (isAdminAuthenticated) { %>
         <div class="panel-100 no-bg">
-            <h1>FM-DX WebServer</h1>
+            <img class="top-10" src="./images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
-            <p>This web setup allows you to set up your entire tuner. <br>Some settings will only change after a server restart.</p>
-            <p>In case you are setting up the webserver for the first time, we already filled fail-safe defaults for you.</p>
         </div>
-        <div class="flex-container">
-            <div class="panel-50" style="min-height: 120px;margin-bottom: 0;">
-                <h2>BASIC SETTINGS</h2>
-                <h3>Connection to xdrd:</h3>
+        <div class="panel-100">
+            <ul class="nav">
+                <li data-panel="status" class="active">Status</li>
+                <li data-panel="connection">Connection</li>
+                <li data-panel="audio">Audio</li>
+                <li data-panel="identification">Identification</li>
+                <li data-panel="mapbroadcast">Online map</li>
+                <li data-panel="maintenance">Maintenance</li>
+                <li class="logout-link text-gray"><i class="fas fa-sign-out"></i></li>
+            </ul>
+        </div>
+
+        <div id="login-message"></div>
+        <div class="panel-100">
+            <div class="panel-100 tab-content" id="status">
+                <h2>STATUS</h2>
+
+                <div class="panel-100 flex-container auto">
+                    <div class="panel-33 bg-color-2">
+                        <span class="text-medium-big color-5"><%= onlineUsers %></span>
+                        <p>Online users</p>
+                    </div>
+
+                    <div class="panel-33 bg-color-2">
+                        <span class="text-medium-big color-5"><%= memoryUsage %></span>
+                        <p>Memory usage</p>
+                    </div>
+
+                    <div class="panel-33 bg-color-2">
+                        <span class="text-medium-big color-5"><%= processUptime %></span>
+                        <p>Uptime</p>
+                    </div>
+                </div>
+
+                <h2>Console output</h2>
+                <% if (consoleOutput && consoleOutput.length > 0) { %>
+                    <div class="panel-100 br-5 p-10 text-small text-left top-10" id="console-output">
+                        <% consoleOutput.forEach(function(log) { %>
+                            <pre class="m-0" style="white-space:pre-wrap;"><%= log %></pre>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p>No console output available.</p>
+                <% } %>
+
+                <p>Version: <span class="version-string color-4"></span></p>
+                <p class="p-bottom-20"><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
+            </div>
+    
+            <div class="panel-100 tab-content" id="connection">
+                <h2>Connection settings</h2>
+                <p>You can set up your connection settings here. Changing these settings requires a server restart.</p>
+                <h3>Tuner connection:</h3>
+                <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
                 <div class="form-group">
                     <label for="xdrd-ip">xdrd ip address:</label>
                     <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
@@ -38,6 +86,7 @@
                 </div> 
                 <br>
                 <h3>Webserver connection:</h3>
+                <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
                 <div class="form-group">
                     <label for="webserver-ip">Webserver IP:</label>
                     <input class="input-text w-150" type="text" name="webserver-ip" id="webserver-ip" placeholder="0.0.0.0">
@@ -46,17 +95,18 @@
                     <label for="webserver-port">Webserver port:</label>
                     <input class="input-text w-100" type="text" name="webserver-port" id="webserver-port" placeholder="8080">
                 </div> 
-                <div class="form-group">
-                    <label for="audio-port">Audio port:</label>
-                    <input class="input-text w-150" type="text" name="audio-port" id="audio-port" placeholder="8081">
-                </div> 
                 <br>
             </div>
-            <div class="panel-50" style="min-height: 120px;margin-bottom: 0;">
-                <h2>AUDIO SETTINGS</h2>
+    
+            <div class="panel-100 tab-content" id="audio">
+                <h2>Audio settings</h2>
                 
+                <p>You can set up your audio settings here. Changing these settings requires a server restart.</p>
                 <div class="panel-100 p-bottom-20">
                     <div class="form-group">
+                        <p class="text-left">Your audio device port.<br>
+                            <span class="text-gray">This is where your tuner is plugged in.</span>
+                        </p>
                         <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
                         <div class="dropdown" style="width: 300px;">
                             <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly />
@@ -72,6 +122,9 @@
                     </div>
                     
                     <div class="form-group">
+                        <p class="text-left">Audio channel count.<br>
+                            <span class="text-gray">1: Mono • 2: Stereo</span>
+                        </p>
                         <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> AUDIO CHANNELS:</label>
                         <div class="dropdown" style="width: 300px;">
                             <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly />
@@ -83,6 +136,9 @@
                     </div>
                     
                     <div class="form-group">
+                        <p class="text-left">The bitrate of the mp3 audio.<br>
+                        <span class="text-gray">Minimum: 64 Kbps • Maximum: 256 Kbps</span>
+                        </p>
                         <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> AUDIO QUALITY:</label>
                         <div class="dropdown" style="width: 300px;">
                             <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly />
@@ -97,35 +153,21 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="flex-container bottom-20">
-            <div class="panel-100" style="padding-bottom: 20px;">
-                <h2>TUNER IDENTIFICATION INFO</h2>
-                
+    
+            <div class="panel-100 tab-content" id="identification">
+                <h2>Tuner Identification info</h2>
+                    
+                <p class="text-gray">Set your tuner name and description here. This info will be visible to anyone who tunes in. </p>
                 <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
                     <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here.">
+                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
                     <br>
                     <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown."></textarea>
-                </div>
-
-                <h3>Map broadcast:</h3>
-                <p class="m-0">If your tuner is set to public and ID information is filled, you can add your tuner to a public list.</p>
-                <p class="m-0">The list is available at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
-                <p></p>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="broadcast-tuner">
-                    <label for="broadcast-tuner">Broadcast to map</label>
-                </div><br>
-                <div class="form-group">
-                    <label for="broadcast-address">Broadcast address (if using a proxy):</label>
-                    <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
+                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
                 </div>
                 
-                <h3>Tuner location:</h3>
-                
+                <h3>Location:</h3>
+                <p class="text-gray">Location info is useful for automatic identification of stations using RDS.</p>
                 <div class="form-group">
                     <label for="lat">Latitude:</label>
                     <input class="input-text" type="text" name="lat" id="lat">
@@ -137,49 +179,61 @@
                 </div>
                 
                 <div id="map"></div>
+                <br>
             </div>
-            
-            <div class="panel-33">
-                <h2>MAINTENANCE</h2>
-                <div class="text-left top-25 bottom-20" style="padding-left: 40px;">
+
+            <div class="panel-100 tab-content" id="mapbroadcast">
+                <h2>Map broadcast</h2>
+                <p class="m-0">If your location information is filled, you can add your tuner to a public list.</p>
+                <p></p>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="broadcast-tuner">
+                    <label for="broadcast-tuner">Broadcast to map</label>
+                </div><br>
+                <div class="form-group">
+                    <label for="owner-contact">Owner contact:</label>
+                    <input class="input-text" type="text" placeholder="Your e-mail, discord..." name="owner-contact" id="owner-contact">
+
+                    <label for="broadcast-address">Broadcast address (if using a proxy):</label>
+                    <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
+                </div>
+
+                <p>Check your tuner at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
+            </div>
+    
+            <div class="panel-100 tab-content" id="maintenance">
+                <h2>Maintenance</h2>
+                <div class="text-left top-25 bottom-20 panel-33 auto">
                     <div class="form-group checkbox">
                         <input type="checkbox" id="tuner-public">
-                        <label for="tuner-public">Public tuner</label>
+                        <label for="tuner-public">Allow tuner control without password</label>
                     </div><br>
                     <div class="form-group checkbox">
                         <input type="checkbox" id="tuner-lock">
-                        <label for="tuner-lock">Lock to admin</label>
-                    </div><br>
+                        <label for="tuner-lock">Lock the tuner [only admins can tune with this option]</label>
+                    </div><br><br>
                     <div class="form-group checkbox">
                         <input type="checkbox" id="shutdown-tuner">
                         <label for="shutdown-tuner">Auto-shutdown [XDR Only]</label>
                     </div><br>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="antenna-switch">
+                        <label for="antenna-switch">Enable the antenna switch</label>
+                    </div><br>
                 </div>
                 <div class="form-group">
                     <label for="tune-pass">Tune password:</label>
-                    <input class="input-text w-150" type="password" name="tune-pass" id="tune-pass">
+                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
                 </div>
-                <div class="form-group" style="margin-bottom: 40px;">
+                <div class="form-group">
                     <label for="admin-pass">Admin setup password:</label>
-                    <input class="input-text w-150" type="password" name="admin-pass" id="admin-pass">
+                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
                 </div><br>
-                <button style="height:48px; width: 200px;margin-bottom:20px;" onclick="submitData();">Save settings</button>
-                <button style="height: 48px; width: 200px;background:var(--color-3)" class="logout-link">Logout</button>
-                <div id="login-message"></div>
             </div>
+
+            <button id="submit-config" style="height:48px; width: 200px;margin:20px;" onclick="submitData();">Save settings</button>
         </div>
-        <div class="panel-100 p-bottom-20">
-            <h2>CONSOLE OUTPUT</h2>
-            <% if (consoleOutput && consoleOutput.length > 0) { %>
-                <div class="panel-100 br-5 p-10 text-small text-left top-10" id="console-output" style="background-color: var(--color-main);height: 300px;overflow-y:auto;">
-                    <% consoleOutput.forEach(function(log) { %>
-                        <pre class="m-0" style="white-space:pre-wrap;"><%= log %></pre>
-                    <% }); %>
-                </div>
-            <% } else { %>
-                <p>No console output available.</p>
-            <% } %>
-        </div>
+        
         <div class="panel-100 no-bg">
             <p>Feel free to contact us on <a href="https://discord.gg/ZAVNdS74mC" target="_blank"><strong><i class="fa-brands fa-discord"></i> Discord</strong></a> for community support.</p>
         </div>
@@ -187,8 +241,7 @@
         <button onclick="document.location.href='./'" id="back-btn" aria-label="Go back to tuning"><i class="fa-solid fa-arrow-left"></i></button>
         <% } else { %>
         <div class="panel-100 no-bg">
-            <img src="../favicon2.png">
-            <h1>FM-DX WebServer</h1>
+            <img class="top-10" src="./images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
             <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
             <p>Please login below.</p>
@@ -206,5 +259,6 @@
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
+    <script src="js/confighandler.js"></script>
 </body>
 </html>

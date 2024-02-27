@@ -9,6 +9,13 @@
     margin-left: 5px;
 }
 
+.setup-wrapper h2 {
+    font-size: 32px;
+    font-weight: 300;
+    padding: 10px;
+    text-transform: uppercase;
+}
+
 
 .setup-wrapper textarea {
     width: 100%;
@@ -17,6 +24,34 @@
     height: 100px;
     font-size: 14px;
     padding-top: 10px;
+}
+
+ul.nav {
+    list-style-type: none;
+    padding: 15px 0;
+    background: var(--color-2);
+    border-radius: 30px;
+}
+
+ul.nav li {
+    display: inline;
+    padding: 15px;
+    cursor: pointer;
+    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    user-select: none;
+}
+
+ul.nav li:hover {
+    color: var(--color-main);
+    background-color: var(--color-4);
+}
+
+li.active {
+    background-color: var(--color-3);
+}
+
+.tab-content {
+    display: none;
 }
 
 #map {
@@ -33,10 +68,37 @@
     margin: 8px;
 }
 
+
+#console-output {
+    background-color: #111;
+    height: 300px;
+    overflow-y:auto;
+}
+.w-200 {
+    width: 200px !important
+}
+
 .w-150 {
     width: 150px !important
 }
 
 .w-100 {
     width: 100px !important;
+}
+
+@media only screen and (max-width: 768px) {
+    ul.nav {
+        display: flex;
+        overflow-y: scroll;
+        background: transparent;
+    }
+
+    ul.nav li {
+        background-color: var(--color-4);
+        color: var(--color-main);
+        margin: 0px 10px;
+        padding: 15px 35px;
+        border-radius: 30px;
+        min-width: fit-content;
+    }
 }

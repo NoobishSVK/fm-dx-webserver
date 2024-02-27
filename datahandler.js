@@ -210,7 +210,7 @@ var dataToSend = {
   st: false,
   st_forced: false,
   ps: '',
-  tp: false,
+  tp: 0,
   ta: 0,
   ms: -1,
   pty: 0,
@@ -231,7 +231,7 @@ var dataToSend = {
   },
   country_name: '',
   country_iso: 'UN',
-  users: '',
+  users: 0,
 };
 
 var legacyRdsPiBuffer = null;

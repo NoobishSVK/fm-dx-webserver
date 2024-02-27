@@ -3,6 +3,7 @@ url.protocol = url.protocol.replace('http', 'ws');
 var socketAddress = url.href;
 var socket = new WebSocket(socketAddress);
 var parsedData, signalChart, previousFreq;
+var signalData = [];
 var data = [];
 let updateCounter = 0;
 
@@ -118,6 +119,7 @@ $(document).ready(function () {
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
     var txContainer = $('#data-station-container')[0];
+    var stereoContainer = $('#stereo-container')[0];
 
     $("#data-eq").click(function () {
         toggleButtonState("eq");
@@ -133,6 +135,7 @@ $(document).ready(function () {
     $(rtContainer).on("click", copyRt);
     $(txContainer).on("click", copyTx);
     $(piCodeContainer).on("click", findOnMaps);
+    $(stereoContainer).on("click", toggleForcedStereo);
     $(freqContainer).on("click", function () {
         textInput.focus();
     });
@@ -514,24 +517,31 @@ function findOnMaps() {
     window.open(url, "_blank");
 }
 
-function updateSignalUnits(parsedData) {
+function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
+    let currentSignal;
+
+    if(localStorage.getItem("smoothSignal") == 'true') {
+        currentSignal = averageSignal
+    } else {
+        currentSignal = parsedData.signal;
+    }
     let signalText = $('#signal-units');
     let signalValue;
 
     switch (signalUnit) {
         case 'dbuv':
-            signalValue = parsedData.signal - 11.25;
+            signalValue = currentSignal - 11.25;
             signalText.text('dBµV');
             break;
 
         case 'dbm':
-            signalValue = parsedData.signal - 120;
+            signalValue = currentSignal - 120;
             signalText.text('dBm');
             break;
 
         default:
-            signalValue = parsedData.signal;
+            signalValue = currentSignal;
             signalText.text('dBf');
             break;
     }
@@ -551,15 +561,6 @@ function updateDataElements(parsedData) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
     $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-    $('.data-tp').html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
-    $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
-    $('.data-ms').html(parsedData.ms === 0
-        ? "<span class='opacity-half'>M</span><span class='opacity-full'>S</span>"
-        : (parsedData.ms === -1
-            ? "<span class='opacity-half'>M</span><span class='opacity-half'>S</span>"
-            : "<span class='opacity-full'>M</span><span class='opacity-half'>S</span>"
-        )
-    );
     $('.data-pty').html(europe_programmes[parsedData.pty]);
 
 
@@ -580,6 +581,7 @@ function updateDataElements(parsedData) {
     $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
     $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
+    $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
     $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
@@ -596,6 +598,18 @@ function updateDataElements(parsedData) {
     }
 
     updateCounter++;
+    if(updateCounter % 8 === 0) {
+        $('.data-tp').html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
+        $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
+        $('.data-ms').html(parsedData.ms === 0
+            ? "<span class='opacity-half'>M</span><span class='opacity-full'>S</span>"
+            : (parsedData.ms === -1
+                ? "<span class='opacity-half'>M</span><span class='opacity-half'>S</span>"
+                : "<span class='opacity-full'>M</span><span class='opacity-half'>S</span>"
+            )
+        );
+    }
+
     if (updateCounter % 30 === 0) {
         $('#data-ps').attr('aria-label', parsedData.ps);
         $('#data-rt0').attr('aria-label', parsedData.rt0);
@@ -607,6 +621,13 @@ let isEventListenerAdded = false;
 
 function updatePanels(parsedData) {
     updateCounter++;
+
+    signalData.push(parsedData.signal);
+    if (signalData.length > 8) {
+        signalData.shift(); // Remove the oldest element
+    }
+    const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+    const averageSignal = sum / signalData.length;
 
     const sortedAf = parsedData.af.sort(compareNumbers);
     const scaledArray = sortedAf.map(element => element / 1000);
@@ -642,9 +663,8 @@ function updatePanels(parsedData) {
         listContainer.scrollTop(scrollTop);
     }
 
-    // Update other elements every time
     updateDataElements(parsedData);
-    updateSignalUnits(parsedData);
+    updateSignalUnits(parsedData, averageSignal);
     $('.users-online').text(parsedData.users);
 }
 
@@ -667,5 +687,11 @@ function toggleButtonState(buttonId) {
     var message = "G";
     message += parsedData.eq ? "1" : "0";
     message += parsedData.ims ? "1" : "0";
+    socket.send(message);
+}
+
+function toggleForcedStereo() {
+    var message = "B";
+    message += parsedData.st_forced = (parsedData.st_forced == "1") ? "0" : "1";
     socket.send(message);
 }

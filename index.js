@@ -11,6 +11,7 @@ const httpProxy = require('http-proxy');
 const https = require('https');
 const app = express();
 const httpServer = http.createServer(app);
+const process = require("process");
 
 // Websocket handling
 const WebSocket = require('ws');
@@ -33,7 +34,7 @@ const { logDebug, logError, logInfo, logWarn } = consoleCmd;
 
 // Create a WebSocket proxy instance
 const proxy = httpProxy.createProxyServer({
-  target: 'ws://localhost:'+ serverConfig.webserver.audioPort, // WebSocket httpServer's address
+  target: 'ws://localhost:' + (Number(serverConfig.webserver.webserverPort) + 10), // WebSocket httpServer's address
   ws: true, // Enable WebSocket proxying
   changeOrigin: true // Change the origin of the host header to the target URL
 });
@@ -98,7 +99,6 @@ function connectToXdrd() {
         const lines = receivedData.split('\n');
 
         for (const line of lines) {
-
           if (!authFlags.receivedPassword) {
             authFlags.receivedSalt = line.trim();
             authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
@@ -225,7 +225,6 @@ app.get('/static_data', (req, res) => {
   res.json({
     qthLatitude: serverConfig.identification.lat,
     qthLongitude: serverConfig.identification.lon,
-    audioPort: serverConfig.webserver.audioPort,
     streamEnabled: streamEnabled
   });
 });
@@ -286,8 +285,7 @@ function parseMarkdown(parsed) {
   var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
   parsed = parsed.replace(linkRegex, '<a href="$2">$1</a>');
 
-  var breakLineRegex = /\\n/g;
-  parsed = parsed.replace(breakLineRegex, '<br>');
+  parsed = parsed.replace(/\n/g, '<br>');
 
   return parsed;
 }
@@ -307,21 +305,17 @@ function removeMarkdown(parsed) {
   var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
   parsed = parsed.replace(linkRegex, '$1');
 
-  var breakLineRegex = /\\n/g;
-  parsed = parsed.replace(breakLineRegex, '');
-
   return parsed;
 }
 
 app.get('/', (req, res) => {
   if (!fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
-      res.render('setup', { 
+      res.render('wizard', { 
         isAdminAuthenticated: true,
         videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices,
-        consoleOutput: consoleCmd.logs });
-      });;
+        audioDevices: result.videoDevices });
+      });
   } else {
   res.render('index', { 
     isAdminAuthenticated: req.session.isAdminAuthenticated,
@@ -330,20 +324,64 @@ app.get('/', (req, res) => {
     tunerDesc: parseMarkdown(serverConfig.identification.tunerDesc),
     tunerDescMeta: removeMarkdown(serverConfig.identification.tunerDesc),
     tunerLock: serverConfig.lockToAdmin,
-    publicTuner: serverConfig.publicTuner
+    publicTuner: serverConfig.publicTuner,
+    antennaSwitch: serverConfig.antennaSwitch
    })
   }
 });
 
+app.get('/wizard', (req, res) => {
+    parseAudioDevice((result) => {
+      res.render('wizard', { 
+        isAdminAuthenticated: req.session.isAdminAuthenticated,
+        videoDevices: result.audioDevices,
+        audioDevices: result.videoDevices });
+      });
+})
+
 app.get('/setup', (req, res) => {
   parseAudioDevice((result) => {
-  res.render('setup', { 
-    isAdminAuthenticated: req.session.isAdminAuthenticated,
-    videoDevices: result.audioDevices,
-    audioDevices: result.videoDevices,
-    consoleOutput: consoleCmd.logs });
+    const processUptimeInSeconds = Math.floor(process.uptime());
+    const formattedProcessUptime = formatUptime(processUptimeInSeconds);
+
+    res.render('setup', { 
+      isAdminAuthenticated: req.session.isAdminAuthenticated,
+      videoDevices: result.audioDevices,
+      audioDevices: result.videoDevices,
+      memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+      processUptime: formattedProcessUptime,
+      consoleOutput: consoleCmd.logs,
+      onlineUsers: dataHandler.dataToSend.users
+    });
   });
 });
+
+app.get('/api', (req, res) => {
+    let data = dataHandler.dataToSend;
+    delete data.ps_errors;
+    delete data.rt0_errors;
+    delete data.rt1_errors;
+    delete data.ims;
+    delete data.eq;
+    delete data.ant;
+    delete data.st_forced;
+    delete data.previousFreq;
+    delete data.txInfo;
+    res.json(data)
+});
+
+function formatUptime(uptimeInSeconds) {
+    const secondsInMinute = 60;
+    const secondsInHour = secondsInMinute * 60;
+    const secondsInDay = secondsInHour * 24;
+
+    const days = Math.floor(uptimeInSeconds / secondsInDay);
+    const hours = Math.floor((uptimeInSeconds % secondsInDay) / secondsInHour);
+    const minutes = Math.floor((uptimeInSeconds % secondsInHour) / secondsInMinute);
+
+    return `${days}d ${hours}h ${minutes}m`;
+}
+
 
 
 // Route for login
