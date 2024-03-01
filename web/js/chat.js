@@ -53,7 +53,7 @@ $(document).ready(function() {
   $('.chatbutton').click(function() {
     $('#chat-chatbox').scrollTop($('#chat-chatbox')[0].scrollHeight);
     chatMessageCount = 0;
-    $('#chat-messages-count').text(chatMessageCount);
+    $('.chat-messages-count').text(chatMessageCount);
     $('.chatbutton').removeClass('bg-color-4').addClass('bg-color-2');
     $('#chat-send-message').focus();
   });
