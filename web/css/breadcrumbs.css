@@ -102,6 +102,23 @@ label {
     cursor: pointer;
 }
 
+.chatbutton.hide-desktop {
+    background: transparent;
+    border: 0;
+    color: var(--color-text);
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 16px;
+    width: 64px;
+    height: 64px;
+    line-height: 64px;
+    text-align: center;
+    border-radius: 50%;
+    transition: 500ms ease-in-out background;
+    cursor: pointer;
+}
+
 #settings:hover, #back-btn:hover, #users-online-container:hover {
     background: var(--color-3);
 }
@@ -199,6 +216,9 @@ label {
     canvas, #flags-container {
         display: none;
     }
+    #tuner-desc {
+        margin-bottom: 20px !important;
+    }
     #ps-container {
         background-color: var(--color-1);
         height: 100px !important;
@@ -213,8 +233,8 @@ label {
     }
     #data-pi {
         font-size: 24px;
-        margin-top: 50px;
-        color: var(--color-text-2)
+        margin-top: 20px;
+        color: var(--color-text-2);
     }
     h2.show-phone {
         display: inline;
@@ -230,6 +250,7 @@ label {
         font-size: 10px;
         text-align: left;
         width: 100%;
+        word-break: break-all;
     }
     #rt-container {
         height: 32px !important;
@@ -272,6 +293,13 @@ label {
     .tuner-info {
         margin-bottom: -60px !important;
     }
+    #af-list ul {
+        height: auto !important;
+    }
+
+    #rt-container {
+        order: 2;
+    }
 }
 
 @media only screen and (min-width: 769px) and (max-height: 860px) {
@@ -287,6 +315,12 @@ label {
     .tuner-info #tuner-name {
         float: left;
         font-size: 24px;
+        text-align: left;
+    }
+
+    .tuner-info #tuner-limit {
+        float: left;
+        text-align: left;
     }
 
     .tuner-info #tuner-desc {
@@ -303,6 +337,9 @@ label {
         margin-top: 2px !important;
     }
     #af-list ul {
-        max-height: 330px;
+        height: 225px !important;
+    }
+    .chatbutton {
+        height: 86px !important;
     }
 }

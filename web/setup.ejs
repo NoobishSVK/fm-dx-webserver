@@ -23,6 +23,7 @@
                 <li data-panel="status" class="active">Status</li>
                 <li data-panel="connection">Connection</li>
                 <li data-panel="audio">Audio</li>
+                <li data-panel="webserver">Webserver</li>
                 <li data-panel="identification">Identification</li>
                 <li data-panel="mapbroadcast">Online map</li>
                 <li data-panel="maintenance">Maintenance</li>
@@ -36,23 +37,49 @@
                 <h2>STATUS</h2>
 
                 <div class="panel-100 flex-container auto">
-                    <div class="panel-33 bg-color-2">
+                    <div class="panel-33">
                         <span class="text-medium-big color-5"><%= onlineUsers %></span>
                         <p>Online users</p>
                     </div>
 
-                    <div class="panel-33 bg-color-2">
+                    <div class="panel-33">
                         <span class="text-medium-big color-5"><%= memoryUsage %></span>
                         <p>Memory usage</p>
                     </div>
 
-                    <div class="panel-33 bg-color-2">
+                    <div class="panel-33">
                         <span class="text-medium-big color-5"><%= processUptime %></span>
                         <p>Uptime</p>
                     </div>
                 </div>
 
-                <h2>Console output</h2>
+                <h3>Current users</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Location</th>
+                            <th>Online since</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (connectedUsers.length > 0) { %>
+                            <% connectedUsers.forEach(user => { %>
+                                <tr>
+                                    <td><%= user.ip %></td>
+                                    <td><%= user.location %></td>
+                                    <td><%= user.time %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="3" style="text-align: center">No users online</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>                
+
+                <h3>Console</h3>
                 <% if (consoleOutput && consoleOutput.length > 0) { %>
                     <div class="panel-100 br-5 p-10 text-small text-left top-10" id="console-output">
                         <% consoleOutput.forEach(function(log) { %>
@@ -153,6 +180,61 @@
                     </div>
                 </div>
             </div>
+
+            <div class="panel-100 tab-content" id="webserver">
+                <h2>Webserver settings</h2>
+                <h3>Antenna options</h3>
+                <div class="form-group checkbox bottom-20">
+                    <input type="checkbox" id="antenna-switch">
+                    <label for="antenna-switch">Enable the antenna switch</label>
+                </div><br>
+
+                <h3>Tuning options</h3>
+                <p>If you want to limit which frequencies the users can tune to, you can set the lower and upper limit here.<br>
+                    <span class="text-gray">Enter frequencies in MHz.</span>
+                </p>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="tuning-limit">
+                    <label for="tuning-limit">Limit tuning</label>
+                </div><br>
+                <div class="form-group">
+                    <label for="tuning-lower-limit">Lower limit:</label>
+                    <input class="input-text w-100" type="text" placeholder="0" name="tuning-lower-limit" id="tuning-lower-limit">
+                </div>
+                <div class="form-group">
+                    <label for="tuning-upper-limit">Upper Limit:</label>
+                    <input class="input-text w-100" type="text" placeholder="108" name="tuning-upper-limit" id="tuning-upper-limit">
+                </div>
+
+                <h3>Presets</h3>
+                <p>You can set up to 4 presets. These presets are accessible with the F1-F4 buttons.<br>
+                <span class="text-gray">Enter frequencies in MHz.</span></p>
+                <div class="form-group">
+                    <label for="preset1">Preset 1:</label>
+                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset1" id="preset1">
+                </div>
+                <div class="form-group">
+                    <label for="preset2">Preset 2:</label>
+                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset2" id="preset2">
+                </div>
+                <div class="form-group">
+                    <label for="preset1">Preset 3:</label>
+                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset3" id="preset3">
+                </div>
+                <div class="form-group">
+                    <label for="preset1">Preset 4:</label>
+                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset4" id="preset4">
+                </div>
+
+                <h3>Banlist</h3>
+                <p>If you have users that don't behave in your chat, you can choose to ban them by their IP address.<br>
+                <span class="text-gray">You can see their IP address by hovering over their nickname. One IP per row.</span></p>
+                <div class="form-group">
+                    <label for="preset1">Banned users:</label>
+                    <textarea id="ip-addresses" placeholder="123.45.67.8"></textarea>
+                </div>
+
+            </div>
     
             <div class="panel-100 tab-content" id="identification">
                 <h2>Tuner Identification info</h2>
@@ -215,10 +297,6 @@
                     <div class="form-group checkbox">
                         <input type="checkbox" id="shutdown-tuner">
                         <label for="shutdown-tuner">Auto-shutdown [XDR Only]</label>
-                    </div><br>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="antenna-switch">
-                        <label for="antenna-switch">Enable the antenna switch</label>
                     </div><br>
                 </div>
                 <div class="form-group">

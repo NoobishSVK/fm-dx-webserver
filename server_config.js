@@ -13,7 +13,8 @@ if (index !== -1 && index + 1 < process.argv.length) {
 let serverConfig = {
   webserver: {
     webserverIp: "0.0.0.0",
-    webserverPort: 8080
+    webserverPort: 8080,
+    banlist: []
   },
   xdrd: {
     xdrdIp: "127.0.0.1",
@@ -55,8 +56,15 @@ function deepMerge(target, source)
 }
 
 function configUpdate(newConfig) {
+  if (newConfig.webserver && newConfig.webserver.banlist !== undefined) {
+    // If new banlist is provided, replace the existing one
+    serverConfig.webserver.banlist = newConfig.webserver.banlist;
+    delete newConfig.webserver.banlist; // Remove banlist from newConfig to avoid merging
+  }
+  
   deepMerge(serverConfig, newConfig);
 }
+
 
 function configSave() {
   fs.writeFile(configName + '.json', JSON.stringify(serverConfig, null, 2), (err) => {

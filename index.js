@@ -16,6 +16,7 @@ const process = require("process");
 // Websocket handling
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
+const chatWss = new WebSocket.Server({ noServer: true });
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
@@ -31,6 +32,19 @@ const audioStream = require('./stream/index.js');
 const { parseAudioDevice } = require('./stream/parser.js');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 const { logDebug, logError, logInfo, logWarn } = consoleCmd;
+var pjson = require('./package.json');
+
+console.log(`\x1b[32m
+ _____ __  __       ______  __ __        __   _                                  
+|  ___|  \\/  |     |  _ \\ \\/ / \\ \\      / /__| |__  ___  ___ _ ____   _____ _ __ 
+| |_  | |\\/| |_____| | | \\  /   \\ \\ /\\ / / _ \\ '_ \\/ __|/ _ \\ '__\\ \\ / / _ \\ '__|
+|  _| | |  | |_____| |_| /  \\    \\ V  V /  __/ |_) \\__ \\  __/ |   \\ V /  __/ |   
+|_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
+`);
+console.log('\x1b[0mFM-DX-Webserver', pjson.version);
+console.log('\x1b[90m======================================================');
+
+
 
 // Create a WebSocket proxy instance
 const proxy = httpProxy.createProxyServer({
@@ -40,6 +54,7 @@ const proxy = httpProxy.createProxyServer({
 });
 
 let currentUsers = 0;
+let connectedUsers = [];
 let streamEnabled = false;
 let incompleteDataBuffer = '';
 
@@ -225,7 +240,8 @@ app.get('/static_data', (req, res) => {
   res.json({
     qthLatitude: serverConfig.identification.lat,
     qthLongitude: serverConfig.identification.lon,
-    streamEnabled: streamEnabled
+    streamEnabled: streamEnabled,
+    presets: serverConfig.webserver.presets || []
   });
 });
 
@@ -325,7 +341,11 @@ app.get('/', (req, res) => {
     tunerDescMeta: removeMarkdown(serverConfig.identification.tunerDesc),
     tunerLock: serverConfig.lockToAdmin,
     publicTuner: serverConfig.publicTuner,
-    antennaSwitch: serverConfig.antennaSwitch
+    ownerContact: serverConfig.identification.contact,
+    antennaSwitch: serverConfig.antennaSwitch,
+    tuningLimit: serverConfig.webserver.tuningLimit,
+    tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
+    tuningUpperLimit: serverConfig.webserver.tuningUpperLimit
    })
   }
 });
@@ -351,7 +371,8 @@ app.get('/setup', (req, res) => {
       memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
       processUptime: formattedProcessUptime,
       consoleOutput: consoleCmd.logs,
-      onlineUsers: dataHandler.dataToSend.users
+      onlineUsers: dataHandler.dataToSend.users,
+      connectedUsers: connectedUsers
     });
   });
 });
@@ -475,9 +496,17 @@ wss.on('connection', (ws, request) => {
     response.on('end', () => {
       try {
         const locationInfo = JSON.parse(data);
+        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        const connectionTime = new Date().toLocaleString([], options);
+
         if(locationInfo.country === undefined) {
+          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime };
+          connectedUsers.push(userData);
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
         } else {
+          const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
+          const userData = { ip: clientIp, location: userLocation, time: connectionTime };
+          connectedUsers.push(userData);
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
         }
       } catch (error) {
@@ -493,6 +522,14 @@ wss.on('connection', (ws, request) => {
     if(command.startsWith('X')) {
       logWarn('Remote tuner shutdown attempted by \x1b[90m' + clientIp + '\x1b[0m. You may consider blocking this user.');
       return;
+    }
+
+    if(command.startsWith('T')) {
+      let tuneFreq = Number(command.slice(1)) / 1000;
+      
+      if(serverConfig.webserver.tuningLimit === true && (tuneFreq < serverConfig.webserver.tuningLowerLimit || tuneFreq > serverConfig.webserver.tuningUpperLimit)) {
+        return;
+      }
     }
 
     if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
@@ -512,14 +549,84 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
-    if(currentUsers === 0 && serverConfig.autoShutdown === true) {
-      client.write('X\n'); 
+  
+    // Find the index of the user's data in connectedUsers array
+    const index = connectedUsers.findIndex(user => user.ip === clientIp);
+    if (index !== -1) {
+      connectedUsers.splice(index, 1); // Remove the user's data from connectedUsers array
+    }
+  
+    if (currentUsers === 0 && serverConfig.autoShutdown === true) {
+      client.write('X\n');
     }
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
-  });
+  });  
 
   ws.on('error', console.error);
 });
+
+// CHAT WEBSOCKET BLOCK
+// Assuming chatWss is your WebSocket server instance
+// Initialize an array to store chat messages
+let chatHistory = [];
+
+chatWss.on('connection', (ws, request) => {
+  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+
+  // Send chat history to the newly connected client
+  chatHistory.forEach(function(message) {
+    message.history = true; // Adding the history parameter
+    ws.send(JSON.stringify(message));
+  });
+
+  const ipMessage = {
+    type: 'clientIp',
+    ip: clientIp,
+    admin: request.session.isAdminAuthenticated
+  };
+  ws.send(JSON.stringify(ipMessage));
+  
+  ws.on('message', function incoming(message) {
+    const messageData = JSON.parse(message);
+    messageData.ip = clientIp; // Adding IP address to the message object
+    const currentTime = new Date();
+    
+    const hours = String(currentTime.getHours()).padStart(2, '0');
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+    messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
+
+    if (serverConfig.webserver.banlist.includes(clientIp)) {
+      return; // Do not proceed further if banned
+    }
+
+    if(request.session.isAdminAuthenticated === true) {
+      messageData.admin = true;
+    }
+
+    // Limit message length to 255 characters
+    if (messageData.message.length > 255) {
+      messageData.message = messageData.message.substring(0, 255);
+    }
+
+    // Add the new message to chat history and keep only the latest 50 messages
+    chatHistory.push(messageData);
+    if (chatHistory.length > 50) {
+      chatHistory.shift(); // Remove the oldest message if the history exceeds 50 messages
+    }
+    
+    const modifiedMessage = JSON.stringify(messageData);
+    
+    chatWss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(modifiedMessage);
+      }
+    });
+});
+
+  ws.on('close', function close() {
+  });
+});
+
 
 // Handle upgrade requests to /text and proxy /audio WebSocket connections
 httpServer.on('upgrade', (request, socket, head) => {
@@ -531,11 +638,16 @@ httpServer.on('upgrade', (request, socket, head) => {
     });
   } else if (request.url === '/audio') {
     proxy.ws(request, socket, head);
+  } else if (request.url === '/chat') {
+    sessionMiddleware(request, {}, () => {
+      chatWss.handleUpgrade(request, socket, head, (ws) => {
+        chatWss.emit('connection', ws, request);
+      });
+    });
   } else {
     socket.destroy();
   }
-}
-);
+});
 
 /* Serving of HTML files */
 app.use(express.static(path.join(__dirname, 'web')));

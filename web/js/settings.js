@@ -1,4 +1,4 @@
-    var currentVersion = 'v1.1.0 [27.2.2024]';
+    var currentVersion = 'v1.1.1 [1.3.2024]';
     
     /**
     * Themes
@@ -8,13 +8,13 @@
     */
     const themes = {
         theme1: ['rgba(32, 34, 40, 1)', 'rgba(88, 219, 171, 1)', 'rgba(255, 255, 255, 1)' ], // Retro (Default)
-        theme2: [ 'rgba(31, 12, 12, 1)', 'rgba(255, 112, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Red
-        theme3: [ 'rgba(18, 28, 12, 1)', 'rgba(169, 255, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Green
-        theme4: [ 'rgba(12, 28, 27, 1)', 'rgba(104, 247, 238, 1)', 'rgba(255, 255, 255, 1)' ], // Cyan
-        theme5: [ 'rgba(23, 17, 6, 1)', 'rgba(245, 182, 66, 1)', 'rgba(255, 255, 255, 1)' ], // Orange
-        theme6: [ 'rgba(33, 9, 29, 1)', 'rgba(237, 81, 211, 1)', 'rgba(255, 255, 255, 1)' ], // Pink
+        theme2: [ 'rgba(21, 32, 33, 1)', 'rgba(203, 202, 165, 1)', 'rgba(255, 255, 255, 1)' ], // Cappuccino
+        theme3: [ 'rgba(18, 18, 12, 1)', 'rgba(169, 255, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Nature
+        theme4: [ 'rgba(12, 28, 27, 1)', 'rgba(104, 247, 238, 1)', 'rgba(255, 255, 255, 1)' ], // Ocean
+        theme5: [ 'rgba(23, 17, 6, 1)', 'rgba(245, 182, 66, 1)', 'rgba(255, 255, 255, 1)' ], // Terminal
+        theme6: [ 'rgba(33, 9, 29, 1)', 'rgba(250, 82, 141, 1)', 'rgba(255, 255, 255, 1)' ], // Nightlife
         theme7: [ 'rgba(13, 11, 26, 1)', 'rgba(128, 105, 250, 1)', 'rgba(255, 255, 255, 1)' ], // Blurple
-        theme8: [ 'rgba(252, 186, 3, 1)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)' ], // Sunny
+        theme8: [ 'rgba(252, 186, 3, 1)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)' ], // Construction
         theme9: [ 'rgba(0, 0, 0, 1)', 'rgba(204, 204, 204, 1)', 'rgba(255, 255, 255, 1)' ], // AMOLED
     };      
     

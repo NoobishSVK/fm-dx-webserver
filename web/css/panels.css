@@ -10,7 +10,7 @@
 
 .panel-10 {
     width: 10%;
-    margin-bottom: 30px;
+    margin-top: 30px;
 }
 
 .panel-33 {
@@ -44,9 +44,9 @@
         padding: 20px;
         padding-top: 5px;
     }
-    .panel-100 {
-        width: 90%;
-        margin: auto;
+    .panel-100, .panel-100.w-100 {
+        width: 90% !important;
+        margin: auto !important;
     } 
     [class^="panel-"] {
         margin: auto;
@@ -67,11 +67,10 @@
     *[class^="panel-"] {
         margin-top: 20px;
     }
-    .panel-10, .panel-90 {
+    .panel-90 {
         margin-top: 0;
     }
     .panel-10 {
-        margin: 0;
         padding-bottom: 20px;
         padding-right: 20px;
     }

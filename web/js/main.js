@@ -313,7 +313,13 @@ function updateCanvas(parsedData, signalChart) {
 socket.onmessage = (event) => {
     parsedData = JSON.parse(event.data);
     updatePanels(parsedData);
-    data.push(parsedData.signal);
+    if(localStorage.getItem("smoothSignal") == 'true') {
+        const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+        const averageSignal = sum / signalData.length;
+        data.push(averageSignal);
+    } else {
+        data.push(parsedData.signal);
+    }
 };
 
 function compareNumbers(a, b) {
@@ -365,13 +371,13 @@ function checkKey(e) {
     if (socket.readyState === WebSocket.OPEN) {
         switch (e.keyCode) {
             case 66: // Back to previous frequency
-                socket.send("T" + (previousFreq * 1000));
+                tuneTo(previousFreq);
                 break;
             case 82: // RDS Reset (R key)
-                socket.send("T" + (currentFreq.toFixed(1) * 1000));
+                tuneTo(Number(currentFreq));
                 break;
             case 38:
-		socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
+		        socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
                 break;
             case 40:
                 socket.send("T" + (Math.round(currentFreq*1000) - ((currentFreq > 30) ? 10 : 1)));
@@ -381,6 +387,22 @@ function checkKey(e) {
                 break;
             case 39:
                 tuneUp();
+                break;
+            case 112: // F1
+                e.preventDefault();
+                tuneTo(Number(localStorage.getItem('preset1')));
+                break;
+            case 113: // F2
+                e.preventDefault();
+                tuneTo(Number(localStorage.getItem('preset2')));
+                break;
+            case 114: // F3
+                e.preventDefault();
+                tuneTo(Number(localStorage.getItem('preset3')));
+                break;
+            case 115: // F4
+                e.preventDefault();
+                tuneTo(Number(localStorage.getItem('preset4')));
                 break;
             default:
                 // Handle default case if needed

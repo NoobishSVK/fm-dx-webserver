@@ -52,8 +52,14 @@
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
             <h1 id="tuner-name"><%= tunerName %> <% if (!publicTuner) { %><i class="fa-solid fa-key pointer" title="Only people with tune password can tune."></i>
-                <% } else if (tunerLock) { %><i class="fa-solid fa-lock pointer" title="Tuner is currently locked to admin."></i><% } %></h1>
-            <p id="tuner-desc"><%- tunerDesc %></p>
+                <% } else if (tunerLock) { %><i class="fa-solid fa-lock pointer" title="Tuner is currently locked to admin."></i><% } %>
+            </h1>
+            <p id="tuner-desc">
+                <%- tunerDesc %>
+                <% if(tuningLimit && tuningLimit == true){ %>
+                    <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
+                 <% } %>
+            </p>
             <div style="clear: both"></div>
         </div>
         <div class="canvas-container hide-phone">
@@ -61,7 +67,7 @@
         </div>
 
         <div class="flex-container">
-            <div class="panel-90 bg-none">
+            <div class="panel-100 bg-none">
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
@@ -148,17 +154,17 @@
                     </div>
                 </div>
                 
-                <div class="flex-container">
-                    <div class="panel-75 hover-brighten" id="rt-container" style="height: 110px;">
+                <div class="flex-container flex-phone flex-phone-column">
+                    <div class="panel-75 hover-brighten" id="rt-container" style="height: 100px;">
                         <h2 style="margin-top: 4px;">RADIOTEXT</h2>
                         <div id="data-rt0"></div>
                         <div id="data-rt1"></div>
-                        <div id="data-container" style="display: none;"></div>
+                        <hr class="hide-desktop">
                     </div>
                     
                     <div class="panel-33 hover-brighten">
                         <div id="data-station-container">
-                            <h2 style="margin-top: 4px;" class="mb-0">
+                            <h2 style="margin-top: 0;" class="mb-0">
                                 <span id="data-station-name"></span>
                             </h2>
                             <h4 class="m-0">
@@ -174,13 +180,16 @@
             </div>
 
             <div class="panel-10 bg-none">
-                <div class="panel-100" style="height: 100%;">
+                <div class="panel-100 w-100">
                     <h2>AF</h2>
-                    <div id="af-list" style="text-align: center;">
-                        <ul>
+                    <div id="af-list" class="p-bottom-20" style="text-align: center;">
+                        <ul style="height: 251px;">
 
                         </ul>
                     </div>
+                </div>
+                <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px;">
+                    <button class="chatbutton bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
                 </div>
             </div>
         </div>
@@ -201,12 +210,13 @@
     </div>
     
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
+    <button class="chatbutton hide-desktop bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
     <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
 
 <div id="myModal" class="modal">
     <div class="modal-panel">
         <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big" id="closeModal"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal"><i class="fa-solid fa-chevron-right"></i></div>
         <div class="modal-panel-content">
             <h1 class="top-25">Settings</h1>
             
@@ -216,13 +226,13 @@
                     <input type="text" placeholder="Theme" readonly />
                     <ul class="options">
                         <li class="option" data-value="theme1">Default</li>
-                        <li class="option" data-value="theme2">Red</li>
-                        <li class="option" data-value="theme3">Green</li>
-                        <li class="option" data-value="theme4">Cyan</li>
-                        <li class="option" data-value="theme5">Orange</li>
-                        <li class="option" data-value="theme6">Pink</li>
+                        <li class="option" data-value="theme2">Cappuccino</li>
+                        <li class="option" data-value="theme3">Nature</li>
+                        <li class="option" data-value="theme4">Ocean</li>
+                        <li class="option" data-value="theme5">Terminal</li>
+                        <li class="option" data-value="theme6">Nightlife</li>
                         <li class="option" data-value="theme7">Blurple</li>
-                        <li class="option" data-value="theme8">Bee</li>
+                        <li class="option" data-value="theme8">Construction</li>
                         <li class="option" data-value="theme9">AMOLED</li>
                     </ul>
                 </div>
@@ -283,6 +293,12 @@
                             <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
                             <span style="color: var(--color-3);" class="version-string"></span><br>
                             <span class="text-small" style="color: var(--color-3);">[<a href="https://list.fmdx.pl" target="_blank">Receiver Map</a>]</span>
+                            <br>
+                            <br>
+                            <% if(ownerContact){ %>
+                                <span>Owner contact:<span><br>
+                                <span class="text-small m-0"><%= ownerContact %></span>
+                             <% } %>
                         </div>
         </div>
     </div>
@@ -305,7 +321,27 @@
         </div>
     </div>
     </div>
-                    
+                  
+    <div class="modal-panel-chat">
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal"><i class="fa-solid fa-chevron-down"></i></div>
+        <div class="modal-panel-content text-left">
+            <div style="text-align: center;">
+                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
+                    <button class="br-0 w-100 top-10" style="height: 44px" id="chat-nickname-save">Save</button>
+                <p style="margin: 5px;">
+                    Current identity: <span style="color: lime;" id="chat-admin"></span> <strong id="chat-identity-nickname">Anonymous User</strong> 
+                </p>
+            </div>
+
+            <div id="chat-chatbox" class="bg-color-1" style="height: 270px;padding: 10px;overflow-y: auto;">
+            </div>
+            
+            <div class="flex-container flex-phone" style="align-content: stretch;">
+                <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
+                <button class="chat-send-message-btn br-0" style="width: 80px; height: 45px;"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="js/webserver.js"></script>

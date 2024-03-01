@@ -1,6 +1,17 @@
 function submitData() {
     const webserverIp = $('#webserver-ip').val() || '0.0.0.0';
     const webserverPort = $('#webserver-port').val() || '8080';
+    const tuningLimit = $('#tuning-limit').is(":checked") || false;
+    const tuningLowerLimit = $('#tuning-lower-limit').val() || '0';
+    const tuningUpperLimit = $('#tuning-upper-limit').val() || '108';
+    let presets = [];
+    presets.push($('#preset1').val() || '87.5');
+    presets.push($('#preset2').val() || '87.5');
+    presets.push($('#preset3').val() || '87.5');
+    presets.push($('#preset4').val() || '87.5');
+
+    let banlist = [];
+    validateAndAdd(banlist);
 
     const xdrdIp = $('#xdrd-ip').val() || '127.0.0.1';
     const xdrdPort = $('#xdrd-port').val() || '7373';
@@ -34,6 +45,11 @@ function submitData() {
       webserver: {
         webserverIp,
         webserverPort,
+        tuningLimit,
+        tuningLowerLimit,
+        tuningUpperLimit,
+        presets,
+        banlist
       },
       xdrd: {
         xdrdIp,
@@ -76,6 +92,7 @@ function submitData() {
       data: JSON.stringify(data),
       success: function (message) {
         alert(message);
+        console.log(data);
       },
       error: function (error) {
         console.error(error);
@@ -96,6 +113,18 @@ function submitData() {
       .then(data => {
         $('#webserver-ip').val(data.webserver.webserverIp);
         $('#webserver-port').val(data.webserver.webserverPort);
+        $('#tuning-limit').prop("checked", data.webserver.tuningLimit);
+        $('#tuning-lower-limit').val(data.webserver.tuningLowerLimit || "");
+        $('#tuning-upper-limit').val(data.webserver.tuningUpperLimit || "");
+
+        if(Array.isArray(data.webserver.presets)) {
+          $('#preset1').val(data.webserver.presets[0] || "");
+          $('#preset2').val(data.webserver.presets[1] || "");
+          $('#preset3').val(data.webserver.presets[2] || "");
+          $('#preset4').val(data.webserver.presets[3] || "");
+        }
+
+        $('#ip-addresses').val(data.webserver.banlist?.join('\n') || "");
 
         $('#xdrd-ip').val(data.xdrd.xdrdIp);
         $('#xdrd-port').val(data.xdrd.xdrdPort);
@@ -142,4 +171,19 @@ function submitData() {
       .catch(error => {
         console.error('Error fetching data:', error.message);
       });
+}
+
+
+function validateAndAdd(banlist) {
+  var textarea = $('#ip-addresses');
+  var ipAddresses = textarea.val().split('\n');
+
+  // Regular expression to validate IP address
+  var ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+
+  ipAddresses.forEach(function(ip) {
+      if (ipRegex.test(ip)) {
+          banlist.push(ip);
+      }
+  });
 }
