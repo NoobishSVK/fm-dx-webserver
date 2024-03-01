@@ -11,7 +11,9 @@ function submitData() {
     presets.push($('#preset4').val() || '87.5');
 
     let banlist = [];
-    validateAndAdd(banlist);
+    if($('#ip-addresses').length > 0) {
+      validateAndAdd(banlist);
+    }
 
     const xdrdIp = $('#xdrd-ip').val() || '127.0.0.1';
     const xdrdPort = $('#xdrd-port').val() || '7373';
@@ -176,7 +178,7 @@ function submitData() {
 
 function validateAndAdd(banlist) {
   var textarea = $('#ip-addresses');
-  var ipAddresses = textarea?.val().split('\n');
+  var ipAddresses = textarea.val().split('\n');
 
   // Regular expression to validate IP address
   var ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
