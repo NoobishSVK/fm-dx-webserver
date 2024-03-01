@@ -36,7 +36,6 @@ $(document).ready(function() {
           }
       }
     }
-    console.log(messageData);
   };  
 
   $('.chat-send-message-btn').click(function() {
