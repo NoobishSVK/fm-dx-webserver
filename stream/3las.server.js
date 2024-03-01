@@ -234,7 +234,7 @@ class StreamServer {
     }
     Run() {
         this.Server = new ws.Server({
-            "host": "127.0.0.1",
+            "host": ["127.0.0.1", "::1"],
             "port": this.Port,
             "clientTracking": true,
             "perMessageDeflate": false
