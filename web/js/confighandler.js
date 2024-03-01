@@ -176,7 +176,7 @@ function submitData() {
 
 function validateAndAdd(banlist) {
   var textarea = $('#ip-addresses');
-  var ipAddresses = textarea.val().split('\n');
+  var ipAddresses = textarea?.val().split('\n');
 
   // Regular expression to validate IP address
   var ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
