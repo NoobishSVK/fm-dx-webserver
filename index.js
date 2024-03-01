@@ -595,7 +595,7 @@ chatWss.on('connection', (ws, request) => {
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
 
-    if (serverConfig.webserver.banlist.includes(clientIp)) {
+    if (serverConfig.webserver.banlist?.includes(clientIp)) {
       return; // Do not proceed further if banned
     }
 
