@@ -163,8 +163,9 @@ function connectToXdrd() {
               client.write('x\n');
               if(serverConfig.defaultFreq) {
                 client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n')
+              } else {
+                client.write('T87500\n');
               }
-              client.write('T87500\n');
               client.write('A0\n');
               client.write('G00\n');
               client.off('data', authDataHandler);
