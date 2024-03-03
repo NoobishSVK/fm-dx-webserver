@@ -490,7 +490,7 @@ wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  if(currentUsers > 0 && serverConfig.autoShutdown === true) {
+  if(currentUsers === 1 && serverConfig.autoShutdown === true) {
     connectToXdrd(); 
   }
 
