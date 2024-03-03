@@ -161,6 +161,9 @@ function connectToXdrd() {
             
             if (authFlags.authMsg && authFlags.firstClient) {
               client.write('x\n');
+              if(serverConfig.defaultFreq) {
+                client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n')
+              }
               client.write('T87500\n');
               client.write('A0\n');
               client.write('G00\n');
@@ -203,11 +206,13 @@ function connectToXdrd() {
 }
 
 client.on('close', () => {
-  logWarn('Disconnected from xdrd. Attempting to reconnect.');
   if(serverConfig.autoShutdown === false) {
+    logWarn('Disconnected from xdrd. Attempting to reconnect.');
     setTimeout(function () {
       connectToXdrd();
     }, 2000)
+  } else {
+    logWarn('Disconnected from xdrd.');
   }
 });
 
@@ -241,7 +246,8 @@ app.get('/static_data', (req, res) => {
     qthLatitude: serverConfig.identification.lat,
     qthLongitude: serverConfig.identification.lon,
     streamEnabled: streamEnabled,
-    presets: serverConfig.webserver.presets || []
+    presets: serverConfig.webserver.presets || [],
+    defaultTheme: serverConfig.webserver.defaultTheme || 'theme1'
   });
 });
 
@@ -345,7 +351,8 @@ app.get('/', (req, res) => {
     antennaSwitch: serverConfig.antennaSwitch,
     tuningLimit: serverConfig.webserver.tuningLimit,
     tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
-    tuningUpperLimit: serverConfig.webserver.tuningUpperLimit
+    tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
+    chatEnabled: serverConfig.webserver.chatEnabled,
    })
   }
 });
@@ -476,13 +483,14 @@ app.get('/getDevices', (req, res) => {
 /**
  * WEBSOCKET BLOCK
  */
+let lastDisconnectTime = null;
 
 wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
   if(currentUsers > 0 && serverConfig.autoShutdown === true) {
-    client.write('x\n'); 
+    connectToXdrd(); 
   }
 
   // Use ipinfo.io API to get geolocation information
@@ -555,10 +563,20 @@ wss.on('connection', (ws, request) => {
     if (index !== -1) {
       connectedUsers.splice(index, 1); // Remove the user's data from connectedUsers array
     }
+
+    if (currentUsers === 0 && serverConfig.defaultFreq && serverConfig.enableDefaultFreq && serverConfig.enableDefaultFreq === true) {
+      setTimeout(function() {
+        if(currentUsers === 0) {
+          client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+          dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+        }
+      }, 10000)
+    }
   
     if (currentUsers === 0 && serverConfig.autoShutdown === true) {
       client.write('X\n');
     }
+
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });  
 

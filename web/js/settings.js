@@ -29,8 +29,13 @@
         // Theme Selector
         const themeSelector = $('#theme-selector');
         const savedTheme = localStorage.getItem('theme');
+        const defaultTheme = localStorage.getItem('defaultTheme');
         const savedUnit = localStorage.getItem('signalUnit');
-        
+
+        if(defaultTheme && themes[defaultTheme]) {
+            setTheme(defaultTheme);
+        }
+
         if (savedTheme && themes[savedTheme]) {
             setTheme(savedTheme);
             themeSelector.find('input').val(themeSelector.find('.option[data-value="' + savedTheme + '"]').text());

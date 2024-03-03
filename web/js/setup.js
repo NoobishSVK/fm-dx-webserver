@@ -8,12 +8,6 @@ var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStree
 $(document).ready(function() {
   MapCreate();
   fetchData();
-  
-  setTimeout( function() {
-    if ($('.nav li.active[data-panel="status"]').length > 0) {
-      $('#submit-config').hide();
-    }
-  }, 50 )
 
   map.on('click', function(ev) {
     $('#lat').val((ev.latlng.lat).toFixed(6));
@@ -31,7 +25,7 @@ $(document).ready(function() {
     }
   });
 
-  $('#status').show();
+  $('#dashboard').show();
   showPanelFromHash();
   $('.nav li').click(function() {
     // Remove background color from all li elements
@@ -53,12 +47,6 @@ $(document).ready(function() {
         setTimeout(function () {
             map.invalidateSize();
         }, 200);
-    }
-
-    if(panelId == 'status') {
-      $('#submit-config').hide();
-    } else {
-      $('#submit-config').show();
     }
   });
 

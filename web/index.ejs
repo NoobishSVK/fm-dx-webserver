@@ -71,7 +71,7 @@
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
-                            <button class="playbutton"><i class="fa-solid fa-play fa-lg"></i></button>
+                            <button class="playbutton" aria-label="Play / Stop Button"><i class="fa-solid fa-play fa-lg"></i></button>
                         </div>
                         <div class="panel-100 m-0 hover-brighten flex-center" id="ps-container" style="height: 90px;">
                             <span class="text-big" id="data-ps"></span>
@@ -124,7 +124,7 @@
                             
                             <% if (antennaSwitch) { %>
                                 <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
-                                    <input type="text" placeholder="Ant A" readonly />
+                                    <input type="text" placeholder="Ant A" readonly>
                                     <ul class="options">
                                         <li data-value="0" class="option">Ant A</li>
                                         <li data-value="1" class="option">Ant B</li>
@@ -188,9 +188,11 @@
                         </ul>
                     </div>
                 </div>
+                <% if (chatEnabled) { %>
                 <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px;">
                     <button class="chatbutton bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
                 </div>
+                <% } %>
             </div>
         </div>
         <div id="flags-container-phone" class="panel-33">
@@ -210,7 +212,9 @@
     </div>
     
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
+    <% if (chatEnabled) { %>
     <button class="chatbutton hide-desktop bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
+    <% } %>
     <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
 
 <div id="myModal" class="modal">
@@ -223,7 +227,7 @@
             <div class="form-group top-25">
                 <label for="themes"><i class="fa-solid fa-palette"></i> Theme:</label>
                 <div class="dropdown" id="theme-selector">
-                    <input type="text" placeholder="Theme" readonly />
+                    <input type="text" placeholder="Default" readonly>
                     <ul class="options">
                         <li class="option" data-value="theme1">Default</li>
                         <li class="option" data-value="theme2">Cappuccino</li>
@@ -241,7 +245,7 @@
             <div class="form-group top-25">
                 <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <div class="dropdown" id="signal-selector">
-                    <input type="text" placeholder="Signal Units" readonly />
+                    <input type="text" placeholder="dBf" readonly>
                     <ul class="options">
                         <li class="option" data-value="dbf">dBf</li>
                         <li class="option" data-value="dbuv">dBuV</li>
@@ -296,7 +300,7 @@
                             <br>
                             <br>
                             <% if(ownerContact){ %>
-                                <span>Owner contact:<span><br>
+                                <span>Owner contact:</span><br>
                                 <span class="text-small m-0"><%= ownerContact %></span>
                              <% } %>
                         </div>
@@ -315,7 +319,7 @@
             <div class="hover-brighten br-0" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
                 <strong>Support</strong> the developer!
             </div>
-            <div class="hover-brighten br-0" style="height: 50px;padding:12px;"onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
+            <div class="hover-brighten br-0" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
                 Join our <strong>OpenRadio Discord</strong> community!
             </div>
         </div>

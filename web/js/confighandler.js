@@ -4,11 +4,21 @@ function submitData() {
     const tuningLimit = $('#tuning-limit').is(":checked") || false;
     const tuningLowerLimit = $('#tuning-lower-limit').val() || '0';
     const tuningUpperLimit = $('#tuning-upper-limit').val() || '108';
+    const chatEnabled = $("#chat-switch").length > 0 ? $("#chat-switch").is(":checked") : true;
+
+    var themeSelectedValue = $("#selected-theme").val();
+    var themeDataValue = $(".option:contains('" + themeSelectedValue + "')").attr('data-value') || 'theme1';
+
+    const defaultTheme = themeDataValue;
+    
     let presets = [];
     presets.push($('#preset1').val() || '87.5');
     presets.push($('#preset2').val() || '87.5');
     presets.push($('#preset3').val() || '87.5');
     presets.push($('#preset4').val() || '87.5');
+
+    const enableDefaultFreq = $('#default-freq-enable').is(":checked") || false;
+    const defaultFreq = $('#default-freq').val() || '87.5';
 
     let banlist = [];
     if($('#ip-addresses').length > 0) {
@@ -50,6 +60,8 @@ function submitData() {
         tuningLimit,
         tuningLowerLimit,
         tuningUpperLimit,
+        chatEnabled,
+        defaultTheme,
         presets,
         banlist
       },
@@ -80,6 +92,8 @@ function submitData() {
       lockToAdmin,
       autoShutdown,
       antennaSwitch,
+      enableDefaultFreq,
+      defaultFreq,
     };
 
     if(adminPass.length < 1) {
@@ -118,13 +132,26 @@ function submitData() {
         $('#tuning-limit').prop("checked", data.webserver.tuningLimit);
         $('#tuning-lower-limit').val(data.webserver.tuningLowerLimit || "");
         $('#tuning-upper-limit').val(data.webserver.tuningUpperLimit || "");
+        $("#chat-switch").prop("checked", data.webserver.chatEnabled || false);
 
+        $('#selected-theme').val(data.webserver.defaultTheme || 'Default');
+
+        var selectedTheme = $(".option[data-value='" + data.webserver.defaultTheme + "']");
+        
+        // If the option exists, set its text as the value of the input
+        if (selectedTheme.length > 0) {
+            $("#selected-theme").val(selectedTheme.text());
+        }
+        
         if(Array.isArray(data.webserver.presets)) {
           $('#preset1').val(data.webserver.presets[0] || "");
           $('#preset2').val(data.webserver.presets[1] || "");
           $('#preset3').val(data.webserver.presets[2] || "");
           $('#preset4').val(data.webserver.presets[3] || "");
         }
+
+        $("#default-freq-enable").prop("checked", data.enableDefaultFreq || false);
+        $('#default-freq').val(data.defaultFreq || "87.5");
 
         $('#ip-addresses').val(data.webserver.banlist?.join('\n') || "");
 

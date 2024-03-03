@@ -14,7 +14,8 @@ let serverConfig = {
   webserver: {
     webserverIp: "0.0.0.0",
     webserverPort: 8080,
-    banlist: []
+    banlist: [],
+    chatEnabled: true
   },
   xdrd: {
     xdrdIp: "127.0.0.1",
@@ -39,9 +40,11 @@ let serverConfig = {
     tunePass: "",
     adminPass: ""
   },
+  defaultFreq: 87.5,
   publicTuner: true,
   lockToAdmin: false,
   autoShutdown: false,
+  enableDefaultFreq: false
 };
 
 function deepMerge(target, source)

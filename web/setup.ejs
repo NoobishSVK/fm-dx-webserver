@@ -20,21 +20,19 @@
         </div>
         <div class="panel-100">
             <ul class="nav">
-                <li data-panel="status" class="active">Status</li>
+                <li data-panel="dashboard" class="active">Dashboard</li>
                 <li data-panel="connection">Connection</li>
                 <li data-panel="audio">Audio</li>
                 <li data-panel="webserver">Webserver</li>
-                <li data-panel="identification">Identification</li>
-                <li data-panel="mapbroadcast">Online map</li>
-                <li data-panel="maintenance">Maintenance</li>
+                <li data-panel="identification">Info & Map</li>
                 <li class="logout-link text-gray"><i class="fas fa-sign-out"></i></li>
             </ul>
         </div>
 
         <div id="login-message"></div>
         <div class="panel-100">
-            <div class="panel-100 tab-content" id="status">
-                <h2>STATUS</h2>
+            <div class="panel-100 tab-content" id="dashboard">
+                <h2>Dashboard</h2>
 
                 <div class="panel-100 flex-container auto">
                     <div class="panel-33">
@@ -90,7 +88,36 @@
                     <p>No console output available.</p>
                 <% } %>
 
-                <p>Version: <span class="version-string color-4"></span></p>
+                <h3>Maintenance</h3>
+                <div class="flex-container">
+                    <div class="panel-50 no-bg">
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="tuner-public">
+                            <label for="tuner-public">Allow tuner control without password</label>
+                        </div>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="tuner-lock">
+                            <label for="tuner-lock">Lock the tuner [only admins can tune with this option]</label>
+                        </div>
+                    </div>
+                    <div class="panel-50 no-bg">
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="shutdown-tuner">
+                            <label for="shutdown-tuner">Auto-shutdown tuner when no one is online</label>
+                        </div><br>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tune-pass">Tune password:</label>
+                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
+                </div>
+                <div class="form-group">
+                    <label for="admin-pass">Admin setup password:</label>
+                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
+                </div><br>
+
+                <p class="text-small">Version: <span class="version-string color-4"></span></p>
                 <p class="p-bottom-20"><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
             </div>
     
@@ -183,48 +210,95 @@
 
             <div class="panel-100 tab-content" id="webserver">
                 <h2>Webserver settings</h2>
-                <h3>Antenna options</h3>
-                <div class="form-group checkbox bottom-20">
-                    <input type="checkbox" id="antenna-switch">
-                    <label for="antenna-switch">Enable the antenna switch</label>
-                </div><br>
-
-                <h3>Tuning options</h3>
-                <p>If you want to limit which frequencies the users can tune to, you can set the lower and upper limit here.<br>
-                    <span class="text-gray">Enter frequencies in MHz.</span>
-                </p>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="tuning-limit">
-                    <label for="tuning-limit">Limit tuning</label>
-                </div><br>
-                <div class="form-group">
-                    <label for="tuning-lower-limit">Lower limit:</label>
-                    <input class="input-text w-100" type="text" placeholder="0" name="tuning-lower-limit" id="tuning-lower-limit">
-                </div>
-                <div class="form-group">
-                    <label for="tuning-upper-limit">Upper Limit:</label>
-                    <input class="input-text w-100" type="text" placeholder="108" name="tuning-upper-limit" id="tuning-upper-limit">
+                <div class="flex-container">
+                    <div class="panel-50 no-bg">
+                        <h3>Antenna options</h3>
+                        <div class="form-group checkbox bottom-20">
+                            <input type="checkbox" id="antenna-switch">
+                            <label for="antenna-switch">Enable the antenna switch</label>
+                        </div>        
+                    </div>
+                    <div class="panel-50 no-bg">
+                        <h3>Chat options</h3>
+                        <div class="form-group checkbox bottom-20">
+                            <input type="checkbox" id="chat-switch">
+                            <label for="chat-switch">Enable chat</label>
+                        </div>        
+                    </div>
                 </div>
 
-                <h3>Presets</h3>
-                <p>You can set up to 4 presets. These presets are accessible with the F1-F4 buttons.<br>
-                <span class="text-gray">Enter frequencies in MHz.</span></p>
+                <h3>Themes</h3>
                 <div class="form-group">
-                    <label for="preset1">Preset 1:</label>
-                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset1" id="preset1">
+                    <label for="themes"><i class="fa-solid fa-palette"></i>Default server theme:</label>
+                    <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
+                        <input type="text" placeholder="Default" id="selected-theme" readonly>
+                        <ul class="options">
+                            <li class="option" data-value="theme1">Default</li>
+                            <li class="option" data-value="theme2">Cappuccino</li>
+                            <li class="option" data-value="theme3">Nature</li>
+                            <li class="option" data-value="theme4">Ocean</li>
+                            <li class="option" data-value="theme5">Terminal</li>
+                            <li class="option" data-value="theme6">Nightlife</li>
+                            <li class="option" data-value="theme7">Blurple</li>
+                            <li class="option" data-value="theme8">Construction</li>
+                            <li class="option" data-value="theme9">AMOLED</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="preset2">Preset 2:</label>
-                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset2" id="preset2">
+                <br><hr>
+
+                <div class="flex-container">
+                    <div class="panel-50 no-bg">
+                        <h3>Tuning options</h3>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="default-freq-enable">
+                            <label for="default-freq-enable">Enable default frequency for first client</label>
+                        </div><br>
+                        <div class="form-group">
+                            <label for="default-freq">Default frequency:</label>
+                            <input class="input-text w-150" type="text" placeholder="87.5" name="default-freq" id="default-freq">
+                        </div>
+                        <p>If you want to limit which frequencies the users can tune to,<br>you can set the lower and upper limit here.<br>
+                            <span class="text-gray">Enter frequencies in MHz.</span>
+                        </p>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="tuning-limit">
+                            <label for="tuning-limit">Limit tuning</label>
+                        </div><br>
+                        <div class="form-group">
+                            <label for="tuning-lower-limit">Lower limit:</label>
+                            <input class="input-text w-100" type="text" placeholder="0" name="tuning-lower-limit" id="tuning-lower-limit">
+                        </div>
+                        <div class="form-group">
+                            <label for="tuning-upper-limit">Upper Limit:</label>
+                            <input class="input-text w-100" type="text" placeholder="108" name="tuning-upper-limit" id="tuning-upper-limit">
+                        </div>
+                    </div>
+
+                    <div class="panel-50 no-bg">
+                        <h3>Presets</h3>
+                        <p>You can set up to 4 presets.<br>These presets are accessible with the F1-F4 buttons.<br>
+                        <span class="text-gray">Enter frequencies in MHz.</span></p>
+                        <div class="form-group">
+                            <label for="preset1">Preset 1:</label>
+                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset1" id="preset1">
+                        </div>
+                        <div class="form-group">
+                            <label for="preset2">Preset 2:</label>
+                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset2" id="preset2">
+                        </div><br>
+                        <div class="form-group">
+                            <label for="preset1">Preset 3:</label>
+                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset3" id="preset3">
+                        </div>
+                        <div class="form-group">
+                            <label for="preset1">Preset 4:</label>
+                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset4" id="preset4">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="preset1">Preset 3:</label>
-                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset3" id="preset3">
-                </div>
-                <div class="form-group">
-                    <label for="preset1">Preset 4:</label>
-                    <input class="input-text w-100" type="text" placeholder="87.5" name="preset4" id="preset4">
-                </div>
+
+                <br><hr>
 
                 <h3>Banlist</h3>
                 <p>If you have users that don't behave in your chat, you can choose to ban them by their IP address.<br>
@@ -237,17 +311,45 @@
             </div>
     
             <div class="panel-100 tab-content" id="identification">
-                <h2>Tuner Identification info</h2>
-                    
-                <p class="text-gray">Set your tuner name and description here. This info will be visible to anyone who tunes in. </p>
-                <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
-                    <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
-                    <br>
-                    <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                    <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                <h2>Identification & Map</h2>
+
+                <div class="flex-container">
+                    <div class="panel-50 no-bg">
+                        <h3>Basic info</h3>
+                        
+                        <p class="text-gray">Set your tuner name and description here.<br>This info will be visible to anyone who tunes in. </p>
+                        <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
+                            <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
+                            <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
+                            <br>
+                            <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
+                            <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="panel-50 no-bg">
+                        <h3>Online map</h3>
+                        <p class="m-0 text-gray">If your location information is filled,<br>you can add your tuner to a public list.</p>
+                        <p></p>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="broadcast-tuner">
+                            <label for="broadcast-tuner">Broadcast to map</label>
+                        </div><br>
+                        <div class="form-group">
+                            <label for="owner-contact">Owner contact:</label>
+                            <input class="input-text" type="text" placeholder="Your e-mail, discord..." name="owner-contact" id="owner-contact">
+                        </div>
+                        <div class="form-group">
+                            <label for="broadcast-address">Broadcast address (if using a proxy):</label>
+                            <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
+                        </div>
+        
+                        <p>Check your tuner at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
+                    </div>
                 </div>
-                
+                <br>
+                <hr>
+
                 <h3>Location:</h3>
                 <p class="text-gray">Location info is useful for automatic identification of stations using RDS.</p>
                 <div class="form-group">
@@ -262,51 +364,6 @@
                 
                 <div id="map"></div>
                 <br>
-            </div>
-
-            <div class="panel-100 tab-content" id="mapbroadcast">
-                <h2>Map broadcast</h2>
-                <p class="m-0">If your location information is filled, you can add your tuner to a public list.</p>
-                <p></p>
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="broadcast-tuner">
-                    <label for="broadcast-tuner">Broadcast to map</label>
-                </div><br>
-                <div class="form-group">
-                    <label for="owner-contact">Owner contact:</label>
-                    <input class="input-text" type="text" placeholder="Your e-mail, discord..." name="owner-contact" id="owner-contact">
-
-                    <label for="broadcast-address">Broadcast address (if using a proxy):</label>
-                    <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
-                </div>
-
-                <p>Check your tuner at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
-            </div>
-    
-            <div class="panel-100 tab-content" id="maintenance">
-                <h2>Maintenance</h2>
-                <div class="text-left top-25 bottom-20 panel-33 auto">
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-public">
-                        <label for="tuner-public">Allow tuner control without password</label>
-                    </div><br>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-lock">
-                        <label for="tuner-lock">Lock the tuner [only admins can tune with this option]</label>
-                    </div><br><br>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="shutdown-tuner">
-                        <label for="shutdown-tuner">Auto-shutdown [XDR Only]</label>
-                    </div><br>
-                </div>
-                <div class="form-group">
-                    <label for="tune-pass">Tune password:</label>
-                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
-                </div>
-                <div class="form-group">
-                    <label for="admin-pass">Admin setup password:</label>
-                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
-                </div><br>
             </div>
 
             <button id="submit-config" style="height:48px; width: 200px;margin:20px;" onclick="submitData();">Save settings</button>

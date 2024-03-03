@@ -9,6 +9,7 @@ function getInitialSettings() {
             localStorage.setItem('qthLatitude', data.qthLatitude);
             localStorage.setItem('qthLongitude', data.qthLongitude);
             localStorage.setItem('streamEnabled', data.streamEnabled);
+            localStorage.setItem('defaultTheme', data.defaultTheme);
             localStorage.setItem('preset1', data.presets[0]);
             localStorage.setItem('preset2', data.presets[1]);
             localStorage.setItem('preset3', data.presets[2]);

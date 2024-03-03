@@ -362,7 +362,7 @@ function getCurrentFreq() {
 function checkKey(e) {
     e = e || window.event;
 
-    if ($('#password:focus').length > 0) {
+    if ($('#password:focus').length > 0 || $('#chat-send-message:focus').length > 0) {
         return; 
     }
 
