@@ -27,7 +27,9 @@ $(document).ready(function() {
       messages.append(chatMessage);
   
       if($('#chat-chatbox').is(':visible')) { 
+        setTimeout(function() {
           $('#chat-chatbox').scrollTop($('#chat-chatbox')[0].scrollHeight);
+        }, 100)
       } else {
           if(messageData.history !== true) {
               chatMessageCount++;
@@ -50,11 +52,14 @@ $(document).ready(function() {
   });
 
   $('.chatbutton').click(function() {
-    $('#chat-chatbox').scrollTop($('#chat-chatbox')[0].scrollHeight);
     chatMessageCount = 0;
     $('.chat-messages-count').text(chatMessageCount);
     $('.chatbutton').removeClass('bg-color-4').addClass('bg-color-2');
     $('#chat-send-message').focus();
+
+    setTimeout(function() {
+      $('#chat-chatbox').scrollTop($('#chat-chatbox')[0].scrollHeight);
+    }, 100)
   });
 
   $('#chat-nickname').keypress(function(event) {

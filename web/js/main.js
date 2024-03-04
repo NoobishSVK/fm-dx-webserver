@@ -366,6 +366,7 @@ function checkKey(e) {
         return; 
     }
 
+    $('#volumeSlider').blur();
     getCurrentFreq();
 
     if (socket.readyState === WebSocket.OPEN) {
