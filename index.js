@@ -573,7 +573,7 @@ wss.on('connection', (ws, request) => {
       setTimeout(function() {
         if(currentUsers === 0) {
           client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-          dataHandler.resetToDefault();
+          //dataHandler.resetToDefault();
           dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
         }
       }, 10000)
