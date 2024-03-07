@@ -102,13 +102,13 @@ function connectToXdrd() {
   if (serverConfig.xdrd.xdrdPassword.length > 1) {
     client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
-      
+
       const authFlags = {
         authMsg: false,
         firstClient: false,
         receivedPassword: false
       };
-      
+
       const authDataHandler = (data) => {
         const receivedData = data.toString();
         const lines = receivedData.split('\n');
@@ -131,38 +131,38 @@ function connectToXdrd() {
               authFlags.authMsg = true;
               logInfo('Authentication with xdrd successful.');
             } else if (line.startsWith('G')) {
-                switch (line) {
-                  case 'G11':
-                    dataHandler.initialData.eq = 1;
-                    dataHandler.dataToSend.eq = 1;
-                    dataHandler.initialData.ims = 1;
-                    dataHandler.dataToSend.ims = 1;
-                    break;
-                  case 'G01':
-                    dataHandler.initialData.eq = 0;
-                    dataHandler.dataToSend.eq = 0;
-                    dataHandler.initialData.ims = 1;
-                    dataHandler.dataToSend.ims = 1;
-                    break;
-                  case 'G10':
-                    dataHandler.initialData.eq = 1;
-                    dataHandler.dataToSend.eq = 1;
-                    dataHandler.initialData.ims = 0;
-                    dataHandler.dataToSend.ims = 0;
-                    break;
-                  case 'G00':
-                    dataHandler.initialData.eq = 0;
-                    dataHandler.initialData.ims = 0;
-                    dataHandler.dataToSend.eq = 0;
-                    dataHandler.dataToSend.ims = 0;
-                    break;
-                  }
+              switch (line) {
+                case 'G11':
+                  dataHandler.initialData.eq = 1;
+                  dataHandler.dataToSend.eq = 1;
+                  dataHandler.initialData.ims = 1;
+                  dataHandler.dataToSend.ims = 1;
+                  break;
+                case 'G01':
+                  dataHandler.initialData.eq = 0;
+                  dataHandler.dataToSend.eq = 0;
+                  dataHandler.initialData.ims = 1;
+                  dataHandler.dataToSend.ims = 1;
+                  break;
+                case 'G10':
+                  dataHandler.initialData.eq = 1;
+                  dataHandler.dataToSend.eq = 1;
+                  dataHandler.initialData.ims = 0;
+                  dataHandler.dataToSend.ims = 0;
+                  break;
+                case 'G00':
+                  dataHandler.initialData.eq = 0;
+                  dataHandler.initialData.ims = 0;
+                  dataHandler.dataToSend.eq = 0;
+                  dataHandler.dataToSend.ims = 0;
+                  break;
+              }
             }
-            
+
             if (authFlags.authMsg && authFlags.firstClient) {
               client.write('x\n');
-              if(serverConfig.defaultFreq) {
-                client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n')
+              if (serverConfig.defaultFreq) {
+                client.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n')
               }
               client.write('T87500\n');
               client.write('A0\n');
@@ -173,11 +173,11 @@ function connectToXdrd() {
           }
         }
       };
-      
+
       client.on('data', (data) => {
         var receivedData = incompleteDataBuffer + data.toString();
         const isIncomplete = (receivedData.slice(-1) != '\n');
-        
+
         if (isIncomplete) {
           const position = receivedData.lastIndexOf('\n');
           if (position < 0) {
@@ -190,7 +190,7 @@ function connectToXdrd() {
         } else {
           incompleteDataBuffer = '';
         }
-        
+
         if (receivedData.length) {
           wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
@@ -199,14 +199,14 @@ function connectToXdrd() {
           });
         }
       });
-      
+
       client.on('data', authDataHandler);
     });
   }
 }
 
 client.on('close', () => {
-  if(serverConfig.autoShutdown === false) {
+  if (serverConfig.autoShutdown === false) {
     logWarn('Disconnected from xdrd. Attempting to reconnect.');
     setTimeout(function () {
       connectToXdrd();
@@ -258,7 +258,7 @@ app.get('/server_time', (req, res) => {
   const serverTime = new Date(); // Get current server time
   const serverTimeUTC = new Date(serverTime.getTime() - (serverTime.getTimezoneOffset() * 60000)); // Adjust server time to UTC
   res.json({
-      serverTime: serverTimeUTC,
+    serverTime: serverTimeUTC,
   });
 });
 
@@ -333,37 +333,39 @@ function removeMarkdown(parsed) {
 app.get('/', (req, res) => {
   if (!fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
-      res.render('wizard', { 
+      res.render('wizard', {
         isAdminAuthenticated: true,
         videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
+        audioDevices: result.videoDevices
       });
+    });
   } else {
-  res.render('index', { 
-    isAdminAuthenticated: req.session.isAdminAuthenticated,
-    isTuneAuthenticated: req.session.isTuneAuthenticated,
-    tunerName: serverConfig.identification.tunerName,
-    tunerDesc: parseMarkdown(serverConfig.identification.tunerDesc),
-    tunerDescMeta: removeMarkdown(serverConfig.identification.tunerDesc),
-    tunerLock: serverConfig.lockToAdmin,
-    publicTuner: serverConfig.publicTuner,
-    ownerContact: serverConfig.identification.contact,
-    antennaSwitch: serverConfig.antennaSwitch,
-    tuningLimit: serverConfig.webserver.tuningLimit,
-    tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
-    tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
-    chatEnabled: serverConfig.webserver.chatEnabled,
-   })
+    res.render('index', {
+      isAdminAuthenticated: req.session.isAdminAuthenticated,
+      isTuneAuthenticated: req.session.isTuneAuthenticated,
+      tunerName: serverConfig.identification.tunerName,
+      tunerDesc: parseMarkdown(serverConfig.identification.tunerDesc),
+      tunerDescMeta: removeMarkdown(serverConfig.identification.tunerDesc),
+      tunerLock: serverConfig.lockToAdmin,
+      publicTuner: serverConfig.publicTuner,
+      ownerContact: serverConfig.identification.contact,
+      antennaSwitch: serverConfig.antennaSwitch,
+      tuningLimit: serverConfig.webserver.tuningLimit,
+      tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
+      tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
+      chatEnabled: serverConfig.webserver.chatEnabled,
+    })
   }
 });
 
 app.get('/wizard', (req, res) => {
-    parseAudioDevice((result) => {
-      res.render('wizard', { 
-        isAdminAuthenticated: req.session.isAdminAuthenticated,
-        videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
-      });
+  parseAudioDevice((result) => {
+    res.render('wizard', {
+      isAdminAuthenticated: req.session.isAdminAuthenticated,
+      videoDevices: result.audioDevices,
+      audioDevices: result.videoDevices
+    });
+  });
 })
 
 app.get('/setup', (req, res) => {
@@ -371,7 +373,7 @@ app.get('/setup', (req, res) => {
     const processUptimeInSeconds = Math.floor(process.uptime());
     const formattedProcessUptime = formatUptime(processUptimeInSeconds);
 
-    res.render('setup', { 
+    res.render('setup', {
       isAdminAuthenticated: req.session.isAdminAuthenticated,
       videoDevices: result.audioDevices,
       audioDevices: result.videoDevices,
@@ -398,16 +400,49 @@ app.get('/api', (req, res) => {
   res.json(data);
 });
 
+app.post('/api', (request, res) => {
+  const { command } = request.body;
+  const clientIp = request.ip;
+
+  logDebug('API command received from \x1b[90m' + clientIp + '\x1b[0m:', command.toString());
+
+  if (command.startsWith('T')) {
+    let tuneFreq = Number(command.slice(1)) / 1000;
+
+    if (serverConfig.webserver.tuningLimit === true && (tuneFreq < serverConfig.webserver.tuningLowerLimit || tuneFreq > serverConfig.webserver.tuningUpperLimit)) {
+      res.json({ message: 'Received command', command });
+      return;
+    }
+  }
+
+  if ((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
+
+    if (serverConfig.lockToAdmin === true) {
+      if (request.session && request.session.isAdminAuthenticated === true) {
+        client.write(command + "\n");
+        res.json({ message: 'Received command', command });
+      } else {
+        return;
+      }
+    } else {
+      client.write(command + "\n");
+      res.json({ message: 'Received command', command });
+
+    }
+  }
+  
+});
+
 function formatUptime(uptimeInSeconds) {
-    const secondsInMinute = 60;
-    const secondsInHour = secondsInMinute * 60;
-    const secondsInDay = secondsInHour * 24;
+  const secondsInMinute = 60;
+  const secondsInHour = secondsInMinute * 60;
+  const secondsInDay = secondsInHour * 24;
 
-    const days = Math.floor(uptimeInSeconds / secondsInDay);
-    const hours = Math.floor((uptimeInSeconds % secondsInDay) / secondsInHour);
-    const minutes = Math.floor((uptimeInSeconds % secondsInHour) / secondsInMinute);
+  const days = Math.floor(uptimeInSeconds / secondsInDay);
+  const hours = Math.floor((uptimeInSeconds % secondsInDay) / secondsInHour);
+  const minutes = Math.floor((uptimeInSeconds % secondsInHour) / secondsInMinute);
 
-    return `${days}d ${hours}h ${minutes}m`;
+  return `${days}d ${hours}h ${minutes}m`;
 }
 
 
@@ -428,11 +463,11 @@ app.get('/logout', (req, res) => {
 app.post('/saveData', (req, res) => {
   const data = req.body;
   let firstSetup;
-  if(req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
+  if (req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
     configUpdate(data);
     fmdxList.update();
 
-    if(!fs.existsSync(configName + '.json')) {
+    if (!fs.existsSync(configName + '.json')) {
       firstSetup = true;
     }
 
@@ -444,10 +479,10 @@ app.post('/saveData', (req, res) => {
         res.status(500).send('Internal Server Error');
       } else {
         logInfo('Server config changed successfully.');
-        if(firstSetup === true) {
+        if (firstSetup === true) {
           res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
         } else {
-        res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
+          res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
         }
       }
     });
@@ -455,8 +490,8 @@ app.post('/saveData', (req, res) => {
 });
 
 // Serve the data.json file when the /getData endpoint is accessed
-app.get('/getData', (req, res) => {  
-  if(req.session.isAdminAuthenticated) {
+app.get('/getData', (req, res) => {
+  if (req.session.isAdminAuthenticated) {
     // Check if the file exists
     fs.access(configName + '.json', fs.constants.F_OK, (err) => {
       if (err) {
@@ -473,7 +508,7 @@ app.get('/getData', (req, res) => {
 app.get('/getDevices', (req, res) => {
   if (req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
     parseAudioDevice((result) => {
-        res.json(result);
+      res.json(result);
     });
   } else {
     res.status(403).json({ error: 'Unauthorized' });
@@ -489,8 +524,8 @@ wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  if(currentUsers === 1 && serverConfig.autoShutdown === true) {
-    connectToXdrd(); 
+  if (currentUsers === 1 && serverConfig.autoShutdown === true) {
+    connectToXdrd();
   }
 
   // Use ipinfo.io API to get geolocation information
@@ -507,7 +542,7 @@ wss.on('connection', (ws, request) => {
         const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         const connectionTime = new Date().toLocaleString([], options);
 
-        if(locationInfo.country === undefined) {
+        if (locationInfo.country === undefined) {
           const userData = { ip: clientIp, location: 'Unknown', time: connectionTime };
           connectedUsers.push(userData);
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
@@ -527,23 +562,23 @@ wss.on('connection', (ws, request) => {
     logDebug('Command received from \x1b[90m' + clientIp + '\x1b[0m:', message.toString());
     command = message.toString();
 
-    if(command.startsWith('X')) {
+    if (command.startsWith('X')) {
       logWarn('Remote tuner shutdown attempted by \x1b[90m' + clientIp + '\x1b[0m. You may consider blocking this user.');
       return;
     }
 
-    if(command.startsWith('T')) {
+    if (command.startsWith('T')) {
       let tuneFreq = Number(command.slice(1)) / 1000;
-      
-      if(serverConfig.webserver.tuningLimit === true && (tuneFreq < serverConfig.webserver.tuningLowerLimit || tuneFreq > serverConfig.webserver.tuningUpperLimit)) {
+
+      if (serverConfig.webserver.tuningLimit === true && (tuneFreq < serverConfig.webserver.tuningLowerLimit || tuneFreq > serverConfig.webserver.tuningUpperLimit)) {
         return;
       }
     }
 
-    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
+    if ((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
 
-      if(serverConfig.lockToAdmin === true) {
-        if(request.session && request.session.isAdminAuthenticated === true) {
+      if (serverConfig.lockToAdmin === true) {
+        if (request.session && request.session.isAdminAuthenticated === true) {
           client.write(command + "\n");
         } else {
           return;
@@ -557,7 +592,7 @@ wss.on('connection', (ws, request) => {
   ws.on('close', (code, reason) => {
     currentUsers--;
     dataHandler.showOnlineUsers(currentUsers);
-  
+
     // Find the index of the user's data in connectedUsers array
     const index = connectedUsers.findIndex(user => user.ip === clientIp);
     if (index !== -1) {
@@ -565,20 +600,20 @@ wss.on('connection', (ws, request) => {
     }
 
     if (currentUsers === 0 && serverConfig.defaultFreq && serverConfig.enableDefaultFreq && serverConfig.enableDefaultFreq === true) {
-      setTimeout(function() {
-        if(currentUsers === 0) {
-          client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-          dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+      setTimeout(function () {
+        if (currentUsers === 0) {
+          client.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
+          dataHandler.dataToSend.command = Number(serverConfig.defaultFreq).toFixed(3);
         }
       }, 10000)
     }
-  
+
     if (currentUsers === 0 && serverConfig.autoShutdown === true) {
       client.write('X\n');
     }
 
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
-  });  
+  });
 
   ws.on('error', console.error);
 });
@@ -592,7 +627,7 @@ chatWss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
 
   // Send chat history to the newly connected client
-  chatHistory.forEach(function(message) {
+  chatHistory.forEach(function (message) {
     message.history = true; // Adding the history parameter
     ws.send(JSON.stringify(message));
   });
@@ -603,12 +638,12 @@ chatWss.on('connection', (ws, request) => {
     admin: request.session.isAdminAuthenticated
   };
   ws.send(JSON.stringify(ipMessage));
-  
+
   ws.on('message', function incoming(message) {
     const messageData = JSON.parse(message);
     messageData.ip = clientIp; // Adding IP address to the message object
     const currentTime = new Date();
-    
+
     const hours = String(currentTime.getHours()).padStart(2, '0');
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
@@ -617,7 +652,7 @@ chatWss.on('connection', (ws, request) => {
       return; // Do not proceed further if banned
     }
 
-    if(request.session.isAdminAuthenticated === true) {
+    if (request.session.isAdminAuthenticated === true) {
       messageData.admin = true;
     }
 
@@ -631,15 +666,15 @@ chatWss.on('connection', (ws, request) => {
     if (chatHistory.length > 50) {
       chatHistory.shift(); // Remove the oldest message if the history exceeds 50 messages
     }
-    
+
     const modifiedMessage = JSON.stringify(messageData);
-    
+
     chatWss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(modifiedMessage);
       }
     });
-});
+  });
 
   ws.on('close', function close() {
   });
@@ -672,7 +707,7 @@ app.use(express.static(path.join(__dirname, 'web')));
 
 httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.webserverIp, () => {
   let currentAddress = serverConfig.webserver.webserverIp;
-  currentAddress == '0.0.0.0' ? currentAddress = 'localhost' : currentAddress = serverConfig.webserver.webserverIp; 
+  currentAddress == '0.0.0.0' ? currentAddress = 'localhost' : currentAddress = serverConfig.webserver.webserverIp;
   logInfo(`Web server is running at \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
 });
 
