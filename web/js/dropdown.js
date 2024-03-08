@@ -21,6 +21,7 @@ const selectOption = (event) => {
 
   if($currentDropdown.attr('id') == 'data-ant') {
     socket.send("Z" + $(event.currentTarget).attr('data-value'));
+    tuneTo(getCurrentFreq()); //Reset RDS when change antenna input
   } else {
     $currentDropdown.find('input').val($(event.currentTarget).text());
   }
