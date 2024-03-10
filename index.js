@@ -569,7 +569,7 @@ wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
-  if(currentUsers === 1 && serverConfig.autoShutdown === true) {
+  if(currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
     serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
   }
 
@@ -624,7 +624,7 @@ wss.on('connection', (ws, request) => {
       }
     }
 
-    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true)) {
+    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true &&  serverConfig.xdrd.wirelessConnection)) {
 
       if(serverConfig.lockToAdmin === true) {
         if(request.session && request.session.isAdminAuthenticated === true) {
