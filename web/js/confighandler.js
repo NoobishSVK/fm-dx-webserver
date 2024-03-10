@@ -8,7 +8,6 @@ function submitData() {
 
     var themeSelectedValue = $("#selected-theme").val();
     var themeDataValue = $(".option:contains('" + themeSelectedValue + "')").attr('data-value') || 'theme1';
-
     const defaultTheme = themeDataValue;
     
     let presets = [];
@@ -25,6 +24,11 @@ function submitData() {
       validateAndAdd(banlist);
     }
 
+    
+    var comDevicesValue = $("#com-devices").val();
+    var comDevicesDataValue = $(".option:contains('" + comDevicesValue + "')").attr('data-value') || '';
+    const comPort = comDevicesDataValue;
+    const wirelessConnection = $('#connection-type-toggle').is(":checked") || false;
     const xdrdIp = $('#xdrd-ip').val() || '127.0.0.1';
     const xdrdPort = $('#xdrd-port').val() || '7373';
     const xdrdPassword = $('#xdrd-password').val() || 'password';
@@ -66,6 +70,8 @@ function submitData() {
         banlist
       },
       xdrd: {
+        comPort,
+        wirelessConnection,
         xdrdIp,
         xdrdPort,
         xdrdPassword
@@ -108,7 +114,6 @@ function submitData() {
       data: JSON.stringify(data),
       success: function (message) {
         alert(message);
-        console.log(data);
       },
       error: function (error) {
         console.error(error);
@@ -155,13 +160,28 @@ function submitData() {
 
         $('#ip-addresses').val(data.webserver.banlist?.join('\n') || "");
 
+        $('#connection-type-toggle').prop("checked", data.xdrd.wirelessConnection || false);
+
         $('#xdrd-ip').val(data.xdrd.xdrdIp);
         $('#xdrd-port').val(data.xdrd.xdrdPort);
         $('#xdrd-password').val(data.xdrd.xdrdPassword);
+        $('#com-devices').val(data.xdrd.comPort);
+        var selectedDevice = $(".option[data-value='" + data.xdrd.comPort + "']");
+        if (selectedDevice.length > 0) {
+          $("#com-devices").val(selectedDevice.text());
+        }
 
         $('#audio-devices').val(data.audio.audioDevice);
         $('#audio-channels').val(data.audio.audioChannels);
+        var selectedChannels = $(".option[data-value='" + data.audio.audioChannels + "']");
+        if (selectedChannels.length > 0) {
+          $("#audio-channels").val(selectedChannels.text());
+        }
         $('#audio-quality').val(data.audio.audioBitrate);
+        var selectedQuality = $(".option[data-value='" + data.audio.audioBitrate + "']");
+        if (selectedQuality.length > 0) {
+          $("#audio-quality").val(selectedQuality.text());
+        }
 
         $('#webserver-name').val(data.identification.tunerName);
         $('#webserver-desc').val(data.identification.tunerDesc);

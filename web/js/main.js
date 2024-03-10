@@ -530,15 +530,15 @@ function copyToClipboard(textToCopy) {
 }
 
 function findOnMaps() {
-    var frequency = $('#data-frequency').text();
+    var frequency = parseFloat($('#data-frequency').text()).toFixed(1);
     var pi = $('#data-pi').text();
     var latitude = localStorage.getItem('qthLongitude');
     var longitude = localStorage.getItem('qthLatitude');
-    frequency = parseFloat(frequency).toFixed(1);
 
-    var url = "https://maps.fmdx.pl/#qth=" + longitude + "," + latitude + "&freq=" + frequency + "&pi=" + pi;
+    var url = `https://maps.fmdx.pl/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
     window.open(url, "_blank");
 }
+
 
 function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
@@ -577,35 +577,37 @@ function updateSignalUnits(parsedData, averageSignal) {
 }
 
 function updateDataElements(parsedData) {
-    $('#data-frequency').text(parsedData.freq);
-    $("#commandinput").attr("aria-label", "Current frequency: " + parsedData.freq);
-    $('#data-pi').html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+    const $dataFrequency = $('#data-frequency');
+    const $commandInput = $("#commandinput");
+    const $dataPi = $('#data-pi');
+    const $dataPs = $('#data-ps');
+    const $dataSt = $('.data-st');
+    const $dataRt0 = $('#data-rt0');
+    const $dataRt1 = $('#data-rt1');
+    const $dataAntInput = $('#data-ant input');
+    const $dataStationContainer = $('#data-station-container');
+    const $dataTp = $('.data-tp');
+    const $dataTa = $('.data-ta');
+    const $dataMs = $('.data-ms');
+    const $dataPty = $('.data-pty');
+
+    $dataFrequency.text(parsedData.freq);
+    $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
+    $dataPi.html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+
     if (localStorage.getItem('psUnderscores') === 'true') {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
-    $('#data-ps').html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-    $('.data-pty').html(europe_programmes[parsedData.pty]);
+    $dataPs.html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
+    $dataSt.html(`<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
+    $dataRt0.html(processString(parsedData.rt0, parsedData.rt0_errors));
+    $dataRt1.html(processString(parsedData.rt1, parsedData.rt1_errors));
+    $dataPty.html(europe_programmes[parsedData.pty]);
 
-
-    if(parsedData.st === true) {
-        if (parsedData.st_forced == true) {
-            $('.data-st').html("<span class='opacity-full'>MO</span>");
-        } else {
-            $('.data-st').html("<span class='opacity-full'>ST</span>");
-        }
-    } else {
-        if (parsedData.st_forced == true) {
-            $('.data-st').html("<span class='opacity-half'>MO</span>");
-        } else {
-            $('.data-st').html("<span class='opacity-half'>ST</span>");
-        }
-    }
-
-    $('#data-rt0').html(processString(parsedData.rt0, parsedData.rt0_errors));
-    $('#data-rt1').html(processString(parsedData.rt1, parsedData.rt1_errors));
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
-    $('#data-ant input').val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
+
+    $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
         $('#data-station-name').text(parsedData.txInfo.station.replace(/%/g, '%25'));
@@ -615,16 +617,16 @@ function updateDataElements(parsedData) {
         $('#data-station-pol').text(parsedData.txInfo.pol);
         $('#data-station-distance').text(parsedData.txInfo.distance);
         $('#data-station-azimuth').text(parsedData.txInfo.azimuth);
-        $('#data-station-container').css('display', 'block');
+        $dataStationContainer.css('display', 'block');
     } else {
-        $('#data-station-container').removeAttr('style');
+        $dataStationContainer.removeAttr('style');
     }
 
     updateCounter++;
     if(updateCounter % 8 === 0) {
-        $('.data-tp').html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
-        $('.data-ta').html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
-        $('.data-ms').html(parsedData.ms === 0
+        $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
+        $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
+        $dataMs.html(parsedData.ms === 0
             ? "<span class='opacity-half'>M</span><span class='opacity-full'>S</span>"
             : (parsedData.ms === -1
                 ? "<span class='opacity-half'>M</span><span class='opacity-half'>S</span>"
@@ -634,9 +636,9 @@ function updateDataElements(parsedData) {
     }
 
     if (updateCounter % 30 === 0) {
-        $('#data-ps').attr('aria-label', parsedData.ps);
-        $('#data-rt0').attr('aria-label', parsedData.rt0);
-        $('#data-rt1').attr('aria-label', parsedData.rt1);
+        $dataPs.attr('aria-label', parsedData.ps);
+        $dataRt0.attr('aria-label', parsedData.rt0);
+        $dataRt1.attr('aria-label', parsedData.rt1);
     }
 }
 

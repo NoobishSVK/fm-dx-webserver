@@ -24,6 +24,7 @@ const client = new net.Socket();
 // Other files and libraries
 const crypto = require('crypto');
 const fs = require('fs');
+const { SerialPort } = require('serialport')
 const commandExists = require('command-exists-promise');
 const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
@@ -57,6 +58,7 @@ let currentUsers = 0;
 let connectedUsers = [];
 let streamEnabled = false;
 let incompleteDataBuffer = '';
+let serialport;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -96,10 +98,40 @@ function authenticateWithXdrd(client, salt, password) {
 }
 
 connectToXdrd();
+connectToSerial();
+
+// Serial Connection
+function connectToSerial() {
+  if (serverConfig.xdrd.wirelessConnection === false) {
+    
+    serialport = new SerialPort({path: serverConfig.xdrd.comPort, baudRate: 115200 });
+
+    serialport.on('open', () => {
+      logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+      serialport.write('x\n');
+      if(serverConfig.defaultFreq) {
+        serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+      } else {
+        serialport.write('T87500\n');
+      }
+      serialport.write('G00\n');
+      
+      serialport.on('data', (data) => {
+        resolveDataBuffer(data);
+      });
+    });
+
+    serialport.on('error', (error) => {
+      logError(error.message);
+    });
+
+    return serialport;
+  }
+}
 
 // xdrd connection
 function connectToXdrd() {
-  if (serverConfig.xdrd.xdrdPassword.length > 1) {
+  if (serverConfig.xdrd.wirelessConnection === true) {
     client.connect(serverConfig.xdrd.xdrdPort, serverConfig.xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
       
@@ -157,12 +189,16 @@ function connectToXdrd() {
                     dataHandler.dataToSend.ims = 0;
                     break;
                   }
+            } else if (line.startsWith('Z')) {
+              let modifiedLine = line.slice(1);
+              dataHandler.initialData.ant = modifiedLine;
+              dataHandler.dataToSend.ant = modifiedLine;
             }
             
             if (authFlags.authMsg && authFlags.firstClient) {
               client.write('x\n');
               if(serverConfig.defaultFreq) {
-                client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n')
+                client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
               } else {
                 client.write('T87500\n');
               }
@@ -176,29 +212,7 @@ function connectToXdrd() {
       };
       
       client.on('data', (data) => {
-        var receivedData = incompleteDataBuffer + data.toString();
-        const isIncomplete = (receivedData.slice(-1) != '\n');
-        
-        if (isIncomplete) {
-          const position = receivedData.lastIndexOf('\n');
-          if (position < 0) {
-            incompleteDataBuffer = receivedData;
-            receivedData = '';
-          } else {
-            incompleteDataBuffer = receivedData.slice(position + 1);
-            receivedData = receivedData.slice(0, position + 1);
-          }
-        } else {
-          incompleteDataBuffer = '';
-        }
-        
-        if (receivedData.length) {
-          wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-              dataHandler.handleData(client, receivedData);
-            }
-          });
-        }
+        resolveDataBuffer(data);
       });
       
       client.on('data', authDataHandler);
@@ -293,6 +307,32 @@ const authenticate = (req, res, next) => {
 app.set('view engine', 'ejs'); // Set EJS as the template engine
 app.set('views', path.join(__dirname, '/web'))
 
+function resolveDataBuffer(data) {
+  var receivedData = incompleteDataBuffer + data.toString();
+  const isIncomplete = (receivedData.slice(-1) != '\n');
+  
+  if (isIncomplete) {
+    const position = receivedData.lastIndexOf('\n');
+    if (position < 0) {
+      incompleteDataBuffer = receivedData;
+      receivedData = '';
+    } else {
+      incompleteDataBuffer = receivedData.slice(position + 1);
+      receivedData = receivedData.slice(0, position + 1);
+    }
+  } else {
+    incompleteDataBuffer = '';
+  }
+  
+  if (receivedData.length) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        dataHandler.handleData(client, receivedData);
+      }
+    });
+  }
+}
+
 function parseMarkdown(parsed) {
   parsed = parsed.replace(/<\/?[^>]+(>|$)/g, '');
 
@@ -333,12 +373,24 @@ function removeMarkdown(parsed) {
 
 app.get('/', (req, res) => {
   if (!fs.existsSync(configName + '.json')) {
-    parseAudioDevice((result) => {
-      res.render('wizard', { 
-        isAdminAuthenticated: true,
-        videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
+    let serialPorts;
+
+    SerialPort.list()
+    .then((deviceList) => {
+      serialPorts = deviceList.map(port => ({
+        path: port.path,
+        friendlyName: port.friendlyName,
+      }));
+      
+      parseAudioDevice((result) => {
+        res.render('wizard', {
+          isAdminAuthenticated: req.session.isAdminAuthenticated,
+          videoDevices: result.audioDevices,
+          audioDevices: result.videoDevices,
+          serialPorts: serialPorts
+        });
       });
+    })
   } else {
   res.render('index', { 
     isAdminAuthenticated: req.session.isAdminAuthenticated,
@@ -359,30 +411,54 @@ app.get('/', (req, res) => {
 });
 
 app.get('/wizard', (req, res) => {
+  let serialPorts;
+  
+  SerialPort.list()
+  .then((deviceList) => {
+    serialPorts = deviceList.map(port => ({
+      path: port.path,
+      friendlyName: port.friendlyName,
+    }));
+    
     parseAudioDevice((result) => {
-      res.render('wizard', { 
+      res.render('wizard', {
         isAdminAuthenticated: req.session.isAdminAuthenticated,
         videoDevices: result.audioDevices,
-        audioDevices: result.videoDevices });
+        audioDevices: result.videoDevices,
+        serialPorts: serialPorts
       });
+    });
+  })
 })
 
 app.get('/setup', (req, res) => {
-  parseAudioDevice((result) => {
-    const processUptimeInSeconds = Math.floor(process.uptime());
-    const formattedProcessUptime = formatUptime(processUptimeInSeconds);
+  let serialPorts; 
 
-    res.render('setup', { 
-      isAdminAuthenticated: req.session.isAdminAuthenticated,
-      videoDevices: result.audioDevices,
-      audioDevices: result.videoDevices,
-      memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
-      processUptime: formattedProcessUptime,
-      consoleOutput: consoleCmd.logs,
-      onlineUsers: dataHandler.dataToSend.users,
-      connectedUsers: connectedUsers
-    });
-  });
+    SerialPort.list()
+        .then((deviceList) => {
+            serialPorts = deviceList.map(port => ({
+                path: port.path,
+                friendlyName: port.friendlyName,
+            }));
+
+            parseAudioDevice((result) => {
+                const processUptimeInSeconds = Math.floor(process.uptime());
+                const formattedProcessUptime = formatUptime(processUptimeInSeconds);
+
+                res.render('setup', {
+                    isAdminAuthenticated: req.session.isAdminAuthenticated,
+                    videoDevices: result.audioDevices,
+                    audioDevices: result.videoDevices,
+                    serialPorts: serialPorts,
+                    memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+                    processUptime: formattedProcessUptime,
+                    consoleOutput: consoleCmd.logs,
+                    onlineUsers: dataHandler.dataToSend.users,
+                    connectedUsers: connectedUsers
+                });
+            });
+        })
+
 });
 
 app.get('/api', (req, res) => {
@@ -491,7 +567,7 @@ wss.on('connection', (ws, request) => {
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
   if(currentUsers === 1 && serverConfig.autoShutdown === true) {
-    connectToXdrd(); 
+    serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
   }
 
   // Use ipinfo.io API to get geolocation information
@@ -549,12 +625,12 @@ wss.on('connection', (ws, request) => {
 
       if(serverConfig.lockToAdmin === true) {
         if(request.session && request.session.isAdminAuthenticated === true) {
-          client.write(command + "\n");
+          serverConfig.xdrd.wirelessConnection === true ? client.write(command + "\n") : serialport.write(command + "\n");
         } else {
           return;
         }
       } else {
-        client.write(command + "\n");
+        serverConfig.xdrd.wirelessConnection === true ? client.write(command + "\n") : serialport.write(command + "\n");
       }
     }
   });
@@ -569,17 +645,17 @@ wss.on('connection', (ws, request) => {
       connectedUsers.splice(index, 1); // Remove the user's data from connectedUsers array
     }
 
-    if (currentUsers === 0 && serverConfig.defaultFreq && serverConfig.enableDefaultFreq && serverConfig.enableDefaultFreq === true) {
+    if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
       setTimeout(function() {
         if(currentUsers === 0) {
           client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-          //dataHandler.resetToDefault();
+          dataHandler.resetToDefault(dataHandler.dataToSend);
           dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
         }
       }, 10000)
     }
   
-    if (currentUsers === 0 && serverConfig.autoShutdown === true) {
+    if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
       client.write('X\n');
     }
 

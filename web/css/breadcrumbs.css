@@ -212,6 +212,9 @@ label {
     text-transform: uppercase;
   }
 
+  #tuner-wireless {
+    display: none;
+  }
 @media (max-width: 768px) {
     canvas, #flags-container {
         display: none;
@@ -340,6 +343,6 @@ label {
         height: 225px !important;
     }
     .chatbutton {
-        height: 86px !important;
+        height: 88px !important;
     }
 }

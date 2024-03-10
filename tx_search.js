@@ -1,5 +1,4 @@
 const fetch = require('node-fetch');
-var fs = require('fs');
 const { serverConfig } = require('./server_config')
 
 let cachedData = {};

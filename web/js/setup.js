@@ -50,6 +50,15 @@ $(document).ready(function() {
     }
   });
 
+  $('#connection-type-toggle').change(function(){
+    if($(this).is(":checked")) {
+        $('#tuner-usb').hide();
+        $('#tuner-wireless').show();
+    } else {
+        $('#tuner-wireless').hide();
+        $('#tuner-usb').show();
+    }
+});
 
   $('#login-form').submit(function (event) {
     event.preventDefault();

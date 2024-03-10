@@ -125,20 +125,50 @@
                 <h2>Connection settings</h2>
                 <p>You can set up your connection settings here. Changing these settings requires a server restart.</p>
                 <h3>Tuner connection:</h3>
-                <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
-                <div class="form-group">
-                    <label for="xdrd-ip">xdrd ip address:</label>
-                    <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
-                </div>  
-                <div class="form-group">
-                    <label for="xdrd-port">xdrd port:</label>
-                    <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
-                </div> 
-                <div class="form-group">
-                    <label for="xdrd-password">xdrd server password:</label>
-                    <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
-                </div> 
-                <br>
+
+                <div style="width: 300px;" class="auto top-10">
+                    <label class="toggleSwitch nolabel" onclick="">
+                        <input id="connection-type-toggle" type="checkbox"/>
+                        <a></a>
+                        <span>
+                            <span class="left-span">USB Cable</span>
+                            <span class="right-span">Wireless</span>
+                        </span>											
+                    </label>
+                </div>
+
+                <div id="tuner-usb" class="top-25">
+                    <div class="form-group">
+                        <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
+                        <div class="dropdown" style="width: 300px;margin-right: 0;">
+                            <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly />
+                            <ul class="options" id="deviceList">
+                                <% serialPorts.forEach(serialPort => { %>
+                                    <li data-value="<%= serialPort.path %>" class="option"><%= serialPort.friendlyName %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tuner-wireless">
+                    <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
+                    <div class="form-group">
+                        <label for="xdrd-ip">xdrd ip address:</label>
+                        <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
+                    </div>  
+                    <div class="form-group">
+                        <label for="xdrd-port">xdrd port:</label>
+                        <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
+                    </div> 
+                    <div class="form-group">
+                        <label for="xdrd-password">xdrd server password:</label>
+                        <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
+                    </div> 
+                </div>
+
+                <br class="top-25">
+
                 <h3>Webserver connection:</h3>
                 <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
                 <div class="form-group">
@@ -177,9 +207,9 @@
                     
                     <div class="form-group">
                         <p class="text-left">Audio channel count.<br>
-                            <span class="text-gray">1: Mono • 2: Stereo</span>
+                            <span class="text-gray">Choose between Mono / Stereo.</span>
                         </p>
-                        <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> AUDIO CHANNELS:</label>
+                        <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> Audio channels:</label>
                         <div class="dropdown" style="width: 300px;">
                             <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly />
                             <ul class="options">
@@ -191,9 +221,9 @@
                     
                     <div class="form-group">
                         <p class="text-left">The bitrate of the mp3 audio.<br>
-                        <span class="text-gray">Minimum: 64 Kbps • Maximum: 256 Kbps</span>
+                        <span class="text-gray">Minimum: 64 Kbps • Maximum: 320 Kbps</span>
                         </p>
-                        <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> AUDIO QUALITY:</label>
+                        <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> Audio quality:</label>
                         <div class="dropdown" style="width: 300px;">
                             <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly />
                             <ul class="options">
@@ -201,7 +231,8 @@
                                 <li data-value="96k" class="option">96k (low quality)</li>
                                 <li data-value="128k" class="option">128k (standard)</li>
                                 <li data-value="192k" class="option">192k (higher quality)</li>
-                                <li data-value="256k" class="option">256k (highest quality)</li>
+                                <li data-value="256k" class="option">256k (very high quality)</li>
+                                <li data-value="320k" class="option">320k (ultra quality)</li>
                             </ul>
                         </div>
                     </div>

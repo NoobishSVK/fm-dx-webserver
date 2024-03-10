@@ -31,23 +31,51 @@
             <!-- BASIC SETTINGS -->
             <div class="panel-100 step" id="step1">
                 <h2 class="settings-heading">BASIC SETTINGS</h2>
-                <p class="m-0">Welcome to the setup wizard!<br> Let's set up some basic things.</p>
+                <p class="m-0">Welcome to the setup wizard! Let's set up some basic things.</p>
                 <h3>Tuner connection:</h3>
-                <p class="m-0 text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
-                <div class="flex-center top-25">
-                    <div class="form-group">
-                        <label for="xdrd-ip">xdrd ip address:</label>
-                        <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
-                    </div>  
-                    <div class="form-group">
-                        <label for="xdrd-port">xdrd port:</label>
-                        <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
-                    </div> 
-                    <div class="form-group">
-                        <label for="xdrd-password">xdrd server password:</label>
-                        <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
-                    </div> 
+                <div style="width: 300px;" class="auto top-10">
+                    <label class="toggleSwitch nolabel" onclick="">
+                        <input id="connection-type-toggle" type="checkbox"/>
+                        <a></a>
+                        <span>
+                            <span class="left-span">USB Cable</span>
+                            <span class="right-span">Wireless</span>
+                        </span>											
+                    </label>
                 </div>
+                <div id="tuner-usb" class="top-25">
+                    <p>It's time to choose your USB device.</p>
+                    <div class="form-group">
+                        <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
+                        <div class="dropdown" style="width: 300px;margin-right: 0;">
+                            <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly />
+                            <ul class="options" id="deviceList">
+                                <% serialPorts.forEach(serialPort => { %>
+                                    <li data-value="<%= serialPort.path %>" class="option"><%= serialPort.friendlyName %></li>
+                                <% }); %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div id="tuner-wireless" class="top-25">
+                    <p class="m-0 text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
+                    <div class="flex-center top-25">
+                        <div class="form-group">
+                            <label for="xdrd-ip">xdrd ip address:</label>
+                            <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
+                        </div>  
+                        <div class="form-group">
+                            <label for="xdrd-port">xdrd port:</label>
+                            <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
+                        </div> 
+                        <div class="form-group">
+                            <label for="xdrd-password">xdrd server password:</label>
+                            <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
+                        </div> 
+                    </div>
+                </div>
+
+                <br class="top-25">
                 <h3>Webserver connection:</h3>
                 <p class="m-0 text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
                 <div class="flex-center top-25">
