@@ -387,7 +387,7 @@ app.get('/', (req, res) => {
       
       parseAudioDevice((result) => {
         res.render('wizard', {
-          isAdminAuthenticated: req.session.isAdminAuthenticated,
+          isAdminAuthenticated: true,
           videoDevices: result.audioDevices,
           audioDevices: result.videoDevices,
           serialPorts: serialPorts
