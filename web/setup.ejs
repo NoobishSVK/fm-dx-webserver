@@ -144,7 +144,7 @@
                             <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly />
                             <ul class="options" id="deviceList">
                                 <% serialPorts.forEach(serialPort => { %>
-                                    <li data-value="<%= serialPort.path %>" class="option"><%= serialPort.friendlyName %></li>
+                                    <li data-value="<%= serialPort.path %>" class="option"><%= serialPort.path %> - <%= serialPort.friendlyName %></li>
                                 <% }); %>
                             </ul>
                         </div>
