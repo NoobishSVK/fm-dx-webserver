@@ -111,6 +111,7 @@ function connectToSerial() {
       serialport.write('x\n');
       if(serverConfig.defaultFreq) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+        dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
       } else {
         serialport.write('T87500\n');
       }
