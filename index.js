@@ -380,7 +380,6 @@ app.get('/', (req, res) => {
     SerialPort.list()
     .then((deviceList) => {
       serialPorts = deviceList
-        .filter(port => !port.path.startsWith('/dev/ttyS'))
         .map(port => ({
           path: port.path,
           friendlyName: port.friendlyName,
