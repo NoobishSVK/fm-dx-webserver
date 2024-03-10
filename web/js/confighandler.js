@@ -161,6 +161,14 @@ function submitData() {
         $('#ip-addresses').val(data.webserver.banlist?.join('\n') || "");
 
         $('#connection-type-toggle').prop("checked", data.xdrd.wirelessConnection || false);
+        
+        if($('#connection-type-toggle').is(":checked")) {
+          $('#tuner-usb').hide();
+          $('#tuner-wireless').show();
+        } else {
+          $('#tuner-wireless').hide();
+          $('#tuner-usb').show();
+        }
 
         $('#xdrd-ip').val(data.xdrd.xdrdIp);
         $('#xdrd-port').val(data.xdrd.xdrdPort);
