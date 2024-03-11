@@ -108,7 +108,18 @@ function connectToSerial() {
 
     serialport.on('open', () => {
       logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-      serialport.write('x\n');
+      serialport.write('M0\n');
+      serialport.write('Y100\n');
+      serialport.write('D0\n');
+      serialport.write('A0\n');
+      serialport.write('F-1\n');
+      serialport.write('Z0\n');
+      serialport.write('G11\n');
+      serialport.write('V0\n');
+      serialport.write('Q0\n');
+      serialport.write('C0\n');
+      serialport.write('I0,0\n');     
+      
       if(serverConfig.defaultFreq) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
@@ -116,7 +127,8 @@ function connectToSerial() {
       } else {
         serialport.write('T87500\n');
       }
-      serialport.write('G00\n');
+      
+      serialport.write('x\n');
       
       serialport.on('data', (data) => {
         resolveDataBuffer(data);
@@ -148,6 +160,7 @@ function connectToXdrd() {
         const lines = receivedData.split('\n');
 
         for (const line of lines) {
+          console.log(line);
           if (!authFlags.receivedPassword) {
             authFlags.receivedSalt = line.trim();
             authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
