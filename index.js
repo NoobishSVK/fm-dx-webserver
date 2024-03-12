@@ -160,7 +160,6 @@ function connectToXdrd() {
         const lines = receivedData.split('\n');
 
         for (const line of lines) {
-          console.log(line);
           if (!authFlags.receivedPassword) {
             authFlags.receivedSalt = line.trim();
             authenticateWithXdrd(client, authFlags.receivedSalt, serverConfig.xdrd.xdrdPassword);
