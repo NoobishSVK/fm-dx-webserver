@@ -98,7 +98,7 @@ function submitData() {
         tunePass,
         adminPass,
       },
-      device,
+      tuner,
       publicTuner, 
       lockToAdmin,
       autoShutdown,
@@ -184,8 +184,8 @@ function submitData() {
           $("#com-devices").val(selectedDevice.text());
         }
 
-        $('#device-type').val(data.device);
-        var selectedDevice = $(".option[data-value='" + data.device + "']");
+        $('#device-type').val(data.tuner);
+        var selectedDevice = $(".option[data-value='" + data.tuner + "']");
         if (selectedDevice.length > 0) {
           $("#device-type").val(selectedDevice.text());
         }

@@ -42,6 +42,7 @@ let serverConfig = {
     tunePass: "",
     adminPass: ""
   },
+  tuner: 'tef',
   defaultFreq: 87.5,
   publicTuner: true,
   lockToAdmin: false,
