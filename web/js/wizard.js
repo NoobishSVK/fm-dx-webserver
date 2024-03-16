@@ -48,13 +48,13 @@ function updateWizardContent() {
         $('.btn-prev').show();
     }
 
-    if($('.step:visible').index() == 2) {
+    if($('.step:visible').index() == 3) {
         setTimeout(function () {
             map.invalidateSize();
         }, 200);
     }
     
-    if($('.step:visible').index() == 3) {
+    if($('.step:visible').index() == 4) {
         $('.btn-next').text('Save');
     } else {
         $('.btn-next').text('Next')

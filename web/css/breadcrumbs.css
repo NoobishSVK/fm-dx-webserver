@@ -36,6 +36,24 @@ h4 {
     font-size: 20px;
 }
 
+.tooltip {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.tooltiptext {
+    position: absolute;
+    background-color: var(--color-3);
+    color: var(--color-text);
+    text-align: center;
+    font-size: 14px;
+    border-radius: 30px;
+    padding: 5px 25px;
+    z-index: 1000;
+    opacity:var(--color-main);
+    transition: opacity 0.3s ease-in-out;
+}
+
 p#tuner-desc {
     margin: 0;
 }
@@ -76,6 +94,10 @@ label {
 
 #data-station-name {
     font-size: 20px;
+}
+
+.highest-signal-container {
+    margin-bottom: -20px !important;
 }
 
 .form-group {
@@ -215,6 +237,17 @@ label {
   #tuner-wireless {
     display: none;
   }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: auto; /* Ensure that the overlay captures clicks */
+    opacity: 0; /* Make the overlay invisible */
+}
+
 @media (max-width: 768px) {
     canvas, #flags-container {
         display: none;
@@ -233,6 +266,10 @@ label {
     }
     .form-group {
         float: none;
+    }
+    .highest-signal-container {
+        margin-top: -20px !important;
+        margin-bottom: 15px !important;
     }
     #data-pi {
         font-size: 24px;

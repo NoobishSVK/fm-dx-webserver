@@ -10,6 +10,10 @@ const fetchInterval = 3000;
 function fetchTx(freq, piCode, rdsPs) {
     const now = Date.now();
     freq = parseFloat(freq);
+
+    if(isNaN(freq)) {
+        return;
+    }
     // Check if it's been at least 3 seconds since the last fetch and if the QTH is correct
     if (now - lastFetchTime < fetchInterval || serverConfig.identification.lat.length < 2 || freq < 87) {
         return Promise.resolve();

@@ -6,6 +6,7 @@ const path = require('path');
 const os = require('os');
 const platform = os.platform();
 const cpuArchitecture = os.arch();
+const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 let unicode_type;
 let shared_Library;
 
@@ -207,8 +208,10 @@ var dataToSend = {
   freq: 87.500.toFixed(3),
   previousFreq: 87.500.toFixed(3),
   signal: 0,
+  highestSignal: -Infinity,
   st: false,
   st_forced: false,
+  rds: false,
   ps: '',
   tp: 0,
   ta: 0,
@@ -234,6 +237,14 @@ var dataToSend = {
   users: 0,
 };
 
+const filterMappings = {
+  'G11': { eq: 1, ims: 1 },
+  'G01': { eq: 0, ims: 1 },
+  'G10': { eq: 1, ims: 0 },
+  'G00': { eq: 0, ims: 0 }
+};
+
+
 var legacyRdsPiBuffer = null;
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
@@ -243,8 +254,10 @@ function handleData(ws, receivedData) {
   // Retrieve the last update time for this client
   let lastUpdateTime = clientUpdateIntervals.get(ws) || 0;
   const currentTime = Date.now();
+
   let modifiedData, parsedValue;
   const receivedLines = receivedData.split('\n');
+  
   for (const receivedLine of receivedLines) {
     switch (true) {
       case receivedLine.startsWith('P'):
@@ -272,86 +285,29 @@ function handleData(ws, receivedData) {
         initialData.ant = receivedLine.substring(1);
         break;
       case receivedLine.startsWith('G'):
-        switch (receivedLine) {
-          case 'G11':
-            initialData.eq = 1;
-            dataToSend.eq = 1;
-            initialData.ims = 1;
-            dataToSend.ims = 1;
-            break;
-          case 'G01':
-            initialData.eq = 0;
-            dataToSend.eq = 0;
-            initialData.ims = 1;
-            dataToSend.ims = 1;
-            break;
-          case 'G10':
-            initialData.eq = 1;
-            dataToSend.eq = 1;
-            initialData.ims = 0;
-            dataToSend.ims = 0;
-            break;
-          case 'G00':
-            initialData.eq = 0;
-            initialData.ims = 0;
-            dataToSend.eq = 0;
-            dataToSend.ims = 0;
-            break;
-          }
-      case receivedLine.startsWith('Sm'):
-        modifiedData = receivedLine.substring(2);
-        parsedValue = parseFloat(modifiedData);
-        dataToSend.st = false;
-        dataToSend.st_forced = false;
-        initialData.st = false;
-        initialData.st_forced = false;
-
-        if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(2);
-          initialData.signal = parsedValue.toFixed(2);
+        const mapping = filterMappings[receivedLine];
+        if (mapping) {
+          initialData.eq = mapping.eq;
+          initialData.ims = mapping.ims;
+          dataToSend.eq = mapping.eq;
+          dataToSend.ims = mapping.ims;
         }
+        break;
+      case receivedData.startsWith('Sm'):
+        processSignal(receivedData, false, false);
         break;
       case receivedData.startsWith('Ss'):
-        modifiedData = receivedData.substring(2);
-        parsedValue = parseFloat(modifiedData);
-        dataToSend.st = true;
-        dataToSend.st_forced = false;
-        initialData.st = true;
-        initialData.st_forced = false;
-
-        if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(2);
-          initialData.signal = parsedValue.toFixed(2);
-        }
+        processSignal(receivedData, true, false);
         break;
       case receivedData.startsWith('SS'):
-        modifiedData = receivedData.substring(2);
-        parsedValue = parseFloat(modifiedData);
-        dataToSend.st = true;
-        dataToSend.st_forced = true;
-        initialData.st = true;
-        initialData.st_forced = true;
-  
-        if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(2);
-          initialData.signal = parsedValue.toFixed(2);
-        }
+        processSignal(receivedData, true, true);
         break;
       case receivedData.startsWith('SM'):
-        modifiedData = receivedData.substring(2);
-        parsedValue = parseFloat(modifiedData);
-        dataToSend.st = false;
-        dataToSend.st_forced = true;
-        initialData.st = false;
-        initialData.st_forced = true;
-    
-        if (!isNaN(parsedValue)) {
-          dataToSend.signal = parsedValue.toFixed(2);
-          initialData.signal = parsedValue.toFixed(2);
-        }
-        break;
+          processSignal(receivedData, false, true);
+          break;
       case receivedLine.startsWith('R'):
         modifiedData = receivedLine.slice(1);
+        dataToSend.rds = true;
 
         if (modifiedData.length == 14) {
           // Handle legacy RDS message
@@ -409,6 +365,42 @@ function handleData(ws, receivedData) {
 function showOnlineUsers(currentUsers) {
   dataToSend.users = currentUsers;
   initialData.users = currentUsers;
+}
+
+function convertSignal(dBFS, fullScaleVoltage = 1, inputImpedance = 300) {
+  // Convert dBFS to voltage
+  let voltage = Math.pow(10, dBFS / 20) * fullScaleVoltage;
+
+  // Convert voltage to microvolts
+  let uV = voltage * 1e6;
+
+  // Convert microvolts to dBuV
+  let dBf = 20 * Math.log10(uV / Math.sqrt(2) / Math.sqrt(inputImpedance));
+
+  return dBf.toFixed(2);
+}
+
+function processSignal(receivedData, st, stForced) {
+  const modifiedData = receivedData.substring(2);
+  const parsedValue = parseFloat(modifiedData);
+  dataToSend.st = st;
+  dataToSend.st_forced = stForced;
+  initialData.st = st;
+  initialData.st_forced = stForced;
+
+  if (!isNaN(parsedValue)) {
+    /*if (serverConfig.device && serverConfig.device === 'sdr') {
+      dataToSend.signal = convertSignal(parsedValue);
+      initialData.signal = convertSignal(parsedValue);
+    } else {*/
+      dataToSend.signal = parsedValue.toFixed(2);
+      initialData.signal = parsedValue.toFixed(2);
+    //}
+
+    if(dataToSend.signal > dataToSend.highestSignal) {
+      dataToSend.highestSignal = dataToSend.signal;
+    }
+  }
 }
 
 module.exports = {

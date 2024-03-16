@@ -2,7 +2,8 @@
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
-const { serverConfig, configUpdate, configSave } = require('./server_config')
+const { serverConfig, configUpdate, configSave } = require('./server_config');
+var pjson = require('./package.json');
 
 let timeoutID = null;
 
@@ -59,6 +60,12 @@ function sendKeepalive() {
 }
 
 function sendUpdate() {
+
+  let bwLimit = '';
+  if (serverConfig.webserver.tuningLimit === true) {
+    bwLimit = serverConfig.webserver.tuningLowerLimit + ' - ' + serverConfig.webserver.tuningUpperLimit + ' Mhz';
+  }
+
   const request = {
     status: (serverConfig.lockToAdmin ? 2 : 1),
     coords: [serverConfig.identification.lat, serverConfig.identification.lon],
@@ -66,7 +73,10 @@ function sendUpdate() {
     desc: serverConfig.identification.tunerDesc,
     audioChannels: serverConfig.audio.audioChannels,
     audioQuality: serverConfig.audio.audioBitrate,
-    contact: serverConfig.identification.contact || ''
+    contact: serverConfig.identification.contact || '',
+    device: serverConfig.deviceName || '',
+    bwLimit: bwLimit,
+    version: pjson.version
   };
 
   if (serverConfig.identification.token)

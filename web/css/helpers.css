@@ -202,6 +202,10 @@
     display: none;
 }
 
+.user-select-none {
+    user-select: none;
+}
+
 @media only screen and (max-width: 960px) {
     .text-medium-big {
         font-size: 32px;

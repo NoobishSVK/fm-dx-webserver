@@ -17,10 +17,16 @@ const europe_programmes = [
     "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
 ];
 
+const usa_programmes = [
+    "No PTY", "News", "Information", "Sports", "Talk", "Rock", "Classic Rock",
+    "Adults Hits", "Soft Rock", "Top 40", "Country", "Oldies", "Soft Music",
+    "Nostalgia", "Jazz", "Classical", "Rhythm and Blues", "Soft Rhythm and Blues", 
+    "Language", "Religious Music", "Religious Talk", "Personality", "Public", "College",
+    "Spanish Talk", "Spanish Music", "Hip Hop", "", "", "Weather", "Emergency Test", "Emergency" 
+];
+
 $(document).ready(function () {
     var canvas = $('#signal-canvas')[0];
-
-    var signalToggle = $("#signal-units-toggle");
 
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
@@ -135,10 +141,11 @@ $(document).ready(function () {
     $(rtContainer).on("click", copyRt);
     $(txContainer).on("click", copyTx);
     $(piCodeContainer).on("click", findOnMaps);
-    $(stereoContainer).on("click", toggleForcedStereo);
+    $(document).on("click", "#stereo-container", toggleForcedStereo);
     $(freqContainer).on("click", function () {
         textInput.focus();
     });
+    initTooltips();
 });
 
 function getServerTime() {
@@ -377,6 +384,27 @@ function checkKey(e) {
             case 82: // RDS Reset (R key)
                 tuneTo(Number(currentFreq));
                 break;
+                case 83: // Screenshot (S key)
+                screenshotCapture.capture().then(function (dataUrl) {
+                    // Create an input element to hold the data URL temporarily
+                    var aux = $('<input>').attr({
+                        type: 'text',
+                        value: dataUrl
+                    });
+            
+                    // Append the input element to the body, select its contents, and copy them to the clipboard
+                    $('body').append(aux);
+                    aux.select();
+                    document.execCommand('copy');
+                    aux.remove();
+            
+                    // Alert the user that the screenshot has been copied to the clipboard
+                    alert('Screenshot copied to clipboard!');
+                }).catch(function (error) {
+                    console.error('Error capturing screenshot:', error);
+                });
+            
+                break;
             case 38:
 		        socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
                 break;
@@ -465,7 +493,7 @@ async function copyPs() {
     var ps = $('#data-ps').text();
     var signal = $('#data-signal').text();
     var signalDecimal = $('#data-signal-decimal').text();
-    var signalUnit = $('#signal-units').text();
+    var signalUnit = $('.signal-units').text();
 
     try {
         await copyToClipboard(frequency + " - " + pi + " | " + ps + " [" + signal + signalDecimal + " " + signalUnit + "]");
@@ -543,13 +571,14 @@ function findOnMaps() {
 function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
     let currentSignal;
+    let highestSignal = parsedData.highestSignal;
 
     if(localStorage.getItem("smoothSignal") == 'true') {
         currentSignal = averageSignal
     } else {
         currentSignal = parsedData.signal;
     }
-    let signalText = $('#signal-units');
+    let signalText = $('.signal-units');
     let signalValue;
 
     switch (signalUnit) {
@@ -572,6 +601,7 @@ function updateSignalUnits(parsedData, averageSignal) {
     const formatted = (Math.round(signalValue * 10) / 10).toFixed(1);
     const [integerPart, decimalPart] = formatted.split('.');
 
+    $('#data-signal-highest').text(Number(highestSignal).toFixed(1));
     $('#data-signal').text(integerPart);
     $('#data-signal-decimal').text('.' + decimalPart);
 }
@@ -589,6 +619,7 @@ function updateDataElements(parsedData) {
     const $dataTp = $('.data-tp');
     const $dataTa = $('.data-ta');
     const $dataMs = $('.data-ms');
+    const $flagDesktopCointainer = $('#flags-container-desktop');
     const $dataPty = $('.data-pty');
 
     $dataFrequency.text(parsedData.freq);
@@ -603,6 +634,12 @@ function updateDataElements(parsedData) {
     $dataRt0.html(processString(parsedData.rt0, parsedData.rt0_errors));
     $dataRt1.html(processString(parsedData.rt1, parsedData.rt1_errors));
     $dataPty.html(europe_programmes[parsedData.pty]);
+
+    if(parsedData.rds === true) {
+        $flagDesktopCointainer.css('background-color', 'var(--color-2');
+    } else {
+        $flagDesktopCointainer.css('background-color', 'var(--color-1');
+    }
 
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
@@ -719,4 +756,28 @@ function toggleForcedStereo() {
     var message = "B";
     message += parsedData.st_forced = (parsedData.st_forced == "1") ? "0" : "1";
     socket.send(message);
+}
+
+function initTooltips() {
+    $('[data-tooltip]').hover(function(e){
+        var tooltipText = $(this).data('tooltip');
+        var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
+        $('body').append(tooltip);
+
+        var tooltipWidth = tooltip.outerWidth();
+        var tooltipHeight = tooltip.outerHeight();
+        var posX = e.pageX - tooltipWidth / 2;
+        var posY = e.pageY - tooltipHeight - 10;
+
+        tooltip.css({ top: posY, left: posX, opacity: 0.9 });
+    }, function() {
+        $('.tooltiptext').remove();
+    }).mousemove(function(e){
+        var tooltipWidth = $('.tooltiptext').outerWidth();
+        var tooltipHeight = $('.tooltiptext').outerHeight();
+        var posX = e.pageX - tooltipWidth / 2;
+        var posY = e.pageY - tooltipHeight - 10;
+
+        $('.tooltiptext').css({ top: posY, left: posX });
+    });
 }

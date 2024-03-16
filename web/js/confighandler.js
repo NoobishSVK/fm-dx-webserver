@@ -41,6 +41,10 @@ function submitData() {
       return $(this).text() === $('#audio-quality').val();
     }).data('value') || "192k");
 
+    const device = ($('.options .option').filter(function() {
+      return $(this).text() === $('#device-type').val();
+    }).data('value') || "tef");
+
     const tunerName = $('#webserver-name').val() || 'FM Tuner';
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';
     const broadcastTuner = $("#broadcast-tuner").is(":checked");
@@ -94,6 +98,7 @@ function submitData() {
         tunePass,
         adminPass,
       },
+      device,
       publicTuner, 
       lockToAdmin,
       autoShutdown,
@@ -177,6 +182,12 @@ function submitData() {
         var selectedDevice = $(".option[data-value='" + data.xdrd.comPort + "']");
         if (selectedDevice.length > 0) {
           $("#com-devices").val(selectedDevice.text());
+        }
+
+        $('#device-type').val(data.device);
+        var selectedDevice = $(".option[data-value='" + data.device + "']");
+        if (selectedDevice.length > 0) {
+          $("#device-type").val(selectedDevice.text());
         }
 
         $('#audio-devices').val(data.audio.audioDevice);

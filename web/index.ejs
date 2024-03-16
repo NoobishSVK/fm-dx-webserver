@@ -6,6 +6,7 @@
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <link rel="icon" type="image/png" href="favicon2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -73,12 +74,12 @@
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
                             <button class="playbutton" aria-label="Play / Stop Button"><i class="fa-solid fa-play fa-lg"></i></button>
                         </div>
-                        <div class="panel-100 m-0 hover-brighten flex-center" id="ps-container" style="height: 90px;">
+                        <div class="panel-100 m-0 hover-brighten flex-center" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
                             <span class="text-big" id="data-ps"></span>
                         </div>
                     </div>
                     
-                    <div id="flags-container-desktop" class="panel-33">
+                    <div id="flags-container-desktop" class="panel-33 user-select-none">
                         <h2 class="show-phone">
                             <div class="data-pty text-color-default"></div>
                         </h2>
@@ -88,14 +89,17 @@
                             <div style="display:inline-block">
                                 <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                             </div>
-                            <span id="stereo-container" class="pointer"><span style="margin-left: 20px;" class="data-st">ST</span></span>
+                            <span id="stereo-container" class="pointer" style="position: relative;">
+                                <span style="margin-left: 20px;" class="data-st">ST</span>
+                                <span class="overlay" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
+                            </span>                                                               
                             <span style="margin-left: 15px;" class="data-ms">MS</span>
                         </h3>
                     </div>
                 </div>
                 
                 <div class="flex-container">
-                    <div class="panel-33 hover-brighten" id="pi-code-container">
+                    <div class="panel-33 hover-brighten" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
                         <h2>PI CODE</h2>
                         <span id="data-pi" class="text-big text-uppercase"></span>
                     </div>
@@ -107,11 +111,16 @@
                     
                     <div class="panel-33">
                         <h2>SIGNAL</h2>
-                        <span class="text-big">
+                        <div class="text-small text-gray highest-signal-container">
+                            <i class="fa-solid fa-arrow-up"></i>
+                            <span id="data-signal-highest"></span>
+                            <span class="signal-units"></span>
+                        </div>
+                        <div class="text-big">
                             <span id="data-signal"></span><!--
                         --><span id="data-signal-decimal" class="text-medium-big" style="opacity:0.7;"></span>
-                            <span id="signal-units" class="text-medium">dBf</span>
-                        </span>
+                            <span class="signal-units text-medium">dBf</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -135,10 +144,12 @@
                             <% } %>
                             
                             <div class="panel-100 no-bg h-100 m-0 button-eq">
-                                <button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="EQ / RF+ Filter"><span class="text-bold">EQ</span><br><span class="text-smaller">(RF+)</span></button>
+                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
                             <div class="panel-100 no-bg h-100 m-0 button-ims">
-                                <button id="data-ims" style="border-radius: 0px 30px 30px 0px;"  aria-label="iMS / IF+ Filter"><span class="text-bold">iMS</span><br><span class="text-smaller">(IF+)</span></button>
+                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
                             </div>
                         </div>
                     </div>
@@ -162,7 +173,7 @@
                         <hr class="hide-desktop">
                     </div>
                     
-                    <div class="panel-33 hover-brighten">
+                    <div class="panel-33 hover-brighten" data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
                         <div id="data-station-container">
                             <h2 style="margin-top: 0;" class="mb-0">
                                 <span id="data-station-name"></span>
@@ -277,7 +288,7 @@
                     <a href="./setup">Setup</a> • <a class="logout-link" href="#">Logout</a>
                 </p>
                 <% } else if (isTuneAuthenticated) { %>
-                    <p>You are logged in and can control the receiver. <a class="logout-link" href="#">Logout</a></p>
+                    <p>You are logged in and can control the receiver.<br><a class="logout-link" href="#">Logout</a></p>
                     <% } else { %>
                         <form action="./login" method="post" id="login-form" class="top-25">
                             <label for="password">Password:</label>
@@ -349,5 +360,9 @@
 </div>
 
 <script src="js/webserver.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/screenshot-capture/2.0.0/screenshot-capture.min.js"></script>
+
+
 </body>
 </html>

@@ -108,6 +108,8 @@ function connectToSerial() {
 
     serialport.on('open', () => {
       logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+      
+      serialport.write('x\n');
       serialport.write('M0\n');
       serialport.write('Y100\n');
       serialport.write('D0\n');
@@ -127,8 +129,6 @@ function connectToSerial() {
       } else {
         serialport.write('T87500\n');
       }
-      
-      serialport.write('x\n');
       
       serialport.on('data', (data) => {
         resolveDataBuffer(data);
@@ -422,6 +422,7 @@ app.get('/', (req, res) => {
     tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
     tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
     chatEnabled: serverConfig.webserver.chatEnabled,
+    device: serverConfig.device
    })
   }
 });
@@ -637,7 +638,7 @@ wss.on('connection', (ws, request) => {
       }
     }
 
-    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true &&  serverConfig.xdrd.wirelessConnection)) {
+    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true && serverConfig.xdrd.wirelessConnection)) {
 
       if(serverConfig.lockToAdmin === true) {
         if(request.session && request.session.isAdminAuthenticated === true) {

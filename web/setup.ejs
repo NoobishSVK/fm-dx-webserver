@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FM-DX Webserver</title>
+    <title>Setup - FM-DX Webserver</title>
     <link href="css/entry.css" type="text/css" rel="stylesheet">
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
@@ -21,6 +21,7 @@
         <div class="panel-100">
             <ul class="nav">
                 <li data-panel="dashboard" class="active">Dashboard</li>
+                <li data-panel="tuner">Tuner</li>
                 <li data-panel="connection">Connection</li>
                 <li data-panel="audio">Audio</li>
                 <li data-panel="webserver">Webserver</li>
@@ -339,6 +340,21 @@
                     <textarea id="ip-addresses" placeholder="123.45.67.8"></textarea>
                 </div>
 
+            </div>
+
+            <div class="panel-100 tab-content" id="tuner">
+                <h2>Tuner Specific Settings</h2>
+                <div class="form-group">
+                    <label for="themes"><i class="fa-solid fa-radio"></i> Device:</label>
+                    <div class="dropdown" id="device-selector" style="margin-right: 0;">
+                        <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly>
+                        <ul class="options">
+                            <li class="option" data-value="tef">TEF668x / TEA685x</li>
+                            <li class="option" data-value="xdr">XDR (F1HD / S10HDiP)</li>
+                            <li class="option" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
     
             <div class="panel-100 tab-content" id="identification">
