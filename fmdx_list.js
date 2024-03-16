@@ -74,7 +74,7 @@ function sendUpdate() {
     audioChannels: serverConfig.audio.audioChannels,
     audioQuality: serverConfig.audio.audioBitrate,
     contact: serverConfig.identification.contact || '',
-    device: serverConfig.deviceName || '',
+    tuner: serverConfig.device || '',
     bwLimit: bwLimit,
     version: pjson.version
   };
