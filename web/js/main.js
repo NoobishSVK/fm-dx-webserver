@@ -28,6 +28,21 @@ const usa_programmes = [
 $(document).ready(function () {
     var canvas = $('#signal-canvas')[0];
 
+    var $panel = $('.admin-quick-dashboard');
+    var panelWidth = $panel.outerWidth();
+  
+    $(document).mousemove(function(e) {
+        var mouseX = e.pageX;
+        var panelLeft = parseInt($panel.css('left'));
+    
+        if (mouseX <= 10 || (panelLeft === 4 && mouseX <= 100)) {
+            $panel.css('left', '4px');
+        } else {
+            $panel.css('left', -panelWidth);
+        }
+    });
+    
+
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
 
@@ -49,9 +64,9 @@ $(document).ready(function () {
     const textInput = $('#commandinput');
 
     textInput.on('change', function (event) {
-        const inputValue = textInput.val();
+        const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
-        if (/iPhone/i.test(navigator.userAgent) && socket.readyState === WebSocket.OPEN) {
+        if (/iPhone/i.test(navigator.userAgent)) {
             socket.send("T" + (inputValue * 1000));
             // Clear the input field if needed
             textInput.val('');
@@ -384,26 +399,7 @@ function checkKey(e) {
             case 82: // RDS Reset (R key)
                 tuneTo(Number(currentFreq));
                 break;
-                case 83: // Screenshot (S key)
-                screenshotCapture.capture().then(function (dataUrl) {
-                    // Create an input element to hold the data URL temporarily
-                    var aux = $('<input>').attr({
-                        type: 'text',
-                        value: dataUrl
-                    });
-            
-                    // Append the input element to the body, select its contents, and copy them to the clipboard
-                    $('body').append(aux);
-                    aux.select();
-                    document.execCommand('copy');
-                    aux.remove();
-            
-                    // Alert the user that the screenshot has been copied to the clipboard
-                    alert('Screenshot copied to clipboard!');
-                }).catch(function (error) {
-                    console.error('Error capturing screenshot:', error);
-                });
-            
+            case 83: // Screenshot (S key)
                 break;
             case 38:
 		        socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
@@ -758,19 +754,51 @@ function toggleForcedStereo() {
     socket.send(message);
 }
 
+function toggleAdminLock() {
+    let $adminLockButton = $('#dashboard-lock-admin');
+
+    if($adminLockButton.hasClass('active')) {
+        socket.send('wL0');
+        $adminLockButton.removeClass('active');
+    } else {
+        socket.send('wL1');
+        $adminLockButton.addClass('active');
+    }
+}
+
+function togglePasswordLock() {
+    let $passwordLockButton = $('#dashboard-lock-tune');
+
+    if($passwordLockButton.hasClass('active')) {
+        socket.send('wT0');
+        $passwordLockButton.removeClass('active');
+    } else {
+        socket.send('wT1');
+        $passwordLockButton.addClass('active');
+    }
+}
+
 function initTooltips() {
-    $('[data-tooltip]').hover(function(e){
+    $('.tooltip').hover(function(e){
         var tooltipText = $(this).data('tooltip');
-        var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
-        $('body').append(tooltip);
+        
+        // Add a delay of 500 milliseconds before creating and appending the tooltip
+        $(this).data('timeout', setTimeout(() => {
+            var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
+            $('body').append(tooltip);
 
-        var tooltipWidth = tooltip.outerWidth();
-        var tooltipHeight = tooltip.outerHeight();
-        var posX = e.pageX - tooltipWidth / 2;
-        var posY = e.pageY - tooltipHeight - 10;
+            var posX = e.pageX;
+            var posY = e.pageY;
 
-        tooltip.css({ top: posY, left: posX, opacity: 0.9 });
+            var tooltipWidth = tooltip.outerWidth();
+            var tooltipHeight = tooltip.outerHeight();
+            posX -= tooltipWidth / 2;
+            posY -= tooltipHeight + 10;
+            tooltip.css({ top: posY, left: posX, opacity: 1 }); // Set opacity to 1
+        }, 500));
     }, function() {
+        // Clear the timeout if the mouse leaves before the delay completes
+        clearTimeout($(this).data('timeout'));
         $('.tooltiptext').remove();
     }).mousemove(function(e){
         var tooltipWidth = $('.tooltiptext').outerWidth();

@@ -17,7 +17,7 @@ function enableAudioStream() {
         ffmpegCommand = `${flags} -f dshow -audio_buffer_size 50 -i audio="${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.webserverPort + 10} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
       } else {
         // Linux
-        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.webserverPort + 10} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
+        ffmpegCommand = `${flags} -f alsa -i "${serverConfig.audio.softwareMode && serverConfig.audio.softwareMode == true ? 'plug' : ''}${serverConfig.audio.audioDevice}" ${codec} ${output} pipe:1 | node stream/3las.server.js -port ${serverConfig.webserver.webserverPort + 10} -samplerate 48000 -channels ${serverConfig.audio.audioChannels}`;
     } 
 
     consoleCmd.logInfo("Using audio device: " + serverConfig.audio.audioDevice);

@@ -281,9 +281,6 @@ app.get('/static_data', (req, res) => {
 });
 
 app.get('/server_time', (req, res) => {
-  /*const serverTime = new Date().toISOString(); // Get server time in ISO format
-  const serverTimezoneOffset = new Date().getTimezoneOffset(); // Get server timezone offset in minutes*/
-
   const serverTime = new Date(); // Get current server time
   const serverTimeUTC = new Date(serverTime.getTime() - (serverTime.getTimezoneOffset() * 60000)); // Adjust server time to UTC
   res.json({
@@ -577,8 +574,6 @@ app.get('/getDevices', (req, res) => {
 /**
  * WEBSOCKET BLOCK
  */
-let lastDisconnectTime = null;
-
 wss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
@@ -618,39 +613,56 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('message', (message) => {
-    logDebug('Command received from \x1b[90m' + clientIp + '\x1b[0m:', message.toString());
-    command = message.toString();
+    const command = message.toString();
+    logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
 
-    if(command.startsWith('X')) {
-      logWarn('Remote tuner shutdown attempted by \x1b[90m' + clientIp + '\x1b[0m. You may consider blocking this user.');
-      return;
-    }
-
-    if(command.includes('\'')) {
-      return;
-    }
-
-    if(command.startsWith('T')) {
-      let tuneFreq = Number(command.slice(1)) / 1000;
-      
-      if(serverConfig.webserver.tuningLimit === true && (tuneFreq < serverConfig.webserver.tuningLowerLimit || tuneFreq > serverConfig.webserver.tuningUpperLimit) || isNaN(tuneFreq)) {
+    if (command.startsWith('X')) {
+        logWarn(`Remote tuner shutdown attempted by \x1b[90m${clientIp}\x1b[0m. You may consider blocking this user.`);
         return;
-      }
     }
 
-    if((serverConfig.publicTuner === true) || (request.session && request.session.isTuneAuthenticated === true && serverConfig.xdrd.wirelessConnection)) {
+    if (command.includes("'")) {
+        return;
+    }
 
-      if(serverConfig.lockToAdmin === true) {
-        if(request.session && request.session.isAdminAuthenticated === true) {
-          serverConfig.xdrd.wirelessConnection === true ? client.write(command + "\n") : serialport.write(command + "\n");
-        } else {
-          return;
+    if (command.startsWith('w') && request.session.isAdminAuthenticated) {
+        switch (command) {
+            case 'wL1':
+                serverConfig.lockToAdmin = true;
+                break;
+            case 'wL0':
+                serverConfig.lockToAdmin = false;
+                break;
+            case 'wT0':
+                serverConfig.publicTuner = true;
+                break;
+            case 'wT1':
+                serverConfig.publicTuner = false;
+                break;
+            default:
+                break;
         }
-      } else {
-        serverConfig.xdrd.wirelessConnection === true ? client.write(command + "\n") : serialport.write(command + "\n");
-      }
+    }
+
+    if (command.startsWith('T')) {
+        const tuneFreq = Number(command.slice(1)) / 1000;
+        const { tuningLimit, tuningLowerLimit, tuningUpperLimit } = serverConfig.webserver;
+        
+        if (tuningLimit && (tuneFreq < tuningLowerLimit || tuneFreq > tuningUpperLimit) || isNaN(tuneFreq)) {
+            return;
+        }
+    }
+
+    const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};
+    const { wirelessConnection } = serverConfig.xdrd;
+
+    if ((serverConfig.publicTuner || (isTuneAuthenticated && wirelessConnection)) && 
+        (!serverConfig.lockToAdmin || isAdminAuthenticated)) {
+        const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
+        output.write(`${command}\n`);
     }
   });
+
 
   ws.on('close', (code, reason) => {
     currentUsers--;
@@ -683,7 +695,6 @@ wss.on('connection', (ws, request) => {
 });
 
 // CHAT WEBSOCKET BLOCK
-// Assuming chatWss is your WebSocket server instance
 // Initialize an array to store chat messages
 let chatHistory = [];
 
@@ -713,22 +724,20 @@ chatWss.on('connection', (ws, request) => {
     messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
 
     if (serverConfig.webserver.banlist?.includes(clientIp)) {
-      return; // Do not proceed further if banned
+      return;
     }
 
     if(request.session.isAdminAuthenticated === true) {
       messageData.admin = true;
     }
 
-    // Limit message length to 255 characters
     if (messageData.message.length > 255) {
       messageData.message = messageData.message.substring(0, 255);
     }
 
-    // Add the new message to chat history and keep only the latest 50 messages
     chatHistory.push(messageData);
     if (chatHistory.length > 50) {
-      chatHistory.shift(); // Remove the oldest message if the history exceeds 50 messages
+      chatHistory.shift();
     }
     
     const modifiedMessage = JSON.stringify(messageData);

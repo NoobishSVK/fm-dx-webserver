@@ -50,7 +50,7 @@ h4 {
     border-radius: 30px;
     padding: 5px 25px;
     z-index: 1000;
-    opacity:var(--color-main);
+    opacity: 0;
     transition: opacity 0.3s ease-in-out;
 }
 
@@ -246,6 +246,42 @@ label {
     right: 0;
     pointer-events: auto; /* Ensure that the overlay captures clicks */
     opacity: 0; /* Make the overlay invisible */
+}
+
+.admin-quick-dashboard {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -96px;
+    width: 96px;
+    height: 286px;
+    background-color: var(--color-2);
+    margin: auto 0;
+    border-radius: 30px;
+    padding-top: 15px;
+}
+
+.admin-quick-dashboard .icon {
+    width: 72px;
+    height: 72px;
+    margin: 10px auto;
+    color: var(--color-1);
+    background-color: var(--color-3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    border-radius: 10px;
+    transition: 0.3s ease-in-out background-color;
+    cursor: pointer;
+}
+
+.admin-quick-dashboard .icon.active {
+    background-color: var(--color-4);
+}
+
+.admin-quick-dashboard .icon:hover {
+    background-color: var(--color-5);
 }
 
 @media (max-width: 768px) {

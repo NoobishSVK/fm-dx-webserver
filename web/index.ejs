@@ -52,8 +52,10 @@
     <audio id="audioTag"></audio>
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
-            <h1 id="tuner-name"><%= tunerName %> <% if (!publicTuner) { %><i class="fa-solid fa-key pointer" title="Only people with tune password can tune."></i>
-                <% } else if (tunerLock) { %><i class="fa-solid fa-lock pointer" title="Tuner is currently locked to admin."></i><% } %>
+            <h1 id="tuner-name"><%= tunerName %> 
+                <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip" data-tooltip="Only people with tune password can tune."></i>
+                <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip" data-tooltip="Tuner is currently locked to admin."></i>
+                <% } %>
             </h1>
             <p id="tuner-desc">
                 <%- tunerDesc %>
@@ -74,7 +76,7 @@
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
                             <button class="playbutton" aria-label="Play / Stop Button"><i class="fa-solid fa-play fa-lg"></i></button>
                         </div>
-                        <div class="panel-100 m-0 hover-brighten flex-center" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
+                        <div class="panel-100 m-0 hover-brighten flex-center tooltip" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
                             <span class="text-big" id="data-ps"></span>
                         </div>
                     </div>
@@ -91,7 +93,7 @@
                             </div>
                             <span id="stereo-container" class="pointer" style="position: relative;">
                                 <span style="margin-left: 20px;" class="data-st">ST</span>
-                                <span class="overlay" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
+                                <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                             </span>                                                               
                             <span style="margin-left: 15px;" class="data-ms">MS</span>
                         </h3>
@@ -99,7 +101,7 @@
                 </div>
                 
                 <div class="flex-container">
-                    <div class="panel-33 hover-brighten" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
+                    <div class="panel-33 hover-brighten tooltip" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
                         <h2>PI CODE</h2>
                         <span id="data-pi" class="text-big text-uppercase"></span>
                     </div>
@@ -144,12 +146,12 @@
                             <% } %>
                             
                             <div class="panel-100 no-bg h-100 m-0 button-eq">
-                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
+                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
                             <div class="panel-100 no-bg h-100 m-0 button-ims">
-                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
+                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
                             </div>
                         </div>
                     </div>
@@ -173,7 +175,7 @@
                         <hr class="hide-desktop">
                     </div>
                     
-                    <div class="panel-33 hover-brighten" data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
+                    <div class="panel-33 hover-brighten tooltip" data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
                         <div id="data-station-container">
                             <h2 style="margin-top: 0;" class="mb-0">
                                 <span id="data-station-name"></span>
@@ -227,6 +229,20 @@
     <button class="chatbutton hide-desktop bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
     <% } %>
     <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
+
+    <% if (isAdminAuthenticated) { %>
+        <div class="admin-quick-dashboard hide-phone">
+            <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" data-tooltip="Toggle admin lock<br>Lasts until restart">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" data-tooltip="Toggle password lock<br>Lasts until restart">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div class="icon tooltip" data-tooltip="Go to admin menu" onClick="window.open('./setup', '_blank').focus();">
+                <i class="fa-solid fa-user"></i>
+            </div>
+        </div>
+    <% } %>   
 
 <div id="myModal" class="modal">
     <div class="modal-panel">
@@ -285,7 +301,7 @@
             
             <% if (isAdminAuthenticated) { %>
                 <p>You are logged in as an adminstrator.<br>
-                    <a href="./setup">Setup</a> • <a class="logout-link" href="#">Logout</a>
+                    <a href="./setup" target="_blank">Setup</a> • <a class="logout-link" href="#">Logout</a>
                 </p>
                 <% } else if (isTuneAuthenticated) { %>
                     <p>You are logged in and can control the receiver.<br><a class="logout-link" href="#">Logout</a></p>
@@ -360,9 +376,5 @@
 </div>
 
 <script src="js/webserver.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/screenshot-capture/2.0.0/screenshot-capture.min.js"></script>
-
-
 </body>
 </html>
