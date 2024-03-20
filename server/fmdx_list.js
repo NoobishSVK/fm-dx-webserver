@@ -3,7 +3,7 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
 const { serverConfig, configUpdate, configSave } = require('./server_config');
-var pjson = require('./package.json');
+var pjson = require('../package.json');
 
 let timeoutID = null;
 

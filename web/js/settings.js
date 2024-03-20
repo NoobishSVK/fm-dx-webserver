@@ -3,7 +3,7 @@ var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year;
-var currentVersion = 'v1.1.5 [' + formattedDate + ']';
+var currentVersion = 'v1.1.5a [' + formattedDate + ']';
 
     
     /**

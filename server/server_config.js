@@ -1,5 +1,6 @@
 /* Libraries / Imports */
 const fs = require('fs');
+const path = require('path');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
 
 let configName = 'config';
@@ -9,6 +10,8 @@ if (index !== -1 && index + 1 < process.argv.length) {
   configName = process.argv[index + 1];
   logInfo('Loading with a custom config file:', configName + '.json')
 }
+
+const configPath = path.join(__dirname, '../' + configName + '.json');
 
 let serverConfig = {
   webserver: {
@@ -73,7 +76,7 @@ function configUpdate(newConfig) {
 
 
 function configSave() {
-  fs.writeFile(configName + '.json', JSON.stringify(serverConfig, null, 2), (err) => {
+  fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
     if (err) {
       logError(err);
     } else {
@@ -82,11 +85,15 @@ function configSave() {
   });
 }
 
-if (fs.existsSync(configName + '.json')) {
-  const configFileContents = fs.readFileSync(configName + '.json', 'utf8');
+function configExists() {
+  return fs.existsSync(configPath);
+}
+
+if (fs.existsSync(configPath)) {
+  const configFileContents = fs.readFileSync(configPath, 'utf8');
   serverConfig = JSON.parse(configFileContents);
 }
 
 module.exports = {
-    configName, serverConfig, configUpdate, configSave
+    configName, serverConfig, configUpdate, configSave, configExists, configPath
 };

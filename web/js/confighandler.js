@@ -45,7 +45,7 @@ function submitData() {
       return $(this).text() === $('#device-type').val();
     }).data('value') || "tef");
 
-    const softwareMode = $('#audio-software-mode').is("checked") || false;
+    const softwareMode = $('#audio-software-mode').is(":checked") || false;
 
     const tunerName = $('#webserver-name').val() || 'FM Tuner';
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';
@@ -205,7 +205,7 @@ function submitData() {
           $("#audio-quality").val(selectedQuality.text());
         }
 
-        $('#audio-software-switch').prop("checked", data.audio.softwareMode || false);
+        $('#audio-software-mode').prop("checked", data.audio.softwareMode || false);
 
         $('#webserver-name').val(data.identification.tunerName);
         $('#webserver-desc').val(data.identification.tunerDesc);

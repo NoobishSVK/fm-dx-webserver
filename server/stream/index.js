@@ -1,7 +1,19 @@
 const { spawn } = require('child_process');
-const fs = require('fs');
 const consoleCmd = require('../console.js');
 const { configName, serverConfig, configUpdate, configSave } = require('../server_config');
+const { logDebug, logError, logInfo, logWarn } = require('../console');
+const commandExists = require('command-exists-promise');
+
+// Check if FFmpeg is installed
+commandExists('ffmpeg')
+  .then(exists => {
+    if (exists) {
+      logInfo("An existing installation of ffmpeg found, enabling audio stream.");
+      enableAudioStream();
+    } else {
+      logError("No ffmpeg installation found. Audio stream won't be available.");
+    }
+  })
 
 function enableAudioStream() {
     var ffmpegCommand;
@@ -46,8 +58,4 @@ function enableAudioStream() {
             consoleCmd.logFfmpeg(`Error starting child process: ${err}`);
         });
     }
-}
-
-module.exports = {
-    enableAudioStream
 }
