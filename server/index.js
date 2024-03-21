@@ -112,19 +112,22 @@ function connectToXdrd() {
       
       let authFlags = {
         authMsg: false,
-        firstClient: false,
-        receivedPassword: false
+        firstClient: true,
+        receivedSalt: '',
+        receivedPassword: false,
+        messageCount: 0,
       };
       
       const authDataHandler = (data) => {
+        authFlags.messageCount++
         const receivedData = data.toString();
         const lines = receivedData.split('\n');
 
         for (const line of lines) {
-          if (!authFlags.receivedPassword) {
+          if (authFlags.receivedPassword === false) {
             authFlags.receivedSalt = line.trim();
-            authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
             authFlags.receivedPassword = true;
+            authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
           } else {
             if (line.startsWith('a')) {
               authFlags.authMsg = true;
@@ -167,7 +170,12 @@ function connectToXdrd() {
       
       client.on('data', (data) => {
         helpers.resolveDataBuffer(data, wss);
-        authDataHandler(data);
+        if (authFlags.authMsg == true && authFlags.messageCount > 1) {
+          // If the limit is reached, remove the 'data' event listener
+          client.off('data', authDataHandler);
+          return;
+          }
+          authDataHandler(data);
       });
     });
   }
