@@ -25,7 +25,6 @@ const { logDebug, logError, logInfo, logWarn } = require('./console');
 const storage = require('./storage');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 const pjson = require('../package.json');
-require('./stream/index');
 
 console.log(`\x1b[32m
  _____ __  __       ______  __ __        __   _                                  
@@ -36,6 +35,9 @@ console.log(`\x1b[32m
 `);
 console.log('\x1b[0mFM-DX-Webserver', pjson.version);
 console.log('\x1b[90m======================================================');
+
+// Start ffmpeg
+require('./stream/index');
 
 // Create a WebSocket proxy instance
 const proxy = httpProxy.createProxyServer({
@@ -67,8 +69,8 @@ function connectToSerial() {
 
     serialport.on('open', () => {
       logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-      
       serialport.write('x\n');
+      serialport.write('W0\n');
       serialport.write('M0\n');
       serialport.write('Y100\n');
       serialport.write('D0\n');
@@ -232,6 +234,7 @@ app.use('/', endpoints);
  * WEBSOCKET BLOCK
  */
 wss.on('connection', (ws, request) => {
+  const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   currentUsers++;
   dataHandler.showOnlineUsers(currentUsers);
@@ -310,14 +313,22 @@ wss.on('connection', (ws, request) => {
         }
     }
 
-    const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};
-    const { wirelessConnection } = serverConfig.xdrd;
+    const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};  
 
-    if ((serverConfig.publicTuner || (isTuneAuthenticated && wirelessConnection)) && 
-        (!serverConfig.lockToAdmin || isAdminAuthenticated)) {
-        const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
-        output.write(`${command}\n`);
+    if (serverConfig.publicTuner && !serverConfig.lockToAdmin) {
+      output.write(`${command}\n`);
+    } else {
+      if (serverConfig.lockToAdmin) {
+        if(isAdminAuthenticated) {
+          output.write(`${command}\n`);
+        }
+      } else {
+        if(isTuneAuthenticated) {
+          output.write(`${command}\n`);
+        }
+      }
     }
+    
   });
 
   ws.on('close', (code, reason) => {
@@ -333,9 +344,10 @@ wss.on('connection', (ws, request) => {
     if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
       setTimeout(function() {
         if(currentUsers === 0) {
-          client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+          output.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
           dataHandler.resetToDefault(dataHandler.dataToSend);
           dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+          dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         }
       }, 10000)
     }

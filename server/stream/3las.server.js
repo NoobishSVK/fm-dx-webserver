@@ -1,16 +1,7 @@
 "use strict";
 var fs = require('fs');
-
-let serverConfig = {
-    audio: {
-      audioBitrate: "128k"
-    },
-};
-
-if(fs.existsSync('./config.json')) {
-    const configFileContents = fs.readFileSync('./config.json', 'utf8');
-    serverConfig = JSON.parse(configFileContents);
-}
+const ffmpegStaticPath = require('ffmpeg-static');
+const {serverConfig} = require('../server_config')
 
 /*
     Stdin streamer is part of 3LAS (Low Latency Live Audio Streaming)
@@ -50,12 +41,7 @@ const child_process_1 = require("child_process");
 const ws = __importStar(require("ws"));
 const wrtc = require('wrtc');
 const Settings = JSON.parse((0, fs_1.readFileSync)('server/stream/settings.json', 'utf-8'));
-const FFmpeg_command = (() => {
-    if (process.platform === 'win32')
-        return Settings.FallbackFFmpegPath;
-    else if (process.platform === 'linux')
-        return "ffmpeg";
-})();
+const FFmpeg_command = ffmpegStaticPath;
 class RtcProvider {
     constructor() {
         this.RtcDistributePeer = new wrtc.RTCPeerConnection(Settings.RtcConfig);

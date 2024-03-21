@@ -489,7 +489,7 @@ async function copyPs() {
     var ps = $('#data-ps').text();
     var signal = $('#data-signal').text();
     var signalDecimal = $('#data-signal-decimal').text();
-    var signalUnit = $('.signal-units').text();
+    var signalUnit = $('.signal-units').eq(0).text();
 
     try {
         await copyToClipboard(frequency + " - " + pi + " | " + ps + " [" + signal + signalDecimal + " " + signalUnit + "]");

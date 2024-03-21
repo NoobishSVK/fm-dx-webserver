@@ -74,7 +74,7 @@ $(document).ready(function() {
     }
   });
 
-  if(localStorage.getItem('nickname').length > 0) {
+  if(localStorage.getItem('nickname')) {
     $('#chat-nickname').val(localStorage.getItem('nickname'));
     $('#chat-identity-nickname').text(localStorage.getItem('nickname'));
   }

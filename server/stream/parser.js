@@ -2,6 +2,7 @@
 
 const exec = require('child_process').exec;
 const fs = require('fs');
+const ffmpeg = require('ffmpeg-static');
 const filePath = '/proc/asound/cards';
 const platform = process.platform;
 
@@ -15,7 +16,7 @@ function parseAudioDevice(options, callback) {
         options = null;
     }
     options = options || {};
-    const ffmpegPath = options.ffmpegPath || 'ffmpeg';
+    const ffmpegPath = ffmpeg.replace(/\\/g, '\\\\');
     const callbackExists = typeof callback === 'function';
     
     let inputDevice, prefix, audioSeparator, alternativeName, deviceParams;

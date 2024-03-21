@@ -70,7 +70,7 @@
         </div>
 
         <div class="flex-container">
-            <div class="panel-100 bg-none">
+            <div class="panel-100 bg-none" style="margin-top: 0;">
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
@@ -116,12 +116,12 @@
                         <div class="text-small text-gray highest-signal-container">
                             <i class="fa-solid fa-arrow-up"></i>
                             <span id="data-signal-highest"></span>
-                            <span class="signal-units"></span>
+                            <% if (device == 'sdr') { %> <span>dB SNR</span> <% } else { %> <span class="signal-units"></span> <% } %>
                         </div>
                         <div class="text-big">
                             <span id="data-signal"></span><!--
                         --><span id="data-signal-decimal" class="text-medium-big" style="opacity:0.7;"></span>
-                            <span class="signal-units text-medium">dBf</span>
+                            <% if (device == 'sdr') { %> <span class="text-medium">dB SNR</span> <% } else { %> <span class="signal-units text-medium">dBf</span> <% } %>
                         </div>
                     </div>
                 </div>
@@ -192,7 +192,7 @@
                 
             </div>
 
-            <div class="panel-10 bg-none">
+            <div class="panel-10 bg-none" style="margin-top: 0;">
                 <div class="panel-100 w-100">
                     <h2>AF</h2>
                     <div id="af-list" class="p-bottom-20" style="text-align: center;">
@@ -269,6 +269,7 @@
                 </div>
             </div>
             
+            <% if (device !== 'sdr') { %>
             <div class="form-group top-25">
                 <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <div class="dropdown" id="signal-selector">
@@ -280,6 +281,7 @@
                     </ul>
                 </div>
             </div><br>
+            <% } %>
             
             <div class="form-group checkbox">
                 <input type="checkbox" id="extended-frequency-range">

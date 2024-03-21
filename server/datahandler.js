@@ -268,10 +268,15 @@ function handleData(ws, receivedData) {
         }
         break;
       case receivedLine.startsWith('T'):
+        modifiedData = receivedLine.substring(1).split(",")[0];
+
+        if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
+          return; // Prevent tune spamming using scrollwheel
+        }
+
         resetToDefault(dataToSend);
         dataToSend.af.length = 0;
         rdsparser.clear(rds);
-        modifiedData = receivedLine.substring(1);
         parsedValue = parseFloat(modifiedData);
 
         if (!isNaN(parsedValue)) {
@@ -293,17 +298,20 @@ function handleData(ws, receivedData) {
           dataToSend.ims = mapping.ims;
         }
         break;
-      case receivedData.startsWith('Sm'):
-        processSignal(receivedData, false, false);
+      case receivedLine.startsWith('W'):
+        console.log(receivedLine);
         break;
-      case receivedData.startsWith('Ss'):
-        processSignal(receivedData, true, false);
+      case receivedLine.startsWith('Sm'):
+        processSignal(receivedLine, false, false);
         break;
-      case receivedData.startsWith('SS'):
-        processSignal(receivedData, true, true);
+      case receivedLine.startsWith('Ss'):
+        processSignal(receivedLine, true, false);
         break;
-      case receivedData.startsWith('SM'):
-          processSignal(receivedData, false, true);
+      case receivedLine.startsWith('SS'):
+        processSignal(receivedLine, true, true);
+        break;
+      case receivedLine.startsWith('SM'):
+          processSignal(receivedLine, false, true);
           break;
       case receivedLine.startsWith('R'):
         modifiedData = receivedLine.slice(1);
