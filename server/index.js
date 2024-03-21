@@ -23,7 +23,6 @@ const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
 const storage = require('./storage');
-const audioStream = require('./stream/index.js');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 const pjson = require('../package.json');
 
@@ -167,7 +166,7 @@ function connectToXdrd() {
       
       client.on('data', (data) => {
         helpers.resolveDataBuffer(data, wss);
-        //authDataHandler(data);
+        authDataHandler(data);
       });
     });
   }
