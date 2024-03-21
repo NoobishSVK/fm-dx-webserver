@@ -129,7 +129,6 @@ function submitData() {
     });
   }
 
-
   function fetchData() {
     // Make a GET request to retrieve the data.json file
     fetch("./getData")

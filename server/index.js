@@ -110,7 +110,7 @@ function connectToXdrd() {
     client.connect(xdrd.xdrdPort, xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
       
-      const authFlags = {
+      let authFlags = {
         authMsg: false,
         firstClient: false,
         receivedPassword: false
@@ -167,7 +167,7 @@ function connectToXdrd() {
       
       client.on('data', (data) => {
         helpers.resolveDataBuffer(data, wss);
-        authDataHandler(data);
+        //authDataHandler(data);
       });
     });
   }
