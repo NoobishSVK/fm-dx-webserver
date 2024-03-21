@@ -25,6 +25,7 @@ const { logDebug, logError, logInfo, logWarn } = require('./console');
 const storage = require('./storage');
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
 const pjson = require('../package.json');
+require('./stream/index');
 
 console.log(`\x1b[32m
  _____ __  __       ______  __ __        __   _                                  
