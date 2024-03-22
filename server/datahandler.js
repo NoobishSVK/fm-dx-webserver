@@ -260,14 +260,14 @@ function handleData(ws, receivedData) {
   
   for (const receivedLine of receivedLines) {
     switch (true) {
-      case receivedLine.startsWith('P'):
+      case receivedLine.startsWith('P'): // PI Code
         modifiedData = receivedLine.slice(1);
         legacyRdsPiBuffer = modifiedData;
         if (dataToSend.pi.length >= modifiedData.length || dataToSend.pi == '?') {
           dataToSend.pi = modifiedData;
         }
         break;
-      case receivedLine.startsWith('T'):
+      case receivedLine.startsWith('T'): // Frequency
         modifiedData = receivedLine.substring(1).split(",")[0];
 
         if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
@@ -285,11 +285,11 @@ function handleData(ws, receivedData) {
           dataToSend.pi = '?';
         }
         break;
-      case receivedLine.startsWith('Z'):
+      case receivedLine.startsWith('Z'): // Antenna
         dataToSend.ant = receivedLine.substring(1);
         initialData.ant = receivedLine.substring(1);
         break;
-      case receivedLine.startsWith('G'):
+      case receivedLine.startsWith('G'): // EQ / iMS (RF+/IF+)
         const mapping = filterMappings[receivedLine];
         if (mapping) {
           initialData.eq = mapping.eq;
@@ -298,7 +298,7 @@ function handleData(ws, receivedData) {
           dataToSend.ims = mapping.ims;
         }
         break;
-      case receivedLine.startsWith('W'):
+      case receivedLine.startsWith('W'): // Bandwidth
         console.log(receivedLine);
         break;
       case receivedLine.startsWith('Sm'):
@@ -313,7 +313,7 @@ function handleData(ws, receivedData) {
       case receivedLine.startsWith('SM'):
           processSignal(receivedLine, false, true);
           break;
-      case receivedLine.startsWith('R'):
+      case receivedLine.startsWith('R'): // RDS HEX
         modifiedData = receivedLine.slice(1);
         dataToSend.rds = true;
 
@@ -375,19 +375,6 @@ function showOnlineUsers(currentUsers) {
   initialData.users = currentUsers;
 }
 
-function convertSignal(dBFS, fullScaleVoltage = 1, inputImpedance = 300) {
-  // Convert dBFS to voltage
-  let voltage = Math.pow(10, dBFS / 20) * fullScaleVoltage;
-
-  // Convert voltage to microvolts
-  let uV = voltage * 1e6;
-
-  // Convert microvolts to dBuV
-  let dBf = 20 * Math.log10(uV / Math.sqrt(2) / Math.sqrt(inputImpedance));
-
-  return dBf.toFixed(2);
-}
-
 function processSignal(receivedData, st, stForced) {
   const modifiedData = receivedData.substring(2);
   const parsedValue = parseFloat(modifiedData);
@@ -397,13 +384,8 @@ function processSignal(receivedData, st, stForced) {
   initialData.st_forced = stForced;
 
   if (!isNaN(parsedValue)) {
-    /*if (serverConfig.device && serverConfig.device === 'sdr') {
-      dataToSend.signal = convertSignal(parsedValue);
-      initialData.signal = convertSignal(parsedValue);
-    } else {*/
       dataToSend.signal = parsedValue.toFixed(2);
       initialData.signal = parsedValue.toFixed(2);
-    //}
 
     if(dataToSend.signal > dataToSend.highestSignal) {
       dataToSend.highestSignal = dataToSend.signal;
