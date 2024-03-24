@@ -230,7 +230,7 @@ function submitData() {
           $("#device-type").val(selectedDevice.text());
         }
 
-        $('#toggle-bw').is(":checked", data.bwSwitch ? data.bwSwitch : false); 
+        $('#toggle-bw').prop("checked", data.bwSwitch ? data.bwSwitch : false); 
 
         $('#audio-devices').val(data.audio.audioDevice);
         $('#audio-channels').val(data.audio.audioChannels);
