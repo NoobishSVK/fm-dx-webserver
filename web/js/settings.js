@@ -182,7 +182,7 @@ var currentVersion = 'v1.1.7 [' + formattedDate + ']';
     
     function setBg() {
         if(localStorage.getItem('bgImage').length > 1 && localStorage.getItem('theme') != 'theme8') {
-            $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top left / cover no-repeat var(--color-main)');
+            $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
         } else {
             $('body').css('background', 'var(--color-main)');
         }
