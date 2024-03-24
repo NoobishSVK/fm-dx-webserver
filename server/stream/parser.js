@@ -16,7 +16,7 @@ function parseAudioDevice(options, callback) {
         options = null;
     }
     options = options || {};
-    const ffmpegPath = ffmpeg.replace(/\\/g, '\\\\');
+    const ffmpegPath = "\"" + ffmpeg.replace(/\\/g, '\\\\') + "\"";
     const callbackExists = typeof callback === 'function';
     
     let inputDevice, prefix, audioSeparator, alternativeName, deviceParams;
