@@ -249,37 +249,77 @@
                 <h2>Webserver settings</h2>
                 <div class="flex-container">
                     <div class="panel-50 no-bg">
+                        <div class="panel-100 no-bg">
+                            <h3>Background image</h3>
+                            <div class="form-group">
+                                <label for="bg-image">Image link:</label>
+                                <input class="input-text w-200" type="text" placeholder="" name="bg-image" id="bg-image">
+                            </div>      
+                        </div>
+                        <div class="panel-100 no-bg">
+                            <h3>Themes</h3>
+                            <div class="form-group">
+                                <label for="themes"><i class="fa-solid fa-palette"></i>Default server theme:</label>
+                                <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
+                                    <input type="text" placeholder="Default" id="selected-theme" readonly>
+                                    <ul class="options">
+                                        <li class="option" data-value="theme1">Default</li>
+                                        <li class="option" data-value="theme2">Cappuccino</li>
+                                        <li class="option" data-value="theme3">Nature</li>
+                                        <li class="option" data-value="theme4">Ocean</li>
+                                        <li class="option" data-value="theme5">Terminal</li>
+                                        <li class="option" data-value="theme6">Nightlife</li>
+                                        <li class="option" data-value="theme7">Blurple</li>
+                                        <li class="option" data-value="theme8">Construction</li>
+                                        <li class="option" data-value="theme9">AMOLED</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-50 no-bg">
                         <h3>Antenna options</h3>
                         <div class="form-group checkbox bottom-20">
                             <input type="checkbox" id="antenna-switch">
                             <label for="antenna-switch">Enable the antenna switch</label>
-                        </div>        
-                    </div>
-                    <div class="panel-50 no-bg">
-                        <h3>Chat options</h3>
-                        <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="chat-switch">
-                            <label for="chat-switch">Enable chat</label>
-                        </div>        
-                    </div>
-                </div>
+                        </div><br>
+                        
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="ant1-enabled">
+                            <label for="ant1-enabled"></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="ant1-name">Antenna 1 name:</label>
+                            <input class="input-text w-100" type="text" placeholder="Ant A" name="ant1-name" id="ant1-name">
+                        </div><br>
 
-                <h3>Themes</h3>
-                <div class="form-group">
-                    <label for="themes"><i class="fa-solid fa-palette"></i>Default server theme:</label>
-                    <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
-                        <input type="text" placeholder="Default" id="selected-theme" readonly>
-                        <ul class="options">
-                            <li class="option" data-value="theme1">Default</li>
-                            <li class="option" data-value="theme2">Cappuccino</li>
-                            <li class="option" data-value="theme3">Nature</li>
-                            <li class="option" data-value="theme4">Ocean</li>
-                            <li class="option" data-value="theme5">Terminal</li>
-                            <li class="option" data-value="theme6">Nightlife</li>
-                            <li class="option" data-value="theme7">Blurple</li>
-                            <li class="option" data-value="theme8">Construction</li>
-                            <li class="option" data-value="theme9">AMOLED</li>
-                        </ul>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="ant2-enabled">
+                            <label for="ant2-enabled"></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="ant2-name">Antenna 2 name:</label>
+                            <input class="input-text w-100" type="text" placeholder="Ant B" name="ant2-name" id="ant2-name">
+                        </div><br>
+
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="ant3-enabled">
+                            <label for="ant3-enabled"></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="ant3-name">Antenna 3 name:</label>
+                            <input class="input-text w-100" type="text" placeholder="Ant C" name="ant3-name" id="ant3-name">
+                        </div><br>
+
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="ant3-enabled">
+                            <label for="ant4-enabled"></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="ant4-name">Antenna 4 name:</label>
+                            <input class="input-text w-100" type="text" placeholder="Ant D" name="ant4-name" id="ant4-name">
+                        </div><br>
+
                     </div>
                 </div>
                 <br><hr>
@@ -337,13 +377,23 @@
 
                 <br><hr>
 
-                <h3>Banlist</h3>
-                <p>If you have users that don't behave in your chat, you can choose to ban them by their IP address.<br>
-                <span class="text-gray">You can see their IP address by hovering over their nickname. One IP per row.</span></p>
-                <div class="form-group">
-                    <label for="preset1">Banned users:</label>
-                    <textarea id="ip-addresses" placeholder="123.45.67.8"></textarea>
-                </div>
+                    <div class="panel-100 no-bg">
+                        <h3>Chat options</h3>
+                        <div class="form-group checkbox bottom-20">
+                            <input type="checkbox" id="chat-switch">
+                            <label for="chat-switch">Enable chat</label>
+                        </div>        
+                    </div>
+
+                    <div class="panel-100 no-bg">
+                        <h3>Banlist</h3>
+                        <p>If you have users that don't behave in your chat, you can choose to ban them by their IP address.<br>
+                        <span class="text-gray">You can see their IP address by hovering over their nickname. One IP per row.</span></p>
+                        <div class="form-group">
+                            <label for="preset1">Banned users:</label>
+                            <textarea id="ip-addresses" placeholder="123.45.67.8"></textarea>
+                        </div>
+                    </div>
 
             </div>
 
@@ -357,10 +407,25 @@
                             <li class="option" data-value="tef">TEF668x / TEA685x</li>
                             <li class="option" data-value="xdr">XDR (F1HD / S10HDiP)</li>
                             <li class="option" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
-                            <li class="option" data-value="sdr">Other</li>
+                            <li class="option" data-value="other">Other</li>
                         </ul>
                     </div>
+                </div><br>
+
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="toggle-bw">
+                    <label for="toggle-bw">Toggle bandwidth switch</label>
+                </div><br>
+
+                <h3>Startup Volume</h3>
+
+                <div class="panel-50 bg-color-2 auto" style="padding: 20px;">
+                    <div class="panel-75 auto" style="height: 48px;">
+                        <input type="range" id="startup-volume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
+                    </div>
+                    <h3 class="top-25" id="volume-percentage-value">asdf</hš>
                 </div>
+
             </div>
     
             <div class="panel-100 tab-content" id="identification">

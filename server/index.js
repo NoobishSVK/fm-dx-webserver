@@ -72,7 +72,7 @@ function connectToSerial() {
       serialport.write('x\n');
       serialport.write('W0\n');
       serialport.write('M0\n');
-      serialport.write('Y100\n');
+      serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
       serialport.write('D0\n');
       serialport.write('A0\n');
       serialport.write('F-1\n');
@@ -162,7 +162,7 @@ function connectToXdrd() {
               client.write('x\n');
               client.write(serverConfig.defaultFreq ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
               client.write('A0\n');
-              client.write('G00\n');
+              client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
               client.off('data', authDataHandler);
               return;
             }

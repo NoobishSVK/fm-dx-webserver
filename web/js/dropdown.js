@@ -19,11 +19,18 @@ const toggleDropdown = (event) => {
 const selectOption = (event) => {
   const $currentDropdown = currentDropdown;
 
-  if($currentDropdown.attr('id') == 'data-ant') {
-    socket.send("Z" + $(event.currentTarget).attr('data-value'));
-    tuneTo(getCurrentFreq()); //Reset RDS when change antenna input
-  } else {
-    $currentDropdown.find('input').val($(event.currentTarget).text());
+  switch($currentDropdown.attr('id')) {
+    case 'data-ant':
+      socket.send("Z" + $(event.currentTarget).attr('data-value'));
+      tuneTo(getCurrentFreq()); //Reset RDS when change antenna input
+      break;
+    case 'data-bw':
+      socket.send("W" + $(event.currentTarget).attr('data-value'));
+      $currentDropdown.find('input').val($(event.currentTarget).text());
+      break;
+    default:
+      $currentDropdown.find('input').val($(event.currentTarget).text());
+      break;
   }
 
   // Use setTimeout to delay class removal

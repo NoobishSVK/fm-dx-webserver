@@ -59,7 +59,15 @@
     border: 1px solid var(--color-4);
     position: relative;
     z-index: 999;
+    max-height: 400px;
+    overflow-y: auto;
   }
+
+  .dropdown .options.open-top {
+    transform: initial;
+    bottom: 100%;
+  }
+
   .dropdown .options .option {
     color: var(--color-4);
     padding: 7px;

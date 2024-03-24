@@ -9,7 +9,19 @@ function submitData() {
     var themeSelectedValue = $("#selected-theme").val();
     var themeDataValue = $(".option:contains('" + themeSelectedValue + "')").attr('data-value') || 'theme1';
     const defaultTheme = themeDataValue;
+
+    const bgImage = $("#bg-image").val() || '';
     
+    const ant1enabled = $('#ant1-enabled').is(":checked") || false;
+    const ant2enabled = $('#ant2-enabled').is(":checked") || false;
+    const ant3enabled = $('#ant3-enabled').is(":checked") || false;
+    const ant4enabled = $('#ant4-enabled').is(":checked") || false;
+
+    const ant1name = $("#ant1-name").val() || 'Ant A';
+    const ant2name = $("#ant2-name").val() || 'Ant B';
+    const ant3name = $("#ant3-name").val() || 'Ant C';
+    const ant4name = $("#ant4-name").val() || 'Ant D';
+
     let presets = [];
     presets.push($('#preset1').val() || '87.5');
     presets.push($('#preset2').val() || '87.5');
@@ -46,6 +58,7 @@ function submitData() {
     }).data('value') || "tef");
 
     const softwareMode = $('#audio-software-mode').is(":checked") || false;
+    const startupVolume = $('#startup-volume').val() || '100';
 
     const tunerName = $('#webserver-name').val() || 'FM Tuner';
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';
@@ -61,7 +74,7 @@ function submitData() {
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
     const autoShutdown = $("#shutdown-tuner").is(":checked") || false;
-    const antennaSwitch = $("#antenna-switch").is(":checked") || false;
+    const antennasEnabled = $("#antenna-switch").is(":checked") || false;
   
     const data = {
       webserver: {
@@ -73,7 +86,27 @@ function submitData() {
         chatEnabled,
         defaultTheme,
         presets,
-        banlist
+        banlist,
+        bgImage
+      },
+      antennas: {
+        enabled: antennasEnabled,
+        ant1: {
+          enabled: ant1enabled,
+          name: ant1name
+        },
+        ant2: {
+          enabled: ant2enabled,
+          name: ant2name
+        },
+        ant3: {
+          enabled: ant3enabled,
+          name: ant3name
+        },
+        ant4: {
+          enabled: ant4enabled,
+          name: ant4name
+        },
       },
       xdrd: {
         comPort,
@@ -87,6 +120,7 @@ function submitData() {
         audioChannels,
         audioBitrate, 
         softwareMode,
+        startupVolume,
       },
       identification: {
         tunerName,
@@ -105,7 +139,6 @@ function submitData() {
       publicTuner, 
       lockToAdmin,
       autoShutdown,
-      antennaSwitch,
       enableDefaultFreq,
       defaultFreq,
     };
@@ -130,7 +163,6 @@ function submitData() {
   }
 
   function fetchData() {
-    // Make a GET request to retrieve the data.json file
     fetch("./getData")
       .then(response => {
         if (!response.ok) {
@@ -154,6 +186,10 @@ function submitData() {
         if (selectedTheme.length > 0) {
             $("#selected-theme").val(selectedTheme.text());
         }
+
+        if (data.webserver.bgImage && data.webserver.bgImage.length > 0) {
+          $("#bg-image").val(data.webserver.bgImage);
+      }
         
         if(Array.isArray(data.webserver.presets)) {
           $('#preset1').val(data.webserver.presets[0] || "");
@@ -204,7 +240,18 @@ function submitData() {
           $("#audio-quality").val(selectedQuality.text());
         }
 
+        var antennaNames = ['ant1', 'ant2', 'ant3', 'ant4'];
+
+        // Iterate over each antenna name
+        antennaNames.forEach(function(antenna) {
+          // Set values based on the antenna name
+          $('#' + antenna + '-name').val(data.antennas?.[antenna]?.name || '');
+          $('#' + antenna + '-enabled').prop("checked", data.antennas?.[antenna]?.enabled || false);
+      });      
+
         $('#audio-software-mode').prop("checked", data.audio.softwareMode || false);
+        $('#startup-volume').val(data.audio.startupVolume || 100);
+        $('#volume-percentage-value').text(data.audio.startupVolume !== undefined ? (data.audio.startupVolume * 100).toFixed(0) + '%' : '100%');
 
         $('#webserver-name').val(data.identification.tunerName);
         $('#webserver-desc').val(data.identification.tunerDesc);
@@ -220,7 +267,7 @@ function submitData() {
         $("#tuner-public").prop("checked", data.publicTuner);
         $("#tuner-lock").prop("checked", data.lockToAdmin);
         $("#shutdown-tuner").prop("checked", data.autoShutdown);
-        $("#antenna-switch").prop("checked", data.antennaSwitch);
+        $("#antenna-switch").prop("checked", data.antennas?.enabled);
 
         // Check if latitude and longitude are present in the data
         if (data.identification.lat && data.identification.lon) {

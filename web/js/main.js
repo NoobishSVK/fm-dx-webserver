@@ -41,7 +41,6 @@ $(document).ready(function () {
             $panel.css('left', -panelWidth);
         }
     });
-    
 
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
@@ -611,6 +610,7 @@ function updateDataElements(parsedData) {
     const $dataRt0 = $('#data-rt0');
     const $dataRt1 = $('#data-rt1');
     const $dataAntInput = $('#data-ant input');
+    const $dataBwInput = $('#data-bw input');
     const $dataStationContainer = $('#data-station-container');
     const $dataTp = $('.data-tp');
     const $dataTa = $('.data-ta');
@@ -641,6 +641,7 @@ function updateDataElements(parsedData) {
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
 
     $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
+    $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
         $('#data-station-name').text(parsedData.txInfo.station.replace(/%/g, '%25'));

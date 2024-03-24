@@ -133,23 +133,23 @@
                                 <button class="playbutton" aria-label="Play/Stop"><i class="fa-solid fa-play"></i></button>
                             </div>
                             
-                            <% if (antennaSwitch) { %>
-                                <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
+                            <% if (antennas.enabled == true) { %>
+                                <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;width:125px;">
                                     <input type="text" placeholder="Ant A" readonly>
                                     <ul class="options">
-                                        <li data-value="0" class="option">Ant A</li>
-                                        <li data-value="1" class="option">Ant B</li>
-                                        <li data-value="2" class="option">Ant C</li>
-                                        <li data-value="3" class="option">Ant D</li>
+                                        <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option"><%= antennas.ant1.name %></li><% } %>
+                                        <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option"><%= antennas.ant2.name %></li><% } %>
+                                        <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option"><%= antennas.ant3.name %></li><% } %>
+                                        <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option"><%= antennas.ant4.name %></li><% } %>
                                     </ul>
                                 </div>
                             <% } %>
                             
-                            <div class="panel-100 no-bg h-100 m-0 button-eq">
+                            <div class="panel-50 no-bg h-100 m-0 button-eq">
                                 <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
                                 <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
-                            <div class="panel-100 no-bg h-100 m-0 button-ims">
+                            <div class="panel-50 no-bg h-100 m-0 button-ims">
                                 <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
                                 <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
                             </div>
@@ -162,8 +162,101 @@
                         <button id="freq-up" aria-label="Tune up by 100 KHz"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     
-                    <div class="panel-33 hide-phone" style="height: 48px;">
-                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
+                    <div class="panel-33 hide-phone no-bg">
+                        <div class="flex-container">
+                            <% if(device === 'other') { %>
+                                <span class="panel-100 m-0 h-100" style="height: 48px;width: 100%;">
+                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
+                                </span>
+                            <% } else { %>
+                                <span class="panel-100 m-0" style="margin-right: 15px !important;">
+                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
+                                </span>
+                            <% } %>
+                            <% if (device == 'tef') { %>
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                    <input type="text" placeholder="Auto BW" readonly>
+                                    <ul class="options open-top">
+                                        <li data-vlaue="0" class="option">Auto</li>
+                                        <li data-value="56000" class="option">56 KHz</li>
+                                        <li data-value="64000" class="option">64 KHz</li>
+                                        <li data-value="72000" class="option">72 KHz</li>
+                                        <li data-value="84000" class="option">84 KHz</li>
+                                        <li data-value="97000" class="option">97 KHz</li>
+                                        <li data-value="114000" class="option">114 KHz</li>
+                                        <li data-value="133000" class="option">133 KHz</li>
+                                        <li data-value="151000" class="option">151 KHz</li>
+                                        <li data-value="184000" class="option">184 KHz</li>
+                                        <li data-value="200000" class="option">200 KHz</li>
+                                        <li data-value="217000" class="option">217 KHz</li>
+                                        <li data-value="236000" class="option">236 KHz</li>
+                                        <li data-value="254000" class="option">254 KHz</li>
+                                        <li data-value="287000" class="option">287 KHz</li>
+                                        <li data-value="311000" class="option">311 KHz</li>
+                                    </ul>
+                                </div>
+                            <% } %>
+
+                            <% if (device == 'xdr') { %>
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                    <input type="text" placeholder="Auto BW" readonly>
+                                    <ul class="options open-top">
+                                        <li data-vlaue="0" class="option">Auto</li>
+                                        <li data-value="9000" class="option">9 KHz</li>
+                                        <li data-value="15000" class="option">15 KHz</li>
+                                        <li data-value="17000" class="option">17 KHz</li>
+                                        <li data-value="20000" class="option">20 KHz</li>
+                                        <li data-value="24000" class="option">24 KHz</li>
+                                        <li data-value="27000" class="option">27 KHz</li>
+                                        <li data-value="32000" class="option">32 KHz</li>
+                                        <li data-value="36000" class="option">36 KHz</li>
+                                        <li data-value="42000" class="option">42 KHz</li>
+                                        <li data-value="48000" class="option">48 KHz</li>
+                                        <li data-value="55000" class="option">55 KHz</li>
+                                        <li data-value="63000" class="option">63 KHz</li>
+                                        <li data-value="73000" class="option">73 KHz</li>
+                                        <li data-value="83000" class="option">83 KHz</li>
+                                        <li data-value="90000" class="option">90 KHz</li>
+                                        <li data-value="95000" class="option">95 KHz</li>
+                                        <li data-value="108000" class="option">108 KHz</li>
+                                        <li data-value="125000" class="option">125 KHz</li>
+                                        <li data-value="142000" class="option">142 KHz</li>
+                                        <li data-value="159000" class="option">159 KHz</li>
+                                        <li data-value="177000" class="option">177 KHz</li>
+                                        <li data-value="194000" class="option">194 KHz</li>
+                                        <li data-value="211000" class="option">211 KHz</li>
+                                        <li data-value="229000" class="option">229 KHz</li>
+                                        <li data-value="246000" class="option">246 KHz</li>
+                                        <li data-value="263000" class="option">263 KHz</li>
+                                        <li data-value="281000" class="option">281 KHz</li>
+                                        <li data-value="298000" class="option">298 KHz</li>
+                                        <li data-value="309000" class="option">309 KHz</li>
+                                    </ul>
+                                </div>
+                            <% } %>
+
+                            <% if (device == 'sdr') { %>
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                    <input type="text" placeholder="Auto BW" readonly>
+                                    <ul class="options open-top">
+                                        <li data-vlaue="0" class="option">Auto</li>
+                                        <li data-value="4000" class="option">4 KHz</li>
+                                        <li data-value="8000" class="option">8 KHz</li>
+                                        <li data-value="10000" class="option">10 KHz</li>
+                                        <li data-value="20000" class="option">20 KHz</li>
+                                        <li data-value="30000" class="option">30 KHz</li>
+                                        <li data-value="50000" class="option">50 KHz</li>
+                                        <li data-value="75000" class="option">75 KHz</li>
+                                        <li data-value="100000" class="option">100 KHz</li>
+                                        <li data-value="125000" class="option">125 KHz</li>
+                                        <li data-value="150000" class="option">150 KHz</li>
+                                        <li data-value="175000" class="option">175 KHz</li>
+                                        <li data-value="200000" class="option">200 KHz</li>
+                                        <li data-value="225000" class="option">225 KHz</li>
+                                    </ul>
+                                </div>
+                            <% } %>
+                        </div>
                     </div>
                 </div>
                 
@@ -181,7 +274,7 @@
                                 <span id="data-station-name"></span>
                             </h2>
                             <h4 class="m-0">
-                                <span id="data-station-city"></span>, <span id="data-station-itu"></span>
+                                <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
                             </h4>
                             <span class="text-small">
                                 <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> km <span class="text-gray">•</span> <span id="data-station-azimuth"></span>°
@@ -316,7 +409,7 @@
                         <% } %>
                         <div id="login-message"></div>
 
-                        <h2>Time:</h2>
+                        <h2>Time</h2>
                         <p class="m-0">Server: <span class="color-3" id="server-time"></span></p>
                         <p class="m-0">Local: <span class="color-3" id="client-time"></span></p>
 
@@ -324,6 +417,10 @@
                         
                         <div class="version-info">
                             <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
+
+                            <% if (device == 'tef') { %><p class="m-0">Device: TEF668x</p> <% } %>
+                            <% if (device == 'xdr') { %><p class="m-0">Device: Sony XDR</p> <% } %>
+                            <% if (device == 'sdr') { %><p class="m-0">Device: SDR</p> <% } %>
                             <span style="color: var(--color-3);" class="version-string"></span><br>
                             <span class="text-small" style="color: var(--color-3);">[<a href="https://list.fmdx.pl" target="_blank">Receiver Map</a>]</span>
                             <br>

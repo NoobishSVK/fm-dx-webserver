@@ -1,9 +1,9 @@
-var currentDate = new Date('March 21, 2024 22:00:00');
+var currentDate = new Date('March 24, 2024 19:00:00');
 var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year;
-var currentVersion = 'v1.1.6 [' + formattedDate + ']';
+var currentVersion = 'v1.1.7 [' + formattedDate + ']';
 
     
     /**
@@ -52,6 +52,7 @@ var currentVersion = 'v1.1.6 [' + formattedDate + ']';
             setTheme(selectedTheme);
             themeSelector.find('input').val($(event.target).text()); // Set the text of the clicked option to the input
             localStorage.setItem('theme', selectedTheme);
+            setBg();
         });
         
         // Signal Selector
@@ -156,6 +157,8 @@ var currentVersion = 'v1.1.6 [' + formattedDate + ']';
         });
         
         $('.version-string').text(currentVersion);
+
+        setBg();
     });
     
     
@@ -177,3 +180,10 @@ var currentVersion = 'v1.1.6 [' + formattedDate + ']';
         }
     }
     
+    function setBg() {
+        if(localStorage.getItem('bgImage').length > 1 && localStorage.getItem('theme') != 'theme8') {
+            $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') var(--color-main)');
+        } else {
+            $('body').css('background', 'var(--color-main)');
+        }
+    }

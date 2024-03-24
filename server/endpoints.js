@@ -16,6 +16,11 @@ const fmdxList = require('./fmdx_list');
 
 // Endpoints
 router.get('/', (req, res) => {
+    if(serverConfig.webserver.banlist.includes(req.connection.remoteAddress)) {
+        res.render('403');
+        return;
+    }
+
     if (configExists() === false) {
         let serialPorts;
         
@@ -45,7 +50,7 @@ router.get('/', (req, res) => {
             tunerLock: serverConfig.lockToAdmin,
             publicTuner: serverConfig.publicTuner,
             ownerContact: serverConfig.identification.contact,
-            antennaSwitch: serverConfig.antennaSwitch,
+            antennas: serverConfig.antennas ? serverConfig.antennas : {},
             tuningLimit: serverConfig.webserver.tuningLimit,
             tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
@@ -204,7 +209,8 @@ router.get('/static_data', (req, res) => {
         qthLatitude: serverConfig.identification.lat,
         qthLongitude: serverConfig.identification.lon,
         presets: serverConfig.webserver.presets || [],
-        defaultTheme: serverConfig.webserver.defaultTheme || 'theme1'
+        defaultTheme: serverConfig.webserver.defaultTheme || 'theme1',
+        bgImage: serverConfig.webserver.bgImage || ''
     });
 });
 

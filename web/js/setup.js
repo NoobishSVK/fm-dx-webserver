@@ -9,6 +9,13 @@ $(document).ready(function() {
   MapCreate();
   fetchData();
 
+  $('#startup-volume').on('change', function() {
+    console.log('changed');
+    var value = $(this).val(); // Get the value of the range input
+    var percentage = value * 100; // Convert to percentage
+    $('#volume-percentage-value').text(percentage.toFixed(0) + '%'); // Display the percentage value
+});
+
   map.on('click', function(ev) {
     $('#lat').val((ev.latlng.lat).toFixed(6));
     $('#lng').val((ev.latlng.lng).toFixed(6));

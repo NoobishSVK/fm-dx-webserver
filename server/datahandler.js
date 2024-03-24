@@ -209,6 +209,7 @@ var dataToSend = {
   previousFreq: 87.500.toFixed(3),
   signal: 0,
   highestSignal: -Infinity,
+  bw: 0,
   st: false,
   st_forced: false,
   rds: false,
@@ -299,7 +300,8 @@ function handleData(ws, receivedData) {
         }
         break;
       case receivedLine.startsWith('W'): // Bandwidth
-        console.log(receivedLine);
+        initialData.bw = receivedLine.substring(1);
+        dataToSend.bw = receivedLine.substring(1);
         break;
       case receivedLine.startsWith('Sm'):
         processSignal(receivedLine, false, false);

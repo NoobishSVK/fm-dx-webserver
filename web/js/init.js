@@ -14,6 +14,7 @@ function getInitialSettings() {
             localStorage.setItem('preset2', data.presets[1]);
             localStorage.setItem('preset3', data.presets[2]);
             localStorage.setItem('preset4', data.presets[3]);
+            localStorage.setItem('bgImage', data.bgImage);
         },
         error: function (error) {
             console.error('Error:', error);
