@@ -75,6 +75,7 @@ function submitData() {
     const lockToAdmin = $("#tuner-lock").is(":checked");
     const autoShutdown = $("#shutdown-tuner").is(":checked") || false;
     const antennasEnabled = $("#antenna-switch").is(":checked") || false;
+    const bwSwitch = $("#toggle-bw").is(":checked") || false;
   
     const data = {
       webserver: {
@@ -141,6 +142,7 @@ function submitData() {
       autoShutdown,
       enableDefaultFreq,
       defaultFreq,
+      bwSwitch,
     };
 
     if(adminPass.length < 1) {
@@ -227,6 +229,8 @@ function submitData() {
         if (selectedDevice.length > 0) {
           $("#device-type").val(selectedDevice.text());
         }
+
+        $('#toggle-bw').is(":checked", data.bwSwitch || false); 
 
         $('#audio-devices').val(data.audio.audioDevice);
         $('#audio-channels').val(data.audio.audioChannels);

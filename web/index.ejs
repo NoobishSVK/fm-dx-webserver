@@ -164,7 +164,7 @@
                     
                     <div class="panel-33 hide-phone no-bg">
                         <div class="flex-container">
-                            <% if(device === 'other') { %>
+                            <% if(device === 'other' || bwSwitch == false) { %>
                                 <span class="panel-100 m-0 h-100" style="height: 48px;width: 100%;">
                                     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
                                 </span>
@@ -173,7 +173,7 @@
                                     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
                                 </span>
                             <% } %>
-                            <% if (device == 'tef') { %>
+                            <% if (device == 'tef' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
@@ -197,7 +197,7 @@
                                 </div>
                             <% } %>
 
-                            <% if (device == 'xdr') { %>
+                            <% if (device == 'xdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
@@ -235,7 +235,7 @@
                                 </div>
                             <% } %>
 
-                            <% if (device == 'sdr') { %>
+                            <% if (device == 'sdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
