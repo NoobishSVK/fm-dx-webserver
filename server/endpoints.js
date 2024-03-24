@@ -56,7 +56,7 @@ router.get('/', (req, res) => {
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
             chatEnabled: serverConfig.webserver.chatEnabled,
             device: serverConfig.device,
-            bwSwitch: serverConfig.bwSwitch || false
+            bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });
     }
 });
