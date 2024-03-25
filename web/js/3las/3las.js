@@ -2,7 +2,6 @@ var _3LAS_Settings = /** @class */ (function () {
     function _3LAS_Settings() {
         this.SocketHost = document.location.hostname ? document.location.hostname : "127.0.0.1";
         this.SocketPath = "/";
-        this.WebRTC = new WebRTC_Settings();
         this.Fallback = new Fallback_Settings();
     }
     return _3LAS_Settings;
@@ -14,24 +13,16 @@ var _3LAS = /** @class */ (function () {
             this.Logger = new Logging(null, null);
         }
         this.Settings = settings;
+
         try {
-            this.WebRTC = new WebRTC(this.Logger, this.Settings.WebRTC);
-            this.WebRTC.ActivityCallback = this.OnActivity.bind(this);
-            this.WebRTC.DisconnectCallback = this.OnSocketDisconnect.bind(this);
+            this.Fallback = new Fallback(this.Logger, this.Settings.Fallback);
+            this.Fallback.ActivityCallback = this.OnActivity.bind(this);
         }
-        catch (_a) {
-            this.WebRTC = null;
+        catch (_b) {
+            this.Fallback = null;
         }
-        if (this.WebRTC == null || this.WebRTC !== null) {
-            try {
-                this.Fallback = new Fallback(this.Logger, this.Settings.Fallback);
-                this.Fallback.ActivityCallback = this.OnActivity.bind(this);
-            }
-            catch (_b) {
-                this.Fallback = null;
-            }
-        }
-        if (this.WebRTC == null && this.Fallback == null) {
+
+        if (this.Fallback == null) {
             this.Logger.Log('3LAS: Browser does not support either media handling methods.');
             throw new Error();
         }
@@ -41,31 +32,20 @@ var _3LAS = /** @class */ (function () {
     }
     Object.defineProperty(_3LAS.prototype, "Volume", {
         get: function () {
-            if (this.WebRTC)
-                return this.WebRTC.Volume;
-            else
                 return this.Fallback.Volume;
         },
         set: function (value) {
-            if (this.WebRTC)
-                this.WebRTC.Volume = value;
-            else
                 this.Fallback.Volume = value;
         },
         enumerable: false,
         configurable: true
     });
     _3LAS.prototype.CanChangeVolume = function () {
-        if (this.WebRTC)
-            return this.WebRTC.CanChangeVolume();
-        else
             return true;
     };
     _3LAS.prototype.Start = function () {
         this.ConnectivityFlag = false;
-        // This is stupid, but required for iOS/iPadOS... thanks Apple :(
-        if (this.Settings && this.Settings.WebRTC && this.Settings.WebRTC.AudioTag)
-            this.Settings.WebRTC.AudioTag.play();
+
         // This is stupid, but required for Android.... thanks Google :(
         if (this.WakeLock)
             this.WakeLock.Begin();
@@ -98,14 +78,6 @@ var _3LAS = /** @class */ (function () {
             if (isAndroid && this.WakeLock) {
                 this.WakeLock.End();
                 this.Logger.Log("WakeLock stopped.");
-            }
-
-            // Reset WebRTC if it exists
-            if (this.WebRTC) {
-                this.WebRTC.OnSocketDisconnect();
-                this.WebRTC.Reset();
-                this.WebRTC.Stop();
-                this.Logger.Log("WebRTC reset.");
             }
 
             // Reset Fallback if it exists
@@ -141,31 +113,16 @@ var _3LAS = /** @class */ (function () {
     // Callback function from socket connection
     _3LAS.prototype.OnSocketError = function (message) {
         this.Logger.Log("Network error: " + message);
-        if (this.WebRTC)
-            this.WebRTC.OnSocketError(message);
-        else
-            this.Fallback.OnSocketError(message);
+        this.Fallback.OnSocketError(message);
     };
     _3LAS.prototype.OnSocketConnect = function () {
         this.Logger.Log("Established connection with server.");
-        if (this.WebRTC)
-            this.WebRTC.OnSocketConnect();
-        else
             this.Fallback.OnSocketConnect();
-        if (this.WebRTC)
-            this.WebRTC.Init(this.WebSocket);
-        else
             this.Fallback.Init(this.WebSocket);
     };
     _3LAS.prototype.OnSocketDisconnect = function () {
         this.Logger.Log("Lost connection to server.");
-        if (this.WebRTC)
-            this.WebRTC.OnSocketDisconnect();
-        else
             this.Fallback.OnSocketDisconnect();
-        if (this.WebRTC)
-            this.WebRTC.Reset();
-        else
             this.Fallback.Reset();
         if (this.ConnectivityFlag) {
             this.ConnectivityFlag = false;
@@ -175,10 +132,7 @@ var _3LAS = /** @class */ (function () {
         this.Start();
     };
     _3LAS.prototype.OnSocketDataReady = function (data) {
-        if (this.WebRTC)
-            this.WebRTC.OnSocketDataReady(data);
-        else
-            this.Fallback.OnSocketDataReady(data);
+        this.Fallback.OnSocketDataReady(data);
     };
     return _3LAS;
 }());

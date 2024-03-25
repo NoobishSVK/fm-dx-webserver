@@ -139,7 +139,6 @@ $(document).ready(function () {
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
     var txContainer = $('#data-station-container')[0];
-    var stereoContainer = $('#stereo-container')[0];
 
     $("#data-eq").click(function () {
         toggleButtonState("eq");

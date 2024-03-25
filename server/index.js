@@ -34,7 +34,7 @@ console.log(`\x1b[32m
 |_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
 `);
 console.log('\x1b[0mFM-DX-Webserver', pjson.version);
-console.log('\x1b[90m======================================================');
+console.log('\x1b[90m―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――');
 
 // Start ffmpeg
 require('./stream/index');
@@ -83,7 +83,7 @@ function connectToSerial() {
       serialport.write('C0\n');
       serialport.write('I0,0\n');     
       
-      if(serverConfig.defaultFreq) {
+      if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
@@ -160,7 +160,9 @@ function connectToXdrd() {
             
             if (authFlags.authMsg && authFlags.firstClient) {
               client.write('x\n');
-              client.write(serverConfig.defaultFreq ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
+              client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
+              dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
+              dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
               client.write('A0\n');
               client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
               client.off('data', authDataHandler);

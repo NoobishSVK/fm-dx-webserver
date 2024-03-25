@@ -7,12 +7,12 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <link rel="icon" type="image/png" href="favicon2.png" />
+    <link rel="icon" type="image/png" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <meta property="og:title" content="FM-DX WebServer [<%= tunerName %>]">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="favicon2.png">
+    <meta property="og:image" content="favicon.png">
     <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
     
     <script src="js/init.js"></script>
@@ -26,22 +26,9 @@
     <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
     <script src="js/3las/util/3las.websocketclient.js"></script>
     <script src="js/3las/fallback/3las.fallback.js"></script>
-    <script src="js/3las/3las.webrtc.js"></script>
     <script src="js/3las/3las.js"></script>
     <script src="js/3las/main.js"></script>
     <script type="text/javascript">
-            var RtcConfig = {	
-				iceServers: [
-					{
-						urls: "turns:turnserver.example.org",
-					},
-					{
-						urls: "stun.l.google.com:19302"
-					}
-				]
-				
-			};
-            var AudioTagId = "audioTag";
 			window.addEventListener('load', Init, false);
 			document.ontouchmove  = function(e){ 
 				e.preventDefault(); 
@@ -49,7 +36,6 @@
     </script>
 </head>
 <body>
-    <audio id="audioTag"></audio>
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
             <h1 id="tuner-name"><%= tunerName %> 
@@ -169,7 +155,7 @@
                                     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
                                 </span>
                             <% } else { %>
-                                <span class="panel-100 m-0" style="margin-right: 15px !important;">
+                                <span class="panel-100 m-0" style="margin-right: 15px !important;height: 48px;">
                                     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
                                 </span>
                             <% } %>
@@ -442,10 +428,10 @@
             </div>
         </div>
         <div class="modal-panel-content">
-            <div class="hover-brighten br-0" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
+            <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
                 <strong>Support</strong> the developer!
             </div>
-            <div class="hover-brighten br-0" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
+            <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
                 Join our <strong>OpenRadio Discord</strong> community!
             </div>
         </div>
@@ -459,7 +445,7 @@
                     <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
                     <button class="br-0 w-100 top-10" style="height: 44px" id="chat-nickname-save">Save</button>
                 <p style="margin: 5px;">
-                    Current identity: <span style="color: lime;" id="chat-admin"></span> <strong id="chat-identity-nickname">Anonymous User</strong> 
+                    Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname">Anonymous User</strong> 
                 </p>
             </div>
 

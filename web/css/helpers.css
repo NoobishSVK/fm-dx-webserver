@@ -217,7 +217,7 @@
     .text-big {
         font-size: 40px;
         display: block;
-        margin-top: -25px;
+        margin-top: 0;
     }
     .text-big#data-ps {
         margin: 0;

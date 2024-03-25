@@ -39,54 +39,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const child_process_1 = require("child_process");
 const ws = __importStar(require("ws"));
-const wrtc = require('wrtc');
 const Settings = JSON.parse((0, fs_1.readFileSync)('server/stream/settings.json', 'utf-8'));
 const FFmpeg_command = ffmpegStaticPath;
-class RtcProvider {
-    constructor() {
-        this.RtcDistributePeer = new wrtc.RTCPeerConnection(Settings.RtcConfig);
-        this.RtcDistributePeer.addTransceiver('audio');
-        this.RtcDistributePeer.ontrack = this.OnTrack.bind(this);
-        this.RtcDistributePeer.onicecandidate = this.OnIceCandidate_Distribute.bind(this);
-        this.RtcSourcePeer = new wrtc.RTCPeerConnection(Settings.RtcConfig);
-        this.RtcSourceMediaSource = new wrtc.nonstandard.RTCAudioSource();
-        this.RtcSourceTrack = this.RtcSourceMediaSource.createTrack();
-        this.RtcSourcePeer.addTrack(this.RtcSourceTrack);
-        this.RtcSourcePeer.onicecandidate = this.OnIceCandidate_Source.bind(this);
-        this.Init();
-    }
-    Init() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let offer = yield this.RtcSourcePeer.createOffer();
-            yield this.RtcSourcePeer.setLocalDescription(new wrtc.RTCSessionDescription(offer));
-            yield this.RtcDistributePeer.setRemoteDescription(offer);
-            let answer = yield this.RtcDistributePeer.createAnswer();
-            yield this.RtcDistributePeer.setLocalDescription(new wrtc.RTCSessionDescription(answer));
-            yield this.RtcSourcePeer.setRemoteDescription(new wrtc.RTCSessionDescription(answer));
-        });
-    }
-    OnTrack(event) {
-        this.RtcDistributeTrack = event.track;
-    }
-    OnIceCandidate_Distribute(e) {
-        if (!e.candidate)
-            return;
-        (() => __awaiter(this, void 0, void 0, function* () { return yield this.RtcSourcePeer.addIceCandidate(e.candidate); }))();
-    }
-    OnIceCandidate_Source(e) {
-        if (!e.candidate)
-            return;
-        (() => __awaiter(this, void 0, void 0, function* () { return yield this.RtcDistributePeer.addIceCandidate(e.candidate); }))();
-    }
-    InsertMediaData(data) {
-        if (!this.RtcSourceMediaSource)
-            return;
-        this.RtcSourceMediaSource.onData(data);
-    }
-    GetTrack() {
-        return this.RtcDistributeTrack;
-    }
-}
 class StreamClient {
     constructor(server, socket) {
         this.Server = server;
@@ -102,10 +56,7 @@ class StreamClient {
         try {
             let request = JSON.parse(message.toString());
             if (request.type == "answer") {
-                (() => __awaiter(this, void 0, void 0, function* () { return yield this.RtcPeer.setRemoteDescription(new wrtc.RTCSessionDescription(request.data)); }))();
-            }
-            else if (request.type == "webrtc") {
-                this.Server.SetWebRtc(this);
+                
             }
             else if (request.type == "fallback") {
                 this.Server.SetFallback(this, request.data);
@@ -137,17 +88,6 @@ class StreamClient {
         }
         catch (ex) {
         }
-        if (this.RtcSender && this.RtcPeer)
-            this.RtcPeer.removeTrack(this.RtcSender);
-        if (this.RtcSender)
-            this.RtcSender = null;
-        if (this.RtcTrack)
-            this.RtcTrack = null;
-        if (this.RtcPeer) {
-            this.RtcPeer.close();
-            delete this.RtcPeer;
-            this.RtcPeer = null;
-        }
     }
     SendBinary(buffer) {
         if (this.Socket.readyState != ws.OPEN) {
@@ -163,28 +103,6 @@ class StreamClient {
         }
         this.Socket.send(text);
     }
-    StartRtc(track) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.RtcPeer = new wrtc.RTCPeerConnection(Settings.RtcConfig);
-            this.RtcTrack = track;
-            this.RtcSender = this.RtcPeer.addTrack(this.RtcTrack);
-            this.RtcPeer.onconnectionstatechange = this.OnConnectionStateChange.bind(this);
-            this.RtcPeer.onicecandidate = this.OnIceCandidate.bind(this);
-            let offer = yield this.RtcPeer.createOffer();
-            yield this.RtcPeer.setLocalDescription(new wrtc.RTCSessionDescription(offer));
-            this.SendText(JSON.stringify({
-                "type": "offer",
-                "data": offer
-            }));
-        });
-    }
-    OnConnectionStateChange(e) {
-        if (!this.RtcPeer)
-            return;
-        let state = this.RtcPeer.connectionState;
-        if (state != "new" && state != "connecting" && state != "connected")
-            this.OnError(null);
-    }
     OnIceCandidate(e) {
         if (e.candidate) {
             this.SendText(JSON.stringify({
@@ -199,9 +117,7 @@ class StreamServer {
         this.Port = port;
         this.Channels = channels;
         this.SampleRate = sampleRate;
-        this.RtcProvider = new RtcProvider();
         this.Clients = new Set();
-        this.RtcClients = new Set();
         this.FallbackClients = {
             "wav": new Set(),
             "mp3": new Set()
@@ -246,7 +162,6 @@ class StreamServer {
                     "channelCount": this.Channels,
                     "numberOfFrames": this.SamplesCount,
                 };
-                this.RtcProvider.InsertMediaData(data);
                 this.Samples = new Int16Array(this.Channels * this.SamplesCount);
                 this.SamplesPosition = 0;
             }
@@ -266,30 +181,22 @@ class StreamServer {
         this.FallbackClients[format].add(client);
         this.FallbackProvider[format].PrimeClient(client);
     }
-    SetWebRtc(client) {
-        this.RtcClients.add(client);
-        client.StartRtc(this.RtcProvider.GetTrack());
-    }
     DestroyClient(client) {
         this.FallbackClients["mp3"].delete(client);
         this.FallbackClients["wav"].delete(client);
-        this.RtcClients.delete(client);
         this.Clients.delete(client);
         client.Destroy();
     }
     GetStats() {
-        let rtc = this.RtcClients.size;
         let fallback = {
             "wav": (this.FallbackClients["wav"] ? this.FallbackClients["wav"].size : 0),
             "mp3": (this.FallbackClients["mp3"] ? this.FallbackClients["mp3"].size : 0),
         };
-        let total = rtc;
         for (let format in fallback) {
             total += fallback[format];
         }
         return {
             "Total": total,
-            "Rtc": rtc,
             "Fallback": fallback,
         };
     }

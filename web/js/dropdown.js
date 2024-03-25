@@ -52,7 +52,5 @@ const closeDropdownFromOutside = (event) => {
 
 // Event Listeners
 $(document).on('click', closeDropdownFromOutside);
-
 $listOfOptions.on('click', selectOption);
-
 $dropdowns.on('click', toggleDropdown);

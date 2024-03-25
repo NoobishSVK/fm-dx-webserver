@@ -3,54 +3,49 @@ $(document).ready(function() {
   var modal = $("#myModal");
   var modalPanel = $(".modal-panel");
   var chatPanel = $(".modal-panel-chat");
-  var chatOpenBtn = $(".chatbutton");
   var openBtn = $("#settings");
   var closeBtn = $(".closeModal, .closeModalButton");
 
   // Function to open the modal
-  function openModal() {
+  function openModal(panel) {
     modal.css("display", "block");
-    modalPanel.css("display", "block");
+    panel.css("display", "block");
     setTimeout(function() {
       modal.css("opacity", 1);
     }, 10);
   }
 
-  function openChat() {
-    modal.css("display", "block");
-    chatPanel.css("display", "block");
+  // Function to close the modal
+  function closeModal() {
+    modal.css("opacity", 0);
     setTimeout(function() {
-      modal.css("opacity", 1);
-    }, 10);
+      modal.css("display", "none");
+      modalPanel.add(chatPanel).css("display", "none");
+    }, 300);
   }
 
+  // Event listeners for the open and close buttons
+  openBtn.on("click", function() {
+    openModal(modalPanel);
+  });
 
-// Function to close the modal
-function closeModal() {
-  modal.css("opacity", 0);
-  setTimeout(function() {
-    modal.css("display", "none");
-    modalPanel.css("display", "none");
-    chatPanel.css("display", "none");
-  }, 300);
-}
+  $(".chatbutton").on("click", function() {
+    openModal(chatPanel);
+  });
 
-// Event listeners for the open and close buttons
-openBtn.on("click", openModal);
-chatOpenBtn.on("click", openChat);
-closeBtn.on("click", closeModal);
+  closeBtn.on("click", closeModal);
 
-// Close the modal when clicking outside of it
-$(document).on("click", function(event) {
-  if ($(event.target).is(modal)) {
-    closeModal();
-  }
-});
+  // Close the modal when clicking outside of it
+  $(document).on("click", function(event) {
+    if ($(event.target).is(modal)) {
+      closeModal();
+    }
+  });
 
-// Close the modal when pressing ESC key
-$(document).on("keydown", function(event) {
-  if (event.key === "Escape") {
-    closeModal();
-  }
-});
+  // Close the modal when pressing ESC key
+  $(document).on("keydown", function(event) {
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  });
 });
