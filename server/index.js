@@ -157,20 +157,45 @@ function connectToXdrd() {
               dataHandler.initialData.ant = modifiedLine;
               dataHandler.dataToSend.ant = modifiedLine;
             }
-            
-            if (authFlags.authMsg && authFlags.firstClient) {
-              client.write('x\n');
-              client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
-              dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-              dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-              client.write('A0\n');
-              client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
-              client.off('data', authDataHandler);
-              return;
-            }
+
+           
+             if (authFlags.authMsg && authFlags.firstClient) {
+     client.write('x\n');
+     client.write('G11\n');
+     client.write('A0\n');
+     client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
+
+       let defaultFreq;
+      if (serverConfig.enableDefaultFreq === true) {
+       client.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+      } else {
+      client.write('T' + 87500 + '\n');
+     }
+
+     const freqValue = typeof serverConfig.defaultFreq === 'number' && serverConfig.enableDefaultFreq === true ? serverConfig.defaultFreq.toFixed(3) : (87.5).toFixed(3);
+     dataHandler.initialData.freq = freqValue;
+     dataHandler.dataToSend.freq = freqValue;
+
+     client.off('data', authDataHandler);
+      return;
+          }
           }
         }
       };
+
+
+      client.on('data', (data) => {
+        helpers.resolveDataBuffer(data, wss);
+        if (authFlags.authMsg == true && authFlags.messageCount > 1) {
+          // If the limit is reached, remove the 'data' event listener
+          client.off('data', authDataHandler);
+          return;
+          }
+          authDataHandler(data);
+      });
+    });
+  }
+}
       
       client.on('data', (data) => {
         helpers.resolveDataBuffer(data, wss);
