@@ -63,7 +63,7 @@ function sendUpdate() {
 
   let bwLimit = '';
   if (serverConfig.webserver.tuningLimit === true) {
-    bwLimit = serverConfig.webserver.tuningLowerLimit + ' - ' + serverConfig.webserver.tuningUpperLimit + ' Mhz';
+    bwLimit = serverConfig.webserver.tuningLowerLimit + ' - ' + serverConfig.webserver.tuningUpperLimit + ' MHz';
   }
 
   const request = {
