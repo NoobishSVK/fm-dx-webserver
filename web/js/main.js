@@ -154,7 +154,7 @@ $(document).ready(function () {
     $(rtContainer).on("click", copyRt);
     $(txContainer).on("click", copyTx);
     $(piCodeContainer).on("click", findOnMaps);
-    $(document).on("click", "#stereo-container", toggleForcedStereo);
+    $(document).on("click", ".stereo-container", toggleForcedStereo);
     $(freqContainer).on("click", function () {
         textInput.focus();
     });
@@ -476,9 +476,7 @@ function tuneDown() {
 }
 
 function tuneTo(freq) {
-    if (socket.readyState === WebSocket.OPEN) {
         socket.send("T" + ((freq).toFixed(1) * 1000));
-    }
 }
 
 async function copyPs() {
@@ -513,8 +511,8 @@ async function copyTx() {
 }
 
 async function copyRt() {
-    var rt0 = $('#data-rt0').text();
-    var rt1 = $('#data-rt1').text();
+    var rt0 = $('#data-rt0 span').text();
+    var rt1 = $('#data-rt1 span').text();
 
     try {
         await copyToClipboard("[0] RT: " + rt0 + "\n[1] RT: " + rt1);
@@ -578,11 +576,13 @@ function updateSignalUnits(parsedData, averageSignal) {
     switch (signalUnit) {
         case 'dbuv':
             signalValue = currentSignal - 11.25;
+            highestSignal = highestSignal - 11.25;
             signalText.text('dBµV');
             break;
 
         case 'dbm':
             signalValue = currentSignal - 120;
+            highestSignal = highestSignal - 120;
             signalText.text('dBm');
             break;
 
@@ -606,8 +606,8 @@ function updateDataElements(parsedData) {
     const $dataPi = $('#data-pi');
     const $dataPs = $('#data-ps');
     const $dataSt = $('.data-st');
-    const $dataRt0 = $('#data-rt0');
-    const $dataRt1 = $('#data-rt1');
+    const $dataRt0 = $('#data-rt0 span');
+    const $dataRt1 = $('#data-rt1 span');
     const $dataAntInput = $('#data-ant input');
     const $dataBwInput = $('#data-bw input');
     const $dataStationContainer = $('#data-station-container');

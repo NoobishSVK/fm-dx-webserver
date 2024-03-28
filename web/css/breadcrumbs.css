@@ -92,6 +92,11 @@ label {
     display: none;
 }
 
+#data-station-container h2 {
+    display: block !important;
+    padding: 0;
+}
+
 #data-station-name {
     font-size: 20px;
 }
@@ -309,11 +314,14 @@ pre {
     }
     .highest-signal-container {
         margin-top: -20px !important;
-        margin-bottom: 15px !important;
+        margin-bottom: -15px !important;
+    }
+    #pi-code-container {
+        margin-bottom: 0 !important;
     }
     #data-pi {
         font-size: 24px;
-        margin-top: 20px;
+        margin-top: 5px;
         color: var(--color-text-2);
     }
     h2.show-phone {
@@ -324,16 +332,18 @@ pre {
         font-size: 42px;
     }
     #data-frequency {
-        font-size: 72px;
+        font-size: 64px;
     }
     #data-rt0, #data-rt1 {
         font-size: 10px;
         text-align: left;
         width: 100%;
-        word-break: break-all;
+        white-space: nowrap;
+        overflow-x:auto;
+        padding: 5px 0;
     }
     #rt-container {
-        height: 32px !important;
+        height: max-content !important;
     }
     ul {
         font-size: 16px;
@@ -376,9 +386,11 @@ pre {
     #af-list ul {
         height: auto !important;
     }
-
     #rt-container {
         order: 2;
+    }
+    .modal-panel-footer {
+        width: auto !important;
     }
 }
 
@@ -410,6 +422,14 @@ pre {
     h2 {
         margin-bottom: 10px;
         font-size: 18px;
+    }
+
+    h2.signal-heading {
+        margin-bottom: 0;
+    }
+
+    .highest-signal-container {
+        margin-bottom: -10px !important;
     }
 
     h2.mb-0 {

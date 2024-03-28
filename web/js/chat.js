@@ -74,15 +74,15 @@ $(document).ready(function() {
   if (savedNickname) {
       chatNicknameInput.val(savedNickname);
   }
-});
 
-function sendMessage() {
-  const nickname = chatNicknameInput.val().trim() || 'Anonymous user';
-  const message = chatSendInput.val().trim();
-
-  if (message) {
-      const messageData = { nickname, message };
-      chatSocket.send(JSON.stringify(messageData));
-      chatSendInput.val('');
+  function sendMessage() {
+    const nickname = savedNickname || 'Anonymous user';
+    const message = chatSendInput.val().trim();
+  
+    if (message) {
+        const messageData = { nickname, message };
+        chatSocket.send(JSON.stringify(messageData));
+        chatSendInput.val('');
+    }
   }
-}
+});

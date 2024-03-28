@@ -61,6 +61,10 @@ router.get('/', (req, res) => {
     }
 });
 
+router.get('/403', (req, res) => {
+    res.render('403');
+})
+
 router.get('/wizard', (req, res) => {
     let serialPorts;
     

@@ -21,9 +21,9 @@ const { SerialPort } = require('serialport')
 const helpers = require('./helpers');
 const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
-const { logDebug, logError, logInfo, logWarn } = require('./console');
+const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
-const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
+const { serverConfig } = require('./server_config');
 const pjson = require('../package.json');
 
 console.log(`\x1b[32m
@@ -70,19 +70,10 @@ function connectToSerial() {
     serialport.on('open', () => {
       logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
       serialport.write('x\n');
-      serialport.write('W0\n');
-      serialport.write('M0\n');
-      serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
-      serialport.write('D0\n');
-      serialport.write('A0\n');
-      serialport.write('F-1\n');
-      serialport.write('Z0\n');
-      serialport.write('G11\n');
-      serialport.write('V0\n');
       serialport.write('Q0\n');
-      serialport.write('C0\n');
-      serialport.write('I0,0\n');     
-      
+      serialport.write('M0\n');
+      serialport.write('Z0\n');
+
       if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
@@ -90,6 +81,13 @@ function connectToSerial() {
       } else {
         serialport.write('T87500\n');
       }
+
+      serialport.write('A0\n');
+      serialport.write('F-1\n');
+      serialport.write('W0\n');
+      serialport.write('D0\n');
+      serialport.write('G11\n');
+      serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
       
       serialport.on('data', (data) => {
         helpers.resolveDataBuffer(data, wss);
@@ -158,11 +156,11 @@ function connectToXdrd() {
               dataHandler.dataToSend.ant = modifiedLine;
             }
             
-            if (authFlags.authMsg && authFlags.firstClient) {
+            if (authFlags.authMsg === true && authFlags.firstClient === true) {
               client.write('x\n');
               client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
-              dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-              dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? (serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
+              dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
+              dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
               client.write('A0\n');
               client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
               client.off('data', authDataHandler);
@@ -406,6 +404,7 @@ chatWss.on('connection', (ws, request) => {
     if (storage.chatHistory.length > 50) {
       storage.chatHistory.shift();
     }
+    logChat(messageData);
     
     const modifiedMessage = JSON.stringify(messageData);
     

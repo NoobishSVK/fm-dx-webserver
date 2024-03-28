@@ -272,6 +272,8 @@ function handleData(ws, receivedData) {
         modifiedData = receivedLine.substring(1).split(",")[0];
 
         if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
+          resetToDefault(dataToSend);
+          rdsparser.clear(rds);
           return; // Prevent tune spamming using scrollwheel
         }
 
@@ -386,13 +388,18 @@ function processSignal(receivedData, st, stForced) {
   initialData.st_forced = stForced;
 
   if (!isNaN(parsedValue)) {
-      dataToSend.signal = parsedValue.toFixed(2);
-      initialData.signal = parsedValue.toFixed(2);
+    // Convert parsedValue to a number
+    var signal = parseFloat(parsedValue.toFixed(2));
+    dataToSend.signal = signal;
+    initialData.signal = signal;
 
-    if(dataToSend.signal > dataToSend.highestSignal) {
-      dataToSend.highestSignal = dataToSend.signal;
+    // Convert highestSignal to a number for comparison
+    var highestSignal = parseFloat(dataToSend.highestSignal);
+    if (signal > highestSignal) {
+        dataToSend.highestSignal = signal.toString(); // Convert back to string for consistency
     }
-  }
+}
+
 }
 
 module.exports = {
