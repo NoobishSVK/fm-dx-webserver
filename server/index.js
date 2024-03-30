@@ -23,7 +23,7 @@ const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
-const { serverConfig } = require('./server_config');
+const { serverConfig, configExists } = require('./server_config');
 const pjson = require('../package.json');
 
 console.log(`\x1b[32m
@@ -445,7 +445,11 @@ app.use(express.static(path.join(__dirname, '../web'))); // Serve the entire web
 httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.webserverIp, () => {
   let currentAddress = serverConfig.webserver.webserverIp;
   currentAddress == '0.0.0.0' ? currentAddress = 'localhost' : currentAddress = serverConfig.webserver.webserverIp; 
-  logInfo(`Web server is running at \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+  if(configExists()) {
+    logInfo(`Web server has started on address \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+  } else {
+    logInfo(`Open your browser and proceed to \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m to continue with setup.`);
+  }
 });
 
 fmdxList.update();

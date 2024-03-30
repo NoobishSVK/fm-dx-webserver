@@ -20,7 +20,6 @@
     "ffmpeg-static": "5.2.0",
     "http": "0.0.1-security",
     "http-proxy": "1.18.1",
-    "https": "1.0.0",
     "koffi": "2.7.2",
     "net": "1.0.2",
     "serialport": "12.0.0",

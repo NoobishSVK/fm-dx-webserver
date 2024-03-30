@@ -219,40 +219,73 @@ function initCanvas(parsedData) {
 
     // Check if signalChart is already initialized
     if (!signalChart) {
+        const canvas = $('#signal-canvas')[0];
+        const context = canvas.getContext('2d');
+        const maxDataPoints = 300;
+        const pointWidth = (canvas.width - 80) / maxDataPoints;
+
         signalChart = {
-            canvas: $('#signal-canvas')[0],
-            context: $('#signal-canvas')[0].getContext('2d'),
-            parsedData: parsedData,
-            maxDataPoints: 300,
-        }
-        signalChart.pointWidth = (signalChart.canvas.width - 80) / signalChart.maxDataPoints;
+            canvas,
+            context,
+            parsedData,
+            maxDataPoints,
+            pointWidth,
+            color2: null,
+            color4: null,
+            signalUnit: localStorage.getItem('signalUnit'),
+            offset: 0,
+        };
+
+        // Initialize colors and signal unit
+        updateChartSettings(signalChart);
+        
+        // Periodically check for color and signal unit updates
+        setInterval(() => {
+            updateChartSettings(signalChart);
+        }, 1000); // Check every 1 second
     }
 
     updateCanvas(parsedData, signalChart);
 }
 
-function updateCanvas(parsedData, signalChart) {
-    const color2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
-    const color4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-    const { context, canvas, maxDataPoints, pointWidth } = signalChart;
+function updateChartSettings(signalChart) {
+    // Update colors
+    const newColor2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
+    const newColor4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
+    if (newColor2 !== signalChart.color2 || newColor4 !== signalChart.color4) {
+        signalChart.color2 = newColor2;
+        signalChart.color4 = newColor4;
+    }
 
-    while (data.length >= signalChart.maxDataPoints) {
-        data.shift();
+    // Update signal unit
+    const newSignalUnit = localStorage.getItem('signalUnit');
+    if (newSignalUnit !== signalChart.signalUnit) {
+        signalChart.signalUnit = newSignalUnit;
+        // Adjust the offset based on the new signal unit
+        switch(newSignalUnit) {
+            case 'dbuv': signalChart.offset = 11.25; break;
+            case 'dbm': signalChart.offset = 120; break;
+            default: signalChart.offset = 0;
+        }
+    }
+}
+
+function updateCanvas(parsedData, signalChart) {
+    const { context, canvas, maxDataPoints, pointWidth, color2, color4, offset } = signalChart;
+
+    if (data.length > maxDataPoints) {
+        data = data.slice(data.length - maxDataPoints);
     }
 
     const actualLowestValue = Math.min(...data);
     const actualHighestValue = Math.max(...data);
-    zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
-    zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
-    zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
+    const zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
+    const zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
+    const zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
 
     // Clear the canvas
-    if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw the signal graph with smooth shifting
-        context.beginPath();
-    }
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.beginPath();
 
     const startingIndex = Math.max(0, data.length - maxDataPoints);
 
@@ -265,8 +298,6 @@ function updateCanvas(parsedData, signalChart) {
         } else {
             const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
             const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-
-            // Interpolate between the current and previous points
             const interpolatedX = (x + prevX) / 2;
             const interpolatedY = (y + prevY) / 2;
 
@@ -306,17 +337,6 @@ function updateCanvas(parsedData, signalChart) {
     context.fillStyle = color4;
     context.font = '12px Titillium Web';
 
-    const signalUnit = localStorage.getItem('signalUnit');
-    let offset;
-
-    if (signalUnit === 'dbuv') {
-        offset = 11.25;
-    } else if (signalUnit === 'dbm') {
-        offset = 120;
-    } else {
-        offset = 0;
-    }
-
     context.textAlign = 'right';
     context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
     context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
@@ -327,7 +347,9 @@ function updateCanvas(parsedData, signalChart) {
     context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
     context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
 
-    requestAnimationFrame(() => updateCanvas(parsedData, signalChart));
+    setTimeout(() => {
+        requestAnimationFrame(() => updateCanvas(parsedData, signalChart));
+    }, 1000 / 15);
 }
 
 socket.onmessage = (event) => {
@@ -600,40 +622,85 @@ function updateSignalUnits(parsedData, averageSignal) {
     $('#data-signal-decimal').text('.' + decimalPart);
 }
 
-function updateDataElements(parsedData) {
-    const $dataFrequency = $('#data-frequency');
-    const $commandInput = $("#commandinput");
-    const $dataPi = $('#data-pi');
-    const $dataPs = $('#data-ps');
-    const $dataSt = $('.data-st');
-    const $dataRt0 = $('#data-rt0 span');
-    const $dataRt1 = $('#data-rt1 span');
-    const $dataAntInput = $('#data-ant input');
-    const $dataBwInput = $('#data-bw input');
-    const $dataStationContainer = $('#data-station-container');
-    const $dataTp = $('.data-tp');
-    const $dataTa = $('.data-ta');
-    const $dataMs = $('.data-ms');
-    const $flagDesktopCointainer = $('#flags-container-desktop');
-    const $dataPty = $('.data-pty');
+// Cache jQuery selectors outside of the update function
+const $dataFrequency = $('#data-frequency');
+const $commandInput = $("#commandinput");
+const $dataPi = $('#data-pi');
+const $dataPs = $('#data-ps');
+const $dataSt = $('.data-st');
+const $dataRt0 = $('#data-rt0 span');
+const $dataRt1 = $('#data-rt1 span');
+const $dataAntInput = $('#data-ant input');
+const $dataBwInput = $('#data-bw input');
+const $dataStationContainer = $('#data-station-container');
+const $dataTp = $('.data-tp');
+const $dataTa = $('.data-ta');
+const $dataMs = $('.data-ms');
+const $flagDesktopCointainer = $('#flags-container-desktop');
+const $dataPty = $('.data-pty');
 
-    $dataFrequency.text(parsedData.freq);
+// Throttling function to limit the frequency of updates
+function throttle(fn, wait) {
+  let isThrottled = false, savedArgs, savedThis;
+
+  function wrapper() {
+    if (isThrottled) {
+      savedArgs = arguments;
+      savedThis = this;
+      return;
+    }
+
+    fn.apply(this, arguments);
+    isThrottled = true;
+
+    setTimeout(function() {
+      isThrottled = false;
+      if (savedArgs) {
+        wrapper.apply(savedThis, savedArgs);
+        savedArgs = savedThis = null;
+      }
+    }, wait);
+  }
+
+  return wrapper;
+}
+
+// Utility function to update element's text if changed
+function updateTextIfChanged($element, newText) {
+    if ($element.text() !== newText) {
+        $element.text(newText);
+    }
+}
+
+// Utility function to update element's HTML content if changed
+function updateHtmlIfChanged($element, newHtml) {
+    if ($element.html() !== newHtml) {
+        $element.html(newHtml);
+    }
+}
+
+// Main function to update data elements, optimized
+const updateDataElements = throttle(function(parsedData) {
+    updateTextIfChanged($dataFrequency, parsedData.freq);
     $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
-    $dataPi.html(parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+    updateHtmlIfChanged($dataPi, parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
 
     if (localStorage.getItem('psUnderscores') === 'true') {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
-    $dataPs.html(parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-    $dataSt.html(`<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
-    $dataRt0.html(processString(parsedData.rt0, parsedData.rt0_errors));
-    $dataRt1.html(processString(parsedData.rt1, parsedData.rt1_errors));
-    $dataPty.html(europe_programmes[parsedData.pty]);
+    updateHtmlIfChanged($dataPs, parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
 
-    if(parsedData.rds === true) {
-        $flagDesktopCointainer.css('background-color', 'var(--color-2');
+    updateHtmlIfChanged($dataSt, `<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
+
+    updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
+    updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));
+
+    updateTextIfChanged($dataPty, europe_programmes[parsedData.pty]);
+
+    if (parsedData.rds === true) {
+        $flagDesktopCointainer.css('background-color', 'var(--color-2)');
     } else {
-        $flagDesktopCointainer.css('background-color', 'var(--color-1');
+        $flagDesktopCointainer.css('background-color', 'var(--color-1)');
     }
 
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
@@ -643,20 +710,20 @@ function updateDataElements(parsedData) {
     $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
 
     if (parsedData.txInfo.station.length > 1) {
-        $('#data-station-name').text(parsedData.txInfo.station.replace(/%/g, '%25'));
-        $('#data-station-erp').text(parsedData.txInfo.erp);
-        $('#data-station-city').text(parsedData.txInfo.city);
-        $('#data-station-itu').text(parsedData.txInfo.itu);
-        $('#data-station-pol').text(parsedData.txInfo.pol);
-        $('#data-station-distance').text(parsedData.txInfo.distance);
-        $('#data-station-azimuth').text(parsedData.txInfo.azimuth);
+        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.station.replace(/%/g, '%25'));
+        updateTextIfChanged($('#data-station-erp'), parsedData.txInfo.erp);
+        updateTextIfChanged($('#data-station-city'), parsedData.txInfo.city);
+        updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
+        updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
+        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.distance);
+        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azimuth);
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
     }
 
     updateCounter++;
-    if(updateCounter % 8 === 0) {
+    if (updateCounter % 8 === 0) {
         $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
         $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
         $dataMs.html(parsedData.ms === 0
@@ -673,7 +740,7 @@ function updateDataElements(parsedData) {
         $dataRt0.attr('aria-label', parsedData.rt0);
         $dataRt1.attr('aria-label', parsedData.rt1);
     }
-}
+}, 100); // Update at most once every 100 milliseconds
 
 let isEventListenerAdded = false;
 
