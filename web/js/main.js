@@ -223,6 +223,7 @@ function initCanvas(parsedData) {
         const context = canvas.getContext('2d');
         const maxDataPoints = 300;
         const pointWidth = (canvas.width - 80) / maxDataPoints;
+        
 
         signalChart = {
             canvas,
@@ -236,6 +237,11 @@ function initCanvas(parsedData) {
             offset: 0,
         };
 
+        switch(signalChart.signalUnit) {
+            case 'dbuv': signalChart.offset = 11.25; break;
+            case 'dbm': signalChart.offset = 120; break;
+            default: signalChart.offset = 0;
+        }
         // Initialize colors and signal unit
         updateChartSettings(signalChart);
         
