@@ -5,7 +5,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 # Officially supported devices
 - **TEF668x:** Supported with PE5PVB's and Konrad's FM-DX Tuner firmware, although Arduino versions with other firmwares will work too 
 - **XDR F1HD:** Officially supported, works best with Konrad's FM-DX Tuner firmware
-- **SDR (AirSpy / RTL-SDR):** Supported unofficially via SDRSharp and XDR-GTK plugin
+- **SDR (AirSpy / RTL-SDR):** Supported unofficially via SDRSharp and the XDR-GTK plugin
 
 ## Features
 - **Web-Based Control:** Access and control your TEF6686 / F1HD receiver from any device with a web browser.
@@ -20,7 +20,7 @@ Check [here](https://trello.com/b/OAKo7n0Q/fm-dx-webserver) for an up to date ta
 Join our **Discord community** to get the latest development update info, share feedback and receive support.
 [<img alt="Join the OpenRadio Discord community!" src="https://i.imgur.com/lI9Tuxf.png" height="120">](https://discord.gg/ZAVNdS74mC)  
 
-## Getting Started
+## Getting Started (Windows)
 
 1. Install node.js from here: 
     ```bash
@@ -45,6 +45,9 @@ Join our **Discord community** to get the latest development update info, share 
     ```
 
 5. Open your web browser and navigate to `http:/localhost:8080` to access the web interface.
+
+## Getting Started (Linux)
+[Click here for the Linux installation tutorial.](https://gist.github.com/bkram/788098558312d2fa71c07dc443e03d10)
 
 ## Utilized projects
 

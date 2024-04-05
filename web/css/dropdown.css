@@ -16,7 +16,7 @@
     position: absolute;
     right: 10px;
     top: 18px;
-    z-index: 9999;
+    z-index: 100;
     width: 6px;
     height: 6px;
     border: 1px solid var(--color-main);

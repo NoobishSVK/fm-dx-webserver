@@ -36,7 +36,7 @@ function enableAudioStream() {
         childProcess.stderr.on('data', (data) => {
             logFfmpeg(`stderr: ${data}`);
             if(data.includes('I/O error')) {
-                logError('Audio device \x1b[35m' + serverConfig.audio.audioDevice + '\x1b[0m failed to start. Start server with the command \x1b[33mnode . --ffmpegdebug \x1b[0mfor more info.')
+                logError('Audio device \x1b[35m' + serverConfig.audio.audioDevice + '\x1b[0m failed to start. Start server with the command \x1b[33mnode . --ffmpegdebug \x1b[0mfor more info.');
             }
             if(data.includes('size=') && startupSuccess === false) {
                 logInfo('Audio stream started up successfully.');

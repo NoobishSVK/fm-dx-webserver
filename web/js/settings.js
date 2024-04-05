@@ -24,7 +24,6 @@ const signalUnits = {
 };
 
 $(document).ready(() => {
-    // Theme Selector
     const themeSelector = $('#theme-selector');
     const savedTheme = localStorage.getItem('theme');
     const defaultTheme = localStorage.getItem('defaultTheme');
@@ -47,7 +46,6 @@ $(document).ready(() => {
         setBg();
     });
     
-    // Signal Selector
     const signalSelector = $('#signal-selector');
     
     if (localStorage.getItem('signalUnit')) {
@@ -88,7 +86,6 @@ $(document).ready(() => {
         });
     });    
     
-    // Assuming you have an anchor tag with id 'logout-link'
     $('.logout-link').click(function (event) {
         event.preventDefault();
         
@@ -97,11 +94,10 @@ $(document).ready(() => {
             type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
             url: './logout',
             success: function (data) {
-                // Update the content on the page with the message from the response
                 $('#login-message').text(data.message);
                 setTimeout(function () {
                     location.reload(true);
-                }, 1750);
+                }, 1000);
             },
             error: function (xhr, status, error) {
                 // Handle error response
@@ -121,7 +117,6 @@ $(document).ready(() => {
         $("#extended-frequency-range").prop("checked", true);
     }
     
-    // Save the value of the checkbox into local storage when its state changes
     $("#extended-frequency-range").change(function() {
         var isChecked = $(this).is(":checked");
         localStorage.setItem("extendedFreqRange", isChecked);
@@ -137,7 +132,6 @@ $(document).ready(() => {
         $("#smooth-signal").prop("checked", true);
     }
     
-    // Save the value of the checkbox into local storage when its state changes
     $("#ps-underscores").change(function() {
         var isChecked = $(this).is(":checked");
         localStorage.setItem("psUnderscores", isChecked);
@@ -160,7 +154,6 @@ function setTheme(themeName) {
         // Extracting the RGBA components and opacity value
         const rgbaComponents = themeColors[2].match(/(\d+(\.\d+)?)/g);
         const opacity = parseFloat(rgbaComponents[3]);
-        // Calculating 80% of the opacity
         const newOpacity = opacity * 0.75;
         // Constructing the new RGBA string with the adjusted opacity
         const textColor2 = `rgba(${rgbaComponents[0]}, ${rgbaComponents[1]}, ${rgbaComponents[2]}, ${newOpacity})`;

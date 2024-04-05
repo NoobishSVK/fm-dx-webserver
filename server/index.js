@@ -141,15 +141,11 @@ function connectToXdrd() {
               authFlags.authMsg = true;
               logInfo('Authentication with xdrd successful.');
             } else if (line.startsWith('G')) {
-              const [command, value] = line.split('');
-              switch (command) {
-                case 'G':
-                  dataHandler.initialData.eq = value[1];
-                  dataHandler.dataToSend.eq = value[1];
-                  dataHandler.initialData.ims = value[0];
-                  dataHandler.dataToSend.ims = value[0];
-                  break;
-              }
+              const value = line.substring(1); 
+              dataHandler.initialData.eq = value.charAt(0);
+              dataHandler.dataToSend.eq = value.charAt(0); 
+              dataHandler.initialData.ims = value.charAt(1); 
+              dataHandler.dataToSend.ims = value.charAt(1);         
             } else if (line.startsWith('Z')) {
               let modifiedLine = line.slice(1);
               dataHandler.initialData.ant = modifiedLine;

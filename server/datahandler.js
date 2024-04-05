@@ -274,6 +274,7 @@ function handleData(ws, receivedData) {
         if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
           resetToDefault(dataToSend);
           rdsparser.clear(rds);
+          dataToSend.af = [];
           return; // Prevent tune spamming using scrollwheel
         }
 

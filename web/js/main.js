@@ -805,10 +805,10 @@ function createListItem(element) {
 
 function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
-    if (value === 0) {
-        button.addClass("btn-disabled");
+    if (value == 0) {
+        button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
     } else {
-        button.removeClass("btn-disabled");
+        button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
     }
 }
 

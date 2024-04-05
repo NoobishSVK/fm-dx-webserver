@@ -254,7 +254,7 @@ function submitData() {
       });      
 
         $('#audio-software-mode').prop("checked", data.audio.softwareMode || false);
-        $('#startup-volume').val(data.audio.startupVolume || 100);
+        $('#startup-volume').val(data.audio.startupVolume || 1);
         $('#volume-percentage-value').text(data.audio.startupVolume !== undefined ? (data.audio.startupVolume * 100).toFixed(0) + '%' : '100%');
 
         $('#webserver-name').val(data.identification.tunerName);
