@@ -16,7 +16,7 @@ const fmdxList = require('./fmdx_list');
 
 // Endpoints
 router.get('/', (req, res) => {
-    if(serverConfig.webserver.banlist.includes(req.connection.remoteAddress)) {
+    if(serverConfig.webserver.banlist.includes(req.connection.remoteAddress || req.headers['x-forwarded-for'])) {
         res.render('403');
         return;
     }

@@ -86,7 +86,7 @@ function connectToSerial() {
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serialport.write('D0\n');
-      serialport.write('G11\n');
+      serialport.write('G00\n');
       serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
       
       serialport.on('data', (data) => {
@@ -277,7 +277,7 @@ wss.on('connection', (ws, request) => {
         return;
     }
 
-    if (command.includes("'")) {
+    if (command.includes("\'")) {
         return;
     }
 

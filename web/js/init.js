@@ -1,9 +1,9 @@
-var currentDate = new Date('April 6, 2024 01:00:00');
+var currentDate = new Date('April 22, 2024 22:00:00');
 var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year;
-var currentVersion = 'v1.1.9b [' + formattedDate + ']';
+var currentVersion = 'v1.1.9c [' + formattedDate + ']';
 
 getInitialSettings();
 
@@ -25,4 +25,4 @@ function getInitialSettings() {
             console.error('Error:', error);
         }
     });
-}
+} 

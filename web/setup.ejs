@@ -59,6 +59,7 @@
                             <th>IP Address</th>
                             <th>Location</th>
                             <th>Online since</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,11 +69,12 @@
                                     <td><%= user.ip %></td>
                                     <td><%= user.location %></td>
                                     <td><%= user.time %></td>
+                                    <td><a href="./kick?user=<% user.ip %>">Kick</a></td>
                                 </tr>
                             <% }); %>
                         <% } else { %>
                             <tr>
-                                <td colspan="3" style="text-align: center">No users online</td>
+                                <td colspan="4" style="text-align: center">No users online</td>
                             </tr>
                         <% } %>
                     </tbody>

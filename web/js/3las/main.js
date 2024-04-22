@@ -25,12 +25,12 @@ function OnPlayButtonClick(_ev) {
             Stream.Stop();
         } else {
             Stream.Start();
-            const $playbutton = $('.playbutton');
-            $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
             $playbutton.addClass('bg-gray').prop('disabled', true);
             setTimeout(() => {
                 $playbutton.removeClass('bg-gray').prop('disabled', false);
             }, 3000);
+            const $playbutton = $('.playbutton');
+            $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
         }
     } catch (error) {
         console.error(error);
