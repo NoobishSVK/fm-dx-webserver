@@ -1,4 +1,4 @@
-var currentDate = new Date('April 22, 2024 22:00:00');
+var currentDate = new Date('April 25, 2024 22:00:00');
 var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
