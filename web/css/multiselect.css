@@ -1,0 +1,45 @@
+.multiselect {
+    width: 400px;
+    height: 320px;
+    background-color: var(--color-2);
+    padding: 8px 16px;
+    border-radius: 30px;
+    padding: 20px;
+  }
+
+  .multiselect:hover {
+    background-color: var(--color-2);
+  }
+
+  .multiselect:focus {
+    outline: 0;
+  }
+  
+  .multiselect option {
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px;
+    position: relative;
+    color: var(--color-4);
+  }
+  
+  .multiselect option:checked::after {
+    content: attr(title);
+    background: var(--color-4);
+    color: var(--color-main);
+    position: absolute;
+    width: 344px;
+    height: 21px;
+    left: 0;
+    top: 0;
+    padding: 8px;
+    border: none;
+  }
+  
+  .multiselect option:focus, .multiselect option:active {
+    background: transparent !important;
+  }
+
+  .multiselect:active > option:checked {
+    background: red !important;
+  }
