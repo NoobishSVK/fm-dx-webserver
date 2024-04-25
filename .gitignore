@@ -2,3 +2,4 @@ node_modules/
 /*.json
 /ffmpeg.exe
 /serverlog.txt
+/web/js/plugins/

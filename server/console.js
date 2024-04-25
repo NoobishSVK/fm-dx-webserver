@@ -4,7 +4,7 @@ const verboseMode = process.argv.includes('--debug');
 const verboseModeFfmpeg = process.argv.includes('--ffmpegdebug');
 
 const ANSI_ESCAPE_CODE_PATTERN = /\x1b\[[0-9;]*m/g;
-const MAX_LOG_LINES = 100000;
+const MAX_LOG_LINES = 5000;
 
 const getCurrentTime = () => {
     const currentTime = new Date();
@@ -90,7 +90,8 @@ const logWarn = (...messages) => {
 };
 
 function appendLogToFile(logMessage) {
-    const cleanLogMessage = removeANSIEscapeCodes(logMessage);
+    const date = new Date();
+    const cleanLogMessage = date.toLocaleDateString() + ' | ' + removeANSIEscapeCodes(logMessage);
 
     fs.appendFile('serverlog.txt', cleanLogMessage + '\n', (err) => {
         if (err) {

@@ -13,6 +13,7 @@ const storage = require('./storage');
 const { logInfo, logDebug, logWarn, logError, logFfmpeg, logs } = require('./console');
 const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
+const { allPluginConfigs } = require('./plugins');
 
 // Endpoints
 router.get('/', (req, res) => {
@@ -56,6 +57,7 @@ router.get('/', (req, res) => {
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
             chatEnabled: serverConfig.webserver.chatEnabled,
             device: serverConfig.device,
+            plugins: serverConfig.plugins,
             bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });
     }
@@ -108,6 +110,7 @@ router.get('/setup', (req, res) => {
                 memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
                 processUptime: formattedProcessUptime,
                 consoleOutput: logs,
+                plugins: allPluginConfigs,
                 onlineUsers: dataHandler.dataToSend.users,
                 connectedUsers: storage.connectedUsers
             });
@@ -152,6 +155,17 @@ router.get('/logout', (req, res) => {
     req.session.destroy(() => {
         res.status(200).json({ message: 'Logged out successfully, refreshing the page...' });
     });
+});
+
+router.get('/kick', (req, res) => {
+    const ipAddress = req.query.ip; // Extract the IP address parameter from the query string
+    // Terminate the WebSocket connection for the specified IP address
+    if(req.session.isAdminAuthenticated) {
+        helpers.kickClient(ipAddress);
+    }
+    setTimeout(() => {
+        res.redirect('/setup');
+    }, 500);
 });
 
 router.post('/saveData', (req, res) => {
@@ -215,7 +229,8 @@ router.get('/static_data', (req, res) => {
         qthLongitude: serverConfig.identification.lon,
         presets: serverConfig.webserver.presets || [],
         defaultTheme: serverConfig.webserver.defaultTheme || 'theme1',
-        bgImage: serverConfig.webserver.bgImage || ''
+        bgImage: serverConfig.webserver.bgImage || '',
+        rdsMode: serverConfig.webserver.rdsMode || false,
     });
 });
 

@@ -25,6 +25,7 @@
                 <li data-panel="connection">Connection</li>
                 <li data-panel="audio">Audio</li>
                 <li data-panel="webserver">Webserver</li>
+                <li data-panel="plugins">Plugins</li>
                 <li data-panel="identification">Info & Map</li>
                 <li class="logout-link text-gray"><i class="fas fa-sign-out"></i></li>
             </ul>
@@ -59,7 +60,7 @@
                             <th>IP Address</th>
                             <th>Location</th>
                             <th>Online since</th>
-                            <!--<th></th>-->
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -69,7 +70,7 @@
                                     <td><%= user.ip %></td>
                                     <td><%= user.location %></td>
                                     <td><%= user.time %></td>
-                                    <!--<td><a href="./kick?user=<% user.ip %>">Kick</a></td>-->
+                                    <td><a href="./kick?ip=<%= user.ip %>">Kick</a></td>
                                 </tr>
                             <% }); %>
                         <% } else { %>
@@ -78,7 +79,32 @@
                             </tr>
                         <% } %>
                     </tbody>
-                </table>                
+                </table>    
+                
+                <h3>Maintenance</h3>
+                <div class="flex-container flex-center" style="margin: 30px;">
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="tuner-public">
+                        <label for="tuner-public">Public tuner (no password)</label>
+                    </div>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="tuner-lock">
+                        <label for="tuner-lock">Admin lock [only admins can tune]</label>
+                    </div>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="shutdown-tuner">
+                        <label for="shutdown-tuner">Auto-shutdown</label>
+                    </div><br>
+                </div>
+
+                <div class="form-group">
+                    <label for="tune-pass">Tune password:</label>
+                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
+                </div>
+                <div class="form-group">
+                    <label for="admin-pass">Admin setup password:</label>
+                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
+                </div><br>
 
                 <h3>Console</h3>
                 <% if (consoleOutput && consoleOutput.length > 0) { %>
@@ -91,37 +117,8 @@
                     <p>No console output available.</p>
                 <% } %>
 
-                <h3>Maintenance</h3>
-                <div class="flex-container">
-                    <div class="panel-50 no-bg">
-                        <div class="form-group checkbox">
-                            <input type="checkbox" id="tuner-public">
-                            <label for="tuner-public">Allow tuner control without password</label>
-                        </div>
-                        <div class="form-group checkbox">
-                            <input type="checkbox" id="tuner-lock">
-                            <label for="tuner-lock">Lock the tuner [only admins can tune with this option]</label>
-                        </div>
-                    </div>
-                    <div class="panel-50 no-bg">
-                        <div class="form-group checkbox">
-                            <input type="checkbox" id="shutdown-tuner">
-                            <label for="shutdown-tuner">Auto-shutdown tuner when no one is online</label>
-                        </div><br>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="tune-pass">Tune password:</label>
-                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
-                </div>
-                <div class="form-group">
-                    <label for="admin-pass">Admin setup password:</label>
-                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
-                </div><br>
-
                 <p class="text-small">Version: <span class="version-string color-4"></span></p>
-                <p class="p-bottom-20"><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
+                <p><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
             </div>
     
             <div class="panel-100 tab-content" id="connection">
@@ -355,6 +352,13 @@
                     </div>
 
                     <div class="panel-50 no-bg">
+                        <h3>RDS Mode</h3>
+                        <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
+                        <div class="form-group checkbox bottom-20">
+                            <input type="checkbox" id="rds-mode">
+                            <label for="rds-mode">Enable American Mode (RBDS)</label>
+                        </div>      
+
                         <h3>Presets</h3>
                         <p>You can set up to 4 presets.<br>These presets are accessible with the F1-F4 buttons.<br>
                         <span class="text-gray">Enter frequencies in MHz.</span></p>
@@ -397,6 +401,21 @@
                         </div>
                     </div>
 
+            </div>
+
+            <div class="panel-100 tab-content" id="plugins">
+                <h2>Plugins</h2>
+                <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
+                    Click on the individual plugins to enable/disable them.</p>
+                    <select id="plugin-list" class="multiselect" multiple>
+                        <% plugins.forEach(function(plugin) { %>
+                            <option data-name="<%= plugin.frontEndPath %>" title="<%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]">
+                                <%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]
+                            </option>
+                        <% }); %>
+                    </select><br><br>
+                    <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
+                    
             </div>
 
             <div class="panel-100 tab-content" id="tuner">

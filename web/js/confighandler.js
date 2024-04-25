@@ -11,6 +11,7 @@ function submitData() {
     const defaultTheme = themeDataValue;
 
     const bgImage = $("#bg-image").val() || '';
+    const rdsMode = $('#rds-mode').is(":checked") || false;
     
     const ant1enabled = $('#ant1-enabled').is(":checked") || false;
     const ant2enabled = $('#ant2-enabled').is(":checked") || false;
@@ -71,6 +72,11 @@ function submitData() {
     const tunePass = $('#tune-pass').val();
     const adminPass = $('#admin-pass').val();
 
+    let plugins = [];
+    $('#plugin-list option:selected').each(function() {
+      plugins.push($(this).data('name'));
+  });
+
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
     const autoShutdown = $("#shutdown-tuner").is(":checked") || false;
@@ -88,7 +94,8 @@ function submitData() {
         defaultTheme,
         presets,
         banlist,
-        bgImage
+        bgImage,
+        rdsMode,
       },
       antennas: {
         enabled: antennasEnabled,
@@ -136,6 +143,7 @@ function submitData() {
         tunePass,
         adminPass,
       },
+      plugins,
       device,
       publicTuner, 
       lockToAdmin,
@@ -181,6 +189,7 @@ function submitData() {
         $("#chat-switch").prop("checked", data.webserver.chatEnabled || false);
 
         $('#selected-theme').val(data.webserver.defaultTheme || 'Default');
+        $('#rds-mode').prop("checked", data.webserver.rdsMode || false);
 
         var selectedTheme = $(".option[data-value='" + data.webserver.defaultTheme + "']");
         
@@ -272,6 +281,14 @@ function submitData() {
         $("#tuner-lock").prop("checked", data.lockToAdmin);
         $("#shutdown-tuner").prop("checked", data.autoShutdown);
         $("#antenna-switch").prop("checked", data.antennas?.enabled);
+
+        data.plugins.forEach(function(name) {
+          // Find the option with the corresponding data-name attribute and mark it as selected
+          $('#plugin-list option[data-name="' + name + '"]').prop('selected', true);
+        });
+      
+        // Update the multi-select element to reflect the changes
+        $('#plugin-list').trigger('change');
 
         // Check if latitude and longitude are present in the data
         if (data.identification.lat && data.identification.lon) {

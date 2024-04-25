@@ -3,7 +3,7 @@ var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year;
-var currentVersion = 'v1.1.9c [' + formattedDate + ']';
+var currentVersion = 'v1.2.0 [' + formattedDate + ']';
 
 getInitialSettings();
 
@@ -20,6 +20,7 @@ function getInitialSettings() {
             localStorage.setItem('preset3', data.presets[2]);
             localStorage.setItem('preset4', data.presets[3]);
             localStorage.setItem('bgImage', data.bgImage);
+            localStorage.setItem('rdsMode', data.rdsMode);
         },
         error: function (error) {
             console.error('Error:', error);

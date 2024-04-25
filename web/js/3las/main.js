@@ -20,6 +20,8 @@ function OnConnectivityCallback(isConnected) {
 }
 
 function OnPlayButtonClick(_ev) {
+    const $playbutton = $('.playbutton');
+    $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
     try {
         if (Stream.ConnectivityFlag) {
             Stream.Stop();
@@ -29,8 +31,6 @@ function OnPlayButtonClick(_ev) {
             setTimeout(() => {
                 $playbutton.removeClass('bg-gray').prop('disabled', false);
             }, 3000);
-            const $playbutton = $('.playbutton');
-            $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
         }
     } catch (error) {
         console.error(error);

@@ -38,6 +38,7 @@ console.log('\x1b[90m―――――――――――――――――――�
 
 // Start ffmpeg
 require('./stream/index');
+require('./plugins');
 
 // Create a WebSocket proxy instance
 const proxy = httpProxy.createProxyServer({
@@ -253,7 +254,7 @@ wss.on('connection', (ws, request) => {
         const connectionTime = new Date().toLocaleString([], options);
 
         if(locationInfo.country === undefined) {
-          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime };
+          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
           storage.connectedUsers.push(userData);
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
         } else {

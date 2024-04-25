@@ -45,6 +45,7 @@ let serverConfig = {
     tunePass: "",
     adminPass: ""
   },
+  plugins: [],
   device: 'tef',
   defaultFreq: 87.5,
   publicTuner: true,
@@ -65,9 +66,10 @@ function deepMerge(target, source)
 }
 
 function configUpdate(newConfig) {
-  if (newConfig.webserver && newConfig.webserver.banlist !== undefined) {
+  if (newConfig.webserver && (newConfig.webserver.banlist !== undefined || newConfig.plugins !== undefined)) {
     // If new banlist is provided, replace the existing one
     serverConfig.webserver.banlist = newConfig.webserver.banlist;
+    serverConfig.plugins = newConfig.plugins;
     delete newConfig.webserver.banlist; // Remove banlist from newConfig to avoid merging
   }
   

@@ -468,5 +468,8 @@
 </div>
 
 <script src="js/webserver.js"></script>
+<% plugins.forEach(function(plugin) { %>
+        <script src="js/plugins/<%= plugin %>"></script>
+<% }); %>
 </body>
 </html>

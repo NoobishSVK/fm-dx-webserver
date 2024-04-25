@@ -25,6 +25,8 @@ const usa_programmes = [
     "Spanish Talk", "Spanish Music", "Hip Hop", "", "", "Weather", "Emergency Test", "Emergency" 
 ];
 
+const rdsMode = localStorage.getItem('rdsMode');
+
 $(document).ready(function () {
     var canvas = $('#signal-canvas')[0];
 
@@ -359,7 +361,16 @@ function updateCanvas(parsedData, signalChart) {
 }
 
 socket.onmessage = (event) => {
+    if (event.data == 'KICK') {
+        console.log('Kick iniitiated.')
+        setTimeout(() => {
+          window.location.href = '/403';
+        }, 500); // Adjust the delay as needed
+        return;
+    }
+
     parsedData = JSON.parse(event.data);
+
     updatePanels(parsedData);
     if(localStorage.getItem("smoothSignal") == 'true') {
         const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
@@ -701,7 +712,7 @@ const updateDataElements = throttle(function(parsedData) {
     updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
     updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));
 
-    updateTextIfChanged($dataPty, europe_programmes[parsedData.pty]);
+    updateTextIfChanged($dataPty, rdsMode == 'true' ? usa_programmes[parsedData.pty] : europe_programmes[parsedData.pty]);
 
     if (parsedData.rds === true) {
         $flagDesktopCointainer.css('background-color', 'var(--color-2)');
