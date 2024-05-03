@@ -113,7 +113,7 @@ function connectToXdrd() {
       
       let authFlags = {
         authMsg: false,
-        firstClient: true,
+        firstClient: false,
         receivedSalt: '',
         receivedPassword: false,
         messageCount: 0,
