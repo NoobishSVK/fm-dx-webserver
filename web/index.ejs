@@ -188,35 +188,35 @@
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
                                         <li data-vlaue="0" class="option">Auto</li>
-                                        <li data-value="9000" class="option">9 KHz</li>
-                                        <li data-value="15000" class="option">15 KHz</li>
-                                        <li data-value="17000" class="option">17 KHz</li>
-                                        <li data-value="20000" class="option">20 KHz</li>
-                                        <li data-value="24000" class="option">24 KHz</li>
-                                        <li data-value="27000" class="option">27 KHz</li>
-                                        <li data-value="32000" class="option">32 KHz</li>
-                                        <li data-value="36000" class="option">36 KHz</li>
-                                        <li data-value="42000" class="option">42 KHz</li>
-                                        <li data-value="48000" class="option">48 KHz</li>
-                                        <li data-value="55000" class="option">55 KHz</li>
-                                        <li data-value="63000" class="option">63 KHz</li>
-                                        <li data-value="73000" class="option">73 KHz</li>
-                                        <li data-value="83000" class="option">83 KHz</li>
-                                        <li data-value="90000" class="option">90 KHz</li>
-                                        <li data-value="95000" class="option">95 KHz</li>
-                                        <li data-value="108000" class="option">108 KHz</li>
-                                        <li data-value="125000" class="option">125 KHz</li>
-                                        <li data-value="142000" class="option">142 KHz</li>
-                                        <li data-value="159000" class="option">159 KHz</li>
-                                        <li data-value="177000" class="option">177 KHz</li>
-                                        <li data-value="194000" class="option">194 KHz</li>
-                                        <li data-value="211000" class="option">211 KHz</li>
-                                        <li data-value="229000" class="option">229 KHz</li>
-                                        <li data-value="246000" class="option">246 KHz</li>
-                                        <li data-value="263000" class="option">263 KHz</li>
-                                        <li data-value="281000" class="option">281 KHz</li>
-                                        <li data-value="298000" class="option">298 KHz</li>
-                                        <li data-value="309000" class="option">309 KHz</li>
+                                        <li data-value="1" class="option">9 KHz</li>
+                                        <li data-value="2" class="option">15 KHz</li>
+                                        <li data-value="3" class="option">17 KHz</li>
+                                        <li data-value="4" class="option">20 KHz</li>
+                                        <li data-value="5" class="option">24 KHz</li>
+                                        <li data-value="6" class="option">27 KHz</li>
+                                        <li data-value="7" class="option">32 KHz</li>
+                                        <li data-value="8" class="option">36 KHz</li>
+                                        <li data-value="9" class="option">42 KHz</li>
+                                        <li data-value="10" class="option">48 KHz</li>
+                                        <li data-value="11" class="option">55 KHz</li>
+                                        <li data-value="12" class="option">63 KHz</li>
+                                        <li data-value="13" class="option">73 KHz</li>
+                                        <li data-value="14" class="option">83 KHz</li>
+                                        <li data-value="15" class="option">90 KHz</li>
+                                        <li data-value="16" class="option">95 KHz</li>
+                                        <li data-value="17" class="option">108 KHz</li>
+                                        <li data-value="18" class="option">125 KHz</li>
+                                        <li data-value="19" class="option">142 KHz</li>
+                                        <li data-value="20" class="option">159 KHz</li>
+                                        <li data-value="21" class="option">177 KHz</li>
+                                        <li data-value="22" class="option">194 KHz</li>
+                                        <li data-value="23" class="option">211 KHz</li>
+                                        <li data-value="24" class="option">229 KHz</li>
+                                        <li data-value="25" class="option">246 KHz</li>
+                                        <li data-value="26" class="option">263 KHz</li>
+                                        <li data-value="27" class="option">281 KHz</li>
+                                        <li data-value="28" class="option">298 KHz</li>
+                                        <li data-value="29" class="option">309 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -401,20 +401,42 @@
                         </form>
                         <% } %>
                         <div id="login-message"></div>
-
-                        <h2>Time</h2>
-                        <p class="m-0">Server: <span class="color-3" id="server-time"></span></p>
-                        <p class="m-0">Local: <span class="color-3" id="client-time"></span></p>
-
-                        <p class="text-small" id="current-ping"></p>
                         
-                        <div class="version-info">
-                            <p class="text-small">FM-DX WebServer <br>by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
+                        <hr class="color-2 auto">
 
-                            <% if (device == 'tef') { %><p class="m-0">Device: TEF668x</p> <% } %>
-                            <% if (device == 'xdr') { %><p class="m-0">Device: Sony XDR</p> <% } %>
-                            <% if (device == 'sdr') { %><p class="m-0">Device: SDR</p> <% } %>
-                            <span style="color: var(--color-3);" class="version-string"></span><br>
+                        <table class="auto text-left p-10">
+                            <tr>
+                                <td>Device:</td>
+                                <td class="color-3 p-left-10">
+                                    <% if (device == 'tef') { %>TEF668x<% } %>
+                                    <% if (device == 'xdr') { %>Sony XDR<% } %>
+                                    <% if (device == 'sdr') { %>SDR<% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Server Time:</td>
+                                <td class="color-3 p-left-10" id="server-time"></td>
+                            </tr>
+                            <tr>
+                                <td>Local Time:</td>
+                                <td class="color-3 p-left-10" id="client-time"></td>
+                            </tr>
+                        </table>
+                        
+                        <table class="auto">
+                            <tr>
+                                <td class="p-left-10">P1: <a class="color-3 pointer" id="preset1">87.5</a></td>
+                                <td class="p-left-10">P2: <a class="color-3 pointer" id="preset2"></a></td>
+                                <td class="p-left-10">P3: <a class="color-3 pointer" id="preset3"></a></td>
+                                <td class="p-left-10">P4: <a class="color-3 pointer" id="preset4"></a></td>
+                            </tr>
+                        </table>
+
+                        <div class="version-info">
+                            <p class="m-0">
+                                FM-DX Webserver <span style="color: var(--color-3);" class="version-string"></span>
+                            </p>
+                            <p class="text-small m-0 color-3">by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
                             <span class="text-small" style="color: var(--color-3);">[<a href="https://list.fmdx.pl" target="_blank">Receiver Map</a>]</span>
                             <br>
                             <br>
@@ -422,6 +444,7 @@
                                 <span>Owner contact:</span><br>
                                 <span class="text-small m-0 bottom-20"><%= ownerContact %></span>
                              <% } %>
+                             <p class="text-small color-3" id="current-ping"></p>
                         </div>
         </div>
     </div>

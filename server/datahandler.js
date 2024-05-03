@@ -261,6 +261,10 @@ function handleData(ws, receivedData) {
   
   for (const receivedLine of receivedLines) {
     switch (true) {
+      case receivedLine.startsWith('F'): // Bandwidth
+        initialData.bw = receivedLine.substring(1);
+        dataToSend.bw = receivedLine.substring(1);
+        break;
       case receivedLine.startsWith('P'): // PI Code
         modifiedData = receivedLine.slice(1);
         legacyRdsPiBuffer = modifiedData;

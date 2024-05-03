@@ -49,6 +49,7 @@ $(document).ready(function () {
 
     // Start updating the canvas
     initCanvas();
+    fillPresets();
 
     signalToggle.on("change", function () {
         const signalText = localStorage.getItem('signalUnit');
@@ -149,6 +150,10 @@ $(document).ready(function () {
     $("#data-ims").click(function () {
         toggleButtonState("ims");
     });
+
+    $("#volumeSlider").on('mouseup', function() {
+        $('#volumeSlider').blur();
+    })
 
     $(freqUpButton).on("click", tuneUp);
     $(freqDownButton).on("click", tuneDown);
@@ -421,11 +426,13 @@ function getCurrentFreq() {
 function checkKey(e) {
     e = e || window.event;
 
-    if ($('#password:focus').length > 0 || $('#chat-send-message:focus').length > 0) {
+    if ($('#password:focus').length > 0
+    || $('#chat-send-message:focus').length > 0
+    || $('#volumeSlider:focus').length > 0
+    || $('#chat-nickname:focus').length > 0) {
         return; 
     }
 
-    $('#volumeSlider').blur();
     getCurrentFreq();
 
     if (socket.readyState === WebSocket.OPEN) {
@@ -892,4 +899,14 @@ function initTooltips() {
 
         $('.tooltiptext').css({ top: posY, left: posX });
     });
+}
+
+function fillPresets() {
+    for (let i = 1; i <= 4; i++) {
+        let presetText = localStorage.getItem(`preset${i}`);
+        $(`#preset${i}`).text(presetText);
+        $(`#preset${i}`).click(function() {
+            tuneTo(Number(presetText));
+        });
+    }
 }

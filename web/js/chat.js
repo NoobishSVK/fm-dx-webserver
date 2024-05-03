@@ -14,7 +14,7 @@ $(document).ready(function() {
       const isAdmin = messageData.admin ? '<span style="color: #bada55">[ADMIN]</span>' : '';
       
       if (messageData.type === 'clientIp') {
-          chatIdentityNickname.html(isAdmin + " " + (savedNickname.length > 0 ? savedNickname : 'Anonymous User'));
+          chatIdentityNickname.html(isAdmin + " " + (savedNickname?.length > 0 ? savedNickname : 'Anonymous User'));
           chatIdentityNickname.attr('title', messageData.ip);
       } else {
           const chatMessage = `

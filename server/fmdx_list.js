@@ -67,7 +67,7 @@ function sendUpdate() {
   }
 
   const request = {
-    status: (serverConfig.lockToAdmin ? 2 : 1),
+    status: ((serverConfig.lockToAdmin == 'true' || serverConfig.publicTuner == 'false') ? 2 : 1),
     coords: [serverConfig.identification.lat, serverConfig.identification.lon],
     name: serverConfig.identification.tunerName,
     desc: serverConfig.identification.tunerDesc,
