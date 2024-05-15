@@ -1,5 +1,6 @@
 $(document).ready(function() {
-  const chatSocket = new WebSocket(`ws://${window.location.host}/chat`);
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const chatSocket = new WebSocket(`${protocol}//${window.location.host}${window.location.pathname}chat`);
   let chatMessageCount = 0;
   const chatMessages = $('#chat-chatbox');
   const chatMessagesCount = $('.chat-messages-count');
