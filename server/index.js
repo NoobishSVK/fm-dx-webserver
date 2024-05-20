@@ -259,7 +259,7 @@ wss.on('connection', (ws, request) => {
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
         } else {
           const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
-          const userData = { ip: clientIp, location: userLocation, time: connectionTime };
+          const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
           storage.connectedUsers.push(userData);
           logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
         }
@@ -336,6 +336,10 @@ wss.on('connection', (ws, request) => {
     const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);
     if (index !== -1) {
       storage.connectedUsers.splice(index, 1); // Remove the user's data from storage.connectedUsers array
+    }
+
+    if(currentUsers === 0) {
+      storage.connectedUsers = [];
     }
 
     if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {

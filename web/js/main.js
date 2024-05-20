@@ -370,7 +370,7 @@ socket.onmessage = (event) => {
         console.log('Kick iniitiated.')
         setTimeout(() => {
           window.location.href = '/403';
-        }, 500); // Adjust the delay as needed
+        }, 500);
         return;
     }
 
@@ -763,6 +763,7 @@ const updateDataElements = throttle(function(parsedData) {
         $dataPs.attr('aria-label', parsedData.ps);
         $dataRt0.attr('aria-label', parsedData.rt0);
         $dataRt1.attr('aria-label', parsedData.rt1);
+        $('#users-online-container').attr("aria-label", "Online users: " + parsedData.users);
     }
 }, 100); // Update at most once every 100 milliseconds
 
@@ -850,9 +851,11 @@ function toggleAdminLock() {
 
     if($adminLockButton.hasClass('active')) {
         socket.send('wL0');
+        $adminLockButton.attr('aria-label', '"ock Tuner (Admin)')
         $adminLockButton.removeClass('active');
     } else {
         socket.send('wL1');
+        $adminLockButton.attr('aria-label', 'Unlock Tuner (Admin)')
         $adminLockButton.addClass('active');
     }
 }
@@ -863,9 +866,11 @@ function togglePasswordLock() {
     if($passwordLockButton.hasClass('active')) {
         socket.send('wT0');
         $passwordLockButton.removeClass('active');
+        $passwordLockButton.attr('aria-label', 'Lock Tuner (Password tune)')
     } else {
         socket.send('wT1');
         $passwordLockButton.addClass('active');
+        $passwordLockButton.attr('aria-label', 'Unlock Tuner (Password tune)')
     }
 }
 

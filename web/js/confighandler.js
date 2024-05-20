@@ -59,7 +59,7 @@ function submitData() {
     }).data('value') || "tef");
 
     const softwareMode = $('#audio-software-mode').is(":checked") || false;
-    const startupVolume = $('#startup-volume').val() || '100';
+    const startupVolume = $('#startup-volume').val() || '1';
 
     const tunerName = $('#webserver-name').val() || 'FM Tuner';
     const tunerDesc = $('#webserver-desc').val() || 'Default FM tuner description';

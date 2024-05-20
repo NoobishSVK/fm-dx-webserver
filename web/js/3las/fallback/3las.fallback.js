@@ -72,7 +72,7 @@ var Fallback = /** @class */ (function () {
     Fallback.prototype.Init = function (webSocket) {
         this.MobileUnmute();
         this.WebSocket = webSocket;
-        this.WebSocket.Send(JSON.stringify({
+        this.WebSocket?.Send(JSON.stringify({
             "type": "fallback",
             "data": this.SelectedFormatName
         }));

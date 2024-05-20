@@ -160,6 +160,7 @@ router.get('/logout', (req, res) => {
 router.get('/kick', (req, res) => {
     const ipAddress = req.query.ip; // Extract the IP address parameter from the query string
     // Terminate the WebSocket connection for the specified IP address
+    console.log(ipAddress);
     if(req.session.isAdminAuthenticated) {
         helpers.kickClient(ipAddress);
     }

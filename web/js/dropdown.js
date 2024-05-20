@@ -25,13 +25,10 @@ const selectOption = (event) => {
       tuneTo(getCurrentFreq()); //Reset RDS when change antenna input
       break;
     case 'data-bw':
-      if($(event.currentTarget).attr('data-value') > 500) { 
-        socket.send("F" + $(event.currentTarget).attr('data-value'));
-      } else {
+        legacyBwValue = $(event.currentTarget).attr('data-value2') || "";
+        socket.send("F" + legacyBwValue);
         socket.send("W" + $(event.currentTarget).attr('data-value'));
-      }
-
-      $currentDropdown.find('input').val($(event.currentTarget).text());
+        $currentDropdown.find('input').val($(event.currentTarget).text());
       break;
     default:
       $currentDropdown.find('input').val($(event.currentTarget).text());

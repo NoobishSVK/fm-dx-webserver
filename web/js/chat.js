@@ -33,6 +33,7 @@ $(document).ready(function() {
               if (!messageData.history) {
                   chatMessageCount++;
                   chatMessagesCount.text(chatMessageCount);
+                  chatMessagesCount.attr("aria-label", "Chat (" + chatMessageCount + " unread)");
                   chatButton.removeClass('bg-color-2').addClass('bg-color-4');
               }
           }

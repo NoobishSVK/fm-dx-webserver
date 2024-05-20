@@ -19,21 +19,37 @@
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
         </div>
         <div class="panel-100">
-            <ul class="nav">
-                <li data-panel="dashboard" class="active">Dashboard</li>
-                <li data-panel="tuner">Tuner</li>
-                <li data-panel="connection">Connection</li>
-                <li data-panel="audio">Audio</li>
-                <li data-panel="webserver">Webserver</li>
-                <li data-panel="plugins">Plugins</li>
-                <li data-panel="identification">Info & Map</li>
-                <li class="logout-link text-gray"><i class="fas fa-sign-out"></i></li>
+            <ul class="nav" role="tablist">
+                <li role="presentation" data-panel="dashboard">
+                    <a href="#" role="tab"  aria-controls="dashboard" aria-selected="true">Dashboard</a>
+                </li>
+                <li role="presentation" data-panel="tuner">
+                    <a href="#" role="tab" aria-controls="tuner">Tuner</a>
+                </li>
+                <li role="presentation" data-panel="connection">
+                    <a href="#" role="tab" aria-controls="connection">Connection</a>
+                </li>
+                <li role="presentation" data-panel="audio">
+                    <a href="#" role="tab" aria-controls="audio">Audio</a>
+                </li>
+                <li role="presentation" data-panel="webserver">
+                    <a href="#" role="tab" aria-controls="webserver">Webserver</a>
+                </li>
+                <li role="presentation" data-panel="plugins">
+                    <a href="#" role="tab" aria-controls="plugins">Plugins</a>
+                </li>
+                <li role="presentation" data-panel="identification">
+                    <a href="#" role="tab" aria-controls="identification">Info & Map</a>
+                </li>
+                <li role="presentation" class="logout-link text-gray">
+                    <a href="./logout"><i class="fas fa-sign-out"></i></a>
+                </li>
             </ul>
         </div>
 
         <div id="login-message"></div>
         <div class="panel-100">
-            <div class="panel-100 tab-content" id="dashboard">
+            <div class="panel-100 tab-content" id="dashboard" role="tabpanel">
                 <h2>Dashboard</h2>
 
                 <div class="panel-100 flex-container auto">
@@ -121,7 +137,7 @@
                 <p><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
             </div>
     
-            <div class="panel-100 tab-content" id="connection">
+            <div class="panel-100 tab-content" id="connection" role="tabpanel">
                 <h2>Connection settings</h2>
                 <p>You can set up your connection settings here. Changing these settings requires a server restart.</p>
                 <h3>Tuner connection:</h3>
@@ -182,7 +198,7 @@
                 <br>
             </div>
     
-            <div class="panel-100 tab-content" id="audio">
+            <div class="panel-100 tab-content" id="audio" role="tabpanel">
                 <h2>Audio settings</h2>
                 
                 <p>You can set up your audio settings here. Changing these settings requires a server restart.</p>
@@ -244,7 +260,7 @@
                 </div>
             </div>
 
-            <div class="panel-100 tab-content" id="webserver">
+            <div class="panel-100 tab-content" id="webserver" role="tabpanel">
                 <h2>Webserver settings</h2>
                 <div class="flex-container">
                     <div class="panel-50 no-bg">
@@ -403,7 +419,7 @@
 
             </div>
 
-            <div class="panel-100 tab-content" id="plugins">
+            <div class="panel-100 tab-content" id="plugins" role="tabpanel">
                 <h2>Plugins</h2>
                 <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
                     Click on the individual plugins to enable/disable them.</p>
@@ -418,7 +434,7 @@
                     
             </div>
 
-            <div class="panel-100 tab-content" id="tuner">
+            <div class="panel-100 tab-content" id="tuner" role="tabpanel">
                 <h2>Tuner Specific Settings</h2>
                 <div class="form-group">
                     <label for="themes"><i class="fa-solid fa-radio"></i> Device:</label>
@@ -449,7 +465,7 @@
 
             </div>
     
-            <div class="panel-100 tab-content" id="identification">
+            <div class="panel-100 tab-content" id="identification" role="tabpanel">
                 <h2>Identification & Map</h2>
 
                 <div class="flex-container">

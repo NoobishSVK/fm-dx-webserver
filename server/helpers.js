@@ -84,6 +84,7 @@ function resolveDataBuffer(data, wss) {
 function kickClient(ipAddress) {
   // Find the entry in connectedClients associated with the provided IP address
   const targetClient = storage.connectedUsers.find(client => client.ip === ipAddress);
+  console.log(storage.connectedUsers);
   if (targetClient && targetClient.instance) {
     // Send a termination message to the client
     targetClient.instance.send('KICK');

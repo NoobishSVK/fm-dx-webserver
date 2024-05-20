@@ -39,8 +39,8 @@
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
             <h1 id="tuner-name"><%= tunerName %> 
-                <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip" data-tooltip="Only people with tune password can tune."></i>
-                <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip" data-tooltip="Tuner is currently locked to admin."></i>
+                <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip" aria-label="Only people with tune password can tune." data-tooltip="Only people with tune password can tune."></i>
+                <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip" aria-label="Tuner is currently locked to admin." data-tooltip="Tuner is currently locked to admin."></i>
                 <% } %>
             </h1>
             <p id="tuner-desc">
@@ -60,7 +60,7 @@
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
-                            <button class="playbutton" aria-label="Play / Stop Button"><i class="fa-solid fa-play fa-lg"></i></button>
+                            <button class="playbutton" aria-label="Play / Stop"><i class="fa-solid fa-play fa-lg"></i></button>
                         </div>
                         <div class="panel-100 m-0 hover-brighten flex-center tooltip" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
                             <span class="text-big" id="data-ps"></span>
@@ -143,9 +143,9 @@
                     </div>
                     
                     <div class="panel-33 flex-container flex-phone" id="tune-buttons">
-                        <button id="freq-down" aria-label="Tune down by 100 KHz"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button id="freq-down" aria-label="Tune down"><i class="fa-solid fa-chevron-left"></i></button>
                         <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency" autocomplete="off" aria-label="Current frequency: ">
-                        <button id="freq-up" aria-label="Tune up by 100 KHz"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button id="freq-up" aria-label="Tune up"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                     
                     <div class="panel-33 hide-phone no-bg">
@@ -163,7 +163,7 @@
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
-                                        <li data-vlaue="0" class="option">Auto</li>
+                                        <li data-value="0" class="option">Auto</li>
                                         <li data-value="56000" class="option">56 KHz</li>
                                         <li data-value="64000" class="option">64 KHz</li>
                                         <li data-value="72000" class="option">72 KHz</li>
@@ -187,36 +187,36 @@
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
-                                        <li data-vlaue="0" class="option">Auto</li>
-                                        <li data-value="1" class="option">9 KHz</li>
-                                        <li data-value="2" class="option">15 KHz</li>
-                                        <li data-value="3" class="option">17 KHz</li>
-                                        <li data-value="4" class="option">20 KHz</li>
-                                        <li data-value="5" class="option">24 KHz</li>
-                                        <li data-value="6" class="option">27 KHz</li>
-                                        <li data-value="7" class="option">32 KHz</li>
-                                        <li data-value="8" class="option">36 KHz</li>
-                                        <li data-value="9" class="option">42 KHz</li>
-                                        <li data-value="10" class="option">48 KHz</li>
-                                        <li data-value="11" class="option">55 KHz</li>
-                                        <li data-value="12" class="option">63 KHz</li>
-                                        <li data-value="13" class="option">73 KHz</li>
-                                        <li data-value="14" class="option">83 KHz</li>
-                                        <li data-value="15" class="option">90 KHz</li>
-                                        <li data-value="16" class="option">95 KHz</li>
-                                        <li data-value="17" class="option">108 KHz</li>
-                                        <li data-value="18" class="option">125 KHz</li>
-                                        <li data-value="19" class="option">142 KHz</li>
-                                        <li data-value="20" class="option">159 KHz</li>
-                                        <li data-value="21" class="option">177 KHz</li>
-                                        <li data-value="22" class="option">194 KHz</li>
-                                        <li data-value="23" class="option">211 KHz</li>
-                                        <li data-value="24" class="option">229 KHz</li>
-                                        <li data-value="25" class="option">246 KHz</li>
-                                        <li data-value="26" class="option">263 KHz</li>
-                                        <li data-value="27" class="option">281 KHz</li>
-                                        <li data-value="28" class="option">298 KHz</li>
-                                        <li data-value="29" class="option">309 KHz</li>
+                                        <li data-value="0" data-value2="0" class="option">Auto</li>
+                                        <li data-value="9000" data-value2="1" class="option">9 KHz</li>
+                                        <li data-value="15000" data-value2="2" class="option">15 KHz</li>
+                                        <li data-value="17000" data-value2="3" class="option">17 KHz</li>
+                                        <li data-value="20000" data-value2="4" class="option">20 KHz</li>
+                                        <li data-value="24000" data-value2="5" class="option">24 KHz</li>
+                                        <li data-value="27000" data-value2="6" class="option">27 KHz</li>
+                                        <li data-value="32000" data-value2="7" class="option">32 KHz</li>
+                                        <li data-value="36000" data-value2="8" class="option">36 KHz</li>
+                                        <li data-value="42000" data-value2="9" class="option">42 KHz</li>
+                                        <li data-value="48000" data-value2="10" class="option">48 KHz</li>
+                                        <li data-value="55000" data-value2="11" class="option">55 KHz</li>
+                                        <li data-value="63000" data-value2="12" class="option">63 KHz</li>
+                                        <li data-value="73000" data-value2="13" class="option">73 KHz</li>
+                                        <li data-value="83000" data-value2="14" class="option">83 KHz</li>
+                                        <li data-value="90000" data-value2="15" class="option">90 KHz</li>
+                                        <li data-value="95000" data-value2="16" class="option">95 KHz</li>
+                                        <li data-value="108000" data-value2="17" class="option">108 KHz</li>
+                                        <li data-value="125000" data-value2="18" class="option">125 KHz</li>
+                                        <li data-value="142000" data-value2="19" class="option">142 KHz</li>
+                                        <li data-value="155000" data-value2="20" class="option">159 KHz</li>
+                                        <li data-value="177000" data-value2="21" class="option">177 KHz</li>
+                                        <li data-value="194000" data-value2="22" class="option">194 KHz</li>
+                                        <li data-value="211000" data-value2="23" class="option">211 KHz</li>
+                                        <li data-value="229000" data-value2="24" class="option">229 KHz</li>
+                                        <li data-value="246000" data-value2="25" class="option">246 KHz</li>
+                                        <li data-value="263000" data-value2="26" class="option">263 KHz</li>
+                                        <li data-value="281000" data-value2="27" class="option">281 KHz</li>
+                                        <li data-value="298000" data-value2="28" class="option">298 KHz</li>
+                                        <li data-value="309000" data-value2="29" class="option">309 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -225,7 +225,7 @@
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly>
                                     <ul class="options open-top">
-                                        <li data-vlaue="0" class="option">Auto</li>
+                                        <li data-value="0" class="option">Auto</li>
                                         <li data-value="4000" class="option">4 KHz</li>
                                         <li data-value="8000" class="option">8 KHz</li>
                                         <li data-value="10000" class="option">10 KHz</li>
@@ -286,7 +286,7 @@
                 </div>
                 <% if (chatEnabled) { %>
                 <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px;">
-                    <button class="chatbutton bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
+                    <button class="chatbutton bg-color-2" aria-label="Chatbox"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
                 </div>
                 <% } %>
             </div>
@@ -469,7 +469,7 @@
     </div>
                   
     <div class="modal-panel-chat">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal"><i class="fa-solid fa-chevron-down"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button"><i class="fa-solid fa-chevron-down"></i></div>
         <div class="modal-panel-content text-left">
             <div style="text-align: center;">
                     <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
@@ -484,7 +484,7 @@
             
             <div class="flex-container flex-phone" style="align-content: stretch;">
                 <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
-                <button class="chat-send-message-btn br-0" style="width: 80px; height: 45px;"><i class="fa-solid fa-paper-plane"></i></button>
+                <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 45px;"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
