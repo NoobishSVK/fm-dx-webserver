@@ -45,6 +45,7 @@ var _3LAS = /** @class */ (function () {
     };
     _3LAS.prototype.Start = function () {
         this.ConnectivityFlag = false;
+        this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
 
         // This is stupid, but required for Android.... thanks Google :(
         if (this.WakeLock)
@@ -128,9 +129,48 @@ var _3LAS = /** @class */ (function () {
             this.ConnectivityFlag = false;
             if (this.ConnectivityCallback)
                 this.ConnectivityCallback(false);
+    }
+
+    if (shouldReconnect) {
+        if (!this.ConnectivityFlag) {
+            console.log("Initial reconnect attempt...");
+            this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
+            this.Start();
         }
-        this.Start();
-    };
+
+        // Delay launch of subsequent reconnect attempts by 3 seconds
+        setTimeout(() => {
+
+            let streamReconnecting = false;
+            
+            let intervalReconnect = setInterval(() => {
+                if (this.ConnectivityFlag || typeof Stream === 'undefined' || Stream === null) {
+                    console.log("Reconnect attempts aborted.");
+                    clearInterval(intervalReconnect);
+                } else if (!streamReconnecting) {
+                    streamReconnecting = true;
+                    console.log("Attempting to restart stream...");
+                    this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
+                    this.Start();
+                    // Wait for reconnect attempt
+                    setTimeout(() => {
+                        streamReconnecting = false;
+                    }, 3000);
+                }
+                // Restore user set volume
+                if (Stream && typeof newVolumeGlobal !== 'undefined' && newVolumeGlobal !== null) {
+                    Stream.Volume = newVolumeGlobal;
+                    console.log(`User volume restored: ${Math.round(newVolumeGlobal * 100)}%`);
+                }
+            }, 3000);
+
+        }, 3000);
+        
+    } else {
+        this.Logger.Log("Reconnection is disabled.");
+    }
+};
+
     _3LAS.prototype.OnSocketDataReady = function (data) {
         this.Fallback.OnSocketDataReady(data);
     };
