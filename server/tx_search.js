@@ -57,8 +57,6 @@ function processData(data, piCode, rdsPs) {
                     let weightDistance = distance.distanceKm
                     if (esMode && distance.distanceKm > 200) {
                         weightDistance = Math.abs(distance.distanceKm-1500);
-                    } else {
-                        weightDistance = distance.distanceKm;
                     }
                     const score =  (10*Math.log10(station.erp*1000)) / weightDistance; // Calculate score
                     if (score > maxScore) {
