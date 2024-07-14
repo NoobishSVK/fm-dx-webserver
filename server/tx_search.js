@@ -6,6 +6,9 @@ let cachedData = {};
 let lastFetchTime = 0;
 const fetchInterval = 3000;
 
+const esSwitchCache = {"lastCheck":0, "esSwitch":false};
+const esFetchInterval = 300000;
+
 // Fetch data from maps
 function fetchTx(freq, piCode, rdsPs) {
     const now = Date.now();
@@ -55,7 +58,7 @@ function processData(data, piCode, rdsPs) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                     let weightDistance = distance.distanceKm
-                    if (esMode && distance.distanceKm > 200) {
+                    if (esMode && (distance.distanceKm > 200)) {
                         weightDistance = Math.abs(distance.distanceKm-1500);
                     }
                     const score =  (10*Math.log10(station.erp*1000)) / weightDistance; // Calculate score
@@ -88,10 +91,15 @@ function processData(data, piCode, rdsPs) {
 }
 
 function checkEs() {
+    const now = Date.now();
     const url = "https://fmdx.org/includes/tools/get_muf.php";
     let esSwitch = false;
 
-    fetch(url)
+    if (now - esSwitchCache.lastCheck < esFetchInterval) {
+        esSwitch = esSwitchCache.esSwitch;
+    } else {
+        esSwitchCache.lastCheck = now;
+        fetch(url)
         .then(response => response.json())
         .then(data => {
             if (serverConfig.identification.lon < -32) {
@@ -103,10 +111,13 @@ function checkEs() {
                     esSwitch = true;
                 }
             }
+            esSwitchCache.esSwitch = esSwitch;
         })
         .catch(error => {
             console.error("Error fetching data:", error);
         });
+    }
+
     return esSwitch;
 }
 
