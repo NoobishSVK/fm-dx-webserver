@@ -98,7 +98,7 @@ function createLinks() {
             }
             fs.symlinkSync(pluginsDir, destinationPluginsDir, 'junction');
             setTimeout(function() {
-                consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
+                //consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
             }, 500)
         } catch (err) {
             console.error(`Error creating junction at ${destinationPluginsDir}: ${err.message}`);
