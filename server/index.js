@@ -74,7 +74,7 @@ function connectToSerial() {
       serialport.write('x\n');
 
       serialport.on('data', (data) => {
-        if (data.startsWith('OK')) {
+        if (data && data.startsWith('OK')) {
           okReceived = true;
 
           // Send the remaining commands
