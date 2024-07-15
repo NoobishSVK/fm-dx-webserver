@@ -103,7 +103,7 @@ class StreamServer {
 
     OnStdInData(buffer) {
         this.Buffer = Buffer.concat([this.Buffer, buffer]);
-        if (this.Buffer.length >= 1) { // Adjust the buffer size as needed
+        if (this.Buffer.length >= 8192) { // Adjust the buffer size as needed
             this.SendAudioData(this.Buffer);
             this.Buffer = Buffer.alloc(0);
         }
