@@ -377,13 +377,9 @@ socket.onmessage = (event) => {
     parsedData = JSON.parse(event.data);
 
     updatePanels(parsedData);
-    if(localStorage.getItem("smoothSignal") == 'true') {
-        const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
-        const averageSignal = sum / signalData.length;
-        data.push(averageSignal);
-    } else {
-        data.push(parsedData.signal);
-    }
+    const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+    const averageSignal = sum / signalData.length;
+    data.push(averageSignal);
 };
 
 function compareNumbers(a, b) {
@@ -611,11 +607,7 @@ function updateSignalUnits(parsedData, averageSignal) {
     let currentSignal;
     let highestSignal = parsedData.highestSignal;
 
-    if(localStorage.getItem("smoothSignal") == 'true') {
-        currentSignal = averageSignal
-    } else {
-        currentSignal = parsedData.signal;
-    }
+    currentSignal = averageSignal
     let signalText = $('.signal-units');
     let signalValue;
 

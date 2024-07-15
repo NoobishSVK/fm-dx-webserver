@@ -73,12 +73,8 @@ function resolveDataBuffer(data, wss) {
   }
   
   if (receivedData.length) {
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        dataHandler.handleData(client, receivedData);
-      }
-    });
-  }
+        dataHandler.handleData(wss, receivedData);
+    };
 }
 
 function kickClient(ipAddress) {

@@ -8,7 +8,7 @@ var pjson = require('../package.json');
 let timeoutID = null;
 
 function send(request) {
-  const url = "https://list.fmdx.pl/api/";
+  const url = "https://servers.fmdx.org/api/";
 
   const options = {
     method: 'POST',
@@ -53,7 +53,7 @@ function sendKeepalive() {
 
   const request = {
     token: serverConfig.identification.token,
-    status: (serverConfig.lockToAdmin ? 2 : 1)
+    status: ((serverConfig.lockToAdmin || !serverConfig.publicTuner) ? 2 : 1)
   };
 
   send(request);

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const consoleCmd = require('./console');
 const { serverConfig } = require('./server_config');
 
 // Function to read all .js files in a directory
@@ -31,7 +32,9 @@ function parsePluginConfig(filePath) {
             // Copy the file to the destination directory
             const destinationFile = path.join(destinationDir, path.basename(sourcePath));
             fs.copyFileSync(sourcePath, destinationFile);
-            console.log(`File copied from ${sourcePath} to ${destinationFile}`);
+            setTimeout(function() {
+                consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
+            }, 500)
         } else {
             console.error(`Error: frontEndPath is not defined in ${filePath}`);
         }

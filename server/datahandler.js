@@ -200,7 +200,6 @@ const decode_errors = function(string) {
 };
 
 const updateInterval = 75;
-const clientUpdateIntervals = new Map(); // Store update intervals for each client
 
 // Initialize the data object
 var dataToSend = {
@@ -247,13 +246,13 @@ const filterMappings = {
 
 
 var legacyRdsPiBuffer = null;
+var lastUpdateTime = Date.now();
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
 
 
-function handleData(ws, receivedData) {
+function handleData(wss, receivedData) {
   // Retrieve the last update time for this client
-  let lastUpdateTime = clientUpdateIntervals.get(ws) || 0;
   const currentTime = Date.now();
 
   let modifiedData, parsedValue;
@@ -374,8 +373,10 @@ function handleData(ws, receivedData) {
     // Send the updated data to the client
     const dataToSendJSON = JSON.stringify(dataToSend);
     if (currentTime - lastUpdateTime >= updateInterval) {
-      clientUpdateIntervals.set(ws, currentTime); // Update the last update time for this client
-      ws.send(dataToSendJSON);
+      wss.clients.forEach((client) => {
+          client.send(dataToSendJSON);
+      });
+      lastUpdateTime = Date.now();
     }
 }
 

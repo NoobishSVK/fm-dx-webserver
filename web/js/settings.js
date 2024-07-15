@@ -127,19 +127,9 @@ $(document).ready(() => {
         $("#ps-underscores").prop("checked", true);
     }
     
-    var smoothSignal = localStorage.getItem("smoothSignal");
-    if (smoothSignal === "true") {
-        $("#smooth-signal").prop("checked", true);
-    }
-    
     $("#ps-underscores").change(function() {
         var isChecked = $(this).is(":checked");
         localStorage.setItem("psUnderscores", isChecked);
-    });
-    
-    $("#smooth-signal").change(function() {
-        var isChecked = $(this).is(":checked");
-        localStorage.setItem("smoothSignal", isChecked);
     });
     
     $('.version-string').text(currentVersion);
