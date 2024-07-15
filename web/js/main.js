@@ -1,7 +1,7 @@
-var url = new URL('text', window.location.href);
-url.protocol = url.protocol.replace('http', 'ws');
-var socketAddress = url.href;
-var socket = new WebSocket(socketAddress);
+// WebSocket connection located in ./websocket.js
+
+
+
 var parsedData, signalChart, previousFreq;
 var signalData = [];
 var data = [];
@@ -10,7 +10,7 @@ let updateCounter = 0;
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
     "Sport", "Education", "Drama", "Culture", "Science", "Varied",
-    "Pop M", "Rock M", "Easy Listening", "Light Classical",
+    "Pop Music", "Rock Music", "Easy Listening", "Light Classical",
     "Serious Classical", "Other Music", "Weather", "Finance",
     "Children's Programmes", "Social Affairs", "Religion", "Phone-in",
     "Travel", "Leisure", "Jazz Music", "Country Music", "National Music",
@@ -873,7 +873,7 @@ function initTooltips() {
         // Add a delay of 500 milliseconds before creating and appending the tooltip
         $(this).data('timeout', setTimeout(() => {
             var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
-            $('body').append(tooltip);
+            if ($('.tooltiptext').length === 0) { $('body').append(tooltip); } // Don't allow more than one tooltip
 
             var posX = e.pageX;
             var posY = e.pageY;
@@ -888,6 +888,7 @@ function initTooltips() {
         // Clear the timeout if the mouse leaves before the delay completes
         clearTimeout($(this).data('timeout'));
         $('.tooltiptext').remove();
+        setTimeout(() => { $('.tooltiptext').remove(); }, 500); // Ensure no tooltips remain stuck
     }).mousemove(function(e){
         var tooltipWidth = $('.tooltiptext').outerWidth();
         var tooltipHeight = $('.tooltiptext').outerHeight();
