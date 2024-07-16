@@ -74,7 +74,6 @@ function connectToSerial() {
       serialport.write('x\n');
 
       serialport.on('data', (data) => {
-        console.log(data);
         const receivedData = data.toString();
         if (receivedData.startsWith('OK')) {
 
