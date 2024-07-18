@@ -12,34 +12,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
+    <div id="wrapper-outer" class="wrapper-outer-static">
     <div id="wrapper" class="setup-wrapper">
         <% if (isAdminAuthenticated) { %>
         <div class="panel-100 no-bg">
             <img class="top-10" src="./images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
         </div>
-        <div class="panel-100">
-            <ul class="nav" role="tablist">
-                <li role="presentation" data-panel="dashboard">
-                    <a href="#" role="tab"  aria-controls="dashboard" aria-selected="true">Dashboard</a>
+        <div id="login-message"></div>
+        <div class="panel-100" style="border-radius: 15px 15px 0 0;">
+            <ul class="nav" role="tablist" style="border-radius: 15px 15px 0 0;">
+                <li role="presentation" data-panel="dashboard" aria-selected="true">
+                    <a href="#" role="tab" tabindex="0" aria-controls="dashboard">Dashboard</a>
                 </li>
                 <li role="presentation" data-panel="tuner">
-                    <a href="#" role="tab" aria-controls="tuner">Tuner</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="tuner">Tuner</a>
                 </li>
                 <li role="presentation" data-panel="connection">
-                    <a href="#" role="tab" aria-controls="connection">Connection</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="connection">Connection</a>
                 </li>
                 <li role="presentation" data-panel="audio">
-                    <a href="#" role="tab" aria-controls="audio">Audio</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="audio">Audio</a>
                 </li>
                 <li role="presentation" data-panel="webserver">
-                    <a href="#" role="tab" aria-controls="webserver">Webserver</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="webserver">Webserver</a>
                 </li>
                 <li role="presentation" data-panel="plugins">
-                    <a href="#" role="tab" aria-controls="plugins">Plugins</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="plugins">Plugins</a>
                 </li>
                 <li role="presentation" data-panel="identification">
-                    <a href="#" role="tab" aria-controls="identification">Info & Map</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="identification">Info & Map</a>
                 </li>
                 <li role="presentation" class="logout-link text-gray">
                     <a href="./logout"><i class="fas fa-sign-out"></i></a>
@@ -47,8 +49,7 @@
             </ul>
         </div>
 
-        <div id="login-message"></div>
-        <div class="panel-100">
+        <div class="panel-100" style="margin-top: -20px; border-radius: 0 0 15px 15px;">
             <div class="panel-100 tab-content" id="dashboard" role="tabpanel">
                 <h2>Dashboard</h2>
 
@@ -83,7 +84,7 @@
                         <% if (connectedUsers.length > 0) { %>
                             <% connectedUsers.forEach(user => { %>
                                 <tr>
-                                    <td><%= user.ip %></td>
+                                    <td><a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip %>" target="_blank"><%= user.ip %></a></td>
                                     <td><%= user.location %></td>
                                     <td><%= user.time %></td>
                                     <td><a href="./kick?ip=<%= user.ip %>">Kick</a></td>
@@ -100,15 +101,15 @@
                 <h3>Maintenance</h3>
                 <div class="flex-container flex-center" style="margin: 30px;">
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-public">
+                        <input type="checkbox" tabindex="0"  id="tuner-public">
                         <label for="tuner-public">Public tuner (no password)</label>
                     </div>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-lock">
+                        <input type="checkbox" tabindex="0"  id="tuner-lock">
                         <label for="tuner-lock">Admin lock [only admins can tune]</label>
                     </div>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="shutdown-tuner">
+                        <input type="checkbox" tabindex="0"  id="shutdown-tuner">
                         <label for="shutdown-tuner">Auto-shutdown</label>
                     </div><br>
                 </div>
@@ -144,7 +145,7 @@
 
                 <div style="width: 300px;" class="auto top-10">
                     <label class="toggleSwitch nolabel" onclick="">
-                        <input id="connection-type-toggle" type="checkbox"/>
+                        <input id="connection-type-toggle" type="checkbox" tabindex="0" />
                         <a></a>
                         <span>
                             <span class="left-span">Direct</span>
@@ -254,7 +255,7 @@
                     </div>
 
                     <div class="form-group checkbox bottom-20">
-                        <input type="checkbox" id="audio-software-mode">
+                        <input type="checkbox" tabindex="0"  id="audio-software-mode">
                         <label for="audio-software-mode">ALSA software mode (plughw) - LINUX ONLY</label>
                     </div>   
                 </div>
@@ -295,12 +296,12 @@
                     <div class="panel-50 no-bg">
                         <h3>Antenna options</h3>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="antenna-switch">
+                            <input type="checkbox" tabindex="0"  id="antenna-switch">
                             <label for="antenna-switch">Enable the antenna switch</label>
                         </div><br>
                         
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant1-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant1-enabled">
                             <label for="ant1-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -309,7 +310,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant2-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant2-enabled">
                             <label for="ant2-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -318,7 +319,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant3-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant3-enabled">
                             <label for="ant3-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -327,7 +328,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant4-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant4-enabled">
                             <label for="ant4-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -343,7 +344,7 @@
                     <div class="panel-50 no-bg">
                         <h3>Tuning options</h3>
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="default-freq-enable">
+                            <input type="checkbox" tabindex="0"  id="default-freq-enable">
                             <label for="default-freq-enable">Enable default frequency for first client</label>
                         </div><br>
                         <div class="form-group">
@@ -354,7 +355,7 @@
                             <span class="text-gray">Enter frequencies in MHz.</span>
                         </p>
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="tuning-limit">
+                            <input type="checkbox" tabindex="0"  id="tuning-limit">
                             <label for="tuning-limit">Limit tuning</label>
                         </div><br>
                         <div class="form-group">
@@ -371,7 +372,7 @@
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="rds-mode">
+                            <input type="checkbox" tabindex="0"  id="rds-mode">
                             <label for="rds-mode">Enable American Mode (RBDS)</label>
                         </div>      
 
@@ -402,7 +403,7 @@
                     <div class="panel-100 no-bg">
                         <h3>Chat options</h3>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="chat-switch">
+                            <input type="checkbox" tabindex="0"  id="chat-switch">
                             <label for="chat-switch">Enable chat</label>
                         </div>        
                     </div>
@@ -450,7 +451,7 @@
                 </div><br>
 
                 <div class="form-group checkbox">
-                    <input type="checkbox" id="toggle-bw">
+                    <input type="checkbox" tabindex="0"  id="toggle-bw">
                     <label for="toggle-bw">Toggle bandwidth switch</label>
                 </div><br>
 
@@ -487,7 +488,7 @@
                         <p class="m-0 text-gray">If your location information is filled,<br>you can add your tuner to a public list.</p>
                         <p></p>
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="broadcast-tuner">
+                            <input type="checkbox" tabindex="0"  id="broadcast-tuner">
                             <label for="broadcast-tuner">Broadcast to map</label>
                         </div><br>
                         <div class="form-group">
@@ -499,7 +500,7 @@
                             <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
                         </div>
         
-                        <p>Check your tuner at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
+                        <p>Check your tuner at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
                     </div>
                 </div>
                 <br>
@@ -545,6 +546,7 @@
             <div id="login-message"></div>
         </div>
         <% } %>
+    </div>
     </div>
     <script src="js/init.js"></script>
     <script src="js/settings.js"></script>

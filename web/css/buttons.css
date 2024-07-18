@@ -2,7 +2,7 @@ button, input[type="submit"] {
     width: 100%;
     height: 100%;
     border: 0;
-    border-radius: 30px;
+    border-radius: 15px;
     transition: 0.3s ease-in-out background-color;
     background-color: var(--color-4);
     cursor: pointer;
@@ -40,7 +40,7 @@ button:hover {
     height: 64px;
     background: var(--color-2);
     color: var(--color-main);
-    border-radius: 30px;
+    border-radius: 15px;
     margin-right: 10px;
     margin-left: 10px;
     display: flex;
@@ -112,11 +112,11 @@ input[type="text"], textarea, input[type="password"] {
   }
   
   #freq-down {
-      border-radius: 30px 0 0 30px;
+      border-radius: 15px 0 0 15px;
   }
   
   #freq-up {
-      border-radius: 0 30px 30px 0;
+      border-radius: 0 15px 15px 0;
   }
 
 input[type="range"] {
@@ -130,7 +130,7 @@ input[type="range"] {
     outline: none;
     /*  slider progress trick  */
     overflow: hidden;
-    border-radius: 30px;
+    border-radius: 15px;
     height: 100%;
     background: transparent;
 }
@@ -139,7 +139,7 @@ input[type="range"] {
 input[type="range"]::-moz-range-track {
     height: 48px;
     background: var(--color-1);
-    border-radius: 30px;
+    border-radius: 15px;
     border: 0;
 }
 
@@ -153,7 +153,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: url('../images/speaker.svg') center no-repeat, var(--color-5);
     background-position: center;
     background-size: 20px;
-    border-radius: 30px;
+    border-radius: 15px;
     outline: 4px solid var(--color-5);
     outline-offset: -3px;
     /*  slider progress trick  */
@@ -168,7 +168,7 @@ input[type="range"]::-moz-range-thumb {
     background: url('../images/speaker.svg') center no-repeat, var(--color-5);
     background-position: center;
     background-size: 20px;
-    border-radius: 30px;
+    border-radius: 15px;
     outline: 4px solid var(--color-5);
     outline-offset: -3px;
     /*  slider progress trick  */
@@ -279,7 +279,7 @@ input[type="range"]::-moz-range-thumb {
     position: absolute;
     left: 0;
     top: -2px;
-    border-radius: 30px;
+    border-radius: 15px;
     -webkit-transition: all 0.2s ease-out;
     -moz-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out;

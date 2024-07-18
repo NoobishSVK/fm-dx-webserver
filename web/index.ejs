@@ -36,9 +36,10 @@
     </script>
 </head>
 <body>
+    <div id="wrapper-outer">
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
-            <h1 id="tuner-name"><%= tunerName %> 
+            <h1 id="tuner-name"><span class="text-bold" style="color: var(--color-text);">[</span> <%= tunerName %> <span class="text-bold" style="color: var(--color-text);">]</span> 
                 <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip" aria-label="Only people with tune password can tune." data-tooltip="Only people with tune password can tune."></i>
                 <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip" aria-label="Tuner is currently locked to admin." data-tooltip="Tuner is currently locked to admin."></i>
                 <% } %>
@@ -56,7 +57,7 @@
         </div>
 
         <div class="flex-container">
-            <div class="panel-100 bg-none" style="margin-top: 0;">
+            <div class="panel-100 bg-none" style="margin-top: 0; margin-left: 0;">
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
@@ -77,8 +78,11 @@
                             <div style="display:inline-block">
                                 <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                             </div>
-                            <span class="pointer stereo-container" style="position: relative;">
-                                <span style="margin-left: 20px;" class="data-st">ST</span>
+                            <span class="pointer stereo-container" style="position: relative;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+                                <div class="circle-container">
+                                    <div class="circle data-st circle1"></div>
+                                    <div class="circle data-st circle2"></div>
+                                </div>
                                 <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                             </span>                                                               
                             <span style="margin-left: 15px;" class="data-ms">MS</span>
@@ -132,12 +136,12 @@
                             <% } %>
                             
                             <div class="panel-50 no-bg h-100 m-0 button-eq">
-                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
+                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
                             <div class="panel-50 no-bg h-100 m-0 button-ims">
-                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
+                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
                             </div>
                         </div>
                     </div>
@@ -275,17 +279,20 @@
                 
             </div>
 
-            <div class="panel-10 bg-none" style="margin-top: 0;">
-                <div class="panel-100 w-100">
+            <div class="panel-10 bg-none m-0">
+                <div class="panel-100 w-100" style="margin-left: 0;">
                     <h2>AF</h2>
                     <div id="af-list" class="p-bottom-20" style="text-align: center;">
-                        <ul style="height: 251px;">
+                        <% if (chatEnabled) { %><ul style="height: 231px;">
+                        <% } else { %>
+                        <ul style="height: 351px;">
+                        <% } %>
 
                         </ul>
                     </div>
                 </div>
                 <% if (chatEnabled) { %>
-                <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px;">
+                <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px; margin-left: 0;">
                     <button class="chatbutton bg-color-2" aria-label="Chatbox"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
                 </div>
                 <% } %>
@@ -302,7 +309,10 @@
                     <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                 </div>
                 <span class="pointer stereo-container" style="position: relative;">
-                    <span style="margin-left: 20px;" class="data-st">ST</span>
+                    <div class="circle-container">
+                        <div class="circle data-st circle1"></div>
+                        <div class="circle data-st circle2"></div>
+                    </div>
                     <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                 </span>
                 <span style="margin-left: 15px;" class="data-ms">MS</span>
@@ -312,28 +322,14 @@
     
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
     <% if (chatEnabled) { %>
-    <button class="chatbutton hide-desktop bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
+    <button class="chatbutton hide-desktop bg-color-2" aria-label="Chatbox"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
     <% } %>
-    <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
-
-    <% if (isAdminAuthenticated) { %>
-        <div class="admin-quick-dashboard hide-phone">
-            <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" data-tooltip="Toggle admin lock<br>Lasts until restart">
-                <i class="fa-solid fa-lock"></i>
-            </div>
-            <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" data-tooltip="Toggle password lock<br>Lasts until restart">
-                <i class="fa-solid fa-key"></i>
-            </div>
-            <div class="icon tooltip" data-tooltip="Go to admin menu" onClick="window.open('./setup', '_blank').focus();">
-                <i class="fa-solid fa-user"></i>
-            </div>
-        </div>
-    <% } %>   
+    <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button> 
 
 <div id="myModal" class="modal">
     <div class="modal-panel">
         <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close settings"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close settings" tabindex="0"><i class="fa-solid fa-chevron-right"></i></div>
         <div class="modal-panel-content">
             <h1 class="top-25">Settings</h1>
             
@@ -370,11 +366,11 @@
             <% } %>
             
             <div class="form-group checkbox">
-                <input type="checkbox" id="extended-frequency-range">
+                <input type="checkbox" tabindex="0"  id="extended-frequency-range">
                 <label for="extended-frequency-range">Add decimals manually</label>
             </div>
             <div class="form-group checkbox">
-                <input type="checkbox" id="ps-underscores">
+                <input type="checkbox" tabindex="0"  id="ps-underscores">
                 <label for="ps-underscores">Add underscores to RDS PS</label>
             </div>
 
@@ -384,11 +380,28 @@
             </div>
             
             <% if (isAdminAuthenticated) { %>
-                <p>You are logged in as an adminstrator.<br>
-                    <a href="./setup" target="_blank">Setup</a> • <a class="logout-link" href="#">Logout</a>
-                </p>
+                <p class="color-3">You are logged in as an adminstrator.</p>
+                    <div class="admin-quick-dashboard">
+                        <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                            <i class="fa-solid fa-sign-out"></i>
+                        </div>
+                    </div>
                 <% } else if (isTuneAuthenticated) { %>
-                    <p>You are logged in and can control the receiver.<br><a class="logout-link" href="#">Logout</a></p>
+                    <p class="color-3">You are logged in and can control the receiver.<br><a class="logout-link" href="#">Logout</a></p>
+                    <div class="admin-quick-dashboard">
+                        <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                            <i class="fa-solid fa-sign-out"></i>
+                        </div>
+                    </div>
                     <% } else { %>
                         <form action="./login" method="post" id="login-form" class="top-25">
                             <label for="password">Password:</label>
@@ -396,7 +409,7 @@
                             <button type="submit" class="br-0 w-100 top-10" style="height: 44px">Login</button>
                         </form>
                         <% } %>
-                        <div id="login-message"></div>
+                        <div id="login-message" class="color-3"></div>
                         
                         <hr class="color-2 auto">
 
@@ -465,7 +478,7 @@
     </div>
                   
     <div class="modal-panel-chat">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close chat"><i class="fa-solid fa-chevron-down"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close chat" tabindex="0"><i class="fa-solid fa-chevron-down"></i></div>
         <div class="modal-panel-content text-left">
             <div style="text-align: center;">
                     <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
@@ -484,6 +497,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script src="js/websocket.js"></script>

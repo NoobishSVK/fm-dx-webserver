@@ -2,15 +2,14 @@
     background-color: var(--color-1);
     margin-left: 10px;
     margin-right: 10px;
-    border-radius: 30px;
+    border-radius: 15px;
     text-align: center;
-    margin-top: 30px;
+    margin-top: 20px;
     transition: 0.3s ease-in-out background-color;
 }
 
 .panel-10 {
     width: 10%;
-    margin-top: 30px;
 }
 
 .panel-33 {

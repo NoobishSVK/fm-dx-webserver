@@ -47,7 +47,7 @@ h4 {
     color: var(--color-text);
     text-align: center;
     font-size: 14px;
-    border-radius: 30px;
+    border-radius: 15px;
     padding: 5px 25px;
     z-index: 1000;
     opacity: 0;
@@ -86,6 +86,7 @@ label {
 
 #data-ps {
     font-weight: 500;
+    margin-top: -5px;
 }
 
 #data-station-container {
@@ -254,28 +255,28 @@ label {
 }
 
 .admin-quick-dashboard {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -96px;
-    width: 96px;
-    height: 286px;
+    width: 255px;
+    height: 72px;
     background-color: var(--color-2);
-    margin: auto 0;
-    border-radius: 30px;
-    padding-top: 15px;
+    margin: 0 auto;
+    margin-bottom: 15px;
+    padding: 5px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .admin-quick-dashboard .icon {
-    width: 72px;
-    height: 72px;
-    margin: 10px auto;
+    width: 52px;
+    height: 52px;
+    margin: auto;
     color: var(--color-1);
     background-color: var(--color-3);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px;
+    font-size: 18px;
     border-radius: 10px;
     transition: 0.3s ease-in-out background-color;
     cursor: pointer;
@@ -291,6 +292,30 @@ label {
 
 pre {
     color: white;
+}
+
+.circle-container {
+    position: relative;
+    width: 25px;
+    height: 34px;
+}
+
+.circle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-3);
+    border-radius: 50%;
+}
+
+.circle.circle1 {
+    left: 0px;
+    top: 10px;
+}
+
+.circle.circle2 {
+    left: 8px;
+    top: 10px;
 }
 
 @media (max-width: 768px) {
@@ -441,5 +466,11 @@ pre {
     }
     .chatbutton {
         height: 88px !important;
+    }
+}
+
+@media only screen and (min-width: 769px) and (max-height: 610px) {
+    .canvas-container {
+        display: none;
     }
 }

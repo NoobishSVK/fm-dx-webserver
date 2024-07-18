@@ -239,6 +239,7 @@ function initCanvas(parsedData) {
             maxDataPoints,
             pointWidth,
             color2: null,
+            color3: null,
             color4: null,
             signalUnit: localStorage.getItem('signalUnit'),
             offset: 0,
@@ -264,9 +265,11 @@ function initCanvas(parsedData) {
 function updateChartSettings(signalChart) {
     // Update colors
     const newColor2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
+    const newColor3 = getComputedStyle(document.documentElement).getPropertyValue('--color-3').trim();
     const newColor4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
     if (newColor2 !== signalChart.color2 || newColor4 !== signalChart.color4) {
         signalChart.color2 = newColor2;
+        signalChart.color3 = newColor3;
         signalChart.color4 = newColor4;
     }
 
@@ -284,7 +287,7 @@ function updateChartSettings(signalChart) {
 }
 
 function updateCanvas(parsedData, signalChart) {
-    const { context, canvas, maxDataPoints, pointWidth, color2, color4, offset } = signalChart;
+    const { context, canvas, maxDataPoints, pointWidth, color2, color3, color4, offset } = signalChart;
 
     if (data.length > maxDataPoints) {
         data = data.slice(data.length - maxDataPoints);
@@ -319,11 +322,11 @@ function updateCanvas(parsedData, signalChart) {
     }
 
     context.strokeStyle = color4;
-    context.lineWidth = 1;
+    context.lineWidth = 2;
     context.stroke();
 
     // Draw horizontal lines for lowest, highest, and average values
-    context.strokeStyle = color2;
+    context.strokeStyle = color3;
     context.lineWidth = 1;
 
     // Draw the lowest value line
@@ -421,6 +424,10 @@ function getCurrentFreq() {
 
 function checkKey(e) {
     e = e || window.event;
+
+    if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) {
+        return;
+    }
 
     if ($('#password:focus').length > 0
     || $('#chat-send-message:focus').length > 0
@@ -706,7 +713,18 @@ const updateDataElements = throttle(function(parsedData) {
     }
     updateHtmlIfChanged($dataPs, parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
 
-    updateHtmlIfChanged($dataSt, `<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
+    let stereoColor;
+    if(parsedData.st) {
+        stereoColor = 'var(--color-4)';
+    } else {
+        stereoColor = 'var(--color-3)';
+    }
+
+    if(parsedData.st_forced) {
+        stereoColor = 'gray';
+    }
+    $dataSt.css('border', '2px solid ' + stereoColor);
+    //updateHtmlIfChanged($dataSt, `<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
 
     updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
     updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));

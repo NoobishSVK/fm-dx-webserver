@@ -1,19 +1,20 @@
 /**
 * Themes
-* @param first color
-* @param second color
+* @param main color
+* @param main-bright color
 * @param text color
+* @param background filter color
 */
 const themes = {
-    theme1: ['rgba(32, 34, 40, 1)', 'rgba(88, 219, 171, 1)', 'rgba(255, 255, 255, 1)' ], // Retro (Default)
-    theme2: [ 'rgba(21, 32, 33, 1)', 'rgba(203, 202, 165, 1)', 'rgba(255, 255, 255, 1)' ], // Cappuccino
-    theme3: [ 'rgba(18, 18, 12, 1)', 'rgba(169, 255, 112, 1)', 'rgba(255, 255, 255, 1)' ], // Nature
-    theme4: [ 'rgba(12, 28, 27, 1)', 'rgba(104, 247, 238, 1)', 'rgba(255, 255, 255, 1)' ], // Ocean
-    theme5: [ 'rgba(23, 17, 6, 1)', 'rgba(245, 182, 66, 1)', 'rgba(255, 255, 255, 1)' ], // Terminal
-    theme6: [ 'rgba(33, 9, 29, 1)', 'rgba(250, 82, 141, 1)', 'rgba(255, 255, 255, 1)' ], // Nightlife
-    theme7: [ 'rgba(13, 11, 26, 1)', 'rgba(128, 105, 250, 1)', 'rgba(255, 255, 255, 1)' ], // Blurple
-    theme8: [ 'rgba(252, 186, 3, 1)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)' ], // Construction
-    theme9: [ 'rgba(0, 0, 0, 1)', 'rgba(204, 204, 204, 1)', 'rgba(255, 255, 255, 1)' ], // AMOLED
+    theme1: [ 'rgba(32, 34, 40, 1)', 'rgba(88, 219, 171, 1)', 'rgba(255, 255, 255, 1)', 'rgba(11, 12, 14, 1)'  ], // Retro (Default)
+    theme2: [ 'rgba(21, 32, 33, 1)', 'rgba(203, 202, 165, 1)', 'rgba(255, 255, 255, 1)', 'rgba(7, 11, 12, 1)'  ], // Cappuccino
+    theme3: [ 'rgba(18, 18, 12, 1)', 'rgba(169, 255, 112, 1)', 'rgba(255, 255, 255, 1)', 'rgba(6, 6, 4, 1)'  ], // Nature
+    theme4: [ 'rgba(12, 28, 27, 1)', 'rgba(104, 247, 238, 1)', 'rgba(255, 255, 255, 1)', 'rgba(4, 10, 9, 1)'  ], // Ocean
+    theme5: [ 'rgba(23, 17, 6, 1)', 'rgba(245, 182, 66, 1)', 'rgba(255, 255, 255, 1)', 'rgba(8, 6, 2, 1)'  ], // Terminal
+    theme6: [ 'rgba(33, 9, 29, 1)', 'rgba(250, 82, 141, 1)', 'rgba(255, 255, 255, 1)', 'rgba(12, 3, 10, 1)'  ], // Nightlife
+    theme7: [ 'rgba(13, 11, 26, 1)', 'rgba(128, 105, 250, 1)', 'rgba(255, 255, 255, 1)', 'rgba(5, 4, 7, 1)'  ], // Blurple
+    theme8: [ 'rgba(252, 186, 3, 1)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 1)', 'rgba(252, 186, 3, 1)'  ], // Construction
+    theme9: [ 'rgba(0, 0, 0, 1)', 'rgba(204, 204, 204, 1)', 'rgba(255, 255, 255, 1)', 'rgba(0, 0, 0, 1)' ], // AMOLED
 };      
 
 // Signal Units
@@ -141,22 +142,27 @@ $(document).ready(() => {
 function setTheme(themeName) {
     const themeColors = themes[themeName];
     if (themeColors) {
-        // Extracting the RGBA components and opacity value
-        const rgbaComponents = themeColors[2].match(/(\d+(\.\d+)?)/g);
-        const opacity = parseFloat(rgbaComponents[3]);
-        const newOpacity = opacity * 0.75;
-        // Constructing the new RGBA string with the adjusted opacity
-        const textColor2 = `rgba(${rgbaComponents[0]}, ${rgbaComponents[1]}, ${rgbaComponents[2]}, ${newOpacity})`;
-        
+        // Extracting the RGBA components from themeColors[2] for --color-text-2
+        const rgbaComponentsText = themeColors[2].match(/(\d+(\.\d+)?)/g);
+        const opacityText = parseFloat(rgbaComponentsText[3]);
+        const newOpacityText = opacityText * 0.75;
+        const textColor2 = `rgba(${rgbaComponentsText[0]}, ${rgbaComponentsText[1]}, ${rgbaComponentsText[2]}, ${newOpacityText})`;
+
+        // Extracting the RGBA components from themeColors[0] for background color
+        const rgbaComponentsBackground = themeColors[3].match(/(\d+(\.\d+)?)/g);
+        const backgroundOpacity = 0.85;
+        const backgroundColorWithOpacity = `rgba(${rgbaComponentsBackground[0]}, ${rgbaComponentsBackground[1]}, ${rgbaComponentsBackground[2]}, ${backgroundOpacity})`;
+
         $(':root').css('--color-main', themeColors[0]);
         $(':root').css('--color-main-bright', themeColors[1]);
         $(':root').css('--color-text', themeColors[2]);
         $(':root').css('--color-text-2', textColor2);
+        $('#wrapper-outer').css('background-color', backgroundColorWithOpacity);
     }
 }
 
 function setBg() {
-    if(localStorage.getItem('bgImage').length > 1 && localStorage.getItem('theme') != 'theme8') {
+    if(localStorage.getItem('bgImage').length > 1 && localStorage.getItem('theme') != 'theme9') {
         $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
     } else {
         $('body').css('background', 'var(--color-main)');
