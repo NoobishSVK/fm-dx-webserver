@@ -64,7 +64,6 @@ connectToSerial();
 
 // Serial Connection
 function connectToSerial() {
-  let okReceived = false;
   if (serverConfig.xdrd.wirelessConnection === false) {
     
     serialport = new SerialPort({path: serverConfig.xdrd.comPort, baudRate: 115200 });
@@ -72,34 +71,29 @@ function connectToSerial() {
     serialport.on('open', () => {
       logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
       serialport.write('x\n');
+	  setTimeout(() => {
+		serialport.write('Q0\n');
+		serialport.write('M0\n');
+		serialport.write('Z0\n');
 
+		if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
+			serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+			dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
+			dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+		} else {
+			serialport.write('T87500\n');
+		}
+
+		serialport.write('A0\n');
+		serialport.write('F-1\n');
+		serialport.write('W0\n');
+		serialport.write('D0\n');
+		serialport.write('G00\n');
+		serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
+	  }, 3000);
+      
       serialport.on('data', (data) => {
-        const receivedData = data.toString();
-        if (receivedData.startsWith('OK')) {
-
-          // Send the remaining commands
-          serialport.write('Q0\n');
-          serialport.write('M0\n');
-          serialport.write('Z0\n');
-
-          if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
-            serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-            dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
-            dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-          } else {
-            serialport.write('T87500\n');
-          }
-
-          serialport.write('A0\n');
-          serialport.write('F-1\n');
-          serialport.write('W0\n');
-          serialport.write('D0\n');
-          serialport.write('G00\n');
-          serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
-        } else {
-          // Continue handling data normally if it's not the "OK" message
-          helpers.resolveDataBuffer(data, wss);
-        }
+        helpers.resolveDataBuffer(data, wss);
       });
     });
 
