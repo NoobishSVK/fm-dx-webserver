@@ -58,7 +58,7 @@ function processData(data, piCode, rdsPs) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                     let weightDistance = distance.distanceKm
-                    if (esMode && (distance.distanceKm > 200)) {
+                    if (esMode && (distance.distanceKm > 500)) {
                         weightDistance = Math.abs(distance.distanceKm-1500);
                     }
                     const score =  (10*Math.log10(station.erp*1000)) / weightDistance; // Calculate score
