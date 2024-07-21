@@ -50,23 +50,23 @@
         </div>
 
         <div class="panel-100" style="margin-top: -20px; border-radius: 0 0 15px 15px;">
-            <div class="panel-100 tab-content" id="dashboard" role="tabpanel">
+            <div class="panel-100 tab-content no-bg no-bg" id="dashboard" role="tabpanel">
                 <h2>Dashboard</h2>
 
-                <div class="panel-100 flex-container auto">
-                    <div class="panel-33">
+                <div class="panel-100 flex-container auto p-bottom-20">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= onlineUsers %></span>
-                        <p>Online users</p>
+                        <p class="m-0">Online users</p>
                     </div>
 
-                    <div class="panel-33">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= memoryUsage %></span>
-                        <p>Memory usage</p>
+                        <p class="m-0">Memory usage</p>
                     </div>
 
-                    <div class="panel-33">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= processUptime %></span>
-                        <p>Uptime</p>
+                        <p class="m-0">Uptime</p>
                     </div>
                 </div>
 
@@ -138,7 +138,7 @@
                 <p><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
             </div>
     
-            <div class="panel-100 tab-content" id="connection" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="connection" role="tabpanel">
                 <h2>Connection settings</h2>
                 <p>You can set up your connection settings here. Changing these settings requires a server restart.</p>
                 <h3>Tuner connection:</h3>
@@ -199,7 +199,7 @@
                 <br>
             </div>
     
-            <div class="panel-100 tab-content" id="audio" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="audio" role="tabpanel">
                 <h2>Audio settings</h2>
                 
                 <p>You can set up your audio settings here. Changing these settings requires a server restart.</p>
@@ -261,7 +261,7 @@
                 </div>
             </div>
 
-            <div class="panel-100 tab-content" id="webserver" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="webserver" role="tabpanel">
                 <h2>Webserver settings</h2>
                 <div class="flex-container">
                     <div class="panel-50 no-bg">
@@ -420,7 +420,7 @@
 
             </div>
 
-            <div class="panel-100 tab-content" id="plugins" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="plugins" role="tabpanel">
                 <h2>Plugins</h2>
                 <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
                     Click on the individual plugins to enable/disable them.</p>
@@ -432,10 +432,13 @@
                         <% }); %>
                     </select><br><br>
                     <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
+                    <hr>
+                    <h3>Plugin settings</h3>
+                    <div id="plugin-settings"></div>
                     
             </div>
 
-            <div class="panel-100 tab-content" id="tuner" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="tuner" role="tabpanel">
                 <h2>Tuner Specific Settings</h2>
                 <div class="form-group">
                     <label for="themes"><i class="fa-solid fa-radio"></i> Device:</label>
@@ -466,7 +469,7 @@
 
             </div>
     
-            <div class="panel-100 tab-content" id="identification" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="identification" role="tabpanel">
                 <h2>Identification & Map</h2>
 
                 <div class="flex-container">
@@ -474,7 +477,7 @@
                         <h3>Basic info</h3>
                         
                         <p class="text-gray">Set your tuner name and description here.<br>This info will be visible to anyone who tunes in. </p>
-                        <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
+                        <div class="panel-100 no-bg" style="padding-left: 20px; padding-right: 20px;">
                             <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
                             <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
                             <br>
@@ -553,5 +556,8 @@
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
     <script src="js/confighandler.js"></script>
+    <% enabledPlugins?.forEach(function(plugin) { %>
+        <script src="js/plugins/<%= plugin %>"></script>
+    <% }); %>
 </body>
 </html>

@@ -724,7 +724,6 @@ const updateDataElements = throttle(function(parsedData) {
         stereoColor = 'gray';
     }
     $dataSt.css('border', '2px solid ' + stereoColor);
-    //updateHtmlIfChanged($dataSt, `<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
 
     updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
     updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));
@@ -732,16 +731,21 @@ const updateDataElements = throttle(function(parsedData) {
     updateTextIfChanged($dataPty, rdsMode == 'true' ? usa_programmes[parsedData.pty] : europe_programmes[parsedData.pty]);
 
     if (parsedData.rds === true) {
-        $flagDesktopCointainer.css('background-color', 'var(--color-2)');
+        $flagDesktopCointainer.css('background-color', 'var(--color-2-transparent)');
     } else {
-        $flagDesktopCointainer.css('background-color', 'var(--color-1)');
+        $flagDesktopCointainer.css('background-color', 'var(--color-1-transparent)');
     }
 
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
 
     $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
-    $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
+
+    if(parsedData.bw < 500) {
+        $dataBwInput.val($('#data-bw li[data-value2="' + parsedData.bw + '"]').text());
+    } else {
+        $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
+    }
 
     if (parsedData.txInfo.station.length > 1) {
         updateTextIfChanged($('#data-station-name'), parsedData.txInfo.station.replace(/%/g, '%25'));

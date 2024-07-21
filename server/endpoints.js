@@ -111,6 +111,7 @@ router.get('/setup', (req, res) => {
                 processUptime: formattedProcessUptime,
                 consoleOutput: logs,
                 plugins: allPluginConfigs,
+                enabledPlugins: serverConfig.plugins,
                 onlineUsers: dataHandler.dataToSend.users,
                 connectedUsers: storage.connectedUsers
             });

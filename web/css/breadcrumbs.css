@@ -326,7 +326,7 @@ pre {
         margin-bottom: 20px !important;
     }
     #ps-container {
-        background-color: var(--color-1);
+        background-color: var(--color-1-transparent);
         height: 100px !important;
         margin: auto !important;
         width: 100%;

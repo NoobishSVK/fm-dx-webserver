@@ -63,46 +63,60 @@ connectToXdrd();
 connectToSerial();
 
 // Serial Connection
-function connectToSerial() {
-  if (serverConfig.xdrd.wirelessConnection === false) {
+if (serverConfig.xdrd.wirelessConnection === false) {
     
-    serialport = new SerialPort({path: serverConfig.xdrd.comPort, baudRate: 115200 });
+  // Configure the SerialPort with DTR and RTS options
+  serialport = new SerialPort({
+    path: serverConfig.xdrd.comPort,
+    baudRate: 115200,
+    autoOpen: false, // Prevents automatic opening
+    dtr: false, // Disable DTR
+    rts: false  // Disable RTS
+  });
 
-    serialport.on('open', () => {
-      logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-      serialport.write('x\n');
-	  setTimeout(() => {
-		serialport.write('Q0\n');
-		serialport.write('M0\n');
-		serialport.write('Z0\n');
+  // Open the port manually after configuring DTR and RTS
+  serialport.open((err) => {
+    if (err) {
+      logError('Error opening port: ' + err.message);
+      return;
+    }
+    
+    logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+    serialport.write('x\n');
+    
+    setTimeout(() => {
+      serialport.write('Q0\n');
+      serialport.write('M0\n');
+      serialport.write('Z0\n');
 
-		if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
-			serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-			dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
-			dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-		} else {
-			serialport.write('T87500\n');
-		}
+      if (serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
+        serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
+        dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
+        dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+      } else {
+        serialport.write('T87500\n');
+      }
 
-		serialport.write('A0\n');
-		serialport.write('F-1\n');
-		serialport.write('W0\n');
-		serialport.write('D0\n');
-		serialport.write('G00\n');
-		serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
-	  }, 3000);
-      
-      serialport.on('data', (data) => {
-        helpers.resolveDataBuffer(data, wss);
-      });
+      serialport.write('A0\n');
+      serialport.write('F-1\n');
+      serialport.write('W0\n');
+      serialport.write('D0\n');
+      serialport.write('G00\n');
+      serverConfig.audio.startupVolume 
+        ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
+        : serialport.write('Y100\n');
+    }, 3000);
+    
+    serialport.on('data', (data) => {
+      helpers.resolveDataBuffer(data, wss);
     });
 
     serialport.on('error', (error) => {
       logError(error.message);
     });
+  });
 
-    return serialport;
-  }
+  return serialport;
 }
 
 // xdrd connection

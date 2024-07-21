@@ -71,7 +71,7 @@ button:hover {
 
 input[type="text"], textarea, input[type="password"] {
     width: 300px;
-    min-height: 46px;
+    min-height: 48px;
     padding-left: 20px;
     box-sizing: border-box;
     border: 2px solid transparent;
@@ -90,9 +90,29 @@ input[type="text"], textarea, input[type="password"] {
     border: 2px solid transparent;
     outline: 0;
     color: var(--color-text);
-    background-color: var(--color-1);
+    background-color: var(--color-1-transparent);
     font-family: 'Titillium Web', sans-serif;
-  }
+}
+
+#tune-buttons input[type="text"]:not(.no-bg):not(.no-filter)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-1);
+    opacity: 0.6; /* Set the desired opacity */
+    pointer-events: none; /* Ensure it does not interfere with interactions */
+    z-index: -1; /* Place the pseudo-element behind the panel content */
+    border-radius: 15px;
+}
+
+#tune-buttons input[type="text"]:not(.no-bg):not(.no-filter) {
+    backdrop-filter: blur(5px);
+    background-attachment: fixed;
+}
+
   
   #tune-buttons button {
       box-sizing: border-box;
@@ -138,7 +158,7 @@ input[type="range"] {
 /* Track: Mozilla Firefox */
 input[type="range"]::-moz-range-track {
     height: 48px;
-    background: var(--color-1);
+    background: var(--color-1-transparent);
     border-radius: 15px;
     border: 0;
 }
@@ -190,7 +210,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 0;
     cursor: pointer;
     width: 100%;
-    border-radius: 25px;
+    border-radius: 15px;
     font-weight: bold;
     background-color: var(--color-2);
 }
@@ -218,7 +238,7 @@ input[type="range"]::-moz-range-thumb {
 .toggleSwitch > span {
     position: absolute;
     left: 0;
-    width: calc(100% - 6px);
+    width: calc(100%);
     margin: 0;
     text-align: left;
     white-space: nowrap;
@@ -233,10 +253,9 @@ input[type="range"]::-moz-range-thumb {
     width: 50%;
     margin-left: 50px;
     text-align: left;
-    font-size: 0.9em;
     width: auto;
     opacity: 1;
-    width: 40%;
+    width: 50%;
     text-align: center;
     line-height:48px;
 }
@@ -251,7 +270,7 @@ input[type="range"]::-moz-range-thumb {
     left: 0;
     width: 50%;
     background-color: var(--color-4);
-    border-radius: 25px;
+    border-radius: 15px;
     -webkit-transition: all 0.2s ease-out;
     -moz-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out;
@@ -285,7 +304,7 @@ input[type="range"]::-moz-range-thumb {
     transition: all 0.2s ease-out;
 }
 .toggleSwitch input:checked ~ a {
-    left: calc(50% - 3px);
+    left: calc(50%);
 }
 
 .toggleSwitch input:checked ~ span span:first-of-type {
