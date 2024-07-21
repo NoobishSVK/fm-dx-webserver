@@ -63,6 +63,7 @@ connectToXdrd();
 connectToSerial();
 
 // Serial Connection
+function connectToSerial() {
 if (serverConfig.xdrd.wirelessConnection === false) {
     
   // Configure the SerialPort with DTR and RTS options
@@ -118,7 +119,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 
   return serialport;
 }
-
+}
 // xdrd connection
 function connectToXdrd() {
   const { xdrd } = serverConfig;
