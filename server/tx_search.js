@@ -97,7 +97,7 @@ function checkEs() {
 
     if (now - esSwitchCache.lastCheck < esFetchInterval) {
         esSwitch = esSwitchCache.esSwitch;
-    } else {
+    } else if (serverConfig.identification.lat > 20) {
         esSwitchCache.lastCheck = now;
         fetch(url)
         .then(response => response.json())
