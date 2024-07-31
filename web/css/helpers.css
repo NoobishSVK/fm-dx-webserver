@@ -112,7 +112,7 @@
 
 .hover-brighten:hover {
     cursor: pointer;
-    background-color: var(--color-2);
+    background-color: var(--color-2-transparent);
 }
 
 .text-left {

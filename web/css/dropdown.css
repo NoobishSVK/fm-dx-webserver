@@ -40,6 +40,11 @@
     background-color: var(--color-4);
     color: var(--color-main);
     border-radius: 15px;
+    transition: 0.35s ease-in-out background-color;
+  }
+
+  .dropdown input:hover {
+    background-color: var(--color-main-bright);
   }
 
   .dropdown.opened > input {

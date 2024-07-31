@@ -22,6 +22,8 @@ router.get('/', (req, res) => {
         return;
     }
 
+    const noPlugins = req.query.noPlugins === 'true';
+
     if (configExists() === false) {
         let serialPorts;
         
@@ -57,6 +59,7 @@ router.get('/', (req, res) => {
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
             chatEnabled: serverConfig.webserver.chatEnabled,
             device: serverConfig.device,
+            noPlugins,
             plugins: serverConfig.plugins,
             bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });

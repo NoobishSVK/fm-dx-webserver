@@ -432,7 +432,8 @@ function checkKey(e) {
     if ($('#password:focus').length > 0
     || $('#chat-send-message:focus').length > 0
     || $('#volumeSlider:focus').length > 0
-    || $('#chat-nickname:focus').length > 0) {
+    || $('#chat-nickname:focus').length > 0
+    || $('.option:focus').length > 0) {
         return; 
     }
 
@@ -612,7 +613,7 @@ function findOnMaps() {
 function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
     let currentSignal;
-    let highestSignal = parsedData.highestSignal;
+    let highestSignal = parsedData.sigTop;
 
     currentSignal = averageSignal
     let signalText = $('.signal-units');
@@ -720,7 +721,7 @@ const updateDataElements = throttle(function(parsedData) {
         stereoColor = 'var(--color-3)';
     }
 
-    if(parsedData.st_forced) {
+    if(parsedData.stForced) {
         stereoColor = 'gray';
     }
     $dataSt.css('border', '2px solid ' + stereoColor);
@@ -747,14 +748,14 @@ const updateDataElements = throttle(function(parsedData) {
         $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
     }
 
-    if (parsedData.txInfo.station.length > 1) {
-        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.station.replace(/%/g, '%25'));
+    if (parsedData.txInfo.tx.length > 1) {
+        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx.replace(/%/g, '%25'));
         updateTextIfChanged($('#data-station-erp'), parsedData.txInfo.erp);
         updateTextIfChanged($('#data-station-city'), parsedData.txInfo.city);
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
-        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.distance);
-        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azimuth);
+        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.dist);
+        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi);
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
@@ -786,7 +787,7 @@ let isEventListenerAdded = false;
 function updatePanels(parsedData) {
     updateCounter++;
 
-    signalData.push(parsedData.signal);
+    signalData.push(parsedData.sig);
     if (signalData.length > 8) {
         signalData.shift(); // Remove the oldest element
     }
@@ -840,8 +841,10 @@ function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
     if (value == 0) {
         button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
+        button.attr('aria-description', 'Off');
     } else {
         button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
+        button.attr('aria-description', 'On');
     }
 }
 
@@ -856,7 +859,7 @@ function toggleButtonState(buttonId) {
 
 function toggleForcedStereo() {
     var message = "B";
-    message += parsedData.st_forced = (parsedData.st_forced == "1") ? "0" : "1";
+    message += parsedData.stForced = (parsedData.stForced == "1") ? "0" : "1";
     socket.send(message);
 }
 
@@ -865,7 +868,7 @@ function toggleAdminLock() {
 
     if($adminLockButton.hasClass('active')) {
         socket.send('wL0');
-        $adminLockButton.attr('aria-label', '"ock Tuner (Admin)')
+        $adminLockButton.attr('aria-label', 'Lock Tuner (Admin)')
         $adminLockButton.removeClass('active');
     } else {
         socket.send('wL1');

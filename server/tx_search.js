@@ -83,6 +83,7 @@ function processData(data, piCode, rdsPs) {
             itu: matchingCity.itu,
             distance: maxDistance.toFixed(0),
             azimuth: txAzimuth.toFixed(0),
+            id: matchingStation.id,
             foundStation: true
         };
     } else {

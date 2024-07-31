@@ -77,8 +77,8 @@ body {
 }
 
 #wrapper {
-    width: 1180px;
-    max-width: 1180px;
+    width: 100%;
+    max-width: calc(0% + 1180px);
 }
 #wrapper.setup-wrapper {
     margin: auto;

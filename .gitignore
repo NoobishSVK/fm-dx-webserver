@@ -1,5 +1,7 @@
 node_modules/
 /*.json
-/ffmpeg.exe
 /serverlog.txt
 /web/js/plugins/
+/plugins/*
+!/plugins/example/frontend.js
+!/plugins/example.js

@@ -33,6 +33,12 @@ $(document).ready(() => {
     if(defaultTheme && themes[defaultTheme]) {
         setTheme(defaultTheme);
     }
+
+    const themeParameter = getQueryParameter('theme');
+    if(themeParameter && themes[themeParameter]) {
+        setTheme(themeParameter);
+        themeSelector.find('input').val(themeSelector.find('.option[data-value="' + themeParameter + '"]').text());
+    }
     
     if (savedTheme && themes[savedTheme]) {
         setTheme(savedTheme);
@@ -49,6 +55,12 @@ $(document).ready(() => {
     
     const signalSelector = $('#signal-selector');
     
+    const signalParameter = getQueryParameter('signalUnits');
+    if(signalParameter) {
+        signalSelector.find('input').val($(signalParameter).text());
+        localStorage.setItem('signalUnit', signalParameter);
+    }
+
     if (localStorage.getItem('signalUnit')) {
         signalSelector.find('input').val(signalSelector.find('.option[data-value="' + savedUnit + '"]').text());
     }
@@ -123,9 +135,16 @@ $(document).ready(() => {
         localStorage.setItem("extendedFreqRange", isChecked);
     });
     
-    var extendedFreqRange = localStorage.getItem("psUnderscores");
-    if (extendedFreqRange === "true") {
-        $("#ps-underscores").prop("checked", true);
+    const psUnderscoreParameter = getQueryParameter('psUnderscores');
+    if(psUnderscoreParameter) {
+        $("#ps-underscores").prop("checked", psUnderscoreParameter);
+        localStorage.setItem("psUnderscores", psUnderscoreParameter);
+    }
+    
+    var psUnderscores = localStorage.getItem("psUnderscores");
+    if (psUnderscores) {
+        $("#ps-underscores").prop("checked", psUnderscores);
+        localStorage.setItem("psUnderscores", psUnderscores);
     }
     
     $("#ps-underscores").change(function() {
@@ -138,6 +157,10 @@ $(document).ready(() => {
     setBg();
 });
 
+function getQueryParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
 
 function setTheme(themeName) {
     const themeColors = themes[themeName];
@@ -162,7 +185,8 @@ function setTheme(themeName) {
 }
 
 function setBg() {
-    if(localStorage.getItem('bgImage').length > 5 && localStorage.getItem('theme') != 'theme9') {
+    const disableBackgroundParameter = getQueryParameter('disableBackground');
+    if(localStorage.getItem('bgImage').length > 5 && localStorage.getItem('theme') != 'theme9' && disableBackgroundParameter != 'true') {
         $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
     } else {
         $('body').css('background', 'var(--color-main)');

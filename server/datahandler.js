@@ -205,12 +205,13 @@ const updateInterval = 75;
 var dataToSend = {
   pi: '?',
   freq: 87.500.toFixed(3),
-  previousFreq: 87.500.toFixed(3),
-  signal: 0,
-  highestSignal: -Infinity,
+  prevFreq: 87.500.toFixed(3),
+  sig: 0,
+  sigRaw: '',
+  sigTop: -Infinity,
   bw: 0,
   st: false,
-  st_forced: false,
+  stForced: false,
   rds: false,
   ps: '',
   tp: 0,
@@ -224,13 +225,14 @@ var dataToSend = {
   eq: 0,
   ant: 0,
   txInfo: {
-    station: '',
+    tx: '',
     pol: '',
     erp: '',
     city: '',
     itu: '',
-    distance: '',
-    azimuth: ''
+    dist: '',
+    azi: '',
+    id: ''
   },
   country_name: '',
   country_iso: 'UN',
@@ -251,7 +253,7 @@ const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
 
 
-function handleData(wss, receivedData) {
+function handleData(wss, receivedData, rdsWss) {
   // Retrieve the last update time for this client
   const currentTime = Date.now();
 
@@ -350,6 +352,10 @@ function handleData(wss, receivedData) {
           modifiedData += errorsNew.toString(16).padStart(2, '0');
         }
 
+        rdsWss.clients.forEach((client) => { // Send to /rds endpoint via WebSocket
+          client.send(modifiedData);
+        });
+
         rdsparser.parse_string(rds, modifiedData);
         legacyRdsPiBuffer = null;
         break;
@@ -360,13 +366,14 @@ function handleData(wss, receivedData) {
   const currentTx = fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps);
   if(currentTx && currentTx.station !== undefined) {
     dataToSend.txInfo = {
-      station: currentTx.station,
+      tx: currentTx.station,
       pol: currentTx.pol,
       erp: currentTx.erp,
       city: currentTx.city,
       itu: currentTx.itu,
-      distance: currentTx.distance,
-      azimuth: currentTx.azimuth
+      dist: currentTx.distance,
+      azi: currentTx.azimuth,
+      id: currentTx.id
     }
   }
 
@@ -389,20 +396,22 @@ function processSignal(receivedData, st, stForced) {
   const modifiedData = receivedData.substring(2);
   const parsedValue = parseFloat(modifiedData);
   dataToSend.st = st;
-  dataToSend.st_forced = stForced;
+  dataToSend.stForced = stForced;
   initialData.st = st;
-  initialData.st_forced = stForced;
+  initialData.stForced = stForced;
 
   if (!isNaN(parsedValue)) {
     // Convert parsedValue to a number
     var signal = parseFloat(parsedValue.toFixed(2));
-    dataToSend.signal = signal;
-    initialData.signal = signal;
+    dataToSend.sig = signal;
+    initialData.sig = signal;
+    dataToSend.sigRaw = receivedData;
+    initialData.sigRaw = receivedData;
 
     // Convert highestSignal to a number for comparison
-    var highestSignal = parseFloat(dataToSend.highestSignal);
+    var highestSignal = parseFloat(dataToSend.sigTop);
     if (signal > highestSignal) {
-        dataToSend.highestSignal = signal.toString(); // Convert back to string for consistency
+        dataToSend.sigTop = signal.toString(); // Convert back to string for consistency
     }
 }
 

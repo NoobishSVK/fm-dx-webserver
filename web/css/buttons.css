@@ -83,14 +83,14 @@ input[type="text"], textarea, input[type="password"] {
 
 #tune-buttons input[type="text"] {
     width: 50%;
-    height: 100%;
+    height: 48px;
     min-height: 46px;
     padding-left: 20px;
     box-sizing: border-box;
     border: 2px solid transparent;
     outline: 0;
     color: var(--color-text);
-    background-color: var(--color-1-transparent);
+    background-color: transparent;
     font-family: 'Titillium Web', sans-serif;
 }
 
@@ -120,7 +120,7 @@ input[type="text"], textarea, input[type="password"] {
       border: 0;
       color: var(--color-1);
       width: 25%;
-      height: 100%;
+      height: 48px;
       display: block;
       padding: 14px;
       cursor: pointer;
@@ -158,7 +158,7 @@ input[type="range"] {
 /* Track: Mozilla Firefox */
 input[type="range"]::-moz-range-track {
     height: 48px;
-    background: var(--color-1-transparent);
+    background-color: transpraent;
     border-radius: 15px;
     border: 0;
 }
@@ -340,4 +340,10 @@ select option {
 
 select:hover {
     background: var(--color-5);
+}
+
+@media only screen and (max-width: 768px) {
+    #tune-buttons input[type="text"] {
+        background-color: var(--color-1-transparent);
+    }
 }

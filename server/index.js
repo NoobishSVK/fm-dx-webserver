@@ -11,6 +11,7 @@ const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 const chatWss = new WebSocket.Server({ noServer: true });
+const rdsWss = new WebSocket.Server({ noServer: true });
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
@@ -109,7 +110,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     }, 3000);
     
     serialport.on('data', (data) => {
-      helpers.resolveDataBuffer(data, wss);
+      helpers.resolveDataBuffer(data, wss, rdsWss);
     });
 
     serialport.on('error', (error) => {
@@ -185,7 +186,7 @@ function connectToXdrd() {
       };
       
       client.on('data', (data) => {
-        helpers.resolveDataBuffer(data, wss);
+        helpers.resolveDataBuffer(data, wss, rdsWss);
         if (authFlags.authMsg == true && authFlags.messageCount > 1) {
           // If the limit is reached, remove the 'data' event listener
           client.off('data', authDataHandler);
@@ -437,6 +438,15 @@ chatWss.on('connection', (ws, request) => {
   });
 });
 
+rdsWss.on('connection', (ws, request) => {
+  ws.on('message', function incoming(message) {
+  
+  });
+
+  ws.on('close', function close() {
+  });
+});
+
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
@@ -451,6 +461,12 @@ httpServer.on('upgrade', (request, socket, head) => {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
+      });
+    });
+  } else if (request.url === '/rds') {
+    sessionMiddleware(request, {}, () => {
+      rdsWss.handleUpgrade(request, socket, head, (ws) => {
+        rdsWss.emit('connection', ws, request);
       });
     });
   } else {

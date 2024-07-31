@@ -125,12 +125,12 @@
                             
                             <% if (antennas.enabled == true) { %>
                                 <div class="panel-50 no-bg h-100 br-0 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
-                                    <input type="text" placeholder="Ant A" readonly>
-                                    <ul class="options open-top">
-                                        <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option"><%= antennas.ant1.name %></li><% } %>
-                                        <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option"><%= antennas.ant2.name %></li><% } %>
-                                        <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option"><%= antennas.ant3.name %></li><% } %>
-                                        <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option"><%= antennas.ant4.name %></li><% } %>
+                                    <input type="text" placeholder="Ant A" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
+                                        <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
+                                        <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
+                                        <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
                                     </ul>
                                 </div>
                             <% } %>
@@ -165,71 +165,71 @@
                             <% } %>
                             <% if (device == 'tef' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" class="option">Auto</li>
-                                        <li data-value="56000" class="option">56 KHz</li>
-                                        <li data-value="64000" class="option">64 KHz</li>
-                                        <li data-value="72000" class="option">72 KHz</li>
-                                        <li data-value="84000" class="option">84 KHz</li>
-                                        <li data-value="97000" class="option">97 KHz</li>
-                                        <li data-value="114000" class="option">114 KHz</li>
-                                        <li data-value="133000" class="option">133 KHz</li>
-                                        <li data-value="151000" class="option">151 KHz</li>
-                                        <li data-value="184000" class="option">184 KHz</li>
-                                        <li data-value="200000" class="option">200 KHz</li>
-                                        <li data-value="217000" class="option">217 KHz</li>
-                                        <li data-value="236000" class="option">236 KHz</li>
-                                        <li data-value="254000" class="option">254 KHz</li>
-                                        <li data-value="287000" class="option">287 KHz</li>
-                                        <li data-value="311000" class="option">311 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" class="option" tabindex="0">Auto</li>
+                                        <li data-value="56000" class="option" tabindex="0">56 KHz</li>
+                                        <li data-value="64000" class="option" tabindex="0">64 KHz</li>
+                                        <li data-value="72000" class="option" tabindex="0">72 KHz</li>
+                                        <li data-value="84000" class="option" tabindex="0">84 KHz</li>
+                                        <li data-value="97000" class="option" tabindex="0">97 KHz</li>
+                                        <li data-value="114000" class="option" tabindex="0">114 KHz</li>
+                                        <li data-value="133000" class="option" tabindex="0">133 KHz</li>
+                                        <li data-value="151000" class="option" tabindex="0">151 KHz</li>
+                                        <li data-value="184000" class="option" tabindex="0">184 KHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
+                                        <li data-value="217000" class="option" tabindex="0">217 KHz</li>
+                                        <li data-value="236000" class="option" tabindex="0">236 KHz</li>
+                                        <li data-value="254000" class="option" tabindex="0">254 KHz</li>
+                                        <li data-value="287000" class="option" tabindex="0">287 KHz</li>
+                                        <li data-value="311000" class="option" tabindex="0">311 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
 
                             <% if (device == 'xdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" data-value2="-1" class="option">Auto</li>
-                                        <li data-value="55000" data-value2="0" class="option">55 KHz</li>
-                                        <li data-value="73000" data-value2="1" class="option">73 KHz</li>
-                                        <li data-value="90000" data-value2="2" class="option">90 KHz</li>
-                                        <li data-value="108000" data-value2="3" class="option">108 KHz</li>
-                                        <li data-value="125000" data-value2="4" class="option">125 KHz</li>
-                                        <li data-value="142000" data-value2="5" class="option">142 KHz</li>
-                                        <li data-value="159000" data-value2="6" class="option">159 KHz</li>
-                                        <li data-value="177000" data-value2="7" class="option">177 KHz</li>
-                                        <li data-value="194000" data-value2="8" class="option">194 KHz</li>
-                                        <li data-value="211000" data-value2="9" class="option">211 KHz</li>
-                                        <li data-value="229000" data-value2="10" class="option">229 KHz</li>
-                                        <li data-value="246000" data-value2="11" class="option">246 KHz</li>
-                                        <li data-value="263000" data-value2="12" class="option">263 KHz</li>
-                                        <li data-value="281000" data-value2="13" class="option">281 KHz</li>
-                                        <li data-value="298000" data-value2="14" class="option">298 KHz</li>
-                                        <li data-value="309000" data-value2="15" class="option">309 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
+                                        <li data-value="55000" data-value2="0" class="option" tabindex="0">55 KHz</li>
+                                        <li data-value="73000" data-value2="1" class="option" tabindex="0">73 KHz</li>
+                                        <li data-value="90000" data-value2="2" class="option" tabindex="0">90 KHz</li>
+                                        <li data-value="108000" data-value2="3" class="option" tabindex="0">108 KHz</li>
+                                        <li data-value="125000" data-value2="4" class="option" tabindex="0">125 KHz</li>
+                                        <li data-value="142000" data-value2="5" class="option" tabindex="0">142 KHz</li>
+                                        <li data-value="159000" data-value2="6" class="option" tabindex="0">159 KHz</li>
+                                        <li data-value="177000" data-value2="7" class="option" tabindex="0">177 KHz</li>
+                                        <li data-value="194000" data-value2="8" class="option" tabindex="0">194 KHz</li>
+                                        <li data-value="211000" data-value2="9" class="option" tabindex="0">211 KHz</li>
+                                        <li data-value="229000" data-value2="10" class="option" tabindex="0">229 KHz</li>
+                                        <li data-value="246000" data-value2="11" class="option" tabindex="0">246 KHz</li>
+                                        <li data-value="263000" data-value2="12" class="option" tabindex="0">263 KHz</li>
+                                        <li data-value="281000" data-value2="13" class="option" tabindex="0">281 KHz</li>
+                                        <li data-value="298000" data-value2="14" class="option" tabindex="0">298 KHz</li>
+                                        <li data-value="309000" data-value2="15" class="option" tabindex="0">309 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
 
                             <% if (device == 'sdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" class="option">Auto</li>
-                                        <li data-value="4000" class="option">4 KHz</li>
-                                        <li data-value="8000" class="option">8 KHz</li>
-                                        <li data-value="10000" class="option">10 KHz</li>
-                                        <li data-value="20000" class="option">20 KHz</li>
-                                        <li data-value="30000" class="option">30 KHz</li>
-                                        <li data-value="50000" class="option">50 KHz</li>
-                                        <li data-value="75000" class="option">75 KHz</li>
-                                        <li data-value="100000" class="option">100 KHz</li>
-                                        <li data-value="125000" class="option">125 KHz</li>
-                                        <li data-value="150000" class="option">150 KHz</li>
-                                        <li data-value="175000" class="option">175 KHz</li>
-                                        <li data-value="200000" class="option">200 KHz</li>
-                                        <li data-value="225000" class="option">225 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" class="option" tabindex="0">Auto</li>
+                                        <li data-value="4000" class="option" tabindex="0">4 KHz</li>
+                                        <li data-value="8000" class="option" tabindex="0">8 KHz</li>
+                                        <li data-value="10000" class="option" tabindex="0">10 KHz</li>
+                                        <li data-value="20000" class="option" tabindex="0">20 KHz</li>
+                                        <li data-value="30000" class="option" tabindex="0">30 KHz</li>
+                                        <li data-value="50000" class="option" tabindex="0">50 KHz</li>
+                                        <li data-value="75000" class="option" tabindex="0">75 KHz</li>
+                                        <li data-value="100000" class="option" tabindex="0">100 KHz</li>
+                                        <li data-value="125000" class="option" tabindex="0">125 KHz</li>
+                                        <li data-value="150000" class="option" tabindex="0">150 KHz</li>
+                                        <li data-value="175000" class="option" tabindex="0">175 KHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
+                                        <li data-value="225000" class="option" tabindex="0">225 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -323,17 +323,17 @@
             <div class="form-group top-25">
                 <label for="themes"><i class="fa-solid fa-palette"></i> Theme:</label>
                 <div class="dropdown" id="theme-selector">
-                    <input type="text" placeholder="Default" readonly>
-                    <ul class="options">
-                        <li class="option" data-value="theme1">Default</li>
-                        <li class="option" data-value="theme2">Cappuccino</li>
-                        <li class="option" data-value="theme3">Nature</li>
-                        <li class="option" data-value="theme4">Ocean</li>
-                        <li class="option" data-value="theme5">Terminal</li>
-                        <li class="option" data-value="theme6">Nightlife</li>
-                        <li class="option" data-value="theme7">Blurple</li>
-                        <li class="option" data-value="theme8">Construction</li>
-                        <li class="option" data-value="theme9">AMOLED</li>
+                    <input type="text" placeholder="Default" readonly tabindex="0">
+                    <ul class="options" tabindex="-1">
+                        <li class="option" tabindex="0" data-value="theme1">Default</li>
+                        <li class="option" tabindex="0" data-value="theme2">Cappuccino</li>
+                        <li class="option" tabindex="0" data-value="theme3">Nature</li>
+                        <li class="option" tabindex="0" data-value="theme4">Ocean</li>
+                        <li class="option" tabindex="0" data-value="theme5">Terminal</li>
+                        <li class="option" tabindex="0" data-value="theme6">Nightlife</li>
+                        <li class="option" tabindex="0" data-value="theme7">Blurple</li>
+                        <li class="option" tabindex="0" data-value="theme8">Construction</li>
+                        <li class="option" tabindex="0" data-value="theme9">AMOLED</li>
                     </ul>
                 </div>
             </div>
@@ -342,22 +342,22 @@
             <div class="form-group top-25">
                 <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <div class="dropdown" id="signal-selector">
-                    <input type="text" placeholder="dBf" readonly>
-                    <ul class="options">
-                        <li class="option" data-value="dbf">dBf</li>
-                        <li class="option" data-value="dbuv">dBuV</li>
-                        <li class="option" data-value="dbm">dBm</li>
+                    <input type="text" placeholder="dBf" readonly tabindex="0">
+                    <ul class="options" tabindex="-1">
+                        <li class="option" tabindex="0" data-value="dbf">dBf</li>
+                        <li class="option" tabindex="0" data-value="dbuv">dBuV</li>
+                        <li class="option" tabindex="0" data-value="dbm">dBm</li>
                     </ul>
                 </div>
             </div><br>
             <% } %>
             
             <div class="form-group checkbox">
-                <input type="checkbox" tabindex="0"  id="extended-frequency-range">
+                <input type="checkbox" tabindex="0"  id="extended-frequency-range" aria-label="Add decimals manually">
                 <label for="extended-frequency-range">Add decimals manually</label>
             </div>
             <div class="form-group checkbox">
-                <input type="checkbox" tabindex="0"  id="ps-underscores">
+                <input type="checkbox" tabindex="0" id="ps-underscores" aria-label="Add underscores to RDS PS">
                 <label for="ps-underscores">Add underscores to RDS PS</label>
             </div>
 
@@ -491,8 +491,10 @@
 
 <script src="js/websocket.js"></script>
 <script src="js/webserver.js"></script>
-<% plugins?.forEach(function(plugin) { %>
+<% if (!noPlugins) { %>
+    <% plugins?.forEach(function(plugin) { %>
         <script src="js/plugins/<%= plugin %>"></script>
-<% }); %>
+    <% }); %>
+<% } %>
 </body>
 </html>
