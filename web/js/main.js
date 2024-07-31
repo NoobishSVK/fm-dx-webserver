@@ -709,7 +709,7 @@ const updateDataElements = throttle(function(parsedData) {
     $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
     updateHtmlIfChanged($dataPi, parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
 
-    if (localStorage.getItem('psUnderscores') === 'true') {
+    if ($('#ps-underscores').is(':checked')) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
     updateHtmlIfChanged($dataPs, parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));

@@ -58,7 +58,6 @@ $(document).ready(() => {
     const signalParameter = getQueryParameter('signalUnits');
     if(signalParameter) {
         signalSelector.find('input').val($(signalParameter).text());
-        localStorage.setItem('signalUnit', signalParameter);
     }
 
     if (localStorage.getItem('signalUnit')) {
@@ -137,13 +136,13 @@ $(document).ready(() => {
     
     const psUnderscoreParameter = getQueryParameter('psUnderscores');
     if(psUnderscoreParameter) {
-        $("#ps-underscores").prop("checked", psUnderscoreParameter);
-        localStorage.setItem("psUnderscores", psUnderscoreParameter);
+        console.log(psUnderscoreParameter);
+        $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
     }
     
     var psUnderscores = localStorage.getItem("psUnderscores");
     if (psUnderscores) {
-        $("#ps-underscores").prop("checked", psUnderscores);
+        $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
         localStorage.setItem("psUnderscores", psUnderscores);
     }
     
