@@ -352,9 +352,31 @@ function handleData(wss, receivedData, rdsWss) {
           modifiedData += errorsNew.toString(16).padStart(2, '0');
         }
 
-        rdsWss.clients.forEach((client) => { // Send to /rds endpoint via WebSocket
-          client.send(modifiedData);
-        });
+		rdsWss.clients.forEach((client) => {
+			let dataString = modifiedData.toString();
+			let lastTwoChars = dataString.slice(-2);
+			let lastByteValue = parseInt(lastTwoChars, 16);
+
+			let truncatedString = dataString.slice(0, -2);
+
+			if ((lastByteValue & 0x03) !== 0) {
+				truncatedString = truncatedString.slice(0, 4) + '----' + truncatedString.slice(8);
+			}
+
+			if ((lastByteValue & 0x30) !== 0) {
+				truncatedString = truncatedString.slice(0, 8) + '----' + truncatedString.slice(12);
+			}
+
+			if ((lastByteValue & 0x0C) !== 0) {
+				truncatedString = truncatedString.slice(0, 12) + '----';
+			}
+
+			let newDataString = "G:\r\n" + truncatedString + "\r\n\r\n";
+
+			let finalBuffer = Buffer.from(newDataString, 'utf-8');
+
+			client.send(finalBuffer);
+		});
 
         rdsparser.parse_string(rds, modifiedData);
         legacyRdsPiBuffer = null;
