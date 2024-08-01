@@ -40,7 +40,7 @@
     background-color: var(--color-4);
     color: var(--color-main);
     border-radius: 15px;
-    transition: 0.35s ease-in-out background-color;
+    transition: 0.35s ease background-color;
   }
 
   .dropdown input:hover {

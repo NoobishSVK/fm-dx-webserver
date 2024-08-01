@@ -37,7 +37,7 @@ ul.nav li {
     display: inline;
     padding: 15px;
     cursor: pointer;
-    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    transition: color 0.3s ease, background-color 0.3s ease;
     user-select: none;
 }
 

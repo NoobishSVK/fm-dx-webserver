@@ -55,7 +55,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-    transition: 0.3s ease-in-out background-color;
+    transition: 0.3s ease background-color;
     margin: 0 auto;
     min-height: 100%;
 }

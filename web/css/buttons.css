@@ -3,7 +3,7 @@ button, input[type="submit"] {
     height: 100%;
     border: 0;
     border-radius: 15px;
-    transition: 0.3s ease-in-out background-color;
+    transition: 0.3s ease background-color;
     background-color: var(--color-4);
     cursor: pointer;
     font-family: inherit;
@@ -90,54 +90,39 @@ input[type="text"], textarea, input[type="password"] {
     border: 2px solid transparent;
     outline: 0;
     color: var(--color-text);
-    background-color: transparent;
+    background-color: var(--color-1-transparent);
     font-family: 'Titillium Web', sans-serif;
-}
-
-#tune-buttons input[type="text"]:not(.no-bg):not(.no-filter)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--color-1);
-    opacity: 0.6; /* Set the desired opacity */
-    pointer-events: none; /* Ensure it does not interfere with interactions */
-    z-index: -1; /* Place the pseudo-element behind the panel content */
-    border-radius: 15px;
 }
 
 #tune-buttons input[type="text"]:not(.no-bg):not(.no-filter) {
     backdrop-filter: blur(5px);
     background-attachment: fixed;
 }
-
   
-  #tune-buttons button {
-      box-sizing: border-box;
-      background-color: var(--color-4);
-      border: 0;
-      color: var(--color-1);
-      width: 25%;
-      height: 48px;
-      display: block;
-      padding: 14px;
-      cursor: pointer;
-      transition: background-color 0.3s ease-in-out;
-  }
+#tune-buttons button {
+    box-sizing: border-box;
+    background-color: var(--color-4);
+    border: 0;
+    color: var(--color-1);
+    width: 25%;
+    height: 48px;
+    display: block;
+    padding: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
   
-  #tune-buttons button:hover {
+#tune-buttons button:hover {
       background-color: var(--color-main-bright);
-  }
+}
   
-  #freq-down {
+#freq-down {
       border-radius: 15px 0 0 15px;
-  }
+}
   
-  #freq-up {
+#freq-up {
       border-radius: 0 15px 15px 0;
-  }
+}
 
 input[type="range"] {
     margin: 0;
@@ -326,7 +311,7 @@ select {
     border: 0;
     border-bottom: 4px solid var(--color-2);
     cursor: pointer;
-    transition: 0.35s ease-in-out background;
+    transition: 0.35s ease background;
     font-family: inherit;
     font-weight: bold;
 }

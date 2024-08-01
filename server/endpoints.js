@@ -123,6 +123,10 @@ router.get('/setup', (req, res) => {
     
 });
 
+router.get('/rds', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
+});
+
 router.get('/api', (req, res) => {
     const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, ...dataToSend } = dataHandler.dataToSend;
     res.json(dataToSend);

@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
-const { serverConfig } = require('./server_config')
+const { serverConfig } = require('./server_config');
+const consoleCmd = require('./console');
 
 let cachedData = {};
 
@@ -39,7 +40,6 @@ function fetchTx(freq, piCode, rdsPs) {
             return processData(data, piCode, rdsPs);
         })
         .catch(error => {
-            console.error("Error fetching data:", error);
         });
 }
 

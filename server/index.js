@@ -34,7 +34,7 @@ console.log(`\x1b[32m
 |  _| | |  | |_____| |_| /  \\    \\ V  V /  __/ |_) \\__ \\  __/ |   \\ V /  __/ |   
 |_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
 `);
-console.log('\x1b[0mFM-DX-Webserver', pjson.version);
+console.log('\x1b[0mFM-DX Webserver', pjson.version);
 console.log('\x1b[90m―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――');
 
 // Start ffmpeg
@@ -285,6 +285,8 @@ wss.on('connection', (ws, request) => {
         logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
       }
     });
+  }).on('error', (err) => {
+    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
   });
 
   ws.on('message', (message) => {
@@ -463,7 +465,7 @@ httpServer.on('upgrade', (request, socket, head) => {
         chatWss.emit('connection', ws, request);
       });
     });
-  } else if (request.url === '/rds') {
+  } else if (request.url === '/rds' || request.url === '/rdsspy') {
     sessionMiddleware(request, {}, () => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
