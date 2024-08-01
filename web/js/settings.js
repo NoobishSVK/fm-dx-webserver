@@ -136,18 +136,18 @@ $(document).ready(() => {
     
     const psUnderscoreParameter = getQueryParameter('psUnderscores');
     if(psUnderscoreParameter) {
-        console.log(psUnderscoreParameter);
         $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
     }
     
     var psUnderscores = localStorage.getItem("psUnderscores");
     if (psUnderscores) {
-        $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
+        $("#ps-underscores").prop("checked", JSON.parse(psUnderscores));
         localStorage.setItem("psUnderscores", psUnderscores);
     }
     
     $("#ps-underscores").change(function() {
         var isChecked = $(this).is(":checked");
+        console.log(isChecked);
         localStorage.setItem("psUnderscores", isChecked);
     });
     
