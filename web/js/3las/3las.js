@@ -1,3 +1,4 @@
+var elapsedTimeConnectionWatchdog;
 var _3LAS_Settings = /** @class */ (function () {
     function _3LAS_Settings() {
         this.SocketHost = document.location.hostname ? document.location.hostname : "127.0.0.1";
@@ -47,6 +48,29 @@ var _3LAS = /** @class */ (function () {
         this.ConnectivityFlag = false;
         this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
 
+        // Stream connection watchdog monitors mp3 frames
+        console.log("Stream connection watchdog active.");
+        let intervalReconnectWatchdog = setInterval(() => {
+            if (Stream) {
+                var endTimeConnectionWatchdog = performance.now();
+                elapsedTimeConnectionWatchdog = endTimeConnectionWatchdog - window.startTimeConnectionWatchdog;
+                //console.log(`Stream frame elapsed time: ${elapsedTimeConnectionWatchdog} ms`);
+                if (elapsedTimeConnectionWatchdog > 2000 && shouldReconnect) {
+                    clearInterval(intervalReconnectWatchdog);
+                    setTimeout(() => {
+                        clearInterval(intervalReconnectWatchdog);
+                        console.log("Unstable internet connection detected, reconnecting (" + elapsedTimeConnectionWatchdog + " ms)...");
+                        this.Stop();
+                        this.Start();
+                    }, 2000);
+                }
+            } else {
+                clearInterval(intervalReconnectWatchdog);
+                this.Stop();
+                console.log("Stream connection watchdog inactive.");
+            }
+        }, 3000);
+
         // This is stupid, but required for Android.... thanks Google :(
         if (this.WakeLock)
             this.WakeLock.Begin();
@@ -54,8 +78,8 @@ var _3LAS = /** @class */ (function () {
             if (window.location.protocol === 'https:') { 
                 this.WebSocket = new WebSocketClient(this.Logger, 'wss://' + this.Settings.SocketHost + ':' + location.port.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
             }
-            else {                           
-                this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + location.port.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));           
+            else {
+                this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + location.port.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
             }
             this.Logger.Log("Init of WebSocketClient succeeded");
             this.Logger.Log("Trying to connect to server.");
@@ -129,45 +153,6 @@ var _3LAS = /** @class */ (function () {
             this.ConnectivityFlag = false;
             if (this.ConnectivityCallback)
                 this.ConnectivityCallback(false);
-    }
-
-    if (shouldReconnect) {
-        if (!this.ConnectivityFlag) {
-            console.log("Initial reconnect attempt...");
-            this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
-            this.Start();
-        }
-
-        // Delay launch of subsequent reconnect attempts by 3 seconds
-        setTimeout(() => {
-
-            let streamReconnecting = false;
-            
-            let intervalReconnect = setInterval(() => {
-                if (this.ConnectivityFlag || typeof Stream === 'undefined' || Stream === null) {
-                    console.log("Reconnect attempts aborted.");
-                    clearInterval(intervalReconnect);
-                } else if (!streamReconnecting) {
-                    streamReconnecting = true;
-                    console.log("Attempting to restart stream...");
-                    this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
-                    this.Start();
-                    // Wait for reconnect attempt
-                    setTimeout(() => {
-                        streamReconnecting = false;
-                    }, 3000);
-                }
-                // Restore user set volume
-                if (Stream && typeof newVolumeGlobal !== 'undefined' && newVolumeGlobal !== null) {
-                    Stream.Volume = newVolumeGlobal;
-                    console.log(`User volume restored: ${Math.round(newVolumeGlobal * 100)}%`);
-                }
-            }, 3000);
-
-        }, 3000);
-        
-    } else {
-        this.Logger.Log("Reconnection is disabled.");
     }
 };
 

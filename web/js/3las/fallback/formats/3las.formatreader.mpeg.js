@@ -2,6 +2,7 @@
     MPEG audio format reader is part of 3LAS (Low Latency Live Audio Streaming)
     https://github.com/JoJoBond/3LAS
 */
+window.startTimeConnectionWatchdog = performance.now();
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -194,6 +195,7 @@ var AudioFormatReader_MPEG = /** @class */ (function (_super) {
     };
     // Is called if the decoding of the window succeeded
     AudioFormatReader_MPEG.prototype.OnDecodeSuccess = function (decodedData, id, expectedTotalPlayTime, firstGranulePlayTime, lastGranulePlayTime) {
+        window.startTimeConnectionWatchdog = performance.now();
         var extractSampleCount;
         var extractSampleOffset;
         var delta = 0.001;

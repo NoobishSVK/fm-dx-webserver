@@ -908,6 +908,11 @@ function initTooltips() {
             posX -= tooltipWidth / 2;
             posY -= tooltipHeight + 10;
             tooltip.css({ top: posY, left: posX, opacity: 1 }); // Set opacity to 1
+            // For touchscreen devices
+            if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
+                setTimeout(() => { $('.tooltiptext').remove(); }, 10000);
+                document.addEventListener('touchstart', function() { setTimeout(() => { $('.tooltiptext').remove(); }, 500); });
+            }
         }, 500));
     }, function() {
         // Clear the timeout if the mouse leaves before the delay completes
