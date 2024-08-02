@@ -4,11 +4,12 @@ const fetch = require('node-fetch');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
 const { serverConfig, configUpdate, configSave } = require('./server_config');
 var pjson = require('../package.json');
+var os = require('os');
 
 let timeoutID = null;
 
 function send(request) {
-  const url = "https://list.fmdx.pl/api/";
+  const url = "https://servers.fmdx.org/api/";
 
   const options = {
     method: 'POST',
@@ -53,13 +54,14 @@ function sendKeepalive() {
 
   const request = {
     token: serverConfig.identification.token,
-    status: (serverConfig.lockToAdmin ? 2 : 1)
+    status: ((serverConfig.lockToAdmin || !serverConfig.publicTuner) ? 2 : 1)
   };
 
   send(request);
 }
 
 function sendUpdate() {
+  let currentOs = os.type() + ' ' + os.release();
 
   let bwLimit = '';
   if (serverConfig.webserver.tuningLimit === true) {
@@ -76,7 +78,8 @@ function sendUpdate() {
     contact: serverConfig.identification.contact || '',
     tuner: serverConfig.device || '',
     bwLimit: bwLimit,
-    version: pjson.version
+    os: currentOs,
+    version: pjson.version 
   };
 
   if (serverConfig.identification.token)

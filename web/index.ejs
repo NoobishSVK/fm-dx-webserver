@@ -36,9 +36,10 @@
     </script>
 </head>
 <body>
+    <div id="wrapper-outer">
     <div id="wrapper">
         <div class="panel-100 no-bg tuner-info">
-            <h1 id="tuner-name"><%= tunerName %> 
+            <h1 id="tuner-name"><span class="text-bold" style="color: var(--color-text);">[</span> <%= tunerName %> <span class="text-bold" style="color: var(--color-text);">]</span> 
                 <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip" aria-label="Only people with tune password can tune." data-tooltip="Only people with tune password can tune."></i>
                 <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip" aria-label="Tuner is currently locked to admin." data-tooltip="Tuner is currently locked to admin."></i>
                 <% } %>
@@ -56,7 +57,7 @@
         </div>
 
         <div class="flex-container">
-            <div class="panel-100 bg-none" style="margin-top: 0;">
+            <div class="panel-100 no-bg" style="margin-top: 0; margin-left: 0;">
                 <div class="flex-container">
                     <div class="panel-75 flex-container no-bg">
                         <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
@@ -77,8 +78,11 @@
                             <div style="display:inline-block">
                                 <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                             </div>
-                            <span class="pointer stereo-container" style="position: relative;">
-                                <span style="margin-left: 20px;" class="data-st">ST</span>
+                            <span class="pointer stereo-container" style="position: relative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+                                <div class="circle-container">
+                                    <div class="circle data-st circle1"></div>
+                                    <div class="circle data-st circle2"></div>
+                                </div>
                                 <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                             </span>                                                               
                             <span style="margin-left: 15px;" class="data-ms">MS</span>
@@ -114,35 +118,35 @@
                 
                 <div class="flex-container flex-phone flex-phone-column">
                     <div class="panel-33 no-bg filter-controls" style="height: 48px;">
-                        <div class="flex-container flex-phone h-100">
+                        <div class="flex-container no-filter flex-phone h-100">
                             <div class="panel-75 no-bg h-100 m-0 hide-desktop m-right-20 button-play-mobile" style="margin-right: 20px;">
                                 <button class="playbutton" aria-label="Play/Stop"><i class="fa-solid fa-play"></i></button>
                             </div>
                             
                             <% if (antennas.enabled == true) { %>
-                                <div class="panel-50 no-bg h-100 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
-                                    <input type="text" placeholder="Ant A" readonly>
-                                    <ul class="options">
-                                        <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option"><%= antennas.ant1.name %></li><% } %>
-                                        <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option"><%= antennas.ant2.name %></li><% } %>
-                                        <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option"><%= antennas.ant3.name %></li><% } %>
-                                        <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option"><%= antennas.ant4.name %></li><% } %>
+                                <div class="panel-50 no-bg h-100 br-0 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
+                                    <input type="text" placeholder="Ant A" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
+                                        <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
+                                        <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
+                                        <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
                                     </ul>
                                 </div>
                             <% } %>
                             
-                            <div class="panel-50 no-bg h-100 m-0 button-eq">
-                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 30px 0px 0px 30px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
+                            <div class="panel-50 no-bg br-0 h-100 m-0 button-eq">
+                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
-                            <div class="panel-50 no-bg h-100 m-0 button-ims">
-                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
-                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 30px 30px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
+                            <div class="panel-50 no-bg br-0 h-100 m-0 button-ims">
+                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
+                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="panel-33 flex-container flex-phone" id="tune-buttons">
+                    <div class="panel-33 flex-container flex-phone no-bg" id="tune-buttons">
                         <button id="freq-down" aria-label="Tune down"><i class="fa-solid fa-chevron-left"></i></button>
                         <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency" autocomplete="off" aria-label="Current frequency: ">
                         <button id="freq-up" aria-label="Tune up"><i class="fa-solid fa-chevron-right"></i></button>
@@ -161,84 +165,71 @@
                             <% } %>
                             <% if (device == 'tef' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" class="option">Auto</li>
-                                        <li data-value="56000" class="option">56 KHz</li>
-                                        <li data-value="64000" class="option">64 KHz</li>
-                                        <li data-value="72000" class="option">72 KHz</li>
-                                        <li data-value="84000" class="option">84 KHz</li>
-                                        <li data-value="97000" class="option">97 KHz</li>
-                                        <li data-value="114000" class="option">114 KHz</li>
-                                        <li data-value="133000" class="option">133 KHz</li>
-                                        <li data-value="151000" class="option">151 KHz</li>
-                                        <li data-value="184000" class="option">184 KHz</li>
-                                        <li data-value="200000" class="option">200 KHz</li>
-                                        <li data-value="217000" class="option">217 KHz</li>
-                                        <li data-value="236000" class="option">236 KHz</li>
-                                        <li data-value="254000" class="option">254 KHz</li>
-                                        <li data-value="287000" class="option">287 KHz</li>
-                                        <li data-value="311000" class="option">311 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" class="option" tabindex="0">Auto</li>
+                                        <li data-value="56000" class="option" tabindex="0">56 KHz</li>
+                                        <li data-value="64000" class="option" tabindex="0">64 KHz</li>
+                                        <li data-value="72000" class="option" tabindex="0">72 KHz</li>
+                                        <li data-value="84000" class="option" tabindex="0">84 KHz</li>
+                                        <li data-value="97000" class="option" tabindex="0">97 KHz</li>
+                                        <li data-value="114000" class="option" tabindex="0">114 KHz</li>
+                                        <li data-value="133000" class="option" tabindex="0">133 KHz</li>
+                                        <li data-value="151000" class="option" tabindex="0">151 KHz</li>
+                                        <li data-value="184000" class="option" tabindex="0">184 KHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
+                                        <li data-value="217000" class="option" tabindex="0">217 KHz</li>
+                                        <li data-value="236000" class="option" tabindex="0">236 KHz</li>
+                                        <li data-value="254000" class="option" tabindex="0">254 KHz</li>
+                                        <li data-value="287000" class="option" tabindex="0">287 KHz</li>
+                                        <li data-value="311000" class="option" tabindex="0">311 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
 
                             <% if (device == 'xdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" data-value2="0" class="option">Auto</li>
-                                        <li data-value="9000" data-value2="1" class="option">9 KHz</li>
-                                        <li data-value="15000" data-value2="2" class="option">15 KHz</li>
-                                        <li data-value="17000" data-value2="3" class="option">17 KHz</li>
-                                        <li data-value="20000" data-value2="4" class="option">20 KHz</li>
-                                        <li data-value="24000" data-value2="5" class="option">24 KHz</li>
-                                        <li data-value="27000" data-value2="6" class="option">27 KHz</li>
-                                        <li data-value="32000" data-value2="7" class="option">32 KHz</li>
-                                        <li data-value="36000" data-value2="8" class="option">36 KHz</li>
-                                        <li data-value="42000" data-value2="9" class="option">42 KHz</li>
-                                        <li data-value="48000" data-value2="10" class="option">48 KHz</li>
-                                        <li data-value="55000" data-value2="11" class="option">55 KHz</li>
-                                        <li data-value="63000" data-value2="12" class="option">63 KHz</li>
-                                        <li data-value="73000" data-value2="13" class="option">73 KHz</li>
-                                        <li data-value="83000" data-value2="14" class="option">83 KHz</li>
-                                        <li data-value="90000" data-value2="15" class="option">90 KHz</li>
-                                        <li data-value="95000" data-value2="16" class="option">95 KHz</li>
-                                        <li data-value="108000" data-value2="17" class="option">108 KHz</li>
-                                        <li data-value="125000" data-value2="18" class="option">125 KHz</li>
-                                        <li data-value="142000" data-value2="19" class="option">142 KHz</li>
-                                        <li data-value="155000" data-value2="20" class="option">159 KHz</li>
-                                        <li data-value="177000" data-value2="21" class="option">177 KHz</li>
-                                        <li data-value="194000" data-value2="22" class="option">194 KHz</li>
-                                        <li data-value="211000" data-value2="23" class="option">211 KHz</li>
-                                        <li data-value="229000" data-value2="24" class="option">229 KHz</li>
-                                        <li data-value="246000" data-value2="25" class="option">246 KHz</li>
-                                        <li data-value="263000" data-value2="26" class="option">263 KHz</li>
-                                        <li data-value="281000" data-value2="27" class="option">281 KHz</li>
-                                        <li data-value="298000" data-value2="28" class="option">298 KHz</li>
-                                        <li data-value="309000" data-value2="29" class="option">309 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
+                                        <li data-value="55000" data-value2="0" class="option" tabindex="0">55 KHz</li>
+                                        <li data-value="73000" data-value2="1" class="option" tabindex="0">73 KHz</li>
+                                        <li data-value="90000" data-value2="2" class="option" tabindex="0">90 KHz</li>
+                                        <li data-value="108000" data-value2="3" class="option" tabindex="0">108 KHz</li>
+                                        <li data-value="125000" data-value2="4" class="option" tabindex="0">125 KHz</li>
+                                        <li data-value="142000" data-value2="5" class="option" tabindex="0">142 KHz</li>
+                                        <li data-value="159000" data-value2="6" class="option" tabindex="0">159 KHz</li>
+                                        <li data-value="177000" data-value2="7" class="option" tabindex="0">177 KHz</li>
+                                        <li data-value="194000" data-value2="8" class="option" tabindex="0">194 KHz</li>
+                                        <li data-value="211000" data-value2="9" class="option" tabindex="0">211 KHz</li>
+                                        <li data-value="229000" data-value2="10" class="option" tabindex="0">229 KHz</li>
+                                        <li data-value="246000" data-value2="11" class="option" tabindex="0">246 KHz</li>
+                                        <li data-value="263000" data-value2="12" class="option" tabindex="0">263 KHz</li>
+                                        <li data-value="281000" data-value2="13" class="option" tabindex="0">281 KHz</li>
+                                        <li data-value="298000" data-value2="14" class="option" tabindex="0">298 KHz</li>
+                                        <li data-value="309000" data-value2="15" class="option" tabindex="0">309 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
 
                             <% if (device == 'sdr' && bwSwitch == true) { %>
                                 <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
-                                    <input type="text" placeholder="Auto BW" readonly>
-                                    <ul class="options open-top">
-                                        <li data-value="0" class="option">Auto</li>
-                                        <li data-value="4000" class="option">4 KHz</li>
-                                        <li data-value="8000" class="option">8 KHz</li>
-                                        <li data-value="10000" class="option">10 KHz</li>
-                                        <li data-value="20000" class="option">20 KHz</li>
-                                        <li data-value="30000" class="option">30 KHz</li>
-                                        <li data-value="50000" class="option">50 KHz</li>
-                                        <li data-value="75000" class="option">75 KHz</li>
-                                        <li data-value="100000" class="option">100 KHz</li>
-                                        <li data-value="125000" class="option">125 KHz</li>
-                                        <li data-value="150000" class="option">150 KHz</li>
-                                        <li data-value="175000" class="option">175 KHz</li>
-                                        <li data-value="200000" class="option">200 KHz</li>
-                                        <li data-value="225000" class="option">225 KHz</li>
+                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                                    <ul class="options open-top" tabindex="-1">
+                                        <li data-value="0" class="option" tabindex="0">Auto</li>
+                                        <li data-value="4000" class="option" tabindex="0">4 KHz</li>
+                                        <li data-value="8000" class="option" tabindex="0">8 KHz</li>
+                                        <li data-value="10000" class="option" tabindex="0">10 KHz</li>
+                                        <li data-value="20000" class="option" tabindex="0">20 KHz</li>
+                                        <li data-value="30000" class="option" tabindex="0">30 KHz</li>
+                                        <li data-value="50000" class="option" tabindex="0">50 KHz</li>
+                                        <li data-value="75000" class="option" tabindex="0">75 KHz</li>
+                                        <li data-value="100000" class="option" tabindex="0">100 KHz</li>
+                                        <li data-value="125000" class="option" tabindex="0">125 KHz</li>
+                                        <li data-value="150000" class="option" tabindex="0">150 KHz</li>
+                                        <li data-value="175000" class="option" tabindex="0">175 KHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
+                                        <li data-value="225000" class="option" tabindex="0">225 KHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -275,17 +266,20 @@
                 
             </div>
 
-            <div class="panel-10 bg-none" style="margin-top: 0;">
-                <div class="panel-100 w-100">
+            <div class="panel-10 no-bg m-0">
+                <div class="panel-100 w-100" style="margin-left: 0;">
                     <h2>AF</h2>
                     <div id="af-list" class="p-bottom-20" style="text-align: center;">
-                        <ul style="height: 251px;">
+                        <% if (chatEnabled) { %><ul style="height: 231px;">
+                        <% } else { %>
+                        <ul style="height: 351px;">
+                        <% } %>
 
                         </ul>
                     </div>
                 </div>
                 <% if (chatEnabled) { %>
-                <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px;">
+                <div class="panel-10 no-bg h-100 hide-phone" style="width: 100px; height: 100px; margin-left: 0;">
                     <button class="chatbutton bg-color-2" aria-label="Chatbox"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
                 </div>
                 <% } %>
@@ -295,14 +289,17 @@
             <h2 class="show-phone">
                 <div class="data-pty text-color-default"></div>
             </h2>
-            <h3 style="margin-top:0;margin-bottom:0;" class="color-4 flex-center">
+            <h3 style="margin-top:0;margin-bottom:0;" class="colornode-4 flex-center">
                 <span class="data-tp">TP</span>
                 <span style="margin-left: 15px;" class="data-ta">TA</span>
                 <div style="display:inline-block">
                     <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                 </div>
-                <span class="pointer stereo-container" style="position: relative;">
-                    <span style="margin-left: 20px;" class="data-st">ST</span>
+                <span class="pointer stereo-container" style="position: noderelative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+                    <div class="circle-container">
+                        <div class="circle data-st circle1"></div>
+                        <div class="circle data-st circle2"></div>
+                    </div>
                     <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                 </span>
                 <span style="margin-left: 15px;" class="data-ms">MS</span>
@@ -312,45 +309,31 @@
     
     <button id="settings" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
     <% if (chatEnabled) { %>
-    <button class="chatbutton hide-desktop bg-color-2"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
+    <button class="chatbutton hide-desktop bg-color-2" aria-label="Chatbox"><i class="fa-solid fa-comments fa-lg"></i> (<span class="chat-messages-count">0</span>)</button>
     <% } %>
-    <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
-
-    <% if (isAdminAuthenticated) { %>
-        <div class="admin-quick-dashboard hide-phone">
-            <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" data-tooltip="Toggle admin lock<br>Lasts until restart">
-                <i class="fa-solid fa-lock"></i>
-            </div>
-            <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" data-tooltip="Toggle password lock<br>Lasts until restart">
-                <i class="fa-solid fa-key"></i>
-            </div>
-            <div class="icon tooltip" data-tooltip="Go to admin menu" onClick="window.open('./setup', '_blank').focus();">
-                <i class="fa-solid fa-user"></i>
-            </div>
-        </div>
-    <% } %>   
+    <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button> 
 
 <div id="myModal" class="modal">
     <div class="modal-panel">
         <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close settings" tabindex="0"><i class="fa-solid fa-chevron-right"></i></div>
         <div class="modal-panel-content">
             <h1 class="top-25">Settings</h1>
             
             <div class="form-group top-25">
                 <label for="themes"><i class="fa-solid fa-palette"></i> Theme:</label>
                 <div class="dropdown" id="theme-selector">
-                    <input type="text" placeholder="Default" readonly>
-                    <ul class="options">
-                        <li class="option" data-value="theme1">Default</li>
-                        <li class="option" data-value="theme2">Cappuccino</li>
-                        <li class="option" data-value="theme3">Nature</li>
-                        <li class="option" data-value="theme4">Ocean</li>
-                        <li class="option" data-value="theme5">Terminal</li>
-                        <li class="option" data-value="theme6">Nightlife</li>
-                        <li class="option" data-value="theme7">Blurple</li>
-                        <li class="option" data-value="theme8">Construction</li>
-                        <li class="option" data-value="theme9">AMOLED</li>
+                    <input type="text" placeholder="Default" readonly tabindex="0">
+                    <ul class="options" tabindex="-1">
+                        <li class="option" tabindex="0" data-value="theme1">Default</li>
+                        <li class="option" tabindex="0" data-value="theme2">Cappuccino</li>
+                        <li class="option" tabindex="0" data-value="theme3">Nature</li>
+                        <li class="option" tabindex="0" data-value="theme4">Ocean</li>
+                        <li class="option" tabindex="0" data-value="theme5">Terminal</li>
+                        <li class="option" tabindex="0" data-value="theme6">Nightlife</li>
+                        <li class="option" tabindex="0" data-value="theme7">Blurple</li>
+                        <li class="option" tabindex="0" data-value="theme8">Construction</li>
+                        <li class="option" tabindex="0" data-value="theme9">AMOLED</li>
                     </ul>
                 </div>
             </div>
@@ -359,27 +342,23 @@
             <div class="form-group top-25">
                 <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
                 <div class="dropdown" id="signal-selector">
-                    <input type="text" placeholder="dBf" readonly>
-                    <ul class="options">
-                        <li class="option" data-value="dbf">dBf</li>
-                        <li class="option" data-value="dbuv">dBuV</li>
-                        <li class="option" data-value="dbm">dBm</li>
+                    <input type="text" placeholder="dBf" readonly tabindex="0">
+                    <ul class="options" tabindex="-1">
+                        <li class="option" tabindex="0" data-value="dbf">dBf</li>
+                        <li class="option" tabindex="0" data-value="dbuv">dBuV</li>
+                        <li class="option" tabindex="0" data-value="dbm">dBm</li>
                     </ul>
                 </div>
             </div><br>
             <% } %>
             
             <div class="form-group checkbox">
-                <input type="checkbox" id="extended-frequency-range">
+                <input type="checkbox" tabindex="0"  id="extended-frequency-range" aria-label="Add decimals manually">
                 <label for="extended-frequency-range">Add decimals manually</label>
             </div>
             <div class="form-group checkbox">
-                <input type="checkbox" id="ps-underscores">
+                <input type="checkbox" tabindex="0" id="ps-underscores" aria-label="Add underscores to RDS PS">
                 <label for="ps-underscores">Add underscores to RDS PS</label>
-            </div>
-            <div class="form-group checkbox">
-                <input type="checkbox" id="smooth-signal">
-                <label for="smooth-signal">Smooth signal</label>
             </div>
 
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
@@ -388,19 +367,38 @@
             </div>
             
             <% if (isAdminAuthenticated) { %>
-                <p>You are logged in as an adminstrator.<br>
-                    <a href="./setup" target="_blank">Setup</a> • <a class="logout-link" href="#">Logout</a>
-                </p>
+                <p class="color-3">You are logged in as an adminstrator.</p>
+                    <div class="admin-quick-dashboard">
+                        <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                            <i class="fa-solid fa-sign-out"></i>
+                        </div>
+                    </div>
                 <% } else if (isTuneAuthenticated) { %>
-                    <p>You are logged in and can control the receiver.<br><a class="logout-link" href="#">Logout</a></p>
+                    <p class="color-3">You are logged in and can control the receiver.</p>
+                    <div class="admin-quick-dashboard">
+                        <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                            <i class="fa-solid fa-sign-out"></i>
+                        </div>
+                    </div>
                     <% } else { %>
                         <form action="./login" method="post" id="login-form" class="top-25">
                             <label for="password">Password:</label>
-                            <input type="password" id="password" name="password" style="width: 200px;" required><br>
-                            <button type="submit" class="br-0 w-100 top-10" style="height: 44px">Login</button>
+                            <input type="password" id="password" name="password" style="width: 145px;" required>
+                            <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                            </button>
                         </form>
                         <% } %>
-                        <div id="login-message"></div>
+                        <div id="login-message" class="color-3">&nbsp;</div>
                         
                         <hr class="color-2 auto">
 
@@ -437,7 +435,7 @@
                                 FM-DX Webserver <span style="color: var(--color-3);" class="version-string"></span>
                             </p>
                             <p class="text-small m-0 color-3">by <a href="https://noobish.eu" target="_blank">Noobish</a>, <a href="https://fmdx.pl" target="_blank">kkonradpl</a> & the OpenRadio community.</p>
-                            <span class="text-small" style="color: var(--color-3);">[<a href="https://list.fmdx.pl" target="_blank">Receiver Map</a>]</span>
+                            <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
                             <br>
                             <br>
                             <% if(ownerContact){ %>
@@ -469,7 +467,7 @@
     </div>
                   
     <div class="modal-panel-chat">
-        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button"><i class="fa-solid fa-chevron-down"></i></div>
+        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close chat" tabindex="0"><i class="fa-solid fa-chevron-down"></i></div>
         <div class="modal-panel-content text-left">
             <div style="text-align: center;">
                     <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
@@ -489,11 +487,14 @@
         </div>
     </div>
 </div>
+</div>
 
 <script src="js/websocket.js"></script>
 <script src="js/webserver.js"></script>
-<% plugins?.forEach(function(plugin) { %>
+<% if (!noPlugins) { %>
+    <% plugins?.forEach(function(plugin) { %>
         <script src="js/plugins/<%= plugin %>"></script>
-<% }); %>
+    <% }); %>
+<% } %>
 </body>
 </html>

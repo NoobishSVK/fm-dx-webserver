@@ -107,12 +107,12 @@
 }
 
 .hover-brighten {
-    transition: 0.3s ease-in-out background-color;
+    transition: 0.3s ease background-color;
 }
 
 .hover-brighten:hover {
     cursor: pointer;
-    background-color: var(--color-2);
+    background-color: var(--color-2-transparent);
 }
 
 .text-left {
@@ -242,7 +242,7 @@
         display: none;
     }
     .m-0 {
-        margin: auto;
+        margin: auto !important;
     }
 }
 

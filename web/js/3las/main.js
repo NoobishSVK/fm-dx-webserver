@@ -1,4 +1,3 @@
-const DefaultVolume = 0.5;
 let Stream;
 let shouldReconnect = true;
 let newVolumeGlobal = 1;
@@ -28,7 +27,7 @@ function destroyStream() {
 function OnConnectivityCallback(isConnected) {
     console.log("Connectivity changed:", isConnected);
     if (Stream) {
-        Stream.Volume = isConnected ? 1.0 : DefaultVolume;
+        Stream.Volume = $('#volumeSlider').val();
     } else {
         console.warn("Stream is not initialized.");
     }

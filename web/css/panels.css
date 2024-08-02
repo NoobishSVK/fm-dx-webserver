@@ -1,16 +1,35 @@
 *[class^="panel-"] {
-    background-color: var(--color-1);
+    background-color: var(--color-1-transparent);
     margin-left: 10px;
     margin-right: 10px;
-    border-radius: 30px;
+    border-radius: 15px;
     text-align: center;
-    margin-top: 30px;
-    transition: 0.3s ease-in-out background-color;
+    margin-top: 20px;
+    transition: 0.3s ease background-color;
+}
+
+*[class^="panel-"]:not(.no-bg):not(.no-filter):not(.w-100) {
+    backdrop-filter: blur(5px);
+}
+
+.panel-100.w-100 {
+    position: relative; 
+}
+
+.panel-100.w-100::before {
+    content: '';
+    backdrop-filter: blur(10px);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    border-radius: 15px;
 }
 
 .panel-10 {
     width: 10%;
-    margin-top: 30px;
 }
 
 .panel-33 {
@@ -50,6 +69,10 @@
         width: 90%;
         margin-bottom: 20px;
         background-color: transparent;
+    }
+    *[class^="panel-"]:not(.no-bg):not(.no-filter):not(#ps-container),
+    .panel-100.w-100::before {
+        backdrop-filter: blur(0px);
     }
     .flex-phone {
         display: flex;

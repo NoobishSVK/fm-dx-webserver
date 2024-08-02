@@ -1,10 +1,14 @@
 const fetch = require('node-fetch');
-const { serverConfig } = require('./server_config')
+const { serverConfig } = require('./server_config');
+const consoleCmd = require('./console');
 
 let cachedData = {};
 
 let lastFetchTime = 0;
 const fetchInterval = 3000;
+
+const esSwitchCache = {"lastCheck":0, "esSwitch":false};
+const esFetchInterval = 300000;
 
 // Fetch data from maps
 function fetchTx(freq, piCode, rdsPs) {
@@ -36,7 +40,6 @@ function fetchTx(freq, piCode, rdsPs) {
             return processData(data, piCode, rdsPs);
         })
         .catch(error => {
-            console.error("Error fetching data:", error);
         });
 }
 
@@ -46,6 +49,7 @@ function processData(data, piCode, rdsPs) {
     let maxScore = -Infinity; // Initialize maxScore with a very low value
     let txAzimuth;
     let maxDistance;
+    let esMode = checkEs();
 
     for (const cityId in data.locations) {
         const city = data.locations[cityId];
@@ -53,7 +57,11 @@ function processData(data, piCode, rdsPs) {
             for (const station of city.stations) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
-                    const score =  (10*Math.log10(station.erp*1000)) / distance.distanceKm; // Calculate score
+                    let weightDistance = distance.distanceKm
+                    if (esMode && (distance.distanceKm > 500)) {
+                        weightDistance = Math.abs(distance.distanceKm-1500);
+                    }
+                    const score =  (10*Math.log10(station.erp*1000)) / weightDistance; // Calculate score
                     if (score > maxScore) {
                         maxScore = score;
                         txAzimuth = distance.azimuth;
@@ -75,11 +83,43 @@ function processData(data, piCode, rdsPs) {
             itu: matchingCity.itu,
             distance: maxDistance.toFixed(0),
             azimuth: txAzimuth.toFixed(0),
+            id: matchingStation.id,
             foundStation: true
         };
     } else {
         return;
     }
+}
+
+function checkEs() {
+    const now = Date.now();
+    const url = "https://fmdx.org/includes/tools/get_muf.php";
+    let esSwitch = false;
+
+    if (now - esSwitchCache.lastCheck < esFetchInterval) {
+        esSwitch = esSwitchCache.esSwitch;
+    } else if (serverConfig.identification.lat > 20) {
+        esSwitchCache.lastCheck = now;
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (serverConfig.identification.lon < -32) {
+                if (data.north_america.max_frequency != "No data") {
+                    esSwitch = true;
+                }
+            } else {
+                if (data.europe.max_frequency != "No data") {
+                    esSwitch = true;
+                }
+            }
+            esSwitchCache.esSwitch = esSwitch;
+        })
+        .catch(error => {
+            console.error("Error fetching data:", error);
+        });
+    }
+
+    return esSwitch;
 }
 
 function haversine(lat1, lon1, lat2, lon2) {

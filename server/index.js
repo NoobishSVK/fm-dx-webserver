@@ -11,6 +11,7 @@ const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 const chatWss = new WebSocket.Server({ noServer: true });
+const rdsWss = new WebSocket.Server({ noServer: true });
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
@@ -33,7 +34,7 @@ console.log(`\x1b[32m
 |  _| | |  | |_____| |_| /  \\    \\ V  V /  __/ |_) \\__ \\  __/ |   \\ V /  __/ |   
 |_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
 `);
-console.log('\x1b[0mFM-DX-Webserver', pjson.version);
+console.log('\x1b[0mFM-DX Webserver', pjson.version);
 console.log('\x1b[90m―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――');
 
 // Start ffmpeg
@@ -64,19 +65,34 @@ connectToSerial();
 
 // Serial Connection
 function connectToSerial() {
-  if (serverConfig.xdrd.wirelessConnection === false) {
+if (serverConfig.xdrd.wirelessConnection === false) {
     
-    serialport = new SerialPort({path: serverConfig.xdrd.comPort, baudRate: 115200 });
+  // Configure the SerialPort with DTR and RTS options
+  serialport = new SerialPort({
+    path: serverConfig.xdrd.comPort,
+    baudRate: 115200,
+    autoOpen: false, // Prevents automatic opening
+    dtr: false, // Disable DTR
+    rts: false  // Disable RTS
+  });
 
-    serialport.on('open', () => {
-      logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-      serialport.write('x\n');
+  // Open the port manually after configuring DTR and RTS
+  serialport.open((err) => {
+    if (err) {
+      logError('Error opening port: ' + err.message);
+      return;
+    }
+    
+    logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+    serialport.write('x\n');
+    
+    setTimeout(() => {
       serialport.write('Q0\n');
       serialport.write('M0\n');
       serialport.write('Z0\n');
 
-      if(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
-        serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
+      if (serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
+        serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
       } else {
@@ -88,21 +104,23 @@ function connectToSerial() {
       serialport.write('W0\n');
       serialport.write('D0\n');
       serialport.write('G00\n');
-      serverConfig.audio.startupVolume ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') : serialport.write('Y100\n');
-      
-      serialport.on('data', (data) => {
-        helpers.resolveDataBuffer(data, wss);
-      });
+      serverConfig.audio.startupVolume 
+        ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
+        : serialport.write('Y100\n');
+    }, 3000);
+    
+    serialport.on('data', (data) => {
+      helpers.resolveDataBuffer(data, wss, rdsWss);
     });
 
     serialport.on('error', (error) => {
       logError(error.message);
     });
+  });
 
-    return serialport;
-  }
+  return serialport;
 }
-
+}
 // xdrd connection
 function connectToXdrd() {
   const { xdrd } = serverConfig;
@@ -168,7 +186,7 @@ function connectToXdrd() {
       };
       
       client.on('data', (data) => {
-        helpers.resolveDataBuffer(data, wss);
+        helpers.resolveDataBuffer(data, wss, rdsWss);
         if (authFlags.authMsg == true && authFlags.messageCount > 1) {
           // If the limit is reached, remove the 'data' event listener
           client.off('data', authDataHandler);
@@ -267,14 +285,16 @@ wss.on('connection', (ws, request) => {
         logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
       }
     });
+  }).on('error', (err) => {
+    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
   });
 
   ws.on('message', (message) => {
     const command = message.toString();
     logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
 
-    if (command.startsWith('X')) {
-        logWarn(`Remote tuner shutdown attempted by \x1b[90m${clientIp}\x1b[0m. You may consider blocking this user.`);
+    if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
+        logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
         return;
     }
 
@@ -420,6 +440,15 @@ chatWss.on('connection', (ws, request) => {
   });
 });
 
+rdsWss.on('connection', (ws, request) => {
+  ws.on('message', function incoming(message) {
+  
+  });
+
+  ws.on('close', function close() {
+  });
+});
+
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
@@ -434,6 +463,12 @@ httpServer.on('upgrade', (request, socket, head) => {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
+      });
+    });
+  } else if (request.url === '/rds' || request.url === '/rdsspy') {
+    sessionMiddleware(request, {}, () => {
+      rdsWss.handleUpgrade(request, socket, head, (ws) => {
+        rdsWss.emit('connection', ws, request);
       });
     });
   } else {

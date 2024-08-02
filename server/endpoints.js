@@ -22,6 +22,8 @@ router.get('/', (req, res) => {
         return;
     }
 
+    const noPlugins = req.query.noPlugins === 'true';
+
     if (configExists() === false) {
         let serialPorts;
         
@@ -57,6 +59,7 @@ router.get('/', (req, res) => {
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
             chatEnabled: serverConfig.webserver.chatEnabled,
             device: serverConfig.device,
+            noPlugins,
             plugins: serverConfig.plugins,
             bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });
@@ -111,12 +114,21 @@ router.get('/setup', (req, res) => {
                 processUptime: formattedProcessUptime,
                 consoleOutput: logs,
                 plugins: allPluginConfigs,
+                enabledPlugins: serverConfig.plugins,
                 onlineUsers: dataHandler.dataToSend.users,
                 connectedUsers: storage.connectedUsers
             });
         });
     })
     
+});
+
+router.get('/rds', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
+});
+
+router.get('/rdsspy', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/api', (req, res) => {

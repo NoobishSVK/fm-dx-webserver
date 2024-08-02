@@ -12,34 +12,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
+    <div id="wrapper-outer" class="wrapper-outer-static">
     <div id="wrapper" class="setup-wrapper">
         <% if (isAdminAuthenticated) { %>
         <div class="panel-100 no-bg">
             <img class="top-10" src="./images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
         </div>
-        <div class="panel-100">
-            <ul class="nav" role="tablist">
-                <li role="presentation" data-panel="dashboard">
-                    <a href="#" role="tab"  aria-controls="dashboard" aria-selected="true">Dashboard</a>
+        <div id="login-message"></div>
+        <div class="panel-100" style="border-radius: 15px 15px 0 0;">
+            <ul class="nav" role="tablist" style="border-radius: 15px 15px 0 0;">
+                <li role="presentation" data-panel="dashboard" aria-selected="true">
+                    <a href="#" role="tab" tabindex="0" aria-controls="dashboard">Dashboard</a>
                 </li>
                 <li role="presentation" data-panel="tuner">
-                    <a href="#" role="tab" aria-controls="tuner">Tuner</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="tuner">Tuner</a>
                 </li>
                 <li role="presentation" data-panel="connection">
-                    <a href="#" role="tab" aria-controls="connection">Connection</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="connection">Connection</a>
                 </li>
                 <li role="presentation" data-panel="audio">
-                    <a href="#" role="tab" aria-controls="audio">Audio</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="audio">Audio</a>
                 </li>
                 <li role="presentation" data-panel="webserver">
-                    <a href="#" role="tab" aria-controls="webserver">Webserver</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="webserver">Webserver</a>
                 </li>
                 <li role="presentation" data-panel="plugins">
-                    <a href="#" role="tab" aria-controls="plugins">Plugins</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="plugins">Plugins</a>
                 </li>
                 <li role="presentation" data-panel="identification">
-                    <a href="#" role="tab" aria-controls="identification">Info & Map</a>
+                    <a href="#" role="tab" tabindex="-1" aria-controls="identification">Info & Map</a>
                 </li>
                 <li role="presentation" class="logout-link text-gray">
                     <a href="./logout"><i class="fas fa-sign-out"></i></a>
@@ -47,25 +49,24 @@
             </ul>
         </div>
 
-        <div id="login-message"></div>
-        <div class="panel-100">
-            <div class="panel-100 tab-content" id="dashboard" role="tabpanel">
+        <div class="panel-100" style="margin-top: -20px; border-radius: 0 0 15px 15px;">
+            <div class="panel-100 tab-content no-bg no-bg" id="dashboard" role="tabpanel">
                 <h2>Dashboard</h2>
 
-                <div class="panel-100 flex-container auto">
-                    <div class="panel-33">
+                <div class="panel-100 flex-container auto p-bottom-20">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= onlineUsers %></span>
-                        <p>Online users</p>
+                        <p class="m-0">Online users</p>
                     </div>
 
-                    <div class="panel-33">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= memoryUsage %></span>
-                        <p>Memory usage</p>
+                        <p class="m-0">Memory usage</p>
                     </div>
 
-                    <div class="panel-33">
+                    <div class="panel-33 no-bg">
                         <span class="text-medium-big color-5"><%= processUptime %></span>
-                        <p>Uptime</p>
+                        <p class="m-0">Uptime</p>
                     </div>
                 </div>
 
@@ -83,7 +84,7 @@
                         <% if (connectedUsers.length > 0) { %>
                             <% connectedUsers.forEach(user => { %>
                                 <tr>
-                                    <td><%= user.ip %></td>
+                                    <td><a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip %>" target="_blank"><%= user.ip %></a></td>
                                     <td><%= user.location %></td>
                                     <td><%= user.time %></td>
                                     <td><a href="./kick?ip=<%= user.ip %>">Kick</a></td>
@@ -100,15 +101,15 @@
                 <h3>Maintenance</h3>
                 <div class="flex-container flex-center" style="margin: 30px;">
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-public">
+                        <input type="checkbox" tabindex="0"  id="tuner-public" aria-label="Public tuner (no password)">
                         <label for="tuner-public">Public tuner (no password)</label>
                     </div>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-lock">
-                        <label for="tuner-lock">Admin lock [only admins can tune]</label>
+                        <input type="checkbox" tabindex="0"  id="tuner-lock" aria-label="Admin lock (only admins can tune)">
+                        <label for="tuner-lock">Admin lock (only admins can tune)</label>
                     </div>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="shutdown-tuner">
+                        <input type="checkbox" tabindex="0"  id="shutdown-tuner" aria-label="Auto shutdown">
                         <label for="shutdown-tuner">Auto-shutdown</label>
                     </div><br>
                 </div>
@@ -137,14 +138,14 @@
                 <p><a href="https://github.com/noobishsvk/fm-dx-webserver" target="_blank">Check for the latest source code</a> • <a href="https://buymeacoffee.com/noobish" target="_blank">Support the developer</a></p>
             </div>
     
-            <div class="panel-100 tab-content" id="connection" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="connection" role="tabpanel">
                 <h2>Connection settings</h2>
                 <p>You can set up your connection settings here. Changing these settings requires a server restart.</p>
                 <h3>Tuner connection:</h3>
 
                 <div style="width: 300px;" class="auto top-10">
                     <label class="toggleSwitch nolabel" onclick="">
-                        <input id="connection-type-toggle" type="checkbox"/>
+                        <input id="connection-type-toggle" type="checkbox" tabindex="0" aria-label="Connection type"/>
                         <a></a>
                         <span>
                             <span class="left-span">Direct</span>
@@ -157,10 +158,10 @@
                     <div class="form-group">
                         <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
                         <div class="dropdown" style="width: 300px;margin-right: 0;">
-                            <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly />
-                            <ul class="options" id="deviceList">
+                            <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly tabindex="0" />
+                            <ul class="options" tabindex="-1" id="deviceList">
                                 <% serialPorts.forEach(serialPort => { %>
-                                    <li data-value="<%= serialPort.path %>" class="option"><%= serialPort.path %> - <%= serialPort.friendlyName %></li>
+                                    <li data-value="<%= serialPort.path %>" class="option" tabindex="0"><%= serialPort.path %> - <%= serialPort.friendlyName %></li>
                                 <% }); %>
                             </ul>
                         </div>
@@ -198,7 +199,7 @@
                 <br>
             </div>
     
-            <div class="panel-100 tab-content" id="audio" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="audio" role="tabpanel">
                 <h2>Audio settings</h2>
                 
                 <p>You can set up your audio settings here. Changing these settings requires a server restart.</p>
@@ -209,13 +210,13 @@
                         </p>
                         <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
                         <div class="dropdown" style="width: 300px;">
-                            <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly />
-                            <ul class="options" id="deviceList">
+                            <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly tabindex="0" />
+                            <ul class="options" tabindex="-1" id="deviceList">
                                 <% videoDevices.forEach(device => { %>
-                                    <li data-value="<%= device.name %>" class="option"><%= device.name %></li>
+                                    <li data-value="<%= device.name %>" class="option" tabindex="0"><%= device.name %></li>
                                 <% }); %>
                                 <% audioDevices.forEach(device => { %>
-                                    <li data-value="<%= device.name %>" class="option"><%= device.name %></li>
+                                    <li data-value="<%= device.name %>" class="option" tabindex="0"><%= device.name %></li>
                                 <% }); %>
                             </ul>
                         </div>
@@ -227,10 +228,10 @@
                         </p>
                         <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> Audio channels:</label>
                         <div class="dropdown" style="width: 300px;">
-                            <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly />
-                            <ul class="options">
-                                <li data-value="2" class="option">Stereo</li>
-                                <li data-value="1" class="option">Mono</li>
+                            <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly tabindex="0" />
+                            <ul class="options" tabindex="-1">
+                                <li data-value="2" class="option" tabindex="0">Stereo</li>
+                                <li data-value="1" class="option" tabindex="0">Mono</li>
                             </ul>
                         </div>
                     </div>
@@ -241,26 +242,26 @@
                         </p>
                         <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> Audio quality:</label>
                         <div class="dropdown" style="width: 300px;">
-                            <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly />
-                            <ul class="options">
-                                <li data-value="64k" class="option">64k (lowest quality)</li>
-                                <li data-value="96k" class="option">96k (low quality)</li>
-                                <li data-value="128k" class="option">128k (standard)</li>
-                                <li data-value="192k" class="option">192k (higher quality)</li>
-                                <li data-value="256k" class="option">256k (very high quality)</li>
-                                <li data-value="320k" class="option">320k (ultra quality)</li>
+                            <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly tabindex="0" />
+                            <ul class="options" tabindex="-1">
+                                <li data-value="64k" class="option" tabindex="0">64k (lowest quality)</li>
+                                <li data-value="96k" class="option" tabindex="0">96k (low quality)</li>
+                                <li data-value="128k" class="option" tabindex="0">128k (standard)</li>
+                                <li data-value="192k" class="option" tabindex="0">192k (higher quality)</li>
+                                <li data-value="256k" class="option" tabindex="0">256k (very high quality)</li>
+                                <li data-value="320k" class="option" tabindex="0">320k (ultra quality)</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="form-group checkbox bottom-20">
-                        <input type="checkbox" id="audio-software-mode">
+                        <input type="checkbox" tabindex="0"  id="audio-software-mode" aria-label="ALSA Software mode (plughw) - Linux only">
                         <label for="audio-software-mode">ALSA software mode (plughw) - LINUX ONLY</label>
                     </div>   
                 </div>
             </div>
 
-            <div class="panel-100 tab-content" id="webserver" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="webserver" role="tabpanel">
                 <h2>Webserver settings</h2>
                 <div class="flex-container">
                     <div class="panel-50 no-bg">
@@ -276,17 +277,17 @@
                             <div class="form-group">
                                 <label for="themes"><i class="fa-solid fa-palette"></i> Default server theme:</label>
                                 <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
-                                    <input type="text" placeholder="Default" id="selected-theme" readonly>
-                                    <ul class="options">
-                                        <li class="option" data-value="theme1">Default</li>
-                                        <li class="option" data-value="theme2">Cappuccino</li>
-                                        <li class="option" data-value="theme3">Nature</li>
-                                        <li class="option" data-value="theme4">Ocean</li>
-                                        <li class="option" data-value="theme5">Terminal</li>
-                                        <li class="option" data-value="theme6">Nightlife</li>
-                                        <li class="option" data-value="theme7">Blurple</li>
-                                        <li class="option" data-value="theme8">Construction</li>
-                                        <li class="option" data-value="theme9">AMOLED</li>
+                                    <input type="text" placeholder="Default" id="selected-theme" readonly tabindex="0">
+                                    <ul class="options" tabindex="-1">
+                                        <li class="option" tabindex="0" data-value="theme1">Default</li>
+                                        <li class="option" tabindex="0" data-value="theme2">Cappuccino</li>
+                                        <li class="option" tabindex="0" data-value="theme3">Nature</li>
+                                        <li class="option" tabindex="0" data-value="theme4">Ocean</li>
+                                        <li class="option" tabindex="0" data-value="theme5">Terminal</li>
+                                        <li class="option" tabindex="0" data-value="theme6">Nightlife</li>
+                                        <li class="option" tabindex="0" data-value="theme7">Blurple</li>
+                                        <li class="option" tabindex="0" data-value="theme8">Construction</li>
+                                        <li class="option" tabindex="0" data-value="theme9">AMOLED</li>
                                     </ul>
                                 </div>
                             </div>
@@ -295,12 +296,12 @@
                     <div class="panel-50 no-bg">
                         <h3>Antenna options</h3>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="antenna-switch">
+                            <input type="checkbox" tabindex="0"  id="antenna-switch" aria-label="Antenna switch">
                             <label for="antenna-switch">Enable the antenna switch</label>
                         </div><br>
                         
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant1-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant1-enabled" aria-label="Enable antenna 1">
                             <label for="ant1-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -309,7 +310,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant2-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant2-enabled" aria-label="Enable antenna 2">
                             <label for="ant2-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -318,7 +319,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant3-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant3-enabled" aria-label="Enable antenna 3">
                             <label for="ant3-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -327,7 +328,7 @@
                         </div><br>
 
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="ant4-enabled">
+                            <input type="checkbox" tabindex="0"  id="ant4-enabled" aria-label="Enable antenna 4">
                             <label for="ant4-enabled"></label>
                         </div>
                         <div class="form-group">
@@ -343,7 +344,7 @@
                     <div class="panel-50 no-bg">
                         <h3>Tuning options</h3>
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="default-freq-enable">
+                            <input type="checkbox" tabindex="0"  id="default-freq-enable" aria-label="Enable deafult frequency for first client">
                             <label for="default-freq-enable">Enable default frequency for first client</label>
                         </div><br>
                         <div class="form-group">
@@ -353,8 +354,8 @@
                         <p>If you want to limit which frequencies the users can tune to,<br>you can set the lower and upper limit here.<br>
                             <span class="text-gray">Enter frequencies in MHz.</span>
                         </p>
-                        <div class="form-group checkbox">
-                            <input type="checkbox" id="tuning-limit">
+                        <div class="form-group checkbox" aria-label="Limit tuning">
+                            <input type="checkbox" tabindex="0"  id="tuning-limit">
                             <label for="tuning-limit">Limit tuning</label>
                         </div><br>
                         <div class="form-group">
@@ -371,7 +372,7 @@
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="rds-mode">
+                            <input type="checkbox" tabindex="0"  id="rds-mode" aria-label="Enable american RDS mode (RBDS)">
                             <label for="rds-mode">Enable American Mode (RBDS)</label>
                         </div>      
 
@@ -402,7 +403,7 @@
                     <div class="panel-100 no-bg">
                         <h3>Chat options</h3>
                         <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" id="chat-switch">
+                            <input type="checkbox" tabindex="0"  id="chat-switch" aria-label="Enable chat">
                             <label for="chat-switch">Enable chat</label>
                         </div>        
                     </div>
@@ -419,7 +420,7 @@
 
             </div>
 
-            <div class="panel-100 tab-content" id="plugins" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="plugins" role="tabpanel">
                 <h2>Plugins</h2>
                 <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
                     Click on the individual plugins to enable/disable them.</p>
@@ -431,26 +432,29 @@
                         <% }); %>
                     </select><br><br>
                     <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
+                    <hr>
+                    <h3>Plugin settings</h3>
+                    <div id="plugin-settings"></div>
                     
             </div>
 
-            <div class="panel-100 tab-content" id="tuner" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="tuner" role="tabpanel">
                 <h2>Tuner Specific Settings</h2>
                 <div class="form-group">
                     <label for="themes"><i class="fa-solid fa-radio"></i> Device:</label>
                     <div class="dropdown" id="device-selector" style="margin-right: 0;">
-                        <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly>
-                        <ul class="options">
-                            <li class="option" data-value="tef">TEF668x / TEA685x</li>
-                            <li class="option" data-value="xdr">XDR (F1HD / S10HDiP)</li>
-                            <li class="option" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
-                            <li class="option" data-value="other">Other</li>
+                        <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly tabindex="0">
+                        <ul class="options" tabindex="0">
+                            <li class="option" tabindex="0" data-value="tef">TEF668x / TEA685x</li>
+                            <li class="option" tabindex="0" data-value="xdr">XDR (F1HD / S10HDiP)</li>
+                            <li class="option" tabindex="0" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
+                            <li class="option" tabindex="0" data-value="other">Other</li>
                         </ul>
                     </div>
                 </div><br>
 
                 <div class="form-group checkbox">
-                    <input type="checkbox" id="toggle-bw">
+                    <input type="checkbox" tabindex="0"  id="toggle-bw" aria-label="Toggle bandwidth switch">
                     <label for="toggle-bw">Toggle bandwidth switch</label>
                 </div><br>
 
@@ -465,7 +469,7 @@
 
             </div>
     
-            <div class="panel-100 tab-content" id="identification" role="tabpanel">
+            <div class="panel-100 tab-content no-bg" id="identification" role="tabpanel">
                 <h2>Identification & Map</h2>
 
                 <div class="flex-container">
@@ -473,7 +477,7 @@
                         <h3>Basic info</h3>
                         
                         <p class="text-gray">Set your tuner name and description here.<br>This info will be visible to anyone who tunes in. </p>
-                        <div class="panel-100" style="padding-left: 20px; padding-right: 20px;">
+                        <div class="panel-100 no-bg" style="padding-left: 20px; padding-right: 20px;">
                             <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
                             <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
                             <br>
@@ -487,7 +491,7 @@
                         <p class="m-0 text-gray">If your location information is filled,<br>you can add your tuner to a public list.</p>
                         <p></p>
                         <div class="form-group checkbox">
-                            <input type="checkbox" id="broadcast-tuner">
+                            <input type="checkbox" tabindex="0"  id="broadcast-tuner" aria-label="Broadcast to map">
                             <label for="broadcast-tuner">Broadcast to map</label>
                         </div><br>
                         <div class="form-group">
@@ -499,7 +503,7 @@
                             <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
                         </div>
         
-                        <p>Check your tuner at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
+                        <p>Check your tuner at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
                     </div>
                 </div>
                 <br>
@@ -546,10 +550,14 @@
         </div>
         <% } %>
     </div>
+    </div>
     <script src="js/init.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
     <script src="js/confighandler.js"></script>
+    <% enabledPlugins?.forEach(function(plugin) { %>
+        <script src="js/plugins/<%= plugin %>"></script>
+    <% }); %>
 </body>
 </html>

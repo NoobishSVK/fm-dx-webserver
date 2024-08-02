@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const consoleCmd = require('./console');
 const { serverConfig } = require('./server_config');
 
 // Function to read all .js files in a directory
@@ -44,7 +45,9 @@ function parsePluginConfig(filePath) {
                         fs.unlinkSync(destinationFile); // Remove existing file/symlink
                     }
                     fs.symlinkSync(sourcePath, destinationFile);
-                    console.log(`Symlink created from ${sourcePath} to ${destinationFile}`);
+                    setTimeout(function() {
+                        consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
+                    }, 500)
                 } catch (err) {
                     console.error(`Error creating symlink at ${destinationFile}: ${err.message}`);
                 }
@@ -94,7 +97,9 @@ function createLinks() {
                 fs.rmSync(destinationPluginsDir, { recursive: true });
             }
             fs.symlinkSync(pluginsDir, destinationPluginsDir, 'junction');
-            console.log(`Junction created from ${pluginsDir} to ${destinationPluginsDir}`);
+            setTimeout(function() {
+                //consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
+            }, 500)
         } catch (err) {
             console.error(`Error creating junction at ${destinationPluginsDir}: ${err.message}`);
         }

@@ -1,8 +1,8 @@
 
 :root {
-    --color-main: rgba(32, 34, 40, 1);
-    --color-main-bright: rgba(88, 219, 171, 1);
-    --color-text: rgba(255, 255, 255, 1);
+    --color-main: rgb(32, 34, 40);
+    --color-main-bright: rgb(88, 219, 171);
+    --color-text: rgb(255, 255, 255);
     
     --color-1: color-mix(in srgb, var(--color-main) 95%, var(--color-main-bright)); /* 5% Brightness */
     --color-2: color-mix(in srgb, var(--color-main) 75%, var(--color-main-bright)); /* 25% Brightness */
@@ -10,7 +10,13 @@
     --color-4: color-mix(in srgb, var(--color-main) 20%, var(--color-main-bright)); /* 80% Brightness */
     --color-5: color-mix(in srgb, var(--color-main) 5%, var(--color-main-bright)); /* 95% Brightness */
 
-    --color-text-2: #ccc;
+    --color-1-transparent: color-mix(in srgb, var(--color-1), transparent 40%);
+    --color-2-transparent: color-mix(in srgb, var(--color-2), transparent 40%);
+    --color-3-transparent: color-mix(in srgb, var(--color-3), transparent 40%);
+    --color-4-transparent: color-mix(in srgb, var(--color-4), transparent 40%);
+    --color-5-transparent: color-mix(in srgb, var(--color-5), transparent 40%);
+    
+    --color-text-2: rgb(240,240,240);
 }
 
 * {
@@ -46,21 +52,33 @@ body {
     font-family: 'Titillium Web', sans-serif;
     color: var(--color-text);
     background: var(--color-main);
-    background-blend-mode: multiply;
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-    transition: 0.3s ease-in-out background-color;
+    transition: 0.3s ease background-color;
     margin: 0 auto;
+    min-height: 100%;
+}
+
+#wrapper-outer {
+    width: 100%;
+    height: auto;
+    background-color: var(--color-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height:100vh;
+}
+
+.wrapper-outer-static {
+    display: block !important;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 #wrapper {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 1180px;
-    max-width: 1180px;
+    width: 100%;
+    max-width: calc(0% + 1180px);
 }
 #wrapper.setup-wrapper {
     margin: auto;
@@ -82,7 +100,7 @@ hr {
 }
 
 .table-big {
-    border-radius: 30px;
+    border-radius: 15px;
     background-color: var(--color-2);
     padding: 20px;
     margin: auto;
@@ -109,11 +127,11 @@ hr {
 
 
 .table-big th:nth-child(1) {
-    border-radius: 30px 0px 0px 30px; 
+    border-radius: 15px 0px 0px 15px; 
 }
 
 .table-big th:nth-last-child(1){
-      border-radius: 0px 30px 30px 0px;
+      border-radius: 0px 15px 15px 0px;
 }
 
 @media (max-width: 1180px) {

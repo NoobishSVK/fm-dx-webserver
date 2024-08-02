@@ -239,6 +239,7 @@ function initCanvas(parsedData) {
             maxDataPoints,
             pointWidth,
             color2: null,
+            color3: null,
             color4: null,
             signalUnit: localStorage.getItem('signalUnit'),
             offset: 0,
@@ -264,9 +265,11 @@ function initCanvas(parsedData) {
 function updateChartSettings(signalChart) {
     // Update colors
     const newColor2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
+    const newColor3 = getComputedStyle(document.documentElement).getPropertyValue('--color-3').trim();
     const newColor4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
     if (newColor2 !== signalChart.color2 || newColor4 !== signalChart.color4) {
         signalChart.color2 = newColor2;
+        signalChart.color3 = newColor3;
         signalChart.color4 = newColor4;
     }
 
@@ -284,7 +287,7 @@ function updateChartSettings(signalChart) {
 }
 
 function updateCanvas(parsedData, signalChart) {
-    const { context, canvas, maxDataPoints, pointWidth, color2, color4, offset } = signalChart;
+    const { context, canvas, maxDataPoints, pointWidth, color2, color3, color4, offset } = signalChart;
 
     if (data.length > maxDataPoints) {
         data = data.slice(data.length - maxDataPoints);
@@ -319,11 +322,11 @@ function updateCanvas(parsedData, signalChart) {
     }
 
     context.strokeStyle = color4;
-    context.lineWidth = 1;
+    context.lineWidth = 2;
     context.stroke();
 
     // Draw horizontal lines for lowest, highest, and average values
-    context.strokeStyle = color2;
+    context.strokeStyle = color3;
     context.lineWidth = 1;
 
     // Draw the lowest value line
@@ -377,13 +380,9 @@ socket.onmessage = (event) => {
     parsedData = JSON.parse(event.data);
 
     updatePanels(parsedData);
-    if(localStorage.getItem("smoothSignal") == 'true') {
-        const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
-        const averageSignal = sum / signalData.length;
-        data.push(averageSignal);
-    } else {
-        data.push(parsedData.signal);
-    }
+    const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+    const averageSignal = sum / signalData.length;
+    data.push(averageSignal);
 };
 
 function compareNumbers(a, b) {
@@ -426,10 +425,15 @@ function getCurrentFreq() {
 function checkKey(e) {
     e = e || window.event;
 
+    if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) {
+        return;
+    }
+
     if ($('#password:focus').length > 0
     || $('#chat-send-message:focus').length > 0
     || $('#volumeSlider:focus').length > 0
-    || $('#chat-nickname:focus').length > 0) {
+    || $('#chat-nickname:focus').length > 0
+    || $('.option:focus').length > 0) {
         return; 
     }
 
@@ -609,13 +613,9 @@ function findOnMaps() {
 function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
     let currentSignal;
-    let highestSignal = parsedData.highestSignal;
+    let highestSignal = parsedData.sigTop;
 
-    if(localStorage.getItem("smoothSignal") == 'true') {
-        currentSignal = averageSignal
-    } else {
-        currentSignal = parsedData.signal;
-    }
+    currentSignal = averageSignal
     let signalText = $('.signal-units');
     let signalValue;
 
@@ -709,12 +709,22 @@ const updateDataElements = throttle(function(parsedData) {
     $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
     updateHtmlIfChanged($dataPi, parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
 
-    if (localStorage.getItem('psUnderscores') === 'true') {
+    if ($('#ps-underscores').is(':checked')) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
     updateHtmlIfChanged($dataPs, parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
 
-    updateHtmlIfChanged($dataSt, `<span class='opacity-${parsedData.st ? 'full' : 'half'}'>${parsedData.st_forced ? 'MO' : 'ST'}</span>`);
+    let stereoColor;
+    if(parsedData.st) {
+        stereoColor = 'var(--color-4)';
+    } else {
+        stereoColor = 'var(--color-3)';
+    }
+
+    if(parsedData.stForced) {
+        stereoColor = 'gray';
+    }
+    $dataSt.css('border', '2px solid ' + stereoColor);
 
     updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
     updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));
@@ -722,25 +732,30 @@ const updateDataElements = throttle(function(parsedData) {
     updateTextIfChanged($dataPty, rdsMode == 'true' ? usa_programmes[parsedData.pty] : europe_programmes[parsedData.pty]);
 
     if (parsedData.rds === true) {
-        $flagDesktopCointainer.css('background-color', 'var(--color-2)');
+        $flagDesktopCointainer.css('background-color', 'var(--color-2-transparent)');
     } else {
-        $flagDesktopCointainer.css('background-color', 'var(--color-1)');
+        $flagDesktopCointainer.css('background-color', 'var(--color-1-transparent)');
     }
 
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
 
     $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
-    $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
 
-    if (parsedData.txInfo.station.length > 1) {
-        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.station.replace(/%/g, '%25'));
+    if(parsedData.bw < 500) {
+        $dataBwInput.val($('#data-bw li[data-value2="' + parsedData.bw + '"]').text());
+    } else {
+        $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
+    }
+
+    if (parsedData.txInfo.tx.length > 1) {
+        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx.replace(/%/g, '%25'));
         updateTextIfChanged($('#data-station-erp'), parsedData.txInfo.erp);
         updateTextIfChanged($('#data-station-city'), parsedData.txInfo.city);
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
-        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.distance);
-        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azimuth);
+        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.dist);
+        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi);
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
@@ -772,7 +787,7 @@ let isEventListenerAdded = false;
 function updatePanels(parsedData) {
     updateCounter++;
 
-    signalData.push(parsedData.signal);
+    signalData.push(parsedData.sig);
     if (signalData.length > 8) {
         signalData.shift(); // Remove the oldest element
     }
@@ -826,8 +841,10 @@ function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
     if (value == 0) {
         button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
+        button.attr('aria-description', 'Off');
     } else {
         button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
+        button.attr('aria-description', 'On');
     }
 }
 
@@ -842,7 +859,7 @@ function toggleButtonState(buttonId) {
 
 function toggleForcedStereo() {
     var message = "B";
-    message += parsedData.st_forced = (parsedData.st_forced == "1") ? "0" : "1";
+    message += parsedData.stForced = (parsedData.stForced == "1") ? "0" : "1";
     socket.send(message);
 }
 
@@ -851,7 +868,7 @@ function toggleAdminLock() {
 
     if($adminLockButton.hasClass('active')) {
         socket.send('wL0');
-        $adminLockButton.attr('aria-label', '"ock Tuner (Admin)')
+        $adminLockButton.attr('aria-label', 'Lock Tuner (Admin)')
         $adminLockButton.removeClass('active');
     } else {
         socket.send('wL1');

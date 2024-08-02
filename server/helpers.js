@@ -1,4 +1,3 @@
-const WebSocket = require('ws');
 const dataHandler = require('./datahandler');
 const storage = require('./storage');
 const consoleCmd = require('./console');
@@ -55,7 +54,7 @@ function formatUptime(uptimeInSeconds) {
 
 let incompleteDataBuffer = '';
 
-function resolveDataBuffer(data, wss) {
+function resolveDataBuffer(data, wss, rdsWss) {
   var receivedData = incompleteDataBuffer + data.toString();
   const isIncomplete = (receivedData.slice(-1) != '\n');
   
@@ -73,12 +72,8 @@ function resolveDataBuffer(data, wss) {
   }
   
   if (receivedData.length) {
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        dataHandler.handleData(client, receivedData);
-      }
-    });
-  }
+        dataHandler.handleData(wss, receivedData, rdsWss);
+    };
 }
 
 function kickClient(ipAddress) {

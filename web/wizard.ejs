@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
+    <div id="wrapper-outer">
     <div id="wrapper" class="setup-wrapper">
         <% if (isAdminAuthenticated) { %>
         <div class="panel-100 no-bg">
@@ -69,7 +70,7 @@
                 <h3>Tuner connection:</h3>
                 <div style="width: 300px;" class="auto top-10">
                     <label class="toggleSwitch nolabel" onclick="">
-                        <input id="connection-type-toggle" type="checkbox"/>
+                        <input id="connection-type-toggle" type="checkbox" aria-label="Tuner connection type"/>
                         <a></a>
                         <span>
                             <span class="left-span">Direct</span>
@@ -188,15 +189,15 @@
 
                     <h3>Map broadcast:</h3>
                     <p class="m-0">If your location info is filled, you can add your tuner to a public list.</p>
-                    <p class="m-0">The list is available at <strong><a href="https://list.fmdx.pl" target="_blank" class="color-4">list.fmdx.pl</a></strong>.</p>
+                    <p class="m-0">The list is available at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
 
                     <p class="text-gray">Only fill up your broadcast address if you are using a proxy. If you don't know what a proxy is, leave it empty.</p>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="broadcast-tuner">
+                        <input type="checkbox" id="broadcast-tuner" aria-label="Broadcast to map">
                         <label for="broadcast-tuner">Show my tuner on the public list</label>
                     </div>
                     <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-public">
+                        <input type="checkbox" id="tuner-public" aria-label="Allow tuning wihtout password">
                         <label for="tuner-public">Allow tuning without password</label>
                     </div>
                     <br>
@@ -246,6 +247,7 @@
             <div id="login-message"></div>
         </div>
         <% } %>
+    </div>
     </div>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>

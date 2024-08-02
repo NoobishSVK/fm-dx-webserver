@@ -148,6 +148,40 @@ $(document).ready(function() {
   if($("#console-output").length > 0) {
     $("#console-output").scrollTop($("#console-output")[0].scrollHeight);
   }
+
+  const $tabs = $('.nav li[role="presentation"]');
+  let currentTabIndex = 0;
+
+  function updateTabFocus(index) {
+      $tabs.each(function(i) {
+          const $link = $(this).find('a');
+          if (i === index) {
+              $(this).attr('aria-selected', 'true');
+              $link.attr('tabindex', '0').focus();
+          } else {
+              $(this).attr('aria-selected', 'false');
+              $link.attr('tabindex', '-1');
+          }
+      });
+  }
+
+  function handleKeyDown(event) {
+      if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          currentTabIndex = (currentTabIndex + 1) % $tabs.length;
+          updateTabFocus(currentTabIndex);
+      } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          currentTabIndex = (currentTabIndex - 1 + $tabs.length) % $tabs.length;
+          updateTabFocus(currentTabIndex);
+      } else if (event.key === 'Enter') {
+          event.preventDefault();
+          $tabs.eq(currentTabIndex).find('a')[0].click();
+      }
+  }
+
+  updateTabFocus(currentTabIndex);
+  $tabs.on('keydown', handleKeyDown);
 });
 
 function MapCreate() {

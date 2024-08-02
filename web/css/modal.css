@@ -7,7 +7,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
     opacity: 0;
-    transition: opacity 0.3s ease-in-out; /* Fade-in/out transition */
+    transition: opacity 0.3s ease; /* Fade-in/out transition */
     z-index: 20; /* Ensure the modal is above other content */
     color: var(--color-4);
     backdrop-filter: blur(10px);
@@ -22,9 +22,9 @@
     transform: translate(-50%, -50%);
     background-color: var(--color-main);
     padding: 30px;
-    border-radius: 30px;
+    border-radius: 15px;
     opacity: 1;
-    transition: opacity 0.3s ease-in-out; /* Fade-in/out transition */
+    transition: opacity 0.3s ease; /* Fade-in/out transition */
     z-index: 21; /* Ensure the modal content is above the modal background */
     min-width: 500px;
 }
@@ -43,7 +43,7 @@
     top: 17px;
     right: 30px;
     cursor: pointer;
-    transition: 0.3s ease-in-out color;
+    transition: 0.3s ease color;
 }
 
 .close:hover {
@@ -56,11 +56,11 @@
     right: 35px;
     width: 100px;
     height: 48px;
-    border-radius: 30px;
+    border-radius: 15px;
     background: var(--color-4);
     font-weight: bold;
     border: 0;
-    transition: 0.35s ease-in-out background;
+    transition: 0.35s ease background;
     cursor: pointer;
 }
 
@@ -135,12 +135,12 @@
     text-align: center;
     display: none;
     background-color: var(--color-main);
-    border-radius: 30px 30px 0px 0px;
+    border-radius: 15px 15px 0px 0px;
 }
 
 .modal-panel-chat .modal-panel-sidebar {
     width: 100%;
-    border-radius: 30px 30px 0px 0px;
+    border-radius: 15px 15px 0px 0px;
 }
 
 @media only screen and (max-width: 768px) {
