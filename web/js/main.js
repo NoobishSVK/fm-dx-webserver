@@ -222,7 +222,6 @@ function sendPingRequest() {
         
     // Automatic reconnection on WebSocket close
     if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
-        console.log("Main/UI attempting to reconnect...", socketAddress);
         socket = new WebSocket(socketAddress);
 
         socket.onopen = () => {
