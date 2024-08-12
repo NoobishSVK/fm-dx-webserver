@@ -219,7 +219,46 @@ function sendPingRequest() {
         .catch(error => {
             console.error('Error fetching ping:', error);
         });
+        
+    // Automatic reconnection on WebSocket close
+    if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+        console.log("Main/UI attempting to reconnect...", socketAddress);
+        socket = new WebSocket(socketAddress);
+
+        socket.onopen = () => {
+            console.log("Main/UI reconnected successfully.");
+        };
+        socket.onmessage = (event) => {
+            handleWebSocketMessage(event);
+        };
+        socket.onerror = (error) => {
+            console.error("Main/UI WebSocket error during reconnection:", error);
+        };
+        socket.onclose = () => {
+            console.warn("Main/UI WebSocket closed during reconnection. Will attempt to reconnect...");
+        };
+    }
 }
+
+// Automatic UI resume on WebSocket reconnect
+function handleWebSocketMessage(event) {
+    if (event.data == 'KICK') {
+        console.log('Kick initiated.')
+        setTimeout(() => {
+          window.location.href = '/403';
+        }, 500);
+        return;
+    }
+
+    parsedData = JSON.parse(event.data);
+
+    updatePanels(parsedData);
+    const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+    const averageSignal = sum / signalData.length;
+    data.push(averageSignal);
+}
+// Attach the message handler
+socket.onmessage = handleWebSocketMessage;
 
 function initCanvas(parsedData) {
     signalToggle = $("#signal-units-toggle");
@@ -370,7 +409,7 @@ function updateCanvas(parsedData, signalChart) {
 
 socket.onmessage = (event) => {
     if (event.data == 'KICK') {
-        console.log('Kick iniitiated.')
+        console.log('Kick initiated.')
         setTimeout(() => {
           window.location.href = '/403';
         }, 500);
