@@ -80,6 +80,9 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   serialport.open((err) => {
     if (err) {
       logError('Error opening port: ' + err.message);
+      setTimeout(() => {
+          connectToSerial();
+      }, 5000);
       return;
     }
     
@@ -120,6 +123,13 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     });
   });
 
+  // Handle port closure
+  serialport.on('close', () => {
+    logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
+    setTimeout(() => {
+        connectToSerial();
+    }, 5000);
+  });
   return serialport;
 }
 }
