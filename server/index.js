@@ -1,3 +1,6 @@
+// index.js - Mod by Highpoint
+// Version for loading server-side plugins
+
 // Library imports
 const express = require('express');
 const endpoints = require('./endpoints');
@@ -12,6 +15,8 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 const chatWss = new WebSocket.Server({ noServer: true });
 const rdsWss = new WebSocket.Server({ noServer: true });
+const ExtraWss = new WebSocket.Server({ noServer: true });
+const fs = require('fs');
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
@@ -26,6 +31,52 @@ const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists } = require('./server_config');
 const pjson = require('../package.json');
+const config = require('./../config.json');
+
+// Function to find server files based on the plugins listed in config
+function findServerFiles(plugins) {
+  let results = [];
+  plugins.forEach(plugin => {
+    // Remove .js extension if present
+    if (plugin.endsWith('.js')) {
+      plugin = plugin.slice(0, -3);
+    }
+	
+    const pluginPath = path.join(__dirname, '..', 'plugins', `${plugin}_server.js`);
+    if (fs.existsSync(pluginPath) && fs.statSync(pluginPath).isFile()) {
+      results.push(pluginPath);
+    }
+  });
+  return results;
+}
+
+// Start plugins with delay
+function startPluginsWithDelay(plugins, delay) {
+  plugins.forEach((pluginPath, index) => {
+    setTimeout(() => {
+      const pluginName = path.basename(pluginPath, '.js'); // Extract plugin name from path
+      logInfo(`-----------------------------------------------------------------`);
+      logInfo(`Plugin ${pluginName} is loaded`);
+      require(pluginPath);
+    }, delay * index);
+  });
+
+  // Add final log line after all plugins are loaded
+  setTimeout(() => {
+    logInfo(`-----------------------------------------------------------------`);
+  }, delay * plugins.length);
+}
+
+// Get all plugins from config and find corresponding server files
+const plugins = findServerFiles(config.plugins);
+
+// Start the first plugin after 3 seconds, then the rest with 3 seconds delay
+if (plugins.length > 0) {
+  setTimeout(() => {
+    startPluginsWithDelay(plugins, 3000); // Start plugins with 3 seconds interval
+  }, 3000); // Initial delay of 3 seconds for the first plugin
+}
+
 
 console.log(`\x1b[32m
  _____ __  __       ______  __ __        __   _                                  
@@ -34,7 +85,7 @@ console.log(`\x1b[32m
 |  _| | |  | |_____| |_| /  \\    \\ V  V /  __/ |_) \\__ \\  __/ |   \\ V /  __/ |   
 |_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
 `);
-console.log('\x1b[0mFM-DX Webserver', pjson.version);
+console.log('\x1b[0mFM-DX-Webserver', pjson.version);
 console.log('\x1b[90m―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――');
 
 // Start ffmpeg
@@ -251,8 +302,14 @@ app.use('/', endpoints);
 wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  currentUsers++;
-  dataHandler.showOnlineUsers(currentUsers);
+  
+  let clientIpTest = clientIp.split(',')[0].trim();
+
+	if (clientIp !== '127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+		currentUsers++;
+	}
+	
+    dataHandler.showOnlineUsers(currentUsers);
   if(currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
     serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
   }
@@ -285,8 +342,6 @@ wss.on('connection', (ws, request) => {
         logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
       }
     });
-  }).on('error', (err) => {
-    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
   });
 
   ws.on('message', (message) => {
@@ -349,7 +404,9 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', (code, reason) => {
-    currentUsers--;
+    if (clientIp !== '127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+		currentUsers--;
+	}
     dataHandler.showOnlineUsers(currentUsers);
   
     // Find the index of the user's data in storage.connectedUsers array
@@ -378,10 +435,13 @@ wss.on('connection', (ws, request) => {
     }
 
     logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+
   });  
 
-  ws.on('error', console.error);
+  ws.on('error', console.error); 
+
 });
+
 
 // CHAT WEBSOCKET BLOCK
 chatWss.on('connection', (ws, request) => {
@@ -449,14 +509,40 @@ rdsWss.on('connection', (ws, request) => {
   });
 });
 
+
+//additional web socket for using plugins
+ExtraWss.on('connection', (ws, request)  => { 
+    ws.on('message', message => {
+
+        const messageData = JSON.parse(message);
+        const modifiedMessage = JSON.stringify(messageData);
+
+        //Broadcast the message to all other clients
+        ExtraWss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(modifiedMessage); // Send the message to all clients
+            }
+        });
+    });
+
+    ws.on('close', () => {
+        // logInfo('WebSocket Extra connection closed'); // Use custom logInfo function
+    });
+
+    ws.on('error', error => {
+        logError('WebSocket Extra error: ' + error); // Use custom logError function
+    });
+});
+
+
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
-    sessionMiddleware(request, {}, () => {
+    //sessionMiddleware(request, {}, () => {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
       });
-    });
+   // });
   } else if (request.url === '/audio') {
     proxy.ws(request, socket, head);
   } else if (request.url === '/chat') {
@@ -465,14 +551,20 @@ httpServer.on('upgrade', (request, socket, head) => {
         chatWss.emit('connection', ws, request);
       });
     });
-  } else if (request.url === '/rds' || request.url === '/rdsspy') {
+  } else if (request.url === '/rds') {
     sessionMiddleware(request, {}, () => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
       });
     });
+   } else if (request.url === '/extra') {
+	 sessionMiddleware(request, {}, () => {
+       ExtraWss.handleUpgrade(request, socket, head, (ws) => {
+		  ExtraWss.emit('connection', ws, request);
+      });
+	});
   } else {
-    socket.destroy();
+	socket.destroy();
   }
 });
 
