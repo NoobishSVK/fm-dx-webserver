@@ -63,9 +63,24 @@ $(document).ready(function () {
         }
     });
 
+    // Check if device is an iPhone to prevent zoom on button press
+    if (/iPhone|iPod|iPad/.test(navigator.userAgent) && !window.MSStream) {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', function(e) {
+                // Prevent default zoom behavior
+                e.preventDefault();
+                // Allow default button action after short delay
+                setTimeout(() => {
+                    e.target.click();
+                }, 0);
+            });
+        });
+    }
+
     const textInput = $('#commandinput');
 
-    textInput.on('change', function (event) {
+    textInput.on('change blur', function (event) {
         const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent)) {
