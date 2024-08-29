@@ -80,11 +80,16 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   serialport.open((err) => {
     if (err) {
       logError('Error opening port: ' + err.message);
+      setTimeout(() => {
+          connectToSerial();
+      }, 5000);
       return;
     }
     
     logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-    serialport.write('x\n');
+    setTimeout(() => {
+        serialport.write('x\n');
+    }, 3000);
     
     setTimeout(() => {
       serialport.write('Q0\n');
@@ -107,7 +112,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       serverConfig.audio.startupVolume 
         ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
         : serialport.write('Y100\n');
-    }, 3000);
+    }, 6000);
     
     serialport.on('data', (data) => {
       helpers.resolveDataBuffer(data, wss, rdsWss);
@@ -118,6 +123,13 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     });
   });
 
+  // Handle port closure
+  serialport.on('close', () => {
+    logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
+    setTimeout(() => {
+        connectToSerial();
+    }, 5000);
+  });
   return serialport;
 }
 }
