@@ -605,7 +605,7 @@ function findOnMaps() {
     var latitude = localStorage.getItem('qthLongitude');
     var longitude = localStorage.getItem('qthLatitude');
 
-    var url = `https://maps.fmdx.pl/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
+    var url = `https://maps.fmdx.org/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
     window.open(url, "_blank");
 }
 

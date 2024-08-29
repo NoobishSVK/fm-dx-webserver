@@ -56,11 +56,10 @@ $(document).ready(() => {
     const signalSelector = $('#signal-selector');
     
     const signalParameter = getQueryParameter('signalUnits');
-    if(signalParameter) {
-        signalSelector.find('input').val($(signalParameter).text());
-    }
-
-    if (localStorage.getItem('signalUnit')) {
+    if(signalParameter && !localStorage.getItem('signalUnit')) {
+        signalSelector.find('input').val(signalSelector.find('.option[data-value="' + signalParameter + '"]').text());
+        localStorage.setItem('signalUnit', signalParameter);
+    } else {
         signalSelector.find('input').val(signalSelector.find('.option[data-value="' + savedUnit + '"]').text());
     }
     

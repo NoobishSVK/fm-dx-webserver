@@ -292,6 +292,10 @@ function handleData(wss, receivedData, rdsWss) {
           initialData.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.pi = '?';
+
+          rdsWss.clients.forEach((client) => {
+            client.send("G:\r\nRESET-------\r\n\r\n");
+          });
         }
         break;
       case receivedLine.startsWith('Z'): // Antenna
@@ -352,31 +356,31 @@ function handleData(wss, receivedData, rdsWss) {
           modifiedData += errorsNew.toString(16).padStart(2, '0');
         }
 
-		rdsWss.clients.forEach((client) => {
-			let dataString = modifiedData.toString();
-			let lastTwoChars = dataString.slice(-2);
-			let lastByteValue = parseInt(lastTwoChars, 16);
+        rdsWss.clients.forEach((client) => {
+          let dataString = modifiedData.toString();
+          let lastTwoChars = dataString.slice(-2);
+          let lastByteValue = parseInt(lastTwoChars, 16);
 
-			let truncatedString = dataString.slice(0, -2);
+          let truncatedString = dataString.slice(0, -2);
 
-			if ((lastByteValue & 0x03) !== 0) {
-				truncatedString = truncatedString.slice(0, 4) + '----' + truncatedString.slice(8);
-			}
+          if ((lastByteValue & 0x03) !== 0) {
+            truncatedString = truncatedString.slice(0, 4) + '----' + truncatedString.slice(8);
+          }
 
-			if ((lastByteValue & 0x30) !== 0) {
-				truncatedString = truncatedString.slice(0, 8) + '----' + truncatedString.slice(12);
-			}
+          if ((lastByteValue & 0x30) !== 0) {
+            truncatedString = truncatedString.slice(0, 8) + '----' + truncatedString.slice(12);
+          }
 
-			if ((lastByteValue & 0x0C) !== 0) {
-				truncatedString = truncatedString.slice(0, 12) + '----';
-			}
+          if ((lastByteValue & 0x0C) !== 0) {
+            truncatedString = truncatedString.slice(0, 12) + '----';
+          }
 
-			let newDataString = "G:\r\n" + truncatedString + "\r\n\r\n";
+          let newDataString = "G:\r\n" + truncatedString + "\r\n\r\n";
 
-			let finalBuffer = Buffer.from(newDataString, 'utf-8');
+          let finalBuffer = Buffer.from(newDataString, 'utf-8');
 
-			client.send(finalBuffer);
-		});
+          client.send(finalBuffer);
+        });
 
         rdsparser.parse_string(rds, modifiedData);
         legacyRdsPiBuffer = null;

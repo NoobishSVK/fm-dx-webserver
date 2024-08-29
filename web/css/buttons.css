@@ -79,6 +79,7 @@ input[type="text"], textarea, input[type="password"] {
     color: var(--color-text);
     background-color: var(--color-1);
     font-family: 'Titillium Web', sans-serif;
+    caret-color: var(--color-4);
 }
 
 #tune-buttons input[type="text"] {
@@ -92,6 +93,7 @@ input[type="text"], textarea, input[type="password"] {
     color: var(--color-text);
     background-color: var(--color-1-transparent);
     font-family: 'Titillium Web', sans-serif;
+    caret-color: var(--color-4);
 }
 
 #tune-buttons input[type="text"]:not(.no-bg):not(.no-filter) {

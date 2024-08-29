@@ -30,7 +30,7 @@ function fetchTx(freq, piCode, rdsPs) {
         return processData(cachedData[freq], piCode, rdsPs);
     }
 
-    const url = "https://maps.fmdx.pl/api?freq=" + freq;
+    const url = "https://maps.fmdx.org/api?freq=" + freq;
 
     return fetch(url)
         .then(response => response.json())
