@@ -63,9 +63,24 @@ $(document).ready(function () {
         }
     });
 
+    // Check if device is an iPhone to prevent zoom on button press
+    if (/iPhone|iPod|iPad/.test(navigator.userAgent) && !window.MSStream) {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', function(e) {
+                // Prevent default zoom behavior
+                e.preventDefault();
+                // Allow default button action after short delay
+                setTimeout(() => {
+                    e.target.click();
+                }, 0);
+            });
+        });
+    }
+
     const textInput = $('#commandinput');
 
-    textInput.on('change', function (event) {
+    textInput.on('change blur', function (event) {
         const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent)) {
@@ -219,7 +234,45 @@ function sendPingRequest() {
         .catch(error => {
             console.error('Error fetching ping:', error);
         });
+        
+    // Automatic reconnection on WebSocket close
+    if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+        socket = new WebSocket(socketAddress);
+
+        socket.onopen = () => {
+            console.log("Main/UI reconnected successfully.");
+        };
+        socket.onmessage = (event) => {
+            handleWebSocketMessage(event);
+        };
+        socket.onerror = (error) => {
+            console.error("Main/UI WebSocket error during reconnection:", error);
+        };
+        socket.onclose = () => {
+            console.warn("Main/UI WebSocket closed during reconnection. Will attempt to reconnect...");
+        };
+    }
 }
+
+// Automatic UI resume on WebSocket reconnect
+function handleWebSocketMessage(event) {
+    if (event.data == 'KICK') {
+        console.log('Kick initiated.')
+        setTimeout(() => {
+          window.location.href = '/403';
+        }, 500);
+        return;
+    }
+
+    parsedData = JSON.parse(event.data);
+
+    updatePanels(parsedData);
+    const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
+    const averageSignal = sum / signalData.length;
+    data.push(averageSignal);
+}
+// Attach the message handler
+socket.onmessage = handleWebSocketMessage;
 
 function initCanvas(parsedData) {
     signalToggle = $("#signal-units-toggle");
@@ -370,7 +423,7 @@ function updateCanvas(parsedData, signalChart) {
 
 socket.onmessage = (event) => {
     if (event.data == 'KICK') {
-        console.log('Kick iniitiated.')
+        console.log('Kick initiated.')
         setTimeout(() => {
           window.location.href = '/403';
         }, 500);
@@ -908,6 +961,11 @@ function initTooltips() {
             posX -= tooltipWidth / 2;
             posY -= tooltipHeight + 10;
             tooltip.css({ top: posY, left: posX, opacity: 1 }); // Set opacity to 1
+            // For touchscreen devices
+            if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
+                setTimeout(() => { $('.tooltiptext').remove(); }, 10000);
+                document.addEventListener('touchstart', function() { setTimeout(() => { $('.tooltiptext').remove(); }, 500); });
+            }
         }, 500));
     }, function() {
         // Clear the timeout if the mouse leaves before the delay completes
