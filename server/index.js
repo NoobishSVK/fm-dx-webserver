@@ -63,6 +63,21 @@ app.use(bodyParser.json());
 connectToXdrd();
 connectToSerial();
 
+// Check for working IPv6
+function checkIPv6Support(callback) {
+  const server = net.createServer();
+
+  server.listen(0, '::1', () => {
+    server.close(() => callback(true));
+  }).on('error', (error) => {
+    if (error.code === 'EADDRNOTAVAIL') {
+      callback(false);
+    } else {
+      callback(false);
+    }
+  });
+}
+
 // Serial Connection
 function connectToSerial() {
 if (serverConfig.xdrd.wirelessConnection === false) {
@@ -490,13 +505,29 @@ httpServer.on('upgrade', (request, socket, head) => {
 
 app.use(express.static(path.join(__dirname, '../web'))); // Serve the entire web folder to the user
 
-httpServer.listen(serverConfig.webserver.webserverPort, serverConfig.webserver.webserverIp, () => {
-  let currentAddress = serverConfig.webserver.webserverIp;
-  currentAddress == '0.0.0.0' ? currentAddress = 'localhost' : currentAddress = serverConfig.webserver.webserverIp; 
-  if(configExists()) {
-    logInfo(`Web server has started on address \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+// Determine ip stack support and start server accordingly
+checkIPv6Support((isIPv6Supported) => {
+  const ipv4Address = serverConfig.webserver.webserverIp === '0.0.0.0' ? 'localhost' : serverConfig.webserver.webserverIp;
+  const ipv6Address = '::'; // This will bind to all available IPv6 interfaces
+  
+  if (isIPv6Supported) {
+    // Start server on both IPv4 and IPv6 addresses
+    httpServer.listen(serverConfig.webserver.webserverPort, ipv4Address, () => {
+      logInfo(`Web server has started on address \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+    });
+
+    httpServer.listen(serverConfig.webserver.webserverPort, ipv6Address, () => {
+      logInfo(`Web server has started on address \x1b[34mhttp://[${ipv6Address}]:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+    });
   } else {
-    logInfo(`Open your browser and proceed to \x1b[34mhttp://${currentAddress}:${serverConfig.webserver.webserverPort}\x1b[0m to continue with setup.`);
+    // Start server only on IPv4 address
+    httpServer.listen(serverConfig.webserver.webserverPort, ipv4Address, () => {
+      if (configExists()) {
+        logInfo(`Web server has started on address \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+      } else {
+        logInfo(`Open your browser and proceed to \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m to continue with setup.`);
+      }
+    });
   }
 });
 
