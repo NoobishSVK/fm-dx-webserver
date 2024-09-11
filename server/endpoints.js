@@ -4,6 +4,7 @@ const router = express.Router();
 const fs = require('fs');
 const { SerialPort } = require('serialport')
 const path = require('path');
+const https = require('https');
 
 // File Imports
 const { parseAudioDevice } = require('./stream/parser');
@@ -124,7 +125,7 @@ router.get('/setup', (req, res) => {
 });
 
 router.get('/rds', (req, res) => {
-    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
+    res.send('Please c onnect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/rdsspy', (req, res) => {
@@ -257,6 +258,64 @@ router.get('/server_time', (req, res) => {
 router.get('/ping', (req, res) => {
     res.send('pong');
 });  
+
+router.get('/log_fmlist', (req, res) => {
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const postData = JSON.stringify({
+        station: {
+            freq: dataHandler.dataToSend.freq,
+            pi: dataHandler.dataToSend.pi,
+            id: dataHandler.dataToSend.txInfo.id,
+            rds_ps: dataHandler.dataToSend.ps,
+            signal: dataHandler.dataToSend.sig,
+            tp: dataHandler.dataToSend.tp,
+            ta: dataHandler.dataToSend.ta,
+            af_list: dataHandler.dataToSend.af,
+        },
+        server: {
+            uuid: serverConfig.identification.token,
+            latitude: serverConfig.identification.lat,
+            longitude: serverConfig.identification.lon,
+            address: serverConfig.identification.proxyIp.length > 1 ? serverConfig.identification.proxyIp : ('Matches request IP with port ' + serverConfig.webserver.port),
+            webserver_name: serverConfig.identification.tunerName,
+        },
+        client: {
+            request_ip: clientIp
+        },
+        log_msg: `PS: ${dataHandler.dataToSend.ps}, PI: ${dataHandler.dataToSend.pi}, Signal: ${dataHandler.dataToSend.sig.toFixed(0)} dBf`
+    });
+
+    const options = {
+        hostname: 'api.fmlist.org',
+        path: '/fmdx.org/slog.php',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': postData.length,
+        }
+    };
+
+    const request = https.request(options, (response) => {
+        let data = '';
+
+        response.on('data', (chunk) => { // Collect the response data
+            data += chunk;
+        });
+
+        response.on('end', () => {
+            res.status(200).send(data);
+        });
+    });
+
+    request.on('error', (error) => {
+        console.error('Error sending POST request:', error);
+        res.status(500).send(error);
+    });
+
+    request.write(postData);
+    request.end();
+});
+
 
 
 module.exports = router;

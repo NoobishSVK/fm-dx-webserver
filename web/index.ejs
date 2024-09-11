@@ -124,7 +124,7 @@
                             </div>
                             
                             <% if (antennas.enabled == true) { %>
-                                <div class="panel-50 no-bg h-100 br-0 m-0 dropdown" id="data-ant" style="margin-right: 25px;">
+                                <div class="panel-50 no-bg h-100 br-0 m-0 dropdown dropdown-up" id="data-ant" style="margin-right: 25px;">
                                     <input type="text" placeholder="Ant A" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
@@ -164,7 +164,7 @@
                                 </span>
                             <% } %>
                             <% if (device == 'tef' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
@@ -188,7 +188,7 @@
                             <% } %>
 
                             <% if (device == 'xdr' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
@@ -213,7 +213,7 @@
                             <% } %>
 
                             <% if (device == 'sdr' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
@@ -233,6 +233,9 @@
                                     </ul>
                                 </div>
                             <% } %>
+                            <!--<button class="tooltip bg-color-4" id="log-fmlist" 
+                            data-tooltip="<strong>LOG TO FMLIST</strong><br>Clicking this button logs the current station to FMLIST's visual logbook." aria-label="Chatbox"
+                            style="width: 80px; height: 48px;margin-left: 15px;"><i class="fa-solid fa-flag fa-lg"></i></button>-->
                         </div>
                     </div>
                 </div>
@@ -321,7 +324,7 @@
             <h1 class="top-25">Settings</h1>
             
             <div class="form-group top-25">
-                <label for="themes"><i class="fa-solid fa-palette"></i> Theme:</label>
+                <label for="themes"><i class="fa-solid fa-palette"></i> Theme</label>
                 <div class="dropdown" id="theme-selector">
                     <input type="text" placeholder="Default" readonly tabindex="0">
                     <ul class="options" tabindex="-1">
@@ -340,7 +343,7 @@
             
             <% if (device !== 'sdr') { %>
             <div class="form-group top-25">
-                <label for="signal"><i class="fa-solid fa-signal"></i> Signal units:</label>
+                <label for="signal"><i class="fa-solid fa-signal"></i> Signal units</label>
                 <div class="dropdown" id="signal-selector">
                     <input type="text" placeholder="dBf" readonly tabindex="0">
                     <ul class="options" tabindex="-1">
@@ -362,7 +365,7 @@
             </div>
 
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
-                <label for="users-online"><i class="fa-solid fa-user"></i> Users online:</label>
+                <label for="users-online"><i class="fa-solid fa-user"></i> Users online</label>
                 <span class="users-online" name="users-online">0</span>
             </div>
             
@@ -391,8 +394,7 @@
                     </div>
                     <% } else { %>
                         <form action="./login" method="post" id="login-form" class="top-25">
-                            <label for="password">Password:</label>
-                            <input type="password" id="password" name="password" style="width: 145px;" required>
+                            <input type="password" id="password" name="password" placeholder="Password" style="width: 145px;" required>
                             <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
                                 <i class="fa-solid fa-right-to-bracket"></i>
                             </button>
@@ -488,7 +490,7 @@
     </div>
 </div>
 </div>
-
+<div id="toast-container" style="position: fixed; top: 20px; right: 96px; z-index: 9999;"></div>
 <script src="js/websocket.js"></script>
 <script src="js/webserver.js"></script>
 <% if (!noPlugins) { %>

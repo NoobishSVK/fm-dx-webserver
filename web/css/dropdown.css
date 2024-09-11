@@ -4,6 +4,7 @@
     background: var(--color-4);
     position: relative;
     margin-right: 20px;
+    border-radius: 15px;
     /*border-bottom: 4px solid var(--color-2);*/
   }
   @media (max-width: 400px) {
@@ -47,8 +48,12 @@
     background-color: var(--color-main-bright);
   }
 
-  .dropdown.opened > input {
+  .dropdown.opened.dropdown-up > input {
     border-radius: 0 0 15px 15px;
+  } 
+
+  .dropdown.opened > input {
+    border-radius: 15px 15px 0 0;
   } 
   .dropdown input:focus {
     outline: none;

@@ -61,7 +61,8 @@ function processData(data, piCode, rdsPs) {
                     if (esMode && (distance.distanceKm > 500)) {
                         weightDistance = Math.abs(distance.distanceKm-1500);
                     }
-                    const score =  (10*Math.log10(station.erp*1000)) / weightDistance; // Calculate score
+                    let erp = (station.erp && station.erp > 0) ? station.erp : 1;
+                    const score =  (10*Math.log10(erp*1000)) / weightDistance; // Calculate score
                     if (score > maxScore) {
                         maxScore = score;
                         txAzimuth = distance.azimuth;
@@ -78,7 +79,7 @@ function processData(data, piCode, rdsPs) {
         return {
             station: matchingStation.station.replace("R.", "Radio "),
             pol: matchingStation.pol.toUpperCase(),
-            erp: matchingStation.erp,
+            erp: (matchingStation.erp && matchingStation.erp > 0) ? matchingStation.erp : '?',
             city: matchingCity.name,
             itu: matchingCity.itu,
             distance: maxDistance.toFixed(0),

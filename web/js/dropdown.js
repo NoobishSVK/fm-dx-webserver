@@ -24,7 +24,7 @@ $(document).ready(function() {
       switch($currentDropdown.attr('id')) {
           case 'data-ant':
               socket.send("Z" + $(event.currentTarget).attr('data-value'));
-              tuneTo(getCurrentFreq()); // Reset RDS when change antenna input
+              resetRDS(getCurrentFreq()); // Reset RDS when change antenna input
               break;
           case 'data-bw':
               legacyBwValue = $(event.currentTarget).attr('data-value2') || "";

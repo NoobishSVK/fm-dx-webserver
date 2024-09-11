@@ -240,7 +240,7 @@ function sendPingRequest() {
         socket = new WebSocket(socketAddress);
 
         socket.onopen = () => {
-            console.log("Main/UI reconnected successfully.");
+            sendToast('info', 'Connected', 'Reconnected successfully!', false, false);
         };
         socket.onmessage = (event) => {
             handleWebSocketMessage(event);
@@ -421,18 +421,31 @@ function updateCanvas(parsedData, signalChart) {
     }, 1000 / 15);
 }
 
+let reconnectTimer = null;
+let dataTimeout = null;
+const TIMEOUT_DURATION = 5000;  // 5 seconds timeout for lost connection
+
+const resetDataTimeout = () => {
+    clearTimeout(dataTimeout);
+    dataTimeout = setTimeout(() => {
+        sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+    }, TIMEOUT_DURATION);
+};
+
 socket.onmessage = (event) => {
-    if (event.data == 'KICK') {
-        console.log('Kick initiated.')
+    if (event.data === 'KICK') {
+        console.log('Kick initiated.');
         setTimeout(() => {
-          window.location.href = '/403';
+            window.location.href = '/403';
         }, 500);
         return;
     }
 
     parsedData = JSON.parse(event.data);
 
+    resetDataTimeout();
     updatePanels(parsedData);
+
     const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
     const averageSignal = sum / signalData.length;
     data.push(averageSignal);
@@ -582,6 +595,10 @@ function tuneTo(freq) {
         socket.send("T" + ((freq).toFixed(1) * 1000));
 }
 
+function resetRDS(freq) {
+    socket.send("T" + ((freq).toFixed(3) * 1000));
+}
+
 async function copyPs() {
     var frequency = $('#data-frequency').text();
     var pi = $('#data-pi').text();
@@ -653,10 +670,12 @@ function copyToClipboard(textToCopy) {
 }
 
 function findOnMaps() {
-    var frequency = parseFloat($('#data-frequency').text()).toFixed(1);
+    var frequency = parseFloat($('#data-frequency').text());
     var pi = $('#data-pi').text();
     var latitude = localStorage.getItem('qthLongitude');
     var longitude = localStorage.getItem('qthLatitude');
+
+    frequency > 74 ? frequency = frequency.toFixed(1) : null;
 
     var url = `https://maps.fmdx.org/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
     window.open(url, "_blank");
@@ -991,3 +1010,17 @@ function fillPresets() {
         });
     }
 }
+
+//FMLIST logging
+$('#log-fmlist').on('click', function() {
+    $.ajax({
+        url: './log_fmlist',
+        method: 'GET',
+        success: function(response) {
+            sendToast('success', 'Log successful', response, false, true);
+        },
+        error: function(xhr) {
+            sendToast('error', 'Log failed', xhr.statusText, false, true);
+        }
+    });
+});

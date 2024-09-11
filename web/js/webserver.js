@@ -3,3 +3,4 @@ $.getScript('./js/dropdown.js');
 $.getScript('./js/modal.js');
 $.getScript('./js/settings.js');
 $.getScript('./js/chat.js');
+$.getScript('./js/toast.js');

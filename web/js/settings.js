@@ -79,7 +79,9 @@ $(document).ready(() => {
             data: $(this).serialize(),
             success: function (data) {
                 // Update the content on the page with the message from the response
-                $('#login-message').text(data.message);
+                sendToast('success', 'Login success!', data.message, false, true);
+
+                //$('#login-message').text(data.message);
                 setTimeout(function () {
                     location.reload(true);
                 }, 1750);
@@ -88,7 +90,7 @@ $(document).ready(() => {
                 // Handle error response
                 if (xhr.status === 403) {
                     // Update the content on the page with the message from the error response
-                    $('#login-message').text(xhr.responseJSON.message);
+                    sendToast('error', 'Login failed!', xhr.responseJSON.message, false, true);
                 } else {
                     // Handle other types of errors if needed
                     console.error('Error:', status, error);
@@ -105,7 +107,7 @@ $(document).ready(() => {
             type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
             url: './logout',
             success: function (data) {
-                $('#login-message').text(data.message);
+                sendToast('success', 'Logout success!', data.message, false, true);
                 setTimeout(function () {
                     location.reload(true);
                 }, 1000);
@@ -114,7 +116,7 @@ $(document).ready(() => {
                 // Handle error response
                 if (xhr.status === 403) {
                     // Update the content on the page with the message from the error response
-                    $('#login-message').text(xhr.responseJSON.message);
+                    sendToast('error', 'Logout failed!', xhr.responseJSON.message, false, true);
                 } else {
                     // Handle other types of errors if needed
                     console.error('Error:', status, error);

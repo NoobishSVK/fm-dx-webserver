@@ -109,7 +109,8 @@ const callbacks = {
   ), 'callback_af*'),
 
   ecc: koffi.register(rds => (
-    value = rdsparser.get_ecc(rds)
+    value = rdsparser.get_ecc(rds),
+    dataToSend.ecc = value
   ), 'callback_ecc*'),
 
   country: koffi.register(rds => (
@@ -218,6 +219,7 @@ var dataToSend = {
   ta: 0,
   ms: -1,
   pty: 0,
+  ecc: null,
   af: [],
   rt0: '',
   rt1: '',
