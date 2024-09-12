@@ -82,6 +82,10 @@ input[type="text"], textarea, input[type="password"] {
     caret-color: var(--color-4);
 }
 
+input[type="password"]:not(#xdrd-password) {
+    border-radius: 15px 0 0 15px;
+}
+
 #tune-buttons input[type="text"] {
     width: 50%;
     height: 48px;

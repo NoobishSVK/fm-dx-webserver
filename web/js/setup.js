@@ -64,37 +64,8 @@ $(document).ready(function() {
         $('#tuner-wireless').hide();
         $('#tuner-usb').show();
     }
-});
-
-  $('#login-form').submit(function (event) {
-    event.preventDefault();
-    
-    // Perform an AJAX request to the /login endpoint
-    $.ajax({
-      type: 'POST',
-      url: './login',
-      data: $(this).serialize(),
-      success: function (data) {
-        // Update the content on the page with the message from the response
-        $('#login-message').text(data.message);
-        setTimeout(function () {
-          location.reload(true);
-        }, 1750);
-      },
-      error: function (xhr, status, error) {
-        // Handle error response
-        if (xhr.status === 403) {
-          // Update the content on the page with the message from the error response
-          $('#login-message').text(xhr.responseJSON.message);
-        } else {
-          // Handle other types of errors if needed
-          console.error('Error:', status, error);
-        }
-      }
-    });
-  });    
+});   
   
-  // Assuming you have an anchor tag with id 'logout-link'
   $('.logout-link').click(function (event) {
     event.preventDefault();
     

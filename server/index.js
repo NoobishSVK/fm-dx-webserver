@@ -1,6 +1,3 @@
-// index.js - Mod by Highpoint
-// Version for loading server-side plugins
-
 // Library imports
 const express = require('express');
 const endpoints = require('./endpoints');
@@ -15,7 +12,7 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true });
 const chatWss = new WebSocket.Server({ noServer: true });
 const rdsWss = new WebSocket.Server({ noServer: true });
-const ExtraWss = new WebSocket.Server({ noServer: true });
+const pluginsWss = new WebSocket.Server({ noServer: true });
 const fs = require('fs');
 const path = require('path');
 const net = require('net');
@@ -537,14 +534,14 @@ rdsWss.on('connection', (ws, request) => {
 });
 
 //additional web socket for using plugins
-ExtraWss.on('connection', (ws, request)  => { 
+pluginsWss.on('connection', (ws, request)  => { 
     ws.on('message', message => {
 
         const messageData = JSON.parse(message);
         const modifiedMessage = JSON.stringify(messageData);
 
         //Broadcast the message to all other clients
-        ExtraWss.clients.forEach(client => {
+        pluginsWss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(modifiedMessage); // Send the message to all clients
             }
@@ -582,10 +579,10 @@ httpServer.on('upgrade', (request, socket, head) => {
         rdsWss.emit('connection', ws, request);
       });
     });
-  } else if (request.url === '/extra') {
+  } else if (request.url === '/data_plugins') {
     sessionMiddleware(request, {}, () => {
-      ExtraWss.handleUpgrade(request, socket, head, (ws) => {
-        ExtraWss.emit('connection', ws, request);
+      pluginsWss.handleUpgrade(request, socket, head, (ws) => {
+        pluginsWss.emit('connection', ws, request);
       });
     });
   } else {
@@ -599,25 +596,28 @@ app.use(express.static(path.join(__dirname, '../web'))); // Serve the entire web
 checkIPv6Support((isIPv6Supported) => {
   const ipv4Address = serverConfig.webserver.webserverIp === '0.0.0.0' ? 'localhost' : serverConfig.webserver.webserverIp;
   const ipv6Address = '::'; // This will bind to all available IPv6 interfaces
-  
-  if (isIPv6Supported) {
-    // Start server on both IPv4 and IPv6 addresses
-    httpServer.listen(serverConfig.webserver.webserverPort, ipv4Address, () => {
-      logInfo(`Web server has started on address \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
-    });
+  const port = serverConfig.webserver.webserverPort;
 
-    httpServer.listen(serverConfig.webserver.webserverPort, ipv6Address, () => {
-      logInfo(`Web server has started on address \x1b[34mhttp://[${ipv6Address}]:${serverConfig.webserver.webserverPort}\x1b[0m.`);
-    });
-  } else {
-    // Start server only on IPv4 address
-    httpServer.listen(serverConfig.webserver.webserverPort, ipv4Address, () => {
-      if (configExists()) {
-        logInfo(`Web server has started on address \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m.`);
+  const logServerStart = (address, isIPv6) => {
+    const formattedAddress = isIPv6 ? `[${address}]` : address;
+    logInfo(`Web server has started on address \x1b[34mhttp://${formattedAddress}:${port}\x1b[0m.`);
+  };
+
+  const startServer = (address, isIPv6) => {
+    httpServer.listen(port, address, () => {
+      if (!isIPv6 && !configExists()) {
+        logInfo(`Open your browser and proceed to \x1b[34mhttp://${address}:${port}\x1b[0m to continue with setup.`);
       } else {
-        logInfo(`Open your browser and proceed to \x1b[34mhttp://${ipv4Address}:${serverConfig.webserver.webserverPort}\x1b[0m to continue with setup.`);
+        logServerStart(address, isIPv6);
       }
     });
+  };
+
+  if (isIPv6Supported) {
+    startServer(ipv4Address, false); // Start on IPv4
+    startServer(ipv6Address, true);  // Start on IPv6
+  } else {
+    startServer(ipv4Address, false); // Start only on IPv4
   }
 });
 

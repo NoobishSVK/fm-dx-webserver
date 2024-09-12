@@ -39,11 +39,11 @@
                 <p class="m-0 text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
                 <div class="flex-center top-25">
                     <div class="form-group">
-                        <label for="webserver-ip">Webserver IP:</label>
+                        <label for="webserver-ip">Webserver IP</label>
                         <input class="input-text w-150" type="text" name="webserver-ip" id="webserver-ip" placeholder="0.0.0.0">
                     </div>  
                     <div class="form-group">
-                        <label for="webserver-port">Webserver port:</label>
+                        <label for="webserver-port">Webserver port</label>
                         <input class="input-text w-100" type="text" name="webserver-port" id="webserver-port" placeholder="8080">
                     </div>  
                 </div>
@@ -56,7 +56,7 @@
                 <h3>Tuner type:</h3>
                 <p class="text-gray">Settings a proper device type ensures that the correct interface and settings will load.</p>
                 <div class="form-group">
-                    <label for="themes"><i class="fa-solid fa-radio"></i> Device:</label>
+                    <label for="themes"><i class="fa-solid fa-radio"></i> Device</label>
                     <div class="dropdown" id="device-selector" style="margin-right: 0;">
                         <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly>
                         <ul class="options">
@@ -82,7 +82,7 @@
                 <div id="tuner-usb" class="top-25">
                     <p>It's time to choose your USB device.</p>
                     <div class="form-group">
-                        <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
+                        <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device</label>
                         <div class="dropdown" style="width: 300px;margin-right: 0;">
                             <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly />
                             <ul class="options" id="deviceList">
@@ -97,15 +97,15 @@
                     <p class="m-0 text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
                     <div class="flex-center top-25">
                         <div class="form-group">
-                            <label for="xdrd-ip">xdrd ip address:</label>
+                            <label for="xdrd-ip">xdrd ip address</label>
                             <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
                         </div>  
                         <div class="form-group">
-                            <label for="xdrd-port">xdrd port:</label>
+                            <label for="xdrd-port">xdrd port</label>
                             <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
                         </div> 
                         <div class="form-group">
-                            <label for="xdrd-password">xdrd server password:</label>
+                            <label for="xdrd-password">xdrd server password</label>
                             <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
                         </div> 
                     </div>
@@ -122,7 +122,7 @@
                     
                     <div class="panel-100 p-bottom-20">
                         <div class="form-group">
-                            <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
+                            <label for="audio-devices"><i class="fa-solid fa-headphones"></i> Stream audio from</label>
                             <div class="dropdown" style="width: 300px;">
                                 <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly />
                                 <ul class="options" id="deviceList">
@@ -137,7 +137,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> AUDIO CHANNELS:</label>
+                            <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> Audio channels</label>
                             <div class="dropdown" style="width: 300px;">
                                 <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly />
                                 <ul class="options">
@@ -148,7 +148,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> AUDIO QUALITY:</label>
+                            <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> Audio quality</label>
                             <div class="dropdown" style="width: 300px;">
                                 <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly />
                                 <ul class="options">
@@ -235,23 +235,27 @@
         <% } else { %>
         <div class="panel-100 no-bg">
             <img class="top-25" src="../images/openradio_logo_neutral.png" height="64px">
-            <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
+            <h2 class="text-monospace text-light">[Wizard]</h2>
             <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
             <p>Please login below.</p>
         </div>
         <div class="panel-100 p-bottom-20">
             <h2>LOGIN</h2>
             <form action="./login" method="post" id="login-form">
-                <input style="background-color: var(--color-2);" type="password" id="password" name="password" required>
-                <button type="submit" class="br-0 w-100" style="height: 44px;">Login</button>
+                <input type="password" id="password" name="password" placeholder="Password" style="width: 250px; background-color: var(--color-2);" required>
+                <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -4px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
               </form>
-            <div id="login-message"></div>
         </div>
         <% } %>
     </div>
     </div>
+    <script src="js/init.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/settings.js"></script>
     <script src="js/setup.js"></script>
     <script src="js/wizard.js"></script>
     <script src="js/confighandler.js"></script>

@@ -234,7 +234,9 @@ var dataToSend = {
     itu: '',
     dist: '',
     azi: '',
-    id: ''
+    id: '',
+    reg: '',
+    pi: '',
   },
   country_name: '',
   country_iso: 'UN',
@@ -294,6 +296,7 @@ function handleData(wss, receivedData, rdsWss) {
           initialData.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.freq = (parsedValue / 1000).toFixed(3);
           dataToSend.pi = '?';
+          dataToSend.txInfo.reg = false;
 
           rdsWss.clients.forEach((client) => {
             client.send("G:\r\nRESET-------\r\n\r\n");
@@ -401,7 +404,9 @@ function handleData(wss, receivedData, rdsWss) {
       itu: currentTx.itu,
       dist: currentTx.distance,
       azi: currentTx.azimuth,
-      id: currentTx.id
+      id: currentTx.id,
+      pi: currentTx.pi,
+      reg: currentTx.reg
     }
   }
 

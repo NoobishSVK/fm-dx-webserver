@@ -50,42 +50,69 @@ function processData(data, piCode, rdsPs) {
     let txAzimuth;
     let maxDistance;
     let esMode = checkEs();
+    let detectedByPireg = false; // To track if the station was found by pireg
 
+    // Helper function to calculate score and update matching station/city
+    function evaluateStation(station, city, distance) {
+        let weightDistance = distance.distanceKm;
+        if (esMode && distance.distanceKm > 500) {
+            weightDistance = Math.abs(distance.distanceKm - 1500);
+        }
+        let erp = station.erp && station.erp > 0 ? station.erp : 1;
+        const score = (10 * Math.log10(erp * 1000)) / weightDistance; // Calculate score
+        if (score > maxScore) {
+            maxScore = score;
+            txAzimuth = distance.azimuth;
+            matchingStation = station;
+            matchingCity = city;
+            maxDistance = distance.distanceKm;
+        }
+    }
+
+    // First attempt: Try to match station using the piCode
     for (const cityId in data.locations) {
         const city = data.locations[cityId];
         if (city.stations) {
             for (const station of city.stations) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
-                    let weightDistance = distance.distanceKm
-                    if (esMode && (distance.distanceKm > 500)) {
-                        weightDistance = Math.abs(distance.distanceKm-1500);
-                    }
-                    let erp = (station.erp && station.erp > 0) ? station.erp : 1;
-                    const score =  (10*Math.log10(erp*1000)) / weightDistance; // Calculate score
-                    if (score > maxScore) {
-                        maxScore = score;
-                        txAzimuth = distance.azimuth;
-                        matchingStation = station;
-                        matchingCity = city;
-                        maxDistance = distance.distanceKm;
+                    evaluateStation(station, city, distance);
+                    detectedByPireg = false; // Detected by pi, not pireg
+                }
+            }
+        }
+    }
+
+    // If no matching station is found, fallback to pireg
+    if (!matchingStation) {
+        for (const cityId in data.locations) {
+            const city = data.locations[cityId];
+            if (city.stations) {
+                for (const station of city.stations) {
+                    if (station.pireg && station.pireg.toUpperCase() === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
+                        const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
+                        evaluateStation(station, city, distance);
+                        detectedByPireg = true; // Detected by pireg
                     }
                 }
             }
         }
     }
 
+    // Return the results if a station was found, otherwise return undefined
     if (matchingStation) {
         return {
             station: matchingStation.station.replace("R.", "Radio "),
             pol: matchingStation.pol.toUpperCase(),
-            erp: (matchingStation.erp && matchingStation.erp > 0) ? matchingStation.erp : '?',
+            erp: matchingStation.erp && matchingStation.erp > 0 ? matchingStation.erp : '?',
             city: matchingCity.name,
             itu: matchingCity.itu,
             distance: maxDistance.toFixed(0),
             azimuth: txAzimuth.toFixed(0),
             id: matchingStation.id,
-            foundStation: true
+            pi: matchingStation.pi,
+            foundStation: true,
+            reg: detectedByPireg // Indicates if it was detected by pireg
         };
     } else {
         return;

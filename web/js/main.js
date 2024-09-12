@@ -827,7 +827,8 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.dist);
-        updateTextIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi);
+        updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
+        updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');

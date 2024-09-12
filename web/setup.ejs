@@ -20,7 +20,6 @@
             <img class="top-10" src="./images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light">[ADMIN PANEL]</h2>
         </div>
-        <div id="login-message"></div>
         <div class="panel-100" style="border-radius: 15px 15px 0 0;">
             <ul class="nav" role="tablist" style="border-radius: 15px 15px 0 0;">
                 <li role="presentation" data-panel="dashboard" aria-selected="true">
@@ -544,15 +543,17 @@
         <div class="panel-100 p-bottom-20">
             <h2>LOGIN</h2>
             <form action="./login" method="post" id="login-form">
-                <input style="background-color: var(--color-2);" type="password" id="password" name="password" required>
-                <button type="submit" class="br-0 w-100" style="height: 44px;">Login</button>
+                <input type="password" id="password" name="password" placeholder="Password" style="width: 250px;" required>
+                <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -2px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
               </form>
-            <div id="login-message"></div>
         </div>
         <% } %>
     </div>
     </div>
     <script src="js/init.js"></script>
+    <script src="js/toast.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
