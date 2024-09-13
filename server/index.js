@@ -330,7 +330,7 @@ wss.on('connection', (ws, request) => {
   
   let clientIpTest = clientIp.split(',')[0].trim();
 
-	if (clientIp !== '127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+	if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
 		currentUsers++;
 	}
   
@@ -431,7 +431,7 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', (code, reason) => {
-    if (clientIp !== '127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+    if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
       currentUsers--;
     }
     dataHandler.showOnlineUsers(currentUsers);
