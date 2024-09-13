@@ -28,7 +28,6 @@ const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists } = require('./server_config');
 const pjson = require('../package.json');
-const config = require('./../config.json');
 
 // Function to find server files based on the plugins listed in config
 function findServerFiles(plugins) {
@@ -65,7 +64,7 @@ function startPluginsWithDelay(plugins, delay) {
 }
 
 // Get all plugins from config and find corresponding server files
-const plugins = findServerFiles(config.plugins);
+const plugins = findServerFiles(serverConfig.plugins);
 
 // Start the first plugin after 3 seconds, then the rest with 3 seconds delay
 if (plugins.length > 0) {
