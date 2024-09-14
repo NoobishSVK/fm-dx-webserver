@@ -52,7 +52,7 @@ function startPluginsWithDelay(plugins, delay) {
     setTimeout(() => {
       const pluginName = path.basename(pluginPath, '.js'); // Extract plugin name from path
       logInfo(`-----------------------------------------------------------------`);
-      logInfo(`Plugin ${pluginName} is loaded`);
+      logInfo(`Plugin ${pluginName} loaded successfully!`);
       require(pluginPath);
     }, delay * index);
   });

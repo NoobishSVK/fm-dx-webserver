@@ -1,4 +1,11 @@
   /* Basic Toast Styling */
+  #toast-container {
+    position: fixed;
+    top: 20px;
+    right: 96px;
+    z-index: 9999;
+  }
+
   .toast {
     padding: 15px;
     margin-top: 10px;
@@ -8,7 +15,7 @@
     position: relative;
     transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
     transform: translateY(-10px); /* Initial animation state */
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(50px);
   }
 
   .toast:hover {
@@ -88,3 +95,13 @@
     color: #fff;
     cursor: pointer;
   }
+
+  @media only screen and (max-width: 768px) {
+    #toast-container {
+      left: 0;
+      right: 0;
+    }
+    .toast {
+      margin: auto;
+    }
+}

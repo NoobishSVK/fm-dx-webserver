@@ -828,11 +828,17 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.dist);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
-        updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
     }
+
+    if(parsedData.txInfo.tx.length > 1 && parsedData.txInfo.dist > 150 && parsedData.txInfo.dist < 4000) {
+        $('#log-fmlist').attr('disabled', 'false').removeClass('btn-disabled cursor-disabled');
+    } else {
+        $('#log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
+    }
+    updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
 
     updateCounter++;
     if (updateCounter % 8 === 0) {

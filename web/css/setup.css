@@ -10,14 +10,13 @@
 }
 
 .setup-wrapper h2 {
-    font-size: 32px;
+    font-size: 42px;
     font-weight: 300;
-    padding: 10px;
-    text-transform: uppercase;
+    padding: 20px 15px;
+    text-align: left;
 }
 
-
-.setup-wrapper textarea {
+#wrapper textarea {
     width: 100%;
     max-width: 768px;
     background-color: var(--color-2);
@@ -26,33 +25,91 @@
     padding-top: 10px;
 }
 
+.sidenav {
+    background-color: var(--color-main);
+  }
+
+  .sidenav li a:focus {
+    outline: none;
+  }
+
+  .sidenav-content {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+  }
+  
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+
+  .sidenav h1 {
+    font-size: 42px;
+    text-transform: initial;
+    font-weight: 300;
+    text-align: center;
+  }
 ul.nav {
     list-style-type: none;
     padding: 15px 0;
-    background: var(--color-2);
     border-radius: 15px;
 }
 
 ul.nav li {
-    display: inline;
-    padding: 15px;
+    padding: 12px 20px;
     cursor: pointer;
     transition: color 0.3s ease, background-color 0.3s ease;
     user-select: none;
 }
 
-ul.nav li:hover {
-    color: var(--color-main);
-    background-color: var(--color-4);
+ul.nav li a {
+    color: var(--color-5) !important;
 }
 
-li.active {
+
+ul.nav li:hover {
     background-color: var(--color-3);
+}
+
+ul.nav li:hover a {
+    color: var(--color-main) !important;
+}
+
+ul.nav li.active a {
+    color: var(--color-main) !important;
+    font-weight: bold;
+}
+
+
+li.active {
+    background-color: var(--color-4);
 }
 
 .tab-content {
     display: none;
 }
+
+#navigation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 420px; /* Width of the sidenav */
+    height: 100%;
+    z-index: 1000; /* Ensure it's above other content */
+    transition: margin-left 0.3s ease; /* Smooth transition */
+  }
+  
+  .admin-wrapper {
+    transition: margin-left 0.3s ease, width 0.3s ease;
+  }
+
+  .admin-wrapper > .panel-full > .panel-full {
+    min-height: 100vh;
+  }
 
 #map {
     height:400px;
@@ -66,6 +123,12 @@ li.active {
 .setup-wrapper h3 {
     font-weight: 300;
     margin: 8px;
+    font-size: 36px;
+    color: var(--color-5)
+}
+
+.setup-wrapper h4 {
+    color: var(--color-4);
 }
 
 
@@ -87,18 +150,15 @@ li.active {
 }
 
 @media only screen and (max-width: 768px) {
-    ul.nav {
-        display: flex;
-        overflow-y: scroll;
-        background: transparent;
+    .setup-wrapper .panel-33, .setup-wrapper .panel-50 {
+        background: var(--color-1-transparent);
     }
-
-    ul.nav li {
-        background-color: var(--color-4);
-        color: var(--color-main);
-        margin: 0px 10px;
-        padding: 15px 35px;
-        border-radius: 15px;
-        min-width: fit-content;
-    }
+    #navigation {
+        width: 100vw; /* You can make the sidenav full width on mobile if you want */
+      }
+      
+      .admin-wrapper {
+        margin-left: 0;
+        width: 100%;
+      }
 }

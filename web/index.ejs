@@ -157,17 +157,11 @@
                     
                     <div class="panel-33 hide-phone no-bg">
                         <div class="flex-container">
-                            <% if(device === 'other' || bwSwitch == false) { %>
-                                <span class="panel-100 m-0 h-100" style="height: 48px;width: 100%;">
-                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
-                                </span>
-                            <% } else { %>
-                                <span class="panel-100 m-0" style="margin-right: 15px !important;height: 48px;">
-                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
-                                </span>
-                            <% } %>
+                            <span class="panel-100-real m-0" style="height: 48px;">
+                                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
+                            </span>
                             <% if (device == 'tef' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
@@ -191,7 +185,7 @@
                             <% } %>
 
                             <% if (device == 'xdr' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
@@ -216,7 +210,7 @@
                             <% } %>
 
                             <% if (device == 'sdr' && bwSwitch == true) { %>
-                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 25px;">
+                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
@@ -236,9 +230,11 @@
                                     </ul>
                                 </div>
                             <% } %>
-                            <!--<button class="tooltip bg-color-4" id="log-fmlist" 
+                            <% if (fmlist_integration == true) { %>
+                            <button class="tooltip bg-color-4" id="log-fmlist" 
                             data-tooltip="<strong>LOG TO FMLIST</strong><br>Clicking this button logs the current station to FMLIST's visual logbook." aria-label="Chatbox"
-                            style="width: 80px; height: 48px;margin-left: 15px;"><i class="fa-solid fa-flag fa-lg"></i></button>-->
+                            style="width: 80px; height: 48px;margin-left: 15px !important;"><i class="fa-solid fa-flag fa-lg"></i></button>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -360,11 +356,11 @@
             
             <div class="form-group checkbox">
                 <input type="checkbox" tabindex="0"  id="extended-frequency-range" aria-label="Add decimals manually">
-                <label for="extended-frequency-range">Add decimals manually</label>
+                <label for="extended-frequency-range" class="tooltip" data-tooltip="Enabling this will allow you to enter the decimal point manually.<br>Useful for servers that use upconverters.">Manual decimal entry</label>
             </div>
             <div class="form-group checkbox">
                 <input type="checkbox" tabindex="0" id="ps-underscores" aria-label="Add underscores to RDS PS">
-                <label for="ps-underscores">Add underscores to RDS PS</label>
+                <label for="ps-underscores" class="tooltip" data-tooltip="Enabling this option replaces spaces in RDS PS with underscores.">Underscores in RDS PS</label>
             </div>
 
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
@@ -493,7 +489,7 @@
     </div>
 </div>
 </div>
-<div id="toast-container" style="position: fixed; top: 20px; right: 96px; z-index: 9999;"></div>
+<div id="toast-container"></div>
 <script src="js/websocket.js"></script>
 <script src="js/webserver.js"></script>
 <% if (!noPlugins) { %>

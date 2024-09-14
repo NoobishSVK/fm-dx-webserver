@@ -18,6 +18,10 @@ button:hover {
     opacity: 0.6;
 }
 
+.cursor-disabled {
+    cursor: not-allowed;
+}
+
 .btn-next {
     width: 200px;
     padding: 10px;

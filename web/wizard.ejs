@@ -14,8 +14,7 @@
 <body>
     <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
     <div id="wrapper-outer">
-    <div id="wrapper" class="setup-wrapper">
-        <% if (isAdminAuthenticated) { %>
+    <div id="wrapper">
         <div class="panel-100 no-bg">
             <img class="top-10" src="../images/openradio_logo_neutral.png" height="64px">
             <h2 class="text-monospace text-light text-gray">[SETUP WIZARD]</h2>
@@ -55,19 +54,20 @@
 
                 <h3>Tuner type:</h3>
                 <p class="text-gray">Settings a proper device type ensures that the correct interface and settings will load.</p>
-                <div class="form-group">
-                    <label for="themes"><i class="fa-solid fa-radio"></i> Device</label>
-                    <div class="dropdown" id="device-selector" style="margin-right: 0;">
-                        <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly>
-                        <ul class="options">
-                            <li class="option" data-value="tef">TEF668x / TEA685x</li>
-                            <li class="option" data-value="xdr">XDR (F1HD / S10HDiP)</li>
-                            <li class="option" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
-                            <li class="option" data-value="other">Other</li>
-                        </ul>
+                <div class="panel-100 no-bg text-center">
+                    <div class="form-group" style="float: none;">
+                        <label for="device-selector"><i class="fa-solid fa-radio"></i> Device</label>
+                        <div class="dropdown" id="device-selector" style="margin: auto;">
+                            <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly>
+                            <ul class="options">
+                                <li class="option" data-value="tef">TEF668x / TEA685x</li>
+                                <li class="option" data-value="xdr">XDR (F1HD / S10HDiP)</li>
+                                <li class="option" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
+                                <li class="option" data-value="other">Other</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-
                 <h3>Tuner connection:</h3>
                 <div style="width: 300px;" class="auto top-10">
                     <label class="toggleSwitch nolabel" onclick="">
@@ -120,7 +120,7 @@
                         Choose the audio port your tuner is connected to and desired audio settings here.</p>
                     <p class="text-gray">Recommended defaults have already been set for the audio quality, you can keep them as-is.</p>
                     
-                    <div class="panel-100 p-bottom-20">
+                    <div class="panel-100 p-bottom-20 flex-container flex-center">
                         <div class="form-group">
                             <label for="audio-devices"><i class="fa-solid fa-headphones"></i> Stream audio from</label>
                             <div class="dropdown" style="width: 300px;">
@@ -177,14 +177,16 @@
                     
                     <h3>Location:</h3>
                     <p class="text-gray">Location info is useful for automatic identification of stations using RDS.</p>
-                    <div class="form-group">
-                        <label for="lat">Latitude:</label>
-                        <input class="input-text" type="text" name="lat" id="lat">
-                    </div>  
-                    
-                    <div class="form-group">
-                        <label for="lng">Longitude:</label>
-                        <input class="input-text" type="text" name="lng" id="lng">
+                    <div class="panel-100 no-bg flex-container flex-center">
+                        <div class="form-group">
+                            <label for="lat">Latitude:</label>
+                            <input class="input-text" type="text" name="lat" id="lat">
+                        </div>  
+                        
+                        <div class="form-group">
+                            <label for="lng">Longitude:</label>
+                            <input class="input-text" type="text" name="lng" id="lng">
+                        </div>
                     </div>
                     <div id="map"></div>
 
@@ -193,18 +195,23 @@
                     <p class="m-0">The list is available at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
 
                     <p class="text-gray">Only fill up your broadcast address if you are using a proxy. If you don't know what a proxy is, leave it empty.</p>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="broadcast-tuner" aria-label="Broadcast to map">
-                        <label for="broadcast-tuner">Show my tuner on the public list</label>
+
+                    <div class="panel-100 flex-container flex-center">
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="broadcast-tuner" aria-label="Broadcast to map">
+                            <label for="broadcast-tuner">Show my tuner on the public list</label>
+                        </div>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="tuner-public" aria-label="Allow tuning wihtout password">
+                            <label for="tuner-public">Allow tuning without password</label>
+                        </div>
                     </div>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="tuner-public" aria-label="Allow tuning wihtout password">
-                        <label for="tuner-public">Allow tuning without password</label>
-                    </div>
-                    <br>
-                    <div class="form-group">
-                        <label for="broadcast-address">Broadcast address:</label>
-                        <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
+
+                    <div class="panel-100 flex-container flex-center">
+                        <div class="form-group">
+                            <label for="broadcast-address">Broadcast address:</label>
+                            <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -215,14 +222,16 @@
                 <p>We are at the last and final step of the settings.</p>
 
                 <p class="text-gray">Here we can set the password. Tune password is optional.<br>Setting an admin password allows you to change settings later and setting one up is mandatory.</p>
-                <div class="form-group">
-                    <label for="tune-pass">Tune password:</label>
-                    <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
+                <div class="flex-container flex-center">
+                    <div class="form-group">
+                        <label for="tune-pass">Tune password:</label>
+                        <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-pass">Admin setup password:</label>
+                        <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="admin-pass">Admin setup password:</label>
-                    <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
-                </div><br>
                 <p>You can now click the <strong>save button</strong> to save your settings.</p>
             </div>
 
@@ -232,23 +241,6 @@
         <div class="panel-100 no-bg">
             <p>Feel free to contact us on <a href="https://discord.gg/ZAVNdS74mC" target="_blank"><strong><i class="fa-brands fa-discord"></i> Discord</strong></a> for community support.</p>
         </div>
-        <% } else { %>
-        <div class="panel-100 no-bg">
-            <img class="top-25" src="../images/openradio_logo_neutral.png" height="64px">
-            <h2 class="text-monospace text-light">[Wizard]</h2>
-            <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
-            <p>Please login below.</p>
-        </div>
-        <div class="panel-100 p-bottom-20">
-            <h2>LOGIN</h2>
-            <form action="./login" method="post" id="login-form">
-                <input type="password" id="password" name="password" placeholder="Password" style="width: 250px; background-color: var(--color-2);" required>
-                <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -4px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                </button>
-              </form>
-        </div>
-        <% } %>
     </div>
     </div>
     <script src="js/init.js"></script>

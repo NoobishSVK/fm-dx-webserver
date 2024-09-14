@@ -235,7 +235,7 @@ var dataToSend = {
     dist: '',
     azi: '',
     id: '',
-    reg: '',
+    reg: false,
     pi: '',
   },
   country_name: '',
@@ -394,21 +394,26 @@ function handleData(wss, receivedData, rdsWss) {
   }
 
   // Get the received TX info
-  const currentTx = fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps);
-  if(currentTx && currentTx.station !== undefined) {
-    dataToSend.txInfo = {
-      tx: currentTx.station,
-      pol: currentTx.pol,
-      erp: currentTx.erp,
-      city: currentTx.city,
-      itu: currentTx.itu,
-      dist: currentTx.distance,
-      azi: currentTx.azimuth,
-      id: currentTx.id,
-      pi: currentTx.pi,
-      reg: currentTx.reg
-    }
-  }
+  fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps)
+  .then((currentTx) => {
+      if (currentTx && currentTx.station !== undefined) {
+          dataToSend.txInfo = {
+              tx: currentTx.station,
+              pol: currentTx.pol,
+              erp: currentTx.erp,
+              city: currentTx.city,
+              itu: currentTx.itu,
+              dist: currentTx.distance,
+              azi: currentTx.azimuth,
+              id: currentTx.id,
+              pi: currentTx.pi,
+              reg: currentTx.reg
+          };
+      }
+  })
+  .catch((error) => {
+      logError("Error fetching Tx info:", error);
+  });
 
     // Send the updated data to the client
     const dataToSendJSON = JSON.stringify(dataToSend);

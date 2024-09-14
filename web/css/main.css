@@ -73,7 +73,6 @@ body {
 .wrapper-outer-static {
     display: block !important;
     padding-top: 10px;
-    padding-bottom: 10px;
 }
 
 #wrapper {
@@ -84,6 +83,8 @@ body {
     margin: auto;
     position: static;
     transform: none;
+    width: calc(100% - 420px);
+    margin-left: 420px;
 }
 
 a {
@@ -140,5 +141,16 @@ hr {
         transform: none;
         margin: 50px auto;
         width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    #wrapper.setup-wrapper {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .setup-wrapper h2 {
+        display: initial;
     }
 }

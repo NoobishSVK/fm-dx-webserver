@@ -153,6 +153,7 @@ $(document).ready(function() {
 
   updateTabFocus(currentTabIndex);
   $tabs.on('keydown', handleKeyDown);
+  //toggleNav();
 });
 
 function MapCreate() {
@@ -188,4 +189,49 @@ function MapCreate() {
         // Add active class to the corresponding li element
         $('.nav li[data-panel="' + panelId + '"]').addClass('active');
     }
+    if(window.location.hash.length == 0) {
+      $('.nav li[data-panel="dashboard"]').addClass('active');
+    }
+}
+
+function toggleNav() {
+  const navOpen = $("#navigation").css('margin-left') === '0px';
+  const isMobile = window.innerWidth <= 768; // Define mobile screen width threshold (you can adjust this as needed)
+
+  if (navOpen) {
+    // Close the navigation
+    if (isMobile) {
+      // Do nothing to .admin-wrapper on mobile (since we're overlaying)
+      $(".admin-wrapper").css({
+        'margin-left': '0',
+        'width': '100%' // Reset content to full width on close
+      });
+      $("#navigation").css('margin-left', 'calc(64px - 100vw)');
+    } else {
+      // On desktop, adjust the content margin and width
+      $(".admin-wrapper").css({
+        'margin-left': '64px',
+        'width': 'calc(100% - 64px)'
+      });
+      $("#navigation").css('margin-left', '-356px');
+    }
+    $(".sidenav-close").html('<i class="fa-solid fa-chevron-right"></i>');
+  } else {
+    // Open the navigation
+    $("#navigation").css('margin-left', '0');
+    if (isMobile) {
+      // On mobile, overlay the navigation
+      $(".admin-wrapper").css({
+        'margin-left': '0', // Keep content in place when sidenav is open
+        'width': '100%' // Keep content at full width
+      });
+    } else {
+      // On desktop, push the content
+      $(".admin-wrapper").css({
+        'margin-left': '420px',
+        'width': 'calc(100% - 420px)'
+      });
+    }
+    $(".sidenav-close").html('<i class="fa-solid fa-chevron-left"></i>');
+  }
 }

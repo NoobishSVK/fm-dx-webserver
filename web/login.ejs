@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - FM-DX Webserver</title>
+    <link href="css/entry.css" type="text/css" rel="stylesheet">
+    <link href="css/flags.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" type="text/css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="toast-container"></div>
+    <div id="wrapper-outer">
+    <div id="wrapper">
+        <div class="panel-100 no-bg">
+            <img class="top-25" src="../favicon.png" height="64px">
+            <p>You are currently not logged in as an administrator and therefore can't change the settings.</p>
+            <p>Please login below.</p>
+        </div>
+        <div class="panel-100 p-bottom-20">
+            <h1 class="text-light">Login</h1>
+            <form action="./login" method="post" id="login-form">
+                <input type="password" id="password" name="password" placeholder="Password" style="width: 250px; background-color: var(--color-2);" required>
+                <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -4px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+              </form>
+        </div>
+    </div>
+    </div>
+    <script src="js/settings.js"></script>
+    <script src="js/toast.js"></script>
+</body>
+</html>

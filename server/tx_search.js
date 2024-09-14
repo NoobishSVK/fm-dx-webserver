@@ -3,29 +3,69 @@ const { serverConfig } = require('./server_config');
 const consoleCmd = require('./console');
 
 let cachedData = {};
-
 let lastFetchTime = 0;
-const fetchInterval = 3000;
-
+const fetchInterval = 1000;
 const esSwitchCache = {"lastCheck":0, "esSwitch":false};
 const esFetchInterval = 300000;
+const usStatesGeoJsonUrl = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
+let usStatesGeoJson = null;  // To cache the GeoJSON data for US states
+
+// Load the US states GeoJSON data
+async function loadUsStatesGeoJson() {
+    if (!usStatesGeoJson) {
+        const response = await fetch(usStatesGeoJsonUrl);
+        usStatesGeoJson = await response.json();
+    }
+}
+
+// Function to get bounding box of a state
+function getStateBoundingBox(coordinates) {
+    let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+    for (const polygon of coordinates) {
+        for (const coord of polygon[0]) { // First level in case of MultiPolygon
+            const [lon, lat] = coord;
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+            if (lon < minLon) minLon = lon;
+            if (lon > maxLon) maxLon = lon;
+        }
+    }
+    return { minLat, maxLat, minLon, maxLon };
+}
+
+// Function to check if a city (lat, lon) falls within the bounding box of a state
+function isCityInState(lat, lon, boundingBox) {
+    return lat >= boundingBox.minLat && lat <= boundingBox.maxLat &&
+           lon >= boundingBox.minLon && lon <= boundingBox.maxLon;
+}
+
+// Function to check if a city (lat, lon) is inside any US state and return the state name
+function getStateForCoordinates(lat, lon) {
+    if (!usStatesGeoJson) return null;
+
+    for (const feature of usStatesGeoJson.features) {
+        const boundingBox = getStateBoundingBox(feature.geometry.coordinates);
+        if (isCityInState(lat, lon, boundingBox)) {
+            return feature.properties.name;  // Return the state's name if city is inside bounding box
+        }
+    }
+    return null;
+}
 
 // Fetch data from maps
-function fetchTx(freq, piCode, rdsPs) {
+async function fetchTx(freq, piCode, rdsPs) {
     const now = Date.now();
     freq = parseFloat(freq);
 
-    if(isNaN(freq)) {
+    if (isNaN(freq)) {
         return;
     }
-    // Check if it's been at least 3 seconds since the last fetch and if the QTH is correct
     if (now - lastFetchTime < fetchInterval || serverConfig.identification.lat.length < 2 || freq < 87) {
         return Promise.resolve();
     }
 
     lastFetchTime = now;
 
-    // Check if data for the given frequency is already cached
     if (cachedData[freq]) {
         return processData(cachedData[freq], piCode, rdsPs);
     }
@@ -34,32 +74,32 @@ function fetchTx(freq, piCode, rdsPs) {
 
     return fetch(url)
         .then(response => response.json())
-        .then(data => {
-            // Cache the fetched data for the specific frequency
+        .then(async (data) => {
             cachedData[freq] = data;
+            await loadUsStatesGeoJson();
             return processData(data, piCode, rdsPs);
         })
         .catch(error => {
+            console.error("Error fetching data:", error);
         });
 }
 
-function processData(data, piCode, rdsPs) {
+async function processData(data, piCode, rdsPs) {
     let matchingStation = null;
     let matchingCity = null;
-    let maxScore = -Infinity; // Initialize maxScore with a very low value
+    let maxScore = -Infinity;
     let txAzimuth;
     let maxDistance;
     let esMode = checkEs();
-    let detectedByPireg = false; // To track if the station was found by pireg
+    let detectedByPireg = false;
 
-    // Helper function to calculate score and update matching station/city
     function evaluateStation(station, city, distance) {
         let weightDistance = distance.distanceKm;
         if (esMode && distance.distanceKm > 500) {
             weightDistance = Math.abs(distance.distanceKm - 1500);
         }
         let erp = station.erp && station.erp > 0 ? station.erp : 1;
-        const score = (10 * Math.log10(erp * 1000)) / weightDistance; // Calculate score
+        const score = (10 * Math.log10(erp * 1000)) / weightDistance;
         if (score > maxScore) {
             maxScore = score;
             txAzimuth = distance.azimuth;
@@ -77,13 +117,13 @@ function processData(data, piCode, rdsPs) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                     const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                     evaluateStation(station, city, distance);
-                    detectedByPireg = false; // Detected by pi, not pireg
+                    detectedByPireg = false;
                 }
             }
         }
     }
 
-    // If no matching station is found, fallback to pireg
+    // Fallback to pireg if no match is found
     if (!matchingStation) {
         for (const cityId in data.locations) {
             const city = data.locations[cityId];
@@ -92,27 +132,34 @@ function processData(data, piCode, rdsPs) {
                     if (station.pireg && station.pireg.toUpperCase() === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
                         const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                         evaluateStation(station, city, distance);
-                        detectedByPireg = true; // Detected by pireg
+                        detectedByPireg = true;
                     }
                 }
             }
         }
     }
 
-    // Return the results if a station was found, otherwise return undefined
+    // Determine the state if the city is in the USA
+    if (matchingStation && matchingCity.itu === 'USA') {
+        const state = getStateForCoordinates(matchingCity.lat, matchingCity.lon);
+        if (state) {
+            matchingCity.state = state;  // Add state to matchingCity
+        }
+    }
+
     if (matchingStation) {
         return {
             station: matchingStation.station.replace("R.", "Radio "),
             pol: matchingStation.pol.toUpperCase(),
             erp: matchingStation.erp && matchingStation.erp > 0 ? matchingStation.erp : '?',
             city: matchingCity.name,
-            itu: matchingCity.itu,
+            itu: matchingCity.state ? matchingCity.state + ', ' + matchingCity.itu : matchingCity.itu,
             distance: maxDistance.toFixed(0),
             azimuth: txAzimuth.toFixed(0),
             id: matchingStation.id,
             pi: matchingStation.pi,
             foundStation: true,
-            reg: detectedByPireg // Indicates if it was detected by pireg
+            reg: detectedByPireg
         };
     } else {
         return;
@@ -151,26 +198,19 @@ function checkEs() {
 }
 
 function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth radius in kilometers
+    const R = 6371;
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
-
     const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    // Distance in kilometers
     const distance = R * c;
 
-    // Azimuth calculation
     const y = Math.sin(dLon) * Math.cos(deg2rad(lat2));
     const x = Math.cos(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) -
               Math.sin(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(dLon);
     const azimuth = Math.atan2(y, x);
-
-    // Convert azimuth from radians to degrees
     const azimuthDegrees = (azimuth * 180 / Math.PI + 360) % 360;
 
     return {
@@ -178,7 +218,6 @@ function haversine(lat1, lon1, lat2, lon2) {
         azimuth: azimuthDegrees
     };
 }
-
 
 function deg2rad(deg) {
     return deg * (Math.PI / 180);

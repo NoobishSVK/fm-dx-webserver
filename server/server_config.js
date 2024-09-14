@@ -45,6 +45,10 @@ let serverConfig = {
     tunePass: "",
     adminPass: ""
   },
+  extras: {
+    fmlist_integration: true,
+    fmlist_omid: "",
+  },
   plugins: [],
   device: 'tef',
   defaultFreq: 87.5,

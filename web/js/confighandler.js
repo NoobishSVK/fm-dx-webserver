@@ -77,6 +77,9 @@ function submitData() {
       plugins.push($(this).data('name'));
   });
 
+    const fmlistIntegration = $("#fmlist-integration").is(":checked") || false;
+    const fmlistOmid = $('#fmlist-omid').val();
+
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
     const autoShutdown = $("#shutdown-tuner").is(":checked") || false;
@@ -143,6 +146,10 @@ function submitData() {
         tunePass,
         adminPass,
       },
+      extras: {
+        fmlistIntegration,
+        fmlistOmid,
+      },
       plugins,
       device,
       publicTuner, 
@@ -164,7 +171,7 @@ function submitData() {
       contentType: 'application/json',
       data: JSON.stringify(data),
       success: function (message) {
-        alert(message);
+        sendToast('success', 'Data saved!', message, true, true);
       },
       error: function (error) {
         console.error(error);
@@ -307,6 +314,9 @@ function submitData() {
             });
           }
         }
+
+        $("#fmlist-integration").prop("checked", data.extras ? data.extras?.fmlist_integration : "true");
+        $('#fmlist-omid').val(data.extras?.fmlist_omid);
       })
       .catch(error => {
         console.error('Error fetching data:', error.message);

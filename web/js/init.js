@@ -1,9 +1,9 @@
-var currentDate = new Date('Sep 12, 2024 21:30:00');
+var currentDate = new Date('Sep 15, 2024 00:00:00');
 var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year; 
-var currentVersion = 'v1.2.8.1 [' + formattedDate + ']';
+var currentVersion = 'v1.3.0 [' + formattedDate + ']';
 
 getInitialSettings();
 removeUrlParameters(); // Call this function to remove URL parameters
@@ -30,9 +30,8 @@ function getInitialSettings() {
 }
 
 function removeUrlParameters() {
-    // Get the current URL without the query parameters
-    var urlWithoutParams = window.location.protocol + "//" + window.location.host + window.location.pathname;
-
-    // Replace the current URL with the new one, without reloading the page
-    window.history.replaceState({ path: urlWithoutParams }, '', urlWithoutParams);
+    if (window.location.pathname === "/") {
+        var urlWithoutParams = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: urlWithoutParams }, '', urlWithoutParams);
+    }
 }

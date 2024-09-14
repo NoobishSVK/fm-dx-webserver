@@ -62,6 +62,7 @@ router.get('/', (req, res) => {
             device: serverConfig.device,
             noPlugins,
             plugins: serverConfig.plugins,
+            fmlist_integration: serverConfig.fmlist_integration ? serverConfig.fmlist_integration : true,
             bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });
     }
@@ -74,6 +75,11 @@ router.get('/403', (req, res) => {
 router.get('/wizard', (req, res) => {
     let serialPorts;
     
+    if(!req.session.isAdminAuthenticated) {
+        res.render('login');
+        return;
+    }
+
     SerialPort.list()
     .then((deviceList) => {
         serialPorts = deviceList.map(port => ({
@@ -94,6 +100,11 @@ router.get('/wizard', (req, res) => {
 
 router.get('/setup', (req, res) => {
     let serialPorts; 
+
+    if(!req.session.isAdminAuthenticated) {
+        res.render('login');
+        return;
+    }
     
     SerialPort.list()
     .then((deviceList) => {
@@ -260,6 +271,14 @@ router.get('/ping', (req, res) => {
 });  
 
 router.get('/log_fmlist', (req, res) => {
+    if(dataHandler.dataToSend.txInfo.tx.length === 0) {
+        res.status(500).send('No suitable transmitter to log.');
+        return;
+    }
+
+    if(serverConfig.extras?.fmlist_integration == false) {
+        res.status(500).send('FMLIST Integration is not enabled on this server.');
+    }
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const postData = JSON.stringify({
         station: {
@@ -278,11 +297,12 @@ router.get('/log_fmlist', (req, res) => {
             longitude: serverConfig.identification.lon,
             address: serverConfig.identification.proxyIp.length > 1 ? serverConfig.identification.proxyIp : ('Matches request IP with port ' + serverConfig.webserver.port),
             webserver_name: serverConfig.identification.tunerName,
+            omid: serverConfig.extras?.fmlist_omid || '',
         },
         client: {
             request_ip: clientIp
         },
-        log_msg: `PS: ${dataHandler.dataToSend.ps}, PI: ${dataHandler.dataToSend.pi}, Signal: ${dataHandler.dataToSend.sig.toFixed(0)} dBf`
+        log_msg: `Logged PS: ${dataHandler.dataToSend.ps.replace(/\s+/g, '_')}, PI: ${dataHandler.dataToSend.pi}, Signal: ${dataHandler.dataToSend.sig.toFixed(0)} dBf`
     });
 
     const options = {

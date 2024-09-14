@@ -18,7 +18,7 @@ function sendToast(type, title, message, persistent, important) {
 
     // Create the toast element
     var $toast = $(`
-        <div class="toast ${type} flex-container ${important ? 'important' : ''}" id="${toastId}">
+        <div class="toast ${type} flex-container flex-phone ${important ? 'important' : ''}" id="${toastId}">
           <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
           <div>
             <div class="toast-title">${toastTitle}</div>
