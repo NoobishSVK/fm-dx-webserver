@@ -62,7 +62,7 @@ router.get('/', (req, res) => {
             device: serverConfig.device,
             noPlugins,
             plugins: serverConfig.plugins,
-            fmlist_integration: typeof(serverConfig.extras?.fmlistIntegration) !== undefined ? serverConfig.extras.fmlistIntegration : true,
+            fmlist_integration: typeof(serverConfig.extras?.fmlistIntegration) !== undefined ? serverConfig.extras?.fmlistIntegration : true,
             bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
         });
     }
