@@ -95,6 +95,7 @@
     display:block;
     transform: translateY(0);
     position:absolute;
+    z-index: 1000;
   }
   .dropdown.opened::before {
     transform: rotate(-225deg);

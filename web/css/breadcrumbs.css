@@ -305,6 +305,11 @@ pre {
     top: 10px;
 }
 
+.flex-container.contains-dropdown {
+    z-index: 999;
+    position: relative;
+}
+
 @media (max-width: 768px) {
     canvas, #flags-container {
         display: none;

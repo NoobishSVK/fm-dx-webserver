@@ -118,11 +118,11 @@
                         <div class="flex-container flex-center" style="margin: 30px;">
                             <div class="form-group checkbox">
                                 <input type="checkbox" tabindex="0"  id="tuner-public" aria-label="Public tuner (no password)">
-                                <label for="tuner-public">Public tuner</label>
+                                <label for="tuner-public"><i class="fa-solid fa-toggle-off m-right-10"></i> Public tuner</label>
                             </div>
                             <div class="form-group checkbox">
                                 <input type="checkbox" tabindex="0"  id="tuner-lock" aria-label="Admin lock (only admins can tune)">
-                                <label for="tuner-lock">Admin lock</label>
+                                <label for="tuner-lock"><i class="fa-solid fa-toggle-off m-right-10"></i> Admin lock</label>
                             </div><br>
                         </div>
         
@@ -156,7 +156,7 @@
             <div class="panel-full tab-content no-bg m-0" id="audio" role="tabpanel">
                 <h2>Audio settings</h2>
                 
-                <div class="flex-container">
+                <div class="flex-container contains-dropdown">
                         <div class="panel-33 p-bottom-20">
                             <h3>Device</h3>
                             <div class="form-group">
@@ -220,7 +220,7 @@
                         <h3>Miscellaneous</h3>
                         <div class="form-group checkbox bottom-20">
                             <input type="checkbox" tabindex="0"  id="audio-software-mode" aria-label="ALSA Software mode (plughw) - Linux only">
-                            <label for="audio-software-mode">Toggle ALSA software mode</label>
+                            <label for="audio-software-mode"><i class="fa-solid fa-toggle-off m-right-10"></i> ALSA software mode</label>
                         </div>   
                     </div>
                 </div>
@@ -228,7 +228,7 @@
 
             <div class="panel-full m-0 tab-content no-bg" id="webserver" role="tabpanel">
                 <h2>Webserver settings</h2>
-                <div class="flex-container">
+                <div class="flex-container contains-dropdown">
                     <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Connection</h3>
                         <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
@@ -249,9 +249,9 @@
                                 <label for="bg-image">Image link:</label>
                                 <input class="input-text w-200" type="text" placeholder="" name="bg-image" id="bg-image">
                             </div>      
-                            <h4>Themes</h4>
-                            <div class="form-group">
-                                <label for="themes"><i class="fa-solid fa-palette"></i> Default server theme:</label>
+                            <h4 class="top-25">Themes</h4>
+                            <div class="form-group top-10">
+                                <label for="selected-theme"><i class="fa-solid fa-palette"></i> Default server theme</label>
                                 <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
                                     <input type="text" placeholder="Default" id="selected-theme" readonly tabindex="0">
                                     <ul class="options" tabindex="-1">
@@ -270,9 +270,12 @@
                     </div>
                     <div class="panel-33 p-bottom-20">
                         <h3>Antennas</h3>
+                        <div class="flex-container">
+                            
+                        </div>
                         <div class="form-group checkbox bottom-20">
                             <input type="checkbox" tabindex="0"  id="antenna-switch" aria-label="Antenna switch">
-                            <label for="antenna-switch">Enable the antenna switch</label>
+                            <label for="antenna-switch"><i class="fa-solid fa-toggle-off m-right-10"></i> Antenna switch</label>
                         </div><br>
                         
                         <div class="form-group checkbox">
@@ -282,7 +285,7 @@
                         <div class="form-group">
                             <label for="ant1-name">Antenna 1 name:</label>
                             <input class="input-text w-100" type="text" placeholder="Ant A" name="ant1-name" id="ant1-name">
-                        </div>
+                        </div><br>
 
                         <div class="form-group checkbox">
                             <input type="checkbox" tabindex="0"  id="ant2-enabled" aria-label="Enable antenna 2">
@@ -300,7 +303,7 @@
                         <div class="form-group">
                             <label for="ant3-name">Antenna 3 name:</label>
                             <input class="input-text w-100" type="text" placeholder="Ant C" name="ant3-name" id="ant3-name">
-                        </div>
+                        </div><br>
 
                         <div class="form-group checkbox">
                             <input type="checkbox" tabindex="0"  id="ant4-enabled" aria-label="Enable antenna 4">
@@ -315,14 +318,14 @@
                 </div>
 
                 <div class="flex-container">
-                    <div class="panel-50">
+                    <div class="panel-50" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Tuning options</h3>
                         <p>If you want to limit which frequencies the users can tune to,<br>you can set the lower and upper limit here.<br>
                             <span class="text-gray">Enter frequencies in MHz.</span>
                         </p>
                         <div class="form-group checkbox" aria-label="Limit tuning">
                             <input type="checkbox" tabindex="0"  id="tuning-limit">
-                            <label for="tuning-limit">Limit tuning</label>
+                            <label for="tuning-limit"><i class="fa-solid fa-toggle-off m-right-10"></i> Limit tuning</label>
                         </div><br>
                         <div class="form-group">
                             <label for="tuning-lower-limit">Lower limit:</label>
@@ -363,14 +366,14 @@
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <div class="form-group checkbox bottom-20">
                             <input type="checkbox" tabindex="0"  id="rds-mode" aria-label="Enable american RDS mode (RBDS)">
-                            <label for="rds-mode">Enable American Mode (RBDS)</label>
+                            <label for="rds-mode"><i class="fa-solid fa-toggle-off m-right-10"></i> American Mode (RBDS)</label>
                         </div>      
                     </div>
                     <div class="panel-33">
                         <h3>Chat options</h3>
                         <div class="form-group checkbox bottom-20">
                             <input type="checkbox" tabindex="0"  id="chat-switch" aria-label="Enable chat">
-                            <label for="chat-switch">Enable chat</label>
+                            <label for="chat-switch"><i class="fa-solid fa-toggle-off m-right-10"></i> Chat</label>
                         </div>        
                     </div>
 
@@ -411,11 +414,11 @@
 
             <div class="panel-full m-0 tab-content no-bg" id="tuner" role="tabpanel">
                 <h2>Tuner settings</h2>
-                <div class="flex-container">
+                <div class="flex-container contains-dropdown">
                 <div class="panel-33 p-bottom-20">
                     <h3>Device type</h3>
                     <div class="form-group">
-                        <label for="themes"><i class="fa-solid fa-radio"></i> Device</label>
+                        <label for="device-type"><i class="fa-solid fa-radio"></i> Device</label>
                         <div class="dropdown" id="device-selector" style="margin-right: 0;">
                             <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly tabindex="0">
                             <ul class="options" tabindex="0">
@@ -490,7 +493,7 @@
                         <h4 class="bottom-20">Default frequency</h4>
                         <div class="form-group checkbox">
                             <input type="checkbox" tabindex="0"  id="default-freq-enable" aria-label="Enable deafult frequency for first client">
-                            <label for="default-freq-enable">Enable default frequency for first client</label>
+                            <label for="default-freq-enable"><i class="fa-solid fa-toggle-off m-right-10"></i> Default frequency for first client</label>
                         </div><br>
                         <div class="form-group">
                             <label for="default-freq">Default frequency</label>
@@ -505,7 +508,7 @@
                                 <p>Bandwidth switch allows the user to set the bandwidth manually.</p>
                                 <div class="form-group checkbox">
                                     <input type="checkbox" tabindex="0"  id="toggle-bw" aria-label="Toggle bandwidth switch">
-                                    <label for="toggle-bw">Toggle bandwidth switch</label>
+                                    <label for="toggle-bw"><i class="fa-solid fa-toggle-off m-right-10"></i> Bandwidth switch</label>
                                 </div><br>
                             </div>
                             <div class="panel-50 no-bg">
@@ -513,7 +516,7 @@
                                 <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
                                 <div class="form-group checkbox">
                                     <input type="checkbox" tabindex="0"  id="shutdown-tuner" aria-label="Auto shutdown">
-                                    <label for="shutdown-tuner">Toggle Auto-shutdown</label>
+                                    <label for="shutdown-tuner"><i class="fa-solid fa-toggle-off m-right-10"></i> Auto-shutdown</label>
                                 </div>
                             </div>
                         </div>
@@ -544,7 +547,7 @@
                         <p></p>
                         <div class="form-group checkbox">
                             <input type="checkbox" tabindex="0"  id="broadcast-tuner" aria-label="Broadcast to map">
-                            <label for="broadcast-tuner">Broadcast to map</label>
+                            <label for="broadcast-tuner"><i class="fa-solid fa-toggle-off m-right-10"></i> Broadcast to map</label>
                         </div><br>
                         <div class="form-group">
                             <label for="owner-contact">Owner contact:</label>
@@ -586,7 +589,7 @@
                     Your server also needs to have a valid UUID, which is obtained by registering on maps in the <strong>Identification & Map</strong> tab.</p>
                     <div class="form-group checkbox">
                         <input type="checkbox" tabindex="0"  id="fmlist-integration" aria-label="FMLIST integration">
-                        <label for="fmlist-integration">Toggle FMLIST integration</label>
+                        <label for="fmlist-integration"><i class="fa-solid fa-toggle-off m-right-10"></i> FMLIST integration</label>
                     </div><br>
                     <p>You can also fill in your OMID from FMLIST.org, if you want the logs to be saved to your account.</p>
                     <div class="form-group">

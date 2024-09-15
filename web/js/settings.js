@@ -155,11 +155,29 @@ $(document).ready(() => {
     $('.version-string').text(currentVersion);
     
     setBg();
+
+    updateIconState();
+        
+        // Update icons when the checkbox state changes
+    $('input[type="checkbox"]').change(function() {
+        updateIconState();
+    });
 });
 
 function getQueryParameter(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
+}
+
+function updateIconState() {
+    $('input[type="checkbox"]').each(function() {
+        var icon = $(this).siblings('label').find('i');
+        if ($(this).is(':checked')) {
+            icon.removeClass('fa-toggle-off').addClass('fa-toggle-on');
+        } else {
+            icon.removeClass('fa-toggle-on').addClass('fa-toggle-off');
+        }
+    });
 }
 
 function setTheme(themeName) {
@@ -192,3 +210,4 @@ function setBg() {
         $('body').css('background', 'var(--color-main)');
     }
 }
+

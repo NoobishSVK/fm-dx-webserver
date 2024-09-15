@@ -270,6 +270,19 @@ router.get('/ping', (req, res) => {
     res.send('pong');
 });  
 
+const logHistory = {};
+
+// Function to check if the ID has been logged within the last 60 minutes
+function canLog(id) {
+    const now = Date.now();
+    const sixtyMinutes = 60 * 60 * 1000; // 60 minutes in milliseconds
+    if (logHistory[id] && (now - logHistory[id]) < sixtyMinutes) {
+        return false; // Deny logging if less than 60 minutes have passed
+    }
+    logHistory[id] = now; // Update with the current timestamp
+    return true;
+}
+
 router.get('/log_fmlist', (req, res) => {
     if(dataHandler.dataToSend.txInfo.tx.length === 0) {
         res.status(500).send('No suitable transmitter to log.');
@@ -278,8 +291,18 @@ router.get('/log_fmlist', (req, res) => {
 
     if(serverConfig.extras?.fmlist_integration == false) {
         res.status(500).send('FMLIST Integration is not enabled on this server.');
+        return;
     }
+
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const txId = dataHandler.dataToSend.txInfo.id; // Extract the ID
+
+    // Check if the ID can be logged (i.e., not logged within the last 60 minutes)
+    if (!canLog(txId)) {
+        res.status(429).send(`ID ${txId} was already logged recently. Please wait before logging again.`);
+        return;
+    }
+
     const postData = JSON.stringify({
         station: {
             freq: dataHandler.dataToSend.freq,
@@ -335,7 +358,5 @@ router.get('/log_fmlist', (req, res) => {
     request.write(postData);
     request.end();
 });
-
-
 
 module.exports = router;

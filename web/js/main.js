@@ -181,6 +181,38 @@ $(document).ready(function () {
         textInput.focus();
     });
     initTooltips();
+
+    //FMLIST logging
+    $('#log-fmlist').on('click', function() {
+        console.log('asdfdasf');
+        $.ajax({
+            url: './log_fmlist',
+            method: 'GET',
+            success: function(response) {
+                // Show a success toast with the response message
+                sendToast('success', 'Log successful', response, false, true);
+            },
+            error: function(xhr) {
+                let errorMessage;
+
+                // Handle different error status codes with custom messages
+                switch (xhr.status) {
+                    case 429:
+                        errorMessage = xhr.responseText;
+                        break;
+                    case 500:
+                        errorMessage = 'Server error: ' + xhr.responseText || 'Internal Server Error';
+                        break;
+                    default:
+                        errorMessage = xhr.statusText || 'An error occurred';
+                }
+
+                // Show an error toast with the specific error message
+                sendToast('error', 'Log failed', errorMessage, false, true);
+            }
+        });
+    });
+
 });
 
 function getServerTime() {
@@ -834,7 +866,7 @@ const updateDataElements = throttle(function(parsedData) {
     }
 
     if(parsedData.txInfo.tx.length > 1 && parsedData.txInfo.dist > 150 && parsedData.txInfo.dist < 4000) {
-        $('#log-fmlist').attr('disabled', 'false').removeClass('btn-disabled cursor-disabled');
+        $('#log-fmlist').removeAttr('disabled').removeClass('btn-disabled cursor-disabled');
     } else {
         $('#log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
     }
@@ -1017,17 +1049,3 @@ function fillPresets() {
         });
     }
 }
-
-//FMLIST logging
-$('#log-fmlist').on('click', function() {
-    $.ajax({
-        url: './log_fmlist',
-        method: 'GET',
-        success: function(response) {
-            sendToast('success', 'Log successful', response, false, true);
-        },
-        error: function(xhr) {
-            sendToast('error', 'Log failed', xhr.statusText, false, true);
-        }
-    });
-});

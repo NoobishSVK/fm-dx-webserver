@@ -315,8 +315,8 @@ function submitData() {
           }
         }
 
-        $("#fmlist-integration").prop("checked", data.extras ? data.extras?.fmlist_integration : "true");
-        $('#fmlist-omid').val(data.extras?.fmlist_omid);
+        $("#fmlist-integration").prop("checked", data.extras ? data.extras?.fmlistIntegration : "true");
+        $('#fmlist-omid').val(data.extras?.fmlistOmid);
       })
       .catch(error => {
         console.error('Error fetching data:', error.message);
