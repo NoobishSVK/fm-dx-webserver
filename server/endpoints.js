@@ -320,7 +320,7 @@ router.get('/log_fmlist', (req, res) => {
             longitude: serverConfig.identification.lon,
             address: serverConfig.identification.proxyIp.length > 1 ? serverConfig.identification.proxyIp : ('Matches request IP with port ' + serverConfig.webserver.port),
             webserver_name: serverConfig.identification.tunerName,
-            omid: serverConfig.extras?.fmlist_omid || '',
+            omid: serverConfig.extras?.fmlistOmid || '',
         },
         client: {
             request_ip: clientIp
