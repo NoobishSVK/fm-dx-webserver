@@ -46,8 +46,8 @@ let serverConfig = {
     adminPass: ""
   },
   extras: {
-    fmlist_integration: true,
-    fmlist_omid: "",
+    fmlistIntegration: true,
+    fmlistOmid: "",
   },
   plugins: [],
   device: 'tef',
