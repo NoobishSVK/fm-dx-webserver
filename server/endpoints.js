@@ -284,12 +284,12 @@ function canLog(id) {
 }
 
 router.get('/log_fmlist', (req, res) => {
-    if(dataHandler.dataToSend.txInfo.tx.length === 0) {
+    if (dataHandler.dataToSend.txInfo.tx.length === 0) {
         res.status(500).send('No suitable transmitter to log.');
         return;
     }
 
-    if(serverConfig.extras?.fmlist_integration == false) {
+    if (serverConfig.extras?.fmlistIntegration === false) {
         res.status(500).send('FMLIST Integration is not enabled on this server.');
         return;
     }
@@ -308,7 +308,7 @@ router.get('/log_fmlist', (req, res) => {
             freq: dataHandler.dataToSend.freq,
             pi: dataHandler.dataToSend.pi,
             id: dataHandler.dataToSend.txInfo.id,
-            rds_ps: dataHandler.dataToSend.ps,
+            rds_ps: dataHandler.dataToSend.ps.replace(/'/g, "\\'"), // Escape quotes
             signal: dataHandler.dataToSend.sig,
             tp: dataHandler.dataToSend.tp,
             ta: dataHandler.dataToSend.ta,
@@ -319,13 +319,13 @@ router.get('/log_fmlist', (req, res) => {
             latitude: serverConfig.identification.lat,
             longitude: serverConfig.identification.lon,
             address: serverConfig.identification.proxyIp.length > 1 ? serverConfig.identification.proxyIp : ('Matches request IP with port ' + serverConfig.webserver.port),
-            webserver_name: serverConfig.identification.tunerName,
+            webserver_name: serverConfig.identification.tunerName.replace(/'/g, "\\'"), // Escape quotes
             omid: serverConfig.extras?.fmlistOmid || '',
         },
         client: {
             request_ip: clientIp
         },
-        log_msg: `Logged PS: ${dataHandler.dataToSend.ps.replace(/\s+/g, '_')}, PI: ${dataHandler.dataToSend.pi}, Signal: ${dataHandler.dataToSend.sig.toFixed(0)} dBf`
+        log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + dataHandler.dataToSend.sig.toFixed(0) + " dBf",
     });
 
     const options = {
@@ -334,27 +334,31 @@ router.get('/log_fmlist', (req, res) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Content-Length': postData.length,
+            'Content-Length': Buffer.byteLength(postData) // Use Buffer.byteLength for accurate content length
         }
     };
 
     const request = https.request(options, (response) => {
         let data = '';
 
-        response.on('data', (chunk) => { // Collect the response data
+        // Collect response chunks
+        response.on('data', (chunk) => {
             data += chunk;
         });
 
+        // Response ended
         response.on('end', () => {
             res.status(200).send(data);
         });
     });
 
+    // Handle errors in the request
     request.on('error', (error) => {
         console.error('Error sending POST request:', error);
-        res.status(500).send(error);
+        res.status(500).send(error.message); // Send error message to client
     });
 
+    // Write the postData and end the request properly
     request.write(postData);
     request.end();
 });
