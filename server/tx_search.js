@@ -21,15 +21,22 @@ async function loadUsStatesGeoJson() {
 // Function to get bounding box of a state
 function getStateBoundingBox(coordinates) {
     let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+
+    // Check if it's a MultiPolygon or a Polygon
     for (const polygon of coordinates) {
-        for (const coord of polygon[0]) { // First level in case of MultiPolygon
-            const [lon, lat] = coord;
-            if (lat < minLat) minLat = lat;
-            if (lat > maxLat) maxLat = lat;
-            if (lon < minLon) minLon = lon;
-            if (lon > maxLon) maxLon = lon;
+        // If it's a Polygon, it won't have an extra level of arrays
+        const linearRings = Array.isArray(polygon[0][0]) ? polygon : [polygon];
+
+        for (const ring of linearRings) {
+            for (const [lon, lat] of ring) {
+                if (lat < minLat) minLat = lat;
+                if (lat > maxLat) maxLat = lat;
+                if (lon < minLon) minLon = lon;
+                if (lon > maxLon) maxLon = lon;
+            }
         }
     }
+
     return { minLat, maxLat, minLon, maxLon };
 }
 
