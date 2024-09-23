@@ -18,7 +18,8 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const crypto = require('crypto');
-const { SerialPort } = require('serialport')
+const { SerialPort } = require('serialport');
+const tunnel = require('./tunnel')
 
 // File imports
 const helpers = require('./helpers');
@@ -110,6 +111,7 @@ app.use(bodyParser.json());
 
 connectToXdrd();
 connectToSerial();
+tunnel.connect();
 
 // Check for working IPv6
 function checkIPv6Support(callback) {
