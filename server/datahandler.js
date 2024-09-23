@@ -425,6 +425,18 @@ function handleData(wss, receivedData, rdsWss) {
     }
 }
 
+// Serialport retry code when port is open but communication is lost (additional code in index.js)
+isSerialportAlive = true;
+lastFrequencyAlive = '87.500';
+setInterval(() => {
+  lastFrequencyAlive = initialData.freq;
+  // Activate serialport retry if handleData has not been executed for over 10 seconds
+  if (((Date.now() - lastUpdateTime) > 8000) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
+    isSerialportAlive = false;
+    isSerialportRetrying = true;
+  }
+}, 2000);
+
 function showOnlineUsers(currentUsers) {
   dataToSend.users = currentUsers;
   initialData.users = currentUsers;
