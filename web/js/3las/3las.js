@@ -57,9 +57,11 @@ var _3LAS = /** @class */ (function () {
         audioStreamRestartInterval = setInterval(() => {
           if (requiresAudioStreamRestart) {
             requiresAudioStreamRestart = false;
-            this.Stop();
-            this.Start();
-            console.log("Audio stream restarted after radio data loss.");
+            if (Stream) {
+              this.Stop();
+              this.Start();
+              console.log("Audio stream restarted after radio data loss.");
+            }
           }
         }, 3000);
 
