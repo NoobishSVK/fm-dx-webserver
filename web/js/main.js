@@ -184,7 +184,7 @@ $(document).ready(function () {
 
     //FMLIST logging
     $('#log-fmlist').on('click', function() {
-        console.log('asdfdasf');
+        //console.log('FMLIST');
         $.ajax({
             url: './log_fmlist',
             method: 'GET',
@@ -284,6 +284,18 @@ function sendPingRequest() {
             console.warn("Main/UI WebSocket closed during reconnection. Will attempt to reconnect...");
         };
     }
+    if (connectionLost) {
+      if (dataTimeout == dataTimeoutPrevious) {
+        connectionLost = true;
+      } else {
+        setTimeout(() => {
+          window.socket.close(1000, 'Normal closure'); // Force reconnection to unfreeze browser UI
+        }, 8000); // Timeout must be higher than TIMEOUT_DURATION
+        connectionLost = false;
+        requiresAudioStreamRestart = true;
+        console.log("Radio data restored.");
+      }
+    }
 }
 
 // Automatic UI resume on WebSocket reconnect
@@ -298,7 +310,9 @@ function handleWebSocketMessage(event) {
 
     parsedData = JSON.parse(event.data);
 
+    resetDataTimeout();
     updatePanels(parsedData);
+
     const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
     const averageSignal = sum / signalData.length;
     data.push(averageSignal);
@@ -455,12 +469,18 @@ function updateCanvas(parsedData, signalChart) {
 
 let reconnectTimer = null;
 let dataTimeout = null;
+let dataTimeoutPrevious = null;
+let connectionLost = false;
+let requiresAudioStreamRestart = false;
+
 const TIMEOUT_DURATION = 5000;  // 5 seconds timeout for lost connection
 
 const resetDataTimeout = () => {
     clearTimeout(dataTimeout);
     dataTimeout = setTimeout(() => {
         sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+        connectionLost = true;
+        dataTimeoutPrevious = dataTimeout;
     }, TIMEOUT_DURATION);
 };
 

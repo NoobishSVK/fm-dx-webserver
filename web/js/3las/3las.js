@@ -1,3 +1,4 @@
+var audioStreamRestartInterval;
 var elapsedTimeConnectionWatchdog;
 var _3LAS_Settings = /** @class */ (function () {
     function _3LAS_Settings() {
@@ -47,6 +48,22 @@ var _3LAS = /** @class */ (function () {
     _3LAS.prototype.Start = function () {
         this.ConnectivityFlag = false;
         this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
+
+        // Restart audio stream if radio data connection was reestablished
+        // to prevent stuttering audio in some cases
+        if (audioStreamRestartInterval) {
+            clearInterval(audioStreamRestartInterval);
+        }
+        audioStreamRestartInterval = setInterval(() => {
+          if (requiresAudioStreamRestart) {
+            requiresAudioStreamRestart = false;
+            if (Stream) {
+              this.Stop();
+              this.Start();
+              console.log("Audio stream restarted after radio data loss.");
+            }
+          }
+        }, 3000);
 
         // Stream connection watchdog monitors mp3 frames
         console.log("Stream connection watchdog active.");

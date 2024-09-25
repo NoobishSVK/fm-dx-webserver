@@ -128,6 +128,28 @@ function checkIPv6Support(callback) {
   });
 }
 
+// Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
+isSerialportRetrying = false;
+
+setInterval(() => {
+  if (!isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
+    isSerialportAlive = true;
+    isSerialportRetrying = true;
+    if (serialport && serialport.isOpen) {
+      logWarn('Communication lost from ' + serverConfig.xdrd.comPort + ', force closing serialport.');
+      setTimeout(() => {
+        serialport.close((err) => {
+          if (err) {
+            logError('Error closing serialport: ', err.message);
+          }
+        });
+      }, 1000);
+    } else {
+      logWarn('Communication lost from ' + serverConfig.xdrd.comPort + '.');
+    }
+  }
+}, 2000);
+
 // Serial Connection
 function connectToSerial() {
 if (serverConfig.xdrd.wirelessConnection === false) {
@@ -152,6 +174,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     }
     
     logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+    isSerialportAlive = true;
     setTimeout(() => {
         serialport.write('x\n');
     }, 3000);
@@ -165,9 +188,12 @@ if (serverConfig.xdrd.wirelessConnection === false) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+      } else if (lastFrequencyAlive && isSerialportRetrying) { // Serialport retry code when port is open but communication is lost
+        serialport.write('T' + (lastFrequencyAlive * 1000) + '\n');
       } else {
         serialport.write('T87500\n');
       }
+      isSerialportRetrying = false;
 
       serialport.write('A0\n');
       serialport.write('F-1\n');
@@ -192,6 +218,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   serialport.on('close', () => {
     logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
     setTimeout(() => {
+        isSerialportRetrying = true;
         connectToSerial();
     }, 5000);
   });
