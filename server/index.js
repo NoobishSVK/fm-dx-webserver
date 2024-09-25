@@ -18,7 +18,8 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const crypto = require('crypto');
-const { SerialPort } = require('serialport')
+const { SerialPort } = require('serialport');
+const tunnel = require('./tunnel')
 
 // File imports
 const helpers = require('./helpers');
@@ -110,6 +111,7 @@ app.use(bodyParser.json());
 
 connectToXdrd();
 connectToSerial();
+tunnel.connect();
 
 // Check for working IPv6
 function checkIPv6Support(callback) {
@@ -325,9 +327,15 @@ app.use('/', endpoints);
  */
 wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
-  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+  let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   
-  let clientIpTest = clientIp.split(',')[0].trim();
+  if (clientIp.includes(',')) {
+    /**
+     * if x-forwarded-for contains ',' it means that connection is going through multiple proxies.
+     * we want first address, which should be IP of the user.
+     */
+    clientIp = clientIp.split(',')[0].trim();
+  }
 
 	if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
 		currentUsers++;
