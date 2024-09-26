@@ -83,6 +83,8 @@ function submitData() {
     const tunnelUsername = $('#tunnel-username').val();
     const tunnelSubdomain = $('#tunnel-subdomain').val();
     const tunnelToken = $('#tunnel-token').val();
+    const tunnelEnabled = $("#tunnel-enabled").is(":checked");
+    const tunnelLowLatency = $("#tuner-lowlatency").is(":checked");
 
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
@@ -331,7 +333,6 @@ function submitData() {
 
         $("#tunnel-enable").prop("checked", !!(data.tunnel && data.tunnel?.enabled));
         $("#tunnel-lowlatency").prop("checked", !!(data.tunnel && data.tunnel?.lowLatencyMode));        
-        console.log((data.tunnel && data.tunnel?.enabled) ? data.tunnel?.enabled : "false");
         $('#tunnel-token').val(data.tunnel?.token);
         $('#tunnel-subdomain').val(data.tunnel?.subdomain);
         $('#tunnel-username').val(data.tunnel?.username);

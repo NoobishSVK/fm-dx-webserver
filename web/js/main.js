@@ -184,7 +184,6 @@ $(document).ready(function () {
 
     //FMLIST logging
     $('#log-fmlist').on('click', function() {
-        //console.log('FMLIST');
         $.ajax({
             url: './log_fmlist',
             method: 'GET',
