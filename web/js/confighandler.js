@@ -84,7 +84,7 @@ function submitData() {
     const tunnelSubdomain = $('#tunnel-subdomain').val();
     const tunnelToken = $('#tunnel-token').val();
     const tunnelEnabled = $("#tunnel-enable").is(":checked");
-    const tunnelLowLatency = $("#tuner-lowlatency").is(":checked");
+    const tunnelLowLatency = $("#tunnel-lowlatency").is(":checked");
 
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
