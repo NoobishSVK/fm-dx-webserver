@@ -102,7 +102,6 @@ $(document).ready(() => {
     $('.logout-link').click(function (event) {
         event.preventDefault();
         
-        // Perform an AJAX request to the /logout endpoint
         $.ajax({
             type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
             url: './logout',
@@ -148,8 +147,18 @@ $(document).ready(() => {
     
     $("#ps-underscores").change(function() {
         var isChecked = $(this).is(":checked");
-        console.log(isChecked);
         localStorage.setItem("psUnderscores", isChecked);
+    });
+
+    var imperialUnits = localStorage.getItem("imperialUnits");
+    if (imperialUnits) {
+        $("#imperial-units").prop("checked", JSON.parse(imperialUnits));
+        localStorage.setItem("imperialUnits", imperialUnits);
+    }
+    
+    $("#imperial-units").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("imperialUnits", isChecked);
     });
     
     $('.version-string').text(currentVersion);

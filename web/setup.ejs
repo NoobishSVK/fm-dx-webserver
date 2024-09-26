@@ -83,7 +83,7 @@
                 </div>
 
                 <div class="flex-container">
-                    <div class="panel-50 p-bottom-20">
+                    <div class="panel-50 p-bottom-20" style="overflow-x: auto;">
                         <h3>Current users</h3>
                         <table class="table-big">
                             <thead>
@@ -164,7 +164,7 @@
                                     <span class="text-gray">This is where your tuner is plugged in.</span>
                                 </p>
                                 <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
-                                <div class="dropdown" style="width: 300px;">
+                                <div class="dropdown">
                                     <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly tabindex="0" />
                                     <ul class="options" tabindex="-1" id="deviceList">
                                         <% videoDevices.forEach(device => { %>
@@ -184,7 +184,7 @@
                                     <span class="text-gray">Choose between Mono / Stereo.</span>
                                 </p>
                                 <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> Audio channels:</label>
-                                <div class="dropdown" style="width: 300px;">
+                                <div class="dropdown">
                                     <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly tabindex="0" />
                                     <ul class="options" tabindex="-1">
                                         <li data-value="2" class="option" tabindex="0">Stereo</li>
@@ -200,7 +200,7 @@
                                 <span class="text-gray">Minimum: 64 Kbps • Maximum: 320 Kbps</span>
                                 </p>
                                 <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> Audio quality:</label>
-                                <div class="dropdown" style="width: 300px;">
+                                <div class="dropdown">
                                     <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly tabindex="0" />
                                     <ul class="options" tabindex="-1">
                                         <li data-value="64k" class="option" tabindex="0">64k (lowest quality)</li>
@@ -434,7 +434,7 @@
                 <div class="panel-33 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
                     <h3>Connection type</h3>
                     <p class="text-gray">If you want to choose the COM port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
-                    <div style="width: 300px;" class="auto top-10">
+                    <div class="auto top-10">
                         <label class="toggleSwitch nolabel" onclick="">
                             <input id="connection-type-toggle" type="checkbox" tabindex="0" aria-label="Connection type"/>
                             <a></a>
@@ -452,7 +452,7 @@
                         <p class="text-gray">Choose your desired <strong>COM port</strong><br>&nbsp;</p>
                         <div class="form-group">
                             <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
-                            <div class="dropdown" style="width: 300px;margin-right: 0;">
+                            <div class="dropdown" style="margin-right: 0;">
                                 <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly tabindex="0" />
                                 <ul class="options" tabindex="-1" id="deviceList">
                                     <% serialPorts.forEach(serialPort => { %>
@@ -597,6 +597,33 @@
                         <input class="input-text w-100" type="text" name="fmlist-omid" id="fmlist-omid" maxlength="5">
                     </div>
 
+                </div>
+
+                <div class="panel-100 p-bottom-20">
+                    <h3>Tunnel</h3>
+                    <p>When you become a <a href="https://buymeacoffee.com/fmdx" target="_blank"><strong>FMDX.org supporter</strong></a>, you can host your webserver without the need of a public IP address.<br>
+                    When you become a supporter, you can message the Founders on Discord for your login details.</p>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" tabindex="0" id="tunnel-enable" aria-label="Enable tunnel">
+                        <label for="tunnel-enable"><i class="fa-solid fa-toggle-off m-right-10"></i> Enable tunnel</label>
+                    </div><br>
+                    <div class="form-group">
+                        <label for="tunnel-subdomain">subdomain name</label>
+                        <input class="input-text w-150" type="text" name="tunnel-subdomain" id="tunnel-subdomain" maxlength="20">.fmtuner.org
+                    </div><br>
+                    <div class="form-group">
+                        <label for="tunnel-username">Username</label>
+                        <input class="input-text w-150" type="text" name="tunnel-username" id="tunnel-username">
+                    </div>
+                    <div class="form-group">
+                        <label for="tunnel-password">Token</label>
+                        <input class="input-text" style="width: 100%; max-width: 400px;" type="password" name="tunnel-token" id="tunnel-token" maxlength="36">
+                    </div><br>
+                    <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" tabindex="0" id="tunnel-lowlatency" aria-label="Low latency mode">
+                        <label for="tunnel-lowlatency"><i class="fa-solid fa-toggle-off m-right-10"></i> Low latency mode</label>
+                    </div>
                 </div>
             </div>
 

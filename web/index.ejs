@@ -92,7 +92,7 @@
                 
                 <div class="flex-container">
                     <div class="panel-33 hover-brighten tooltip" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
-                        <h2>PI CODE</h2>
+                        <h2 class="signal-heading">PI CODE</h2>
                         <div class="text-small text-gray highest-signal-container">
                             <span id="data-regular-pi">&nbsp;</span>
                         </div>
@@ -139,7 +139,7 @@
                             <% } %>
                             
                             <div class="panel-50 no-bg br-0 h-100 m-0 button-eq">
-                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 KHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 kHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
                                 <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
                             </div>
                             <div class="panel-50 no-bg br-0 h-100 m-0 button-ims">
@@ -165,21 +165,21 @@
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
-                                        <li data-value="56000" class="option" tabindex="0">56 KHz</li>
-                                        <li data-value="64000" class="option" tabindex="0">64 KHz</li>
-                                        <li data-value="72000" class="option" tabindex="0">72 KHz</li>
-                                        <li data-value="84000" class="option" tabindex="0">84 KHz</li>
-                                        <li data-value="97000" class="option" tabindex="0">97 KHz</li>
-                                        <li data-value="114000" class="option" tabindex="0">114 KHz</li>
-                                        <li data-value="133000" class="option" tabindex="0">133 KHz</li>
-                                        <li data-value="151000" class="option" tabindex="0">151 KHz</li>
-                                        <li data-value="184000" class="option" tabindex="0">184 KHz</li>
-                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
-                                        <li data-value="217000" class="option" tabindex="0">217 KHz</li>
-                                        <li data-value="236000" class="option" tabindex="0">236 KHz</li>
-                                        <li data-value="254000" class="option" tabindex="0">254 KHz</li>
-                                        <li data-value="287000" class="option" tabindex="0">287 KHz</li>
-                                        <li data-value="311000" class="option" tabindex="0">311 KHz</li>
+                                        <li data-value="56000" class="option" tabindex="0">56 kHz</li>
+                                        <li data-value="64000" class="option" tabindex="0">64 kHz</li>
+                                        <li data-value="72000" class="option" tabindex="0">72 kHz</li>
+                                        <li data-value="84000" class="option" tabindex="0">84 kHz</li>
+                                        <li data-value="97000" class="option" tabindex="0">97 kHz</li>
+                                        <li data-value="114000" class="option" tabindex="0">114 kHz</li>
+                                        <li data-value="133000" class="option" tabindex="0">133 kHz</li>
+                                        <li data-value="151000" class="option" tabindex="0">151 kHz</li>
+                                        <li data-value="184000" class="option" tabindex="0">184 kHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 kHz</li>
+                                        <li data-value="217000" class="option" tabindex="0">217 kHz</li>
+                                        <li data-value="236000" class="option" tabindex="0">236 kHz</li>
+                                        <li data-value="254000" class="option" tabindex="0">254 kHz</li>
+                                        <li data-value="287000" class="option" tabindex="0">287 kHz</li>
+                                        <li data-value="311000" class="option" tabindex="0">311 kHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -189,22 +189,22 @@
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
-                                        <li data-value="55000" data-value2="0" class="option" tabindex="0">55 KHz</li>
-                                        <li data-value="73000" data-value2="1" class="option" tabindex="0">73 KHz</li>
-                                        <li data-value="90000" data-value2="2" class="option" tabindex="0">90 KHz</li>
-                                        <li data-value="108000" data-value2="3" class="option" tabindex="0">108 KHz</li>
-                                        <li data-value="125000" data-value2="4" class="option" tabindex="0">125 KHz</li>
-                                        <li data-value="142000" data-value2="5" class="option" tabindex="0">142 KHz</li>
-                                        <li data-value="159000" data-value2="6" class="option" tabindex="0">159 KHz</li>
-                                        <li data-value="177000" data-value2="7" class="option" tabindex="0">177 KHz</li>
-                                        <li data-value="194000" data-value2="8" class="option" tabindex="0">194 KHz</li>
-                                        <li data-value="211000" data-value2="9" class="option" tabindex="0">211 KHz</li>
-                                        <li data-value="229000" data-value2="10" class="option" tabindex="0">229 KHz</li>
-                                        <li data-value="246000" data-value2="11" class="option" tabindex="0">246 KHz</li>
-                                        <li data-value="263000" data-value2="12" class="option" tabindex="0">263 KHz</li>
-                                        <li data-value="281000" data-value2="13" class="option" tabindex="0">281 KHz</li>
-                                        <li data-value="298000" data-value2="14" class="option" tabindex="0">298 KHz</li>
-                                        <li data-value="309000" data-value2="15" class="option" tabindex="0">309 KHz</li>
+                                        <li data-value="55000" data-value2="0" class="option" tabindex="0">55 kHz</li>
+                                        <li data-value="73000" data-value2="1" class="option" tabindex="0">73 kHz</li>
+                                        <li data-value="90000" data-value2="2" class="option" tabindex="0">90 kHz</li>
+                                        <li data-value="108000" data-value2="3" class="option" tabindex="0">108 kHz</li>
+                                        <li data-value="125000" data-value2="4" class="option" tabindex="0">125 kHz</li>
+                                        <li data-value="142000" data-value2="5" class="option" tabindex="0">142 kHz</li>
+                                        <li data-value="159000" data-value2="6" class="option" tabindex="0">159 kHz</li>
+                                        <li data-value="177000" data-value2="7" class="option" tabindex="0">177 kHz</li>
+                                        <li data-value="194000" data-value2="8" class="option" tabindex="0">194 kHz</li>
+                                        <li data-value="211000" data-value2="9" class="option" tabindex="0">211 kHz</li>
+                                        <li data-value="229000" data-value2="10" class="option" tabindex="0">229 kHz</li>
+                                        <li data-value="246000" data-value2="11" class="option" tabindex="0">246 kHz</li>
+                                        <li data-value="263000" data-value2="12" class="option" tabindex="0">263 kHz</li>
+                                        <li data-value="281000" data-value2="13" class="option" tabindex="0">281 kHz</li>
+                                        <li data-value="298000" data-value2="14" class="option" tabindex="0">298 kHz</li>
+                                        <li data-value="309000" data-value2="15" class="option" tabindex="0">309 kHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -214,19 +214,19 @@
                                     <input type="text" placeholder="Auto BW" readonly tabindex="0">
                                     <ul class="options open-top" tabindex="-1">
                                         <li data-value="0" class="option" tabindex="0">Auto</li>
-                                        <li data-value="4000" class="option" tabindex="0">4 KHz</li>
-                                        <li data-value="8000" class="option" tabindex="0">8 KHz</li>
-                                        <li data-value="10000" class="option" tabindex="0">10 KHz</li>
-                                        <li data-value="20000" class="option" tabindex="0">20 KHz</li>
-                                        <li data-value="30000" class="option" tabindex="0">30 KHz</li>
-                                        <li data-value="50000" class="option" tabindex="0">50 KHz</li>
-                                        <li data-value="75000" class="option" tabindex="0">75 KHz</li>
-                                        <li data-value="100000" class="option" tabindex="0">100 KHz</li>
-                                        <li data-value="125000" class="option" tabindex="0">125 KHz</li>
-                                        <li data-value="150000" class="option" tabindex="0">150 KHz</li>
-                                        <li data-value="175000" class="option" tabindex="0">175 KHz</li>
-                                        <li data-value="200000" class="option" tabindex="0">200 KHz</li>
-                                        <li data-value="225000" class="option" tabindex="0">225 KHz</li>
+                                        <li data-value="4000" class="option" tabindex="0">4 kHz</li>
+                                        <li data-value="8000" class="option" tabindex="0">8 kHz</li>
+                                        <li data-value="10000" class="option" tabindex="0">10 kHz</li>
+                                        <li data-value="20000" class="option" tabindex="0">20 kHz</li>
+                                        <li data-value="30000" class="option" tabindex="0">30 kHz</li>
+                                        <li data-value="50000" class="option" tabindex="0">50 kHz</li>
+                                        <li data-value="75000" class="option" tabindex="0">75 kHz</li>
+                                        <li data-value="100000" class="option" tabindex="0">100 kHz</li>
+                                        <li data-value="125000" class="option" tabindex="0">125 kHz</li>
+                                        <li data-value="150000" class="option" tabindex="0">150 kHz</li>
+                                        <li data-value="175000" class="option" tabindex="0">175 kHz</li>
+                                        <li data-value="200000" class="option" tabindex="0">200 kHz</li>
+                                        <li data-value="225000" class="option" tabindex="0">225 kHz</li>
                                     </ul>
                                 </div>
                             <% } %>
@@ -260,7 +260,7 @@
                                 <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
                             </h4>
                             <span class="text-small">
-                                <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> km <span class="text-gray">•</span> <span id="data-station-azimuth"></span>
+                                <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span>
                             </span>
                         </div>
                     </div>
@@ -362,6 +362,10 @@
                 <input type="checkbox" tabindex="0" id="ps-underscores" aria-label="Add underscores to RDS PS">
                 <label for="ps-underscores" class="tooltip" data-tooltip="Enabling this option replaces spaces in RDS PS with underscores."><i class="fa-solid fa-toggle-off m-right-10"></i> RDS PS Underscores</label>
             </div>
+            <div class="form-group checkbox">
+                <input type="checkbox" tabindex="0" id="imperial-units" aria-label="Imperial units">
+                <label for="imperial-units" class="tooltip" data-tooltip="Enabling this option will show miles in distances instead of kilometers."><i class="fa-solid fa-toggle-off m-right-10"></i> Imperial Units</label>
+            </div>
 
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
                 <label for="users-online"><i class="fa-solid fa-user"></i> Users online</label>
@@ -461,7 +465,7 @@
                 <strong>Support</strong> the developer!
             </div>
             <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
-                Join our <strong>OpenRadio Discord</strong> community!
+                Join our <strong>FMDX.org Discord</strong> community!
             </div>
         </div>
     </div>

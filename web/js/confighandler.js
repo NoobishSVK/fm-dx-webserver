@@ -80,6 +80,10 @@ function submitData() {
     const fmlistIntegration = $("#fmlist-integration").is(":checked") || false;
     const fmlistOmid = $('#fmlist-omid').val();
 
+    const tunnelUsername = $('#tunnel-username').val();
+    const tunnelSubdomain = $('#tunnel-subdomain').val();
+    const tunnelToken = $('#tunnel-token').val();
+
     const publicTuner = $("#tuner-public").is(":checked");
     const lockToAdmin = $("#tuner-lock").is(":checked");
     const autoShutdown = $("#shutdown-tuner").is(":checked") || false;
@@ -149,6 +153,13 @@ function submitData() {
       extras: {
         fmlistIntegration,
         fmlistOmid,
+      },
+      tunnel: {
+        enabled: tunnelEnabled,
+        username: tunnelUsername,
+        token: tunnelToken,
+        lowLatencyMode: tunnelLowLatency,
+        subdomain: tunnelSubdomain,
       },
       plugins,
       device,
@@ -315,8 +326,15 @@ function submitData() {
           }
         }
 
-        $("#fmlist-integration").prop("checked", data.extras ? data.extras?.fmlistIntegration : "true");
+        $("#fmlist-integration").prop("checked", !!(data.extras && data.extras?.fmlistIntegration));
         $('#fmlist-omid').val(data.extras?.fmlistOmid);
+
+        $("#tunnel-enable").prop("checked", !!(data.tunnel && data.tunnel?.enabled));
+        $("#tunnel-lowlatency").prop("checked", !!(data.tunnel && data.tunnel?.lowLatencyMode));        
+        console.log((data.tunnel && data.tunnel?.enabled) ? data.tunnel?.enabled : "false");
+        $('#tunnel-token').val(data.tunnel?.token);
+        $('#tunnel-subdomain').val(data.tunnel?.subdomain);
+        $('#tunnel-username').val(data.tunnel?.username);
       })
       .catch(error => {
         console.error('Error fetching data:', error.message);

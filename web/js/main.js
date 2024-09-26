@@ -676,7 +676,7 @@ async function copyTx() {
     const stationErp = $('#data-station-erp').text();
 
     try {
-        await copyToClipboard(frequency + " - " + pi + " | " + stationName + " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " km | " + stationErp + " kW");
+        await copyToClipboard(frequency + " - " + pi + " | " + stationName + " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " | " + stationErp + " kW");
     } catch (error) {
         console.error(error);
     }
@@ -878,8 +878,9 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-city'), parsedData.txInfo.city);
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
-        updateTextIfChanged($('#data-station-distance'), parsedData.txInfo.dist);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
+        const txDistance = localStorage.getItem('imperialUnits') == "true" ? (Number(parsedData.txInfo.dist) * 0.621371192).toFixed(0) + " mi" : parsedData.txInfo.dist + " km";
+        updateTextIfChanged($('#data-station-distance'), txDistance);
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
