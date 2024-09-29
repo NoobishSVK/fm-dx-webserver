@@ -77,9 +77,11 @@ async function fetchTx(freq, piCode, rdsPs) {
         return processData(cachedData[freq], piCode, rdsPs);
     }
 
-    const url = "https://maps.fmdx.org/api?freq=" + freq;
+    const url = "https://maps.fmdx.org/api/?freq=" + freq;
 
-    return fetch(url)
+    return fetch(url, {
+        redirect: 'manual'
+    })
         .then(response => response.json())
         .then(async (data) => {
             cachedData[freq] = data;
