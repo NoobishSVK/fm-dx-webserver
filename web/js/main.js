@@ -845,7 +845,16 @@ const updateDataElements = throttle(function(parsedData) {
     }
 
     if(parsedData.stForced) {
-        stereoColor = 'gray';
+        if (!parsedData.st) {
+          stereoColor = 'gray';
+        } else {
+          stereoColor = 'var(--color-4)';
+        }
+        $('.data-st.circle1').css('left', '4px');
+        $('.data-st.circle2').css('display', 'none');
+    } else {
+        $('.data-st.circle1').css('left', '0px');
+        $('.data-st.circle2').css('display', 'block');
     }
     $dataSt.css('border', '2px solid ' + stereoColor);
 
