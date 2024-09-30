@@ -6,6 +6,10 @@ var parsedData, signalChart, previousFreq;
 var signalData = [];
 var data = [];
 let updateCounter = 0;
+let messageCounter = 0;
+let messageData = 800; // Inital value anything above 0
+let messageLength = 800; // Retain value of messageData until value is updated
+let pingTimeLimit = false; // WebSocket becomes unresponsive with high ping
 
 const europe_programmes = [
     "No PTY", "News", "Current Affairs", "Info",
@@ -254,18 +258,66 @@ function getServerTime() {
   }  
   
 function sendPingRequest() {
+    const timeoutDuration = 15000; // Ping response can become buggy if it exceeds 20 seconds
     const startTime = new Date().getTime();
+    
+    const fetchWithTimeout = (url, options, timeout = timeoutDuration) => {
+        return new Promise((resolve, reject) => {
+            const timerTimeout = setTimeout(() => {
+                reject(new Error('Request timed out'));
+            }, timeout);
 
-    fetch('./ping')
+            fetch(url, options)
+                .then(response => {
+                    clearTimeout(timerTimeout);
+                    resolve(response);
+                })
+                .catch(error => {
+                    clearTimeout(timerTimeout);
+                    reject(error);
+                });
+        });
+    };
+
+    fetchWithTimeout('./ping', { cache: 'no-store' }, timeoutDuration)
         .then(response => {
             const endTime = new Date().getTime();
             const pingTime = endTime - startTime;
             $('#current-ping').text(`Ping: ${pingTime}ms`);
+            pingTimeLimit = false;
         })
         .catch(error => {
-            console.error('Error fetching ping:', error);
+            console.warn('Ping request failed');
+            $('#current-ping').text(`Ping: unknown`);
+            if (!pingTimeLimit) { // Force reconnection as WebSocket could be unresponsive even though it's reported as OPEN
+              window.socket.close(1000, 'Normal closure');
+              sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+              console.log("Reconnecting due to high ping...");
+              pingTimeLimit = true;
+            }
         });
         
+    function handleMessage(message) {
+        messageData = JSON.parse(message.data.length);
+        socket.removeEventListener('message', handleMessage);
+    }
+    socket.addEventListener('message', handleMessage);
+    messageLength = messageData;
+    messageData = 0;
+    
+    // Force reconnection if no WebSocket data after several queries
+    if (messageLength === 0) {
+      messageCounter++;
+      if (messageCounter === 5) {
+        messageCounter = 0;
+        window.socket.close(1000, 'Normal closure');
+        sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+        console.log("Reconnecting due to no data received...");
+      }
+    } else {
+      messageCounter = 0;
+    }
+    
     // Automatic reconnection on WebSocket close
     if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
         socket = new WebSocket(socketAddress);
