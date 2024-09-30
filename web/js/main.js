@@ -6,8 +6,8 @@ var parsedData, signalChart, previousFreq;
 var signalData = [];
 var data = [];
 let updateCounter = 0;
-let messageCounter = 0;
-let messageData = 800; // Inital value anything above 0
+let messageCounter = 0; // Count for WebSocket data length returning 0
+let messageData = 800; // Initial value anything above 0
 let messageLength = 800; // Retain value of messageData until value is updated
 let pingTimeLimit = false; // WebSocket becomes unresponsive with high ping
 
