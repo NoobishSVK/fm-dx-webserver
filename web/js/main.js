@@ -291,7 +291,7 @@ function sendPingRequest() {
             $('#current-ping').text(`Ping: unknown`);
             if (!pingTimeLimit) { // Force reconnection as WebSocket could be unresponsive even though it's reported as OPEN
               window.socket.close(1000, 'Normal closure');
-              sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+              if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
               console.log("Reconnecting due to high ping...");
               pingTimeLimit = true;
             }
@@ -311,7 +311,7 @@ function sendPingRequest() {
       if (messageCounter === 5) {
         messageCounter = 0;
         window.socket.close(1000, 'Normal closure');
-        sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+        if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
         console.log("Reconnecting due to no data received...");
       }
     } else {
