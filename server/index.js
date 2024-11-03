@@ -355,7 +355,7 @@ app.use('/', endpoints);
 wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  
+
   if (clientIp.includes(',')) {
     clientIp = clientIp.split(',')[0].trim();
   }
@@ -363,29 +363,71 @@ wss.on('connection', (ws, request) => {
   if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
     currentUsers++;
   }
+  
+  dataHandler.showOnlineUsers(currentUsers);
 
-  // Map to store command timestamps per user to prevent spam
+  if(currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
+    serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
+  }
+
+  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      try {
+        const locationInfo = JSON.parse(data);
+        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        const connectionTime = new Date().toLocaleString([], options);
+
+        if(locationInfo.country === undefined) {
+          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
+          storage.connectedUsers.push(userData);
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+        } else {
+          const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
+          const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
+          storage.connectedUsers.push(userData);
+          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
+        }
+      } catch (error) {
+        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+      }
+    });
+  }).on('error', (err) => {
+    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+  });
+
+  // Anti-spam tracking for each client
   const userCommands = {};
 
   ws.on('message', (message) => {
     const command = message.toString();
     logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
     
+    // Anti-spam check: initialize command history for this client if not existing
     if (!userCommands[command]) {
       userCommands[command] = [];
     }
-    
+
+    // Record the current timestamp for this command
     const now = Date.now();
     userCommands[command].push(now);
-    
+
+    // Remove timestamps older than 1 second
     userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-    
-    if (userCommands[command].length > 5) {
+
+    // If command count exceeds 3 in a second, close connection
+    if (userCommands[command].length > 3) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
       ws.close(1008, 'Spamming detected');
       return;
     }
 
+    // Existing command processing logic
     if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
         logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
         return;
@@ -476,6 +518,7 @@ wss.on('connection', (ws, request) => {
 
   ws.on('error', console.error);
 });
+
 
 // CHAT WEBSOCKET BLOCK
 chatWss.on('connection', (ws, request) => {
