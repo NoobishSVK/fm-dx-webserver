@@ -433,7 +433,7 @@ wss.on('connection', (ws, request) => {
         serverConfig.webserver.banlist.push(clientIp);
         logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
         console.log(serverConfig.webserver.banlist);
-        serverConfig.saveConfig();
+        serverConfig.configSave();
       }
       
       ws.close(1008, 'Bot-like behavior detected');
