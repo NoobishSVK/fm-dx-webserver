@@ -407,7 +407,6 @@ wss.on('connection', (ws, request) => {
 
   // Anti-spam tracking for each client
   const userCommands = {};
-  let lastMessageTime = Date.now();
 
   ws.on('message', (message) => {
     const command = message.toString();
@@ -426,13 +425,15 @@ wss.on('connection', (ws, request) => {
     userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 10);
   
     // Check if there are 3 or more commands in the last 10 ms
-    if (userCommandHistory[clientIp].length >= 3) {
+    if (userCommandHistory[clientIp].length >= 5) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
       
       // Add to banlist if not already banned
       if (!serverConfig.webserver.banlist.includes(clientIp)) {
         serverConfig.webserver.banlist.push(clientIp);
         logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
+        console.log(serverConfig.webserver.banlist);
+        serverConfig.saveConfig();
       }
       
       ws.close(1008, 'Bot-like behavior detected');
