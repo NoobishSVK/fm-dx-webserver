@@ -422,7 +422,7 @@ wss.on('connection', (ws, request) => {
     userCommandHistory[clientIp].push(now);
   
     // Remove timestamps older than 10 ms from the history
-    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 10);
+    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
   
     // Check if there are 3 or more commands in the last 10 ms
     if (userCommandHistory[clientIp].length >= 5) {
