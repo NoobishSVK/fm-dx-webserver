@@ -27,7 +27,7 @@ const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
-const { serverConfig, configExists } = require('./server_config');
+const { serverConfig, configExists, configSave } = require('./server_config');
 const pjson = require('../package.json');
 
 // Function to find server files based on the plugins listed in config
@@ -433,7 +433,7 @@ wss.on('connection', (ws, request) => {
         serverConfig.webserver.banlist.push(clientIp);
         logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
         console.log(serverConfig.webserver.banlist);
-        serverConfig.configSave();
+        configSave();
       }
       
       ws.close(1008, 'Bot-like behavior detected');
