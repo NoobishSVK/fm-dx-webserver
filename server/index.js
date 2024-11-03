@@ -387,6 +387,10 @@ wss.on('connection', (ws, request) => {
         const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         const connectionTime = new Date().toLocaleString([], options);
 
+        if (locationInfo.org?.includes("AS205016 HERN Labs AB")) { // anti opera VPN block
+          return;
+        }      
+
         if(locationInfo.country === undefined) {
           const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
           storage.connectedUsers.push(userData);
