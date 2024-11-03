@@ -357,57 +357,34 @@ wss.on('connection', (ws, request) => {
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   
   if (clientIp.includes(',')) {
-    /**
-     * if x-forwarded-for contains ',' it means that connection is going through multiple proxies.
-     * we want first address, which should be IP of the user.
-     */
     clientIp = clientIp.split(',')[0].trim();
   }
 
-	if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
-		currentUsers++;
-	}
-  
-  dataHandler.showOnlineUsers(currentUsers);
-  if(currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
-    serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
+  if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+    currentUsers++;
   }
 
-  // Use ipinfo.io API to get geolocation information
-  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
-    let data = '';
-
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    response.on('end', () => {
-      try {
-        const locationInfo = JSON.parse(data);
-        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        const connectionTime = new Date().toLocaleString([], options);
-
-        if(locationInfo.country === undefined) {
-          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-        } else {
-          const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
-          const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
-        }
-      } catch (error) {
-        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-      }
-    });
-  }).on('error', (err) => {
-    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-  });
+  // Map to store command timestamps per user to prevent spam
+  const userCommands = {};
 
   ws.on('message', (message) => {
     const command = message.toString();
     logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
+    
+    if (!userCommands[command]) {
+      userCommands[command] = [];
+    }
+    
+    const now = Date.now();
+    userCommands[command].push(now);
+    
+    userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
+    
+    if (userCommands[command].length > 5) {
+      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
+      ws.close(1008, 'Spamming detected');
+      return;
+    }
 
     if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
         logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
@@ -469,11 +446,10 @@ wss.on('connection', (ws, request) => {
       currentUsers--;
     }
     dataHandler.showOnlineUsers(currentUsers);
-  
-    // Find the index of the user's data in storage.connectedUsers array
+
     const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);
     if (index !== -1) {
-      storage.connectedUsers.splice(index, 1); // Remove the user's data from storage.connectedUsers array
+      storage.connectedUsers.splice(index, 1);
     }
 
     if(currentUsers === 0) {
@@ -490,7 +466,7 @@ wss.on('connection', (ws, request) => {
         }
       }, 10000)
     }
-  
+
     if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
       client.write('X\n');
     }
