@@ -356,6 +356,10 @@ wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
 
+  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    return;
+  }
+
   if (clientIp.includes(',')) {
     clientIp = clientIp.split(',')[0].trim();
   }
@@ -403,18 +407,29 @@ wss.on('connection', (ws, request) => {
 
   // Anti-spam tracking for each client
   const userCommands = {};
+  let lastMessageTime = Date.now();
 
   ws.on('message', (message) => {
     const command = message.toString();
+    const now = Date.now();
     logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
     
-    // Anti-spam check: initialize command history for this client if not existing
+    // Detect extremely fast spamming (more than 1 message in under 10ms)
+    if (now - lastMessageTime < 10) {
+      logWarn(`User \x1b[90m${clientIp}\x1b[0m is likely a bot or script spamming. Connection will be terminated immediately.`);
+      ws.close(1008, 'Bot-like behavior detected');
+      return;
+    }
+
+    // Update the last message time
+    lastMessageTime = now;
+
+    // Initialize command history for rate-limiting checks
     if (!userCommands[command]) {
       userCommands[command] = [];
     }
 
     // Record the current timestamp for this command
-    const now = Date.now();
     userCommands[command].push(now);
 
     // Remove timestamps older than 1 second
