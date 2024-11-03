@@ -355,7 +355,7 @@ app.use('/', endpoints);
 wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-
+  const userCommandHistory = {}; 
   if (serverConfig.webserver.banlist?.includes(clientIp)) {
     return;
   }
@@ -413,10 +413,23 @@ wss.on('connection', (ws, request) => {
     const command = message.toString();
     const now = Date.now();
     logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
-    
-    // Detect extremely fast spamming (more than 1 message in under 10ms)
-    if (now - lastMessageTime < 10) {
-      logWarn(`User \x1b[90m${clientIp}\x1b[0m is likely a bot or script spamming. Connection will be terminated immediately.`);
+  
+    // Initialize user command history if not present
+    if (!userCommandHistory[clientIp]) {
+      userCommandHistory[clientIp] = [];
+    }
+  
+    // Record the current timestamp for the user
+    userCommandHistory[clientIp].push(now);
+  
+    // Remove timestamps older than 10 ms from the history
+    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 10);
+  
+    // Check if there are 3 or more commands in the last 10 ms
+    if (userCommandHistory[clientIp].length >= 3) {
+      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
+      
+      // Add to banlist if not already banned
       if (!serverConfig.webserver.banlist.includes(clientIp)) {
         serverConfig.webserver.banlist.push(clientIp);
         logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
@@ -425,27 +438,28 @@ wss.on('connection', (ws, request) => {
       ws.close(1008, 'Bot-like behavior detected');
       return;
     }
-
-    // Update the last message time
+  
+    // Update the last message time for general spam detection
     lastMessageTime = now;
-
+  
     // Initialize command history for rate-limiting checks
     if (!userCommands[command]) {
       userCommands[command] = [];
     }
-
+  
     // Record the current timestamp for this command
     userCommands[command].push(now);
-
+  
     // Remove timestamps older than 1 second
     userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-
+  
     // If command count exceeds 3 in a second, close connection
     if (userCommands[command].length > 3) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
       ws.close(1008, 'Spamming detected');
       return;
     }
+  
 
     // Existing command processing logic
     if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
