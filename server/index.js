@@ -417,6 +417,11 @@ wss.on('connection', (ws, request) => {
     // Detect extremely fast spamming (more than 1 message in under 10ms)
     if (now - lastMessageTime < 10) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is likely a bot or script spamming. Connection will be terminated immediately.`);
+      if (!serverConfig.webserver.banlist.includes(clientIp)) {
+        serverConfig.webserver.banlist.push(clientIp);
+        logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
+      }
+      
       ws.close(1008, 'Bot-like behavior detected');
       return;
     }
