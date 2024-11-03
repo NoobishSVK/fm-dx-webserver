@@ -256,6 +256,11 @@ var lastUpdateTime = Date.now();
 const initialData = { ...dataToSend };
 const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
 
+// Serialport reconnect variables
+const ServerStartTime = process.hrtime();
+var serialportUpdateTime = process.hrtime();
+let checkSerialport = false;
+
 
 function handleData(wss, receivedData, rdsWss) {
   // Retrieve the last update time for this client
@@ -422,6 +427,7 @@ function handleData(wss, receivedData, rdsWss) {
           client.send(dataToSendJSON);
       });
       lastUpdateTime = Date.now();
+      serialportUpdateTime = process.hrtime();
     }
 }
 
@@ -430,12 +436,29 @@ isSerialportAlive = true;
 lastFrequencyAlive = '87.500';
 setInterval(() => {
   lastFrequencyAlive = initialData.freq;
-  // Activate serialport retry if handleData has not been executed for over 10 seconds
-  if (((Date.now() - lastUpdateTime) > 8000) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
+  const serialportElapsedTime = process.hrtime(serialportUpdateTime)[0];
+  // Activate serialport retry if handleData has not been executed for over 8 seconds
+  if (checkSerialport && (serialportElapsedTime > 8) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
     isSerialportAlive = false;
     isSerialportRetrying = true;
   }
 }, 2000);
+
+// Delay checking Serialport status on startup for 10 seconds
+async function checkSerialPortStatus() {
+    const ServerStartTime = process.hrtime();
+
+    while (!checkSerialport) {
+        const ServerElapsedSeconds = process.hrtime(ServerStartTime)[0];
+
+        if (ServerElapsedSeconds > 10) {
+            checkSerialport = true;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+}
+checkSerialPortStatus();
 
 function showOnlineUsers(currentUsers) {
   dataToSend.users = currentUsers;
