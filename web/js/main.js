@@ -88,7 +88,7 @@ $(document).ready(function () {
         const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent)) {
-            socket.send("T" + (inputValue * 1000));
+            socket.send("T" + (Math.round(inputValue * 1000)));
             // Clear the input field if needed
             textInput.val('');
         }
@@ -118,7 +118,7 @@ $(document).ready(function () {
         if (event.key === 'Enter') {
             const inputValue = textInput.val();
             if (socket.readyState === WebSocket.OPEN) {
-                socket.send("T" + (inputValue * 1000));
+                socket.send("T" + (Math.round(inputValue * 1000)));
             }
             textInput.val('');
         }
