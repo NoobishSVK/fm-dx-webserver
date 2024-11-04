@@ -357,6 +357,7 @@ wss.on('connection', (ws, request) => {
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
   const userCommandHistory = {}; 
   if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    ws.close(1008, 'Banned IP');
     return;
   }
 
@@ -425,11 +426,11 @@ wss.on('connection', (ws, request) => {
     // Record the current timestamp for the user
     userCommandHistory[clientIp].push(now);
   
-    // Remove timestamps older than 10 ms from the history
+    // Remove timestamps older than 20 ms from the history
     userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
   
-    // Check if there are 3 or more commands in the last 10 ms
-    if (userCommandHistory[clientIp].length >= 5) {
+    // Check if there are 8 or more commands in the last 20 ms
+    if (userCommandHistory[clientIp].length >= 8) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
       
       // Add to banlist if not already banned
@@ -458,8 +459,8 @@ wss.on('connection', (ws, request) => {
     // Remove timestamps older than 1 second
     userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
   
-    // If command count exceeds 3 in a second, close connection
-    if (userCommands[command].length > 3) {
+    // If command count exceeds limit, close connection
+    if (userCommands[command].length > 18) {
       logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
       ws.close(1008, 'Spamming detected');
       return;
