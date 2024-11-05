@@ -124,9 +124,26 @@ $(document).ready(function () {
         }
     });
 
-    document.onkeydown = checkKey;
+    document.onkeydown = function(event) {
+        if (!event.repeat) {
+            checkKey(event);
+        }
+    };
+    
 
+    let lastExecutionTime = 0;
+    const throttleDelay = 100; // Time in ms
     $('#freq-container').on('wheel keypress', function (e) {
+        e.preventDefault();
+        const now = Date.now();
+    
+        if (now - lastExecutionTime < throttleDelay) {
+            // Ignore this event as it's within the throttle delay
+            return;
+        }
+    
+        lastExecutionTime = now; // Update the last execution time
+    
         getCurrentFreq();
         var delta = e.originalEvent.deltaY;
         var adjustment = 0;
@@ -654,54 +671,6 @@ function checkKey(e) {
     }
 }
 
-function tuneUp() {
-    if (socket.readyState === WebSocket.OPEN) {
-        getCurrentFreq();
-        let addVal = 0;
-        if (currentFreq < 0.52) {
-            addVal = 9 - (Math.round(currentFreq*1000) % 9);
-        } else if (currentFreq < 1.71) {
-            // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
-            addVal = 9 - (Math.round(currentFreq*1000) % 9);
-        } else if (currentFreq < 29.6) {
-            addVal = 5 - (Math.round(currentFreq*1000) % 5);
-        } else if (currentFreq >= 65.9 && currentFreq < 74) {
-            addVal = 30 - ((Math.round(currentFreq*1000) - 65900) % 30);
-        } else {
-            addVal = 100 - (Math.round(currentFreq*1000) % 100);
-        }
-        socket.send("T" + (Math.round(currentFreq*1000) + addVal));
-    }
-}
-
-function tuneDown() {
-    if (socket.readyState === WebSocket.OPEN) {
-        getCurrentFreq();
-        let subVal = 0;
-        if (currentFreq < 0.52) {
-            subVal = (Math.round(currentFreq*1000) % 9 == 0) ? 9 : (Math.round(currentFreq*1000) % 9);
-        } else if (currentFreq < 1.71) {
-            // TODO: Rework to replace 9 with 9 or 10 based on regionalisation setting
-            subVal = (Math.round(currentFreq*1000) % 9 == 0) ? 9 : (Math.round(currentFreq*1000) % 9);
-        } else if (currentFreq < 29.6) {
-            subVal = (Math.round(currentFreq*1000) % 5 == 0) ? 5 : (Math.round(currentFreq*1000) % 5);
-        } else if (currentFreq > 65.9 && currentFreq <= 74) {
-            subVal = ((Math.round(currentFreq*1000) - 65900) % 30 == 0) ? 30 : ((Math.round(currentFreq*1000) - 65900) % 30);
-        } else {
-            subVal = (Math.round(currentFreq*1000) % 100 == 0) ? 100 : (Math.round(currentFreq*1000) % 100);
-        }
-        socket.send("T" + (Math.round(currentFreq*1000) - subVal));
-    }
-}
-
-function tuneTo(freq) {
-        socket.send("T" + ((freq).toFixed(1) * 1000));
-}
-
-function resetRDS(freq) {
-    socket.send("T" + ((freq).toFixed(3) * 1000));
-}
-
 async function copyPs() {
     var frequency = $('#data-frequency').text();
     var pi = $('#data-pi').text();
@@ -1055,33 +1024,20 @@ function toggleForcedStereo() {
     socket.send(message);
 }
 
-function toggleAdminLock() {
-    let $adminLockButton = $('#dashboard-lock-admin');
+function toggleLock(buttonSelector, activeMessage, inactiveMessage, activeLabel, inactiveLabel) {
+    let $lockButton = $(buttonSelector);
 
-    if($adminLockButton.hasClass('active')) {
-        socket.send('wL0');
-        $adminLockButton.attr('aria-label', 'Lock Tuner (Admin)')
-        $adminLockButton.removeClass('active');
+    if ($lockButton.hasClass('active')) {
+        socket.send(inactiveMessage);
+        $lockButton.attr('aria-label', inactiveLabel);
+        $lockButton.removeClass('active');
     } else {
-        socket.send('wL1');
-        $adminLockButton.attr('aria-label', 'Unlock Tuner (Admin)')
-        $adminLockButton.addClass('active');
+        socket.send(activeMessage);
+        $lockButton.attr('aria-label', activeLabel);
+        $lockButton.addClass('active');
     }
 }
 
-function togglePasswordLock() {
-    let $passwordLockButton = $('#dashboard-lock-tune');
-
-    if($passwordLockButton.hasClass('active')) {
-        socket.send('wT0');
-        $passwordLockButton.removeClass('active');
-        $passwordLockButton.attr('aria-label', 'Lock Tuner (Password tune)')
-    } else {
-        socket.send('wT1');
-        $passwordLockButton.addClass('active');
-        $passwordLockButton.attr('aria-label', 'Unlock Tuner (Password tune)')
-    }
-}
 
 function initTooltips() {
     $('.tooltip').hover(function(e){

@@ -33,7 +33,9 @@ $(document).ready(function() {
               $currentDropdown.find('input').val($(event.currentTarget).text());
               break;
           default:
-              $currentDropdown.find('input').val($(event.currentTarget).text());
+            $currentDropdown.find('input')
+            .val($(event.currentTarget).text())
+            .attr('data-value', $(event.currentTarget).data('value')); 
               break;
       }
 

@@ -1,22 +1,17 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 
 const verboseMode = process.argv.includes('--debug');
 const verboseModeFfmpeg = process.argv.includes('--ffmpegdebug');
 
+const LOG_FILE = 'serverlog.txt';
 const ANSI_ESCAPE_CODE_PATTERN = /\x1b\[[0-9;]*m/g;
 const MAX_LOG_LINES = 5000;
+const FLUSH_INTERVAL = 60000;
+const logs = [];
+const maxConsoleLogLines = 250;
+let logBuffer = [];
 
-const getCurrentTime = () => {
-    const currentTime = new Date();
-    const hours = currentTime.getHours().toString().padStart(2, '0');
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-    return `\x1b[90m[${hours}:${minutes}]\x1b[0m`;
-};
-
-const removeANSIEscapeCodes = (str) => {
-    return str.replace(ANSI_ESCAPE_CODE_PATTERN, '');
-};
-
+// Message prefixes with ANSI codes
 const MESSAGE_PREFIX = {
     CHAT: "\x1b[36m[CHAT]\x1b[0m",
     DEBUG: "\x1b[36m[DEBUG]\x1b[0m",
@@ -26,97 +21,67 @@ const MESSAGE_PREFIX = {
     WARN: "\x1b[33m[WARN]\x1b[0m",
 };
 
-// Initialize an array to store logs
-const logs = [];
-const maxLogLines = 250;
+const getCurrentTime = () => {
+    const currentTime = new Date();
+    const date = currentTime.toLocaleDateString().replace(/\ /g, '');
+    const time = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `\x1b[90m[${date} ${time}]\x1b[0m`;
+};
 
-const logDebug = (...messages) => {
-    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.DEBUG} ${messages.join(' ')}`;
-    if (verboseMode) {
+const removeANSIEscapeCodes = (str) => str.replace(ANSI_ESCAPE_CODE_PATTERN, ''); // Strip ANSI escape codes from a string
+
+const logMessage = (type, messages, verbose = false) => {
+    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX[type]} ${messages.join(' ')}`;
+
+    if (type === 'DEBUG' && verboseMode || type === 'FFMPEG' && verboseModeFfmpeg || type !== 'DEBUG' && type !== 'FFMPEG') {
         logs.push(logMessage);
-        if (logs.length > maxLogLines) {
-            logs.shift();
-        }
-    console.log(logMessage);
+        if (logs.length > maxConsoleLogLines) logs.shift();
+        console.log(logMessage);
     }
-    appendLogToFile(logMessage);
+    appendLogToBuffer(logMessage);
 };
 
-const logChat = (...messages) => {
-    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.CHAT} ${messages[0].nickname} (${messages[0].ip}) sent a chat message: ${messages[0].message}`;
-    appendLogToFile(logMessage);
-};
+const logDebug = (...messages) => logMessage('DEBUG', messages, verboseMode);
+const logChat = (message) => logMessage('CHAT', [`${message.nickname} (${message.ip}) sent a chat message: ${message.message}`]);
+const logError = (...messages) => logMessage('ERROR', messages);
+const logFfmpeg = (...messages) => logMessage('FFMPEG', messages, verboseModeFfmpeg);
+const logInfo = (...messages) => logMessage('INFO', messages);
+const logWarn = (...messages) => logMessage('WARN', messages);
 
-const logError = (...messages) => {
-    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.ERROR} ${messages.join(' ')}`;
-    logs.push(logMessage);
-    if (logs.length > maxLogLines) {
-        logs.shift();
-    }
-    console.log(logMessage);
-    appendLogToFile(logMessage);
-};
-
-const logFfmpeg = (...messages) => {
-    if (verboseModeFfmpeg) {
-        const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.FFMPEG} ${messages.join(' ')}`;
-        logs.push(logMessage);
-        if (logs.length > maxLogLines) {
-            logs.shift(); 
-        }
-    console.log(logMessage);
-    appendLogToFile(logMessage);
-    }
-};
-
-const logInfo = (...messages) => {
-    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.INFO} ${messages.join(' ')}`;
-    logs.push(logMessage);
-    if (logs.length > maxLogLines) {
-        logs.shift(); 
-    }
-    console.log(logMessage);
-    appendLogToFile(logMessage);
-};
-
-const logWarn = (...messages) => {
-    const logMessage = `${getCurrentTime()} ${MESSAGE_PREFIX.WARN} ${messages.join(' ')}`;
-    logs.push(logMessage);
-    if (logs.length > maxLogLines) {
-        logs.shift(); 
-    }
-    console.log(logMessage);
-    appendLogToFile(logMessage);
-};
-
-function appendLogToFile(logMessage) {
-    const date = new Date();
-    const cleanLogMessage = date.toLocaleDateString() + ' | ' + removeANSIEscapeCodes(logMessage);
-
-    fs.appendFile('serverlog.txt', cleanLogMessage + '\n', (err) => {
-        if (err) {
-            console.error('Error writing to server log:', err);
-        } else {
-            fs.readFile('serverlog.txt', 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Error reading server log:', err);
-                } else {
-                    const lineCount = data.split('\n').length;
-                    if (lineCount > MAX_LOG_LINES) {
-                        const excessLines = lineCount - MAX_LOG_LINES;
-                        const truncatedContent = data.split('\n').slice(excessLines).join('\n');
-                        fs.writeFile('serverlog.txt', truncatedContent, (err) => {
-                            if (err) {
-                                console.error('Error truncating server log:', err);
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    });
+function appendLogToBuffer(logMessage) {
+    const cleanLogMessage = removeANSIEscapeCodes(logMessage);
+    logBuffer.push(cleanLogMessage + '\n');
 }
 
-module.exports = {
-    logError, logDebug, logFfmpeg, logInfo, logWarn, logs, logChat
+async function flushLogBuffer() {
+    if (logBuffer.length === 0) return;
+
+    const logContent = logBuffer.join('');
+    logBuffer = [];
+
+    try {
+        await fs.appendFile(LOG_FILE, logContent);
+
+        const data = await fs.readFile(LOG_FILE, 'utf8');
+        const lines = data.split('\n');
+        if (lines.length > MAX_LOG_LINES) {
+            const truncatedContent = lines.slice(-MAX_LOG_LINES).join('\n');
+            await fs.writeFile(LOG_FILE, truncatedContent);
+        }
+    } catch (err) {
+        console.error('Error flushing log buffer:', err);
+    }
+}
+
+setInterval(flushLogBuffer, FLUSH_INTERVAL);
+
+const gracefulExit = async () => {
+    await flushLogBuffer();
+    process.exit();
 };
+
+process.on('exit', flushLogBuffer);
+process.on('SIGINT', gracefulExit);
+process.on('SIGTERM', gracefulExit);
+
+module.exports = { logError, logDebug, logFfmpeg, logInfo, logWarn, logs, logChat };

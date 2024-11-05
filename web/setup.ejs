@@ -18,25 +18,25 @@
             <div class="sidenav-content">
                 <h1 class="top-25">Settings</h1>
                 <ul class="nav" role="tablist" style="border-radius: 15px 15px 0 0;">
-                    <li role="presentation" data-panel="dashboard" aria-selected="true">
-                        <a href="#" role="tab" tabindex="0" aria-controls="dashboard"><i class="fa-solid fa-fw fa-chart-line"></i> Dashboard</a>
+                    <li role="tab" data-panel="dashboard" aria-selected="true" tabindex="0">
+                        <a href="#" role="tab" aria-controls="dashboard"><i class="fa-solid fa-fw fa-chart-line"></i> Dashboard</a>
                     </li>
-                    <li role="presentation" data-panel="tuner">
+                    <li role="tab" data-panel="tuner" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="tuner"><i class="fa-solid fa-fw fa-radio"></i> Tuner</a>
                     </li>
-                    <li role="presentation" data-panel="audio">
+                    <li role="tab" data-panel="audio" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="audio"><i class="fa-solid fa-fw fa-volume-high"></i> Audio</a>
                     </li>
-                    <li role="presentation" data-panel="webserver">
+                    <li role="tab" data-panel="webserver" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="webserver"><i class="fa-solid fa-fw fa-server"></i> Webserver</a>
                     </li>
-                    <li role="presentation" data-panel="plugins">
+                    <li role="tab" data-panel="plugins" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="plugins"><i class="fa-solid fa-fw fa-puzzle-piece"></i> Plugins</a>
                     </li>
-                    <li role="presentation" data-panel="identification">
+                    <li role="tab" data-panel="identification" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="identification"><i class="fa-solid fa-fw fa-circle-info"></i> Identification & Map</a>
                     </li>
-                    <li role="presentation" data-panel="extras">
+                    <li role="tab" data-panel="extras" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="extras"><i class="fa-solid fa-fw fa-star"></i> Extras</a>
                     </li>
 
@@ -44,7 +44,7 @@
                         <div class="icon tooltip" role="button" aria-label="Go back to the main screen" tabindex="0" data-tooltip="Go back to the main screen" onclick="document.location.href='./'">
                             <i class="fa-solid fa-arrow-left"></i>
                         </div>
-                        <div class="icon tooltip" id="submit-config" role="button" aria-label="Save settings" tabindex="0" data-tooltip="Save settings" onclick="submitData()">
+                        <div class="icon tooltip" id="submit-config" role="button" aria-label="Save settings" tabindex="0" data-tooltip="Save settings" onclick="submitConfig()">
                             <i class="fa-solid fa-save"></i>
                         </div>
                         <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
@@ -116,24 +116,12 @@
                     <div class="panel-50 p-bottom-20">
                         <h3>Quick settings</h3>
                         <div class="flex-container flex-center" style="margin: 30px;">
-                            <div class="form-group checkbox">
-                                <input type="checkbox" tabindex="0"  id="tuner-public" aria-label="Public tuner (no password)">
-                                <label for="tuner-public"><i class="fa-solid fa-toggle-off m-right-10"></i> Public tuner</label>
-                            </div>
-                            <div class="form-group checkbox">
-                                <input type="checkbox" tabindex="0"  id="tuner-lock" aria-label="Admin lock (only admins can tune)">
-                                <label for="tuner-lock"><i class="fa-solid fa-toggle-off m-right-10"></i> Admin lock</label>
-                            </div><br>
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Public Tuner', id: 'publicTuner'}) %>
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Admin lock', id: 'lockToAdmin'}) %><br>
                         </div>
         
-                        <div class="form-group">
-                            <label for="tune-pass">Tune password:</label>
-                            <input class="input-text w-200" type="password" name="tune-pass" id="tune-pass">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-pass">Admin setup password:</label>
-                            <input class="input-text w-200" type="password" name="admin-pass" id="admin-pass">
-                        </div><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
                     </div>
                 </div>
 
@@ -159,69 +147,64 @@
                 <div class="flex-container contains-dropdown">
                         <div class="panel-33 p-bottom-20">
                             <h3>Device</h3>
-                            <div class="form-group">
-                                <p class="text-left">Your audio device port.<br>
-                                    <span class="text-gray">This is where your tuner is plugged in.</span>
-                                </p>
-                                <label for="audio-devices"><i class="fa-solid fa-headphones"></i> STREAM AUDIO FROM:</label>
-                                <div class="dropdown">
-                                    <input id="audio-devices" type="text" name="audio-devices" placeholder="Choose your audio device" readonly tabindex="0" />
-                                    <ul class="options" tabindex="-1" id="deviceList">
-                                        <% videoDevices.forEach(device => { %>
-                                            <li data-value="<%= device.name %>" class="option" tabindex="0"><%= device.name %></li>
-                                        <% }); %>
-                                        <% audioDevices.forEach(device => { %>
-                                            <li data-value="<%= device.name %>" class="option" tabindex="0"><%= device.name %></li>
-                                        <% }); %>
-                                    </ul>
-                                </div>
-                            </div>
+                            <p>Your audio device port.<br>
+                                <span class="text-gray">This is where your tuner is plugged in.</span>
+                            </p>
+
+                            <%- include('_components', {
+                                component: 'dropdown',
+                                id: 'audioList',
+                                inputId: 'audio-audioDevice',
+                                label: 'Audio device',
+                                cssClass: '',
+                                placeholder: 'Choose your audio device',
+                                options: [
+                                    ...videoDevices.map(device => ({
+                                        value: device.name,
+                                        label: `${device.name}`
+                                    })),
+                                    ...audioDevices.map(device => ({
+                                        value: device.name,
+                                        label: `${device.name}`
+                                    }))
+                                ]
+                            }) %>   
                         </div>
                         <div class="panel-33 p-bottom-20">
                             <h3>Channels</h3>
-                            <div class="form-group">
-                                <p class="text-left">Audio channel count.<br>
-                                    <span class="text-gray">Choose between Mono / Stereo.</span>
-                                </p>
-                                <label for="audio-devices"><i class="fa-solid fa-microphone-lines"></i> Audio channels:</label>
-                                <div class="dropdown">
-                                    <input id="audio-channels" type="text" name="audio-channels" placeholder="Stereo" readonly tabindex="0" />
-                                    <ul class="options" tabindex="-1">
-                                        <li data-value="2" class="option" tabindex="0">Stereo</li>
-                                        <li data-value="1" class="option" tabindex="0">Mono</li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <p>Audio channel count.<br>
+                                <span class="text-gray">Choose between Mono / Stereo.</span>
+                            </p>
+                            <%- include('_components', { component: 'dropdown', id: 'audio-channels-dropdown', inputId: 'audio-audioChannels', label: 'Audio channels', cssClass: '', placeholder: 'Stereo', 
+                            options: [
+                                { value: '2', label: 'Stereo' },
+                                { value: '1', label: 'Mono' }
+                            ]
+                            }) %><br>
                         </div>
                         <div class="panel-33 p-bottom-20">
                             <h3>Bitrate</h3>
-                            <div class="form-group">
-                                <p class="text-left">The bitrate of the mp3 audio.<br>
+                            <p>The bitrate of the mp3 audio.<br>
                                 <span class="text-gray">Minimum: 64 Kbps • Maximum: 320 Kbps</span>
-                                </p>
-                                <label for="audio-quality"><i class="fa-solid fa-wave-square"></i> Audio quality:</label>
-                                <div class="dropdown">
-                                    <input id="audio-quality" type="text" name="audio-quality" placeholder="128k (standard)" readonly tabindex="0" />
-                                    <ul class="options" tabindex="-1">
-                                        <li data-value="64k" class="option" tabindex="0">64k (lowest quality)</li>
-                                        <li data-value="96k" class="option" tabindex="0">96k (low quality)</li>
-                                        <li data-value="128k" class="option" tabindex="0">128k (standard)</li>
-                                        <li data-value="192k" class="option" tabindex="0">192k (higher quality)</li>
-                                        <li data-value="256k" class="option" tabindex="0">256k (very high quality)</li>
-                                        <li data-value="320k" class="option" tabindex="0">320k (ultra quality)</li>
-                                    </ul>
-                                </div>
-                            </div>
+                            </p>
+                            <%- include('_components', { component: 'dropdown', id: 'audio-quality-dropdown', inputId: 'audio-audioBitrate', label: 'Audio quality', cssClass: '', placeholder: '128kbps (standard)', 
+                            options: [
+                                { value: '64k', label: '64kbps (lowest quality)' },
+                                { value: '96k', label: '96kbps (low quality)' },
+                                { value: '128k', label: '128kbps (standard)' },
+                                { value: '192k', label: '192kbps (high quality)' },
+                                { value: '256k', label: '256kbps (very high quality)' },
+                                { value: '320k', label: '320kbps (ultra quality)' }
+                            ]
+                            }) %><br>
                         </div>
                 </div>
 
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20">
                         <h3>Miscellaneous</h3>
-                        <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" tabindex="0"  id="audio-software-mode" aria-label="ALSA Software mode (plughw) - Linux only">
-                            <label for="audio-software-mode"><i class="fa-solid fa-toggle-off m-right-10"></i> ALSA software mode</label>
-                        </div>   
+                        <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
                     </div>
                 </div>
             </div>
@@ -232,88 +215,44 @@
                     <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Connection</h3>
                         <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
-                        <div class="form-group">
-                            <label for="webserver-ip">Webserver IP:</label>
-                            <input class="input-text w-150" type="text" name="webserver-ip" id="webserver-ip" placeholder="0.0.0.0">
-                        </div>  
-                        <div class="form-group">
-                            <label for="webserver-port">Webserver port:</label>
-                            <input class="input-text w-100" type="text" name="webserver-port" id="webserver-port" placeholder="8080">
-                        </div> 
-                        <br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
                     </div>
                     <div class="panel-33 p-bottom-20">
                             <h3>Design</h3>
-                            <h4>Background image</h4>
-                            <div class="form-group">
-                                <label for="bg-image">Image link:</label>
-                                <input class="input-text w-200" type="text" placeholder="" name="bg-image" id="bg-image">
-                            </div>      
+                            <h4>Background image</h4>  
+                            <%- include('_components', {component: 'text', cssClass: '', placeholder: 'Direct image link', label: 'Image link', id: 'webserver-bgImage'}) %><br> 
+
                             <h4 class="top-25">Themes</h4>
-                            <div class="form-group top-10">
-                                <label for="selected-theme"><i class="fa-solid fa-palette"></i> Default server theme</label>
-                                <div class="dropdown" id="server-theme-selector" style="margin-right: 0;">
-                                    <input type="text" placeholder="Default" id="selected-theme" readonly tabindex="0">
-                                    <ul class="options" tabindex="-1">
-                                        <li class="option" tabindex="0" data-value="theme1">Default</li>
-                                        <li class="option" tabindex="0" data-value="theme2">Cappuccino</li>
-                                        <li class="option" tabindex="0" data-value="theme3">Nature</li>
-                                        <li class="option" tabindex="0" data-value="theme4">Ocean</li>
-                                        <li class="option" tabindex="0" data-value="theme5">Terminal</li>
-                                        <li class="option" tabindex="0" data-value="theme6">Nightlife</li>
-                                        <li class="option" tabindex="0" data-value="theme7">Blurple</li>
-                                        <li class="option" tabindex="0" data-value="theme8">Construction</li>
-                                        <li class="option" tabindex="0" data-value="theme9">AMOLED</li>
-                                    </ul>
-                                </div>
-                            </div>
+                            <%- include('_components', { component: 'dropdown', id: 'server-theme-selector', inputId: 'webserver-defaultTheme', label: 'Default server theme', cssClass: '', placeholder: 'Default', 
+                            options: [
+                                { value: 'theme1', label: 'Default' },
+                                { value: 'theme2', label: 'Cappuccino' },
+                                { value: 'theme3', label: 'Nature' },
+                                { value: 'theme4', label: 'Ocean' },
+                                { value: 'theme5', label: 'Terminal' },
+                                { value: 'theme6', label: 'Nightlife' },
+                                { value: 'theme7', label: 'Blurple' },
+                                { value: 'theme8', label: 'Construction' },
+                                { value: 'theme9', label: 'Amoled' },
+                            ]
+                            }) %><br>
                     </div>
                     <div class="panel-33 p-bottom-20">
                         <h3>Antennas</h3>
-                        <div class="flex-container">
-                            
-                        </div>
-                        <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" tabindex="0"  id="antenna-switch" aria-label="Antenna switch">
-                            <label for="antenna-switch"><i class="fa-solid fa-toggle-off m-right-10"></i> Antenna switch</label>
-                        </div><br>
-                        
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="ant1-enabled" aria-label="Enable antenna 1">
-                            <label for="ant1-enabled"><i class="fa-solid fa-check"></i></label>
-                        </div>
-                        <div class="form-group">
-                            <label for="ant1-name">Antenna 1 name:</label>
-                            <input class="input-text w-100" type="text" placeholder="Ant A" name="ant1-name" id="ant1-name">
-                        </div><br>
+                        <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', label: 'Antenna switch', id: 'antennas-enabled'}) %><br>
 
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="ant2-enabled" aria-label="Enable antenna 2">
-                            <label for="ant2-enabled"><i class="fa-solid fa-check"></i></label>
-                        </div>
-                        <div class="form-group">
-                            <label for="ant2-name">Antenna 2 name:</label>
-                            <input class="input-text w-100" type="text" placeholder="Ant B" name="ant2-name" id="ant2-name">
-                        </div><br>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 1', id: 'antennas-ant1-enabled'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant A', label: 'Antenna 1 name', id: 'antennas-ant1-name'}) %><br>
 
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="ant3-enabled" aria-label="Enable antenna 3">
-                            <label for="ant3-enabled"><i class="fa-solid fa-check"></i></label>
-                        </div>
-                        <div class="form-group">
-                            <label for="ant3-name">Antenna 3 name:</label>
-                            <input class="input-text w-100" type="text" placeholder="Ant C" name="ant3-name" id="ant3-name">
-                        </div><br>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 2', id: 'antennas-ant2-enabled'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant B', label: 'Antenna 2 name', id: 'antennas-ant2-name'}) %><br>
 
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="ant4-enabled" aria-label="Enable antenna 4">
-                            <label for="ant4-enabled"><i class="fa-solid fa-check"></i></label>
-                        </div>
-                        <div class="form-group">
-                            <label for="ant4-name">Antenna 4 name:</label>
-                            <input class="input-text w-100" type="text" placeholder="Ant D" name="ant4-name" id="ant4-name">
-                        </div><br>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 3', id: 'antennas-ant3-enabled'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant C', label: 'Antenna 3 name', id: 'antennas-ant3-name'}) %><br>
 
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 4', id: 'antennas-ant4-enabled'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant D', label: 'Antenna 4 name', id: 'antennas-ant4-name'}) %><br>
                     </div>
                 </div>
 
@@ -323,40 +262,21 @@
                         <p>If you want to limit which frequencies the users can tune to,<br>you can set the lower and upper limit here.<br>
                             <span class="text-gray">Enter frequencies in MHz.</span>
                         </p>
-                        <div class="form-group checkbox" aria-label="Limit tuning">
-                            <input type="checkbox" tabindex="0"  id="tuning-limit">
-                            <label for="tuning-limit"><i class="fa-solid fa-toggle-off m-right-10"></i> Limit tuning</label>
-                        </div><br>
-                        <div class="form-group">
-                            <label for="tuning-lower-limit">Lower limit:</label>
-                            <input class="input-text w-100" type="text" placeholder="0" name="tuning-lower-limit" id="tuning-lower-limit">
-                        </div>
-                        <div class="form-group">
-                            <label for="tuning-upper-limit">Upper Limit:</label>
-                            <input class="input-text w-100" type="text" placeholder="108" name="tuning-upper-limit" id="tuning-upper-limit">
-                        </div>
+
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Limit tuning', id: 'webserver-tuningLimit'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '0', label: 'Lower limit', id: 'webserver-tuningLowerLimit'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '108', label: 'Upper limit', id: 'webserver-tuningUpperLimit'}) %>
                     </div>
 
                     <div class="panel-50 p-bottom-20">
                         <h3>Presets</h3>
                         <p>You can set up to 4 presets.<br>These presets are accessible with the F1-F4 buttons.<br>
                         <span class="text-gray">Enter frequencies in MHz.</span></p>
-                        <div class="form-group">
-                            <label for="preset1">Preset 1:</label>
-                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset1" id="preset1">
-                        </div>
-                        <div class="form-group">
-                            <label for="preset2">Preset 2:</label>
-                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset2" id="preset2">
-                        </div><br>
-                        <div class="form-group">
-                            <label for="preset1">Preset 3:</label>
-                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset3" id="preset3">
-                        </div>
-                        <div class="form-group">
-                            <label for="preset1">Preset 4:</label>
-                            <input class="input-text w-100" type="text" placeholder="87.5" name="preset4" id="preset4">
-                        </div>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 1', id: 'webserver-presets-1'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 2', id: 'webserver-presets-2'}) %>
+                        <br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 3', id: 'webserver-presets-3'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 4', id: 'webserver-presets-4'}) %>
                     </div>
                 </div>
 
@@ -364,17 +284,11 @@
                     <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
-                        <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" tabindex="0"  id="rds-mode" aria-label="Enable american RDS mode (RBDS)">
-                            <label for="rds-mode"><i class="fa-solid fa-toggle-off m-right-10"></i> American Mode (RBDS)</label>
-                        </div>      
+                        <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
                     </div>
                     <div class="panel-33">
                         <h3>Chat options</h3>
-                        <div class="form-group checkbox bottom-20">
-                            <input type="checkbox" tabindex="0"  id="chat-switch" aria-label="Enable chat">
-                            <label for="chat-switch"><i class="fa-solid fa-toggle-off m-right-10"></i> Chat</label>
-                        </div>        
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Chat', id: 'webserver-chatEnabled'}) %>     
                     </div>
 
                     <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
@@ -383,7 +297,7 @@
                         <span class="text-gray">You can see their IP address by hovering over their nickname. One IP per row.</span></p>
                         <div class="form-group">
                             <label for="preset1">Banned users:</label>
-                            <textarea id="ip-addresses" placeholder="123.45.67.8"></textarea>
+                            <textarea id="webserver-banlist" placeholder="123.45.67.8"></textarea>
                         </div>
                     </div>
                 </div>
@@ -417,18 +331,15 @@
                 <div class="flex-container contains-dropdown">
                 <div class="panel-33 p-bottom-20">
                     <h3>Device type</h3>
-                    <div class="form-group">
-                        <label for="device-type"><i class="fa-solid fa-radio"></i> Device</label>
-                        <div class="dropdown" id="device-selector" style="margin-right: 0;">
-                            <input type="text" placeholder="TEF6686 / TEA685x" id="device-type" readonly tabindex="0">
-                            <ul class="options" tabindex="0">
-                                <li class="option" tabindex="0" data-value="tef">TEF668x / TEA685x</li>
-                                <li class="option" tabindex="0" data-value="xdr">XDR (F1HD / S10HDiP)</li>
-                                <li class="option" tabindex="0" data-value="sdr">SDR (RTL-SDR / AirSpy)</li>
-                                <li class="option" tabindex="0" data-value="other">Other</li>
-                            </ul>
-                        </div>
-                    </div><br>
+                            <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
+                                options: [
+                                    { value: 'tef', label: 'TEF668x / TEA685x' },
+                                    { value: 'xdr', label: 'XDR (F1HD / S10HDiP)' },
+                                    { value: 'sdr', label: 'SDR (RTL-SDR / AirSpy)' },
+                                    { value: 'other', label: 'Other' }
+                                ]
+                            }) %><br>
+                    
                 </div>
 
                 <div class="panel-33 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
@@ -436,7 +347,7 @@
                     <p class="text-gray">If you want to choose the COM port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
                     <div class="auto top-10">
                         <label class="toggleSwitch nolabel" onclick="">
-                            <input id="connection-type-toggle" type="checkbox" tabindex="0" aria-label="Connection type"/>
+                            <input id="xdrd-wirelessConnection" type="checkbox" tabindex="0" aria-label="Connection type"/>
                             <a></a>
                             <span>
                                 <span class="left-span">Direct</span>
@@ -450,33 +361,25 @@
                         
                     <div id="tuner-usb">
                         <p class="text-gray">Choose your desired <strong>COM port</strong><br>&nbsp;</p>
-                        <div class="form-group">
-                            <label for="com-devices"><i class="fa-brands fa-usb"></i> USB Device:</label>
-                            <div class="dropdown" style="margin-right: 0;">
-                                <input id="com-devices" type="text" name="com-devices" placeholder="Choose your USB device" readonly tabindex="0" />
-                                <ul class="options" tabindex="-1" id="deviceList">
-                                    <% serialPorts.forEach(serialPort => { %>
-                                        <li data-value="<%= serialPort.path %>" class="option" tabindex="0"><%= serialPort.path %> - <%= serialPort.friendlyName %></li>
-                                    <% }); %>
-                                </ul>
-                            </div>
-                        </div>
+                        <%- include('_components', {
+                            component: 'dropdown',
+                            id: 'deviceList',
+                            inputId: 'xdrd-comPort',
+                            label: 'USB Device',
+                            cssClass: '',
+                            placeholder: 'Choose your USB device',
+                            options: serialPorts.map(serialPort => ({
+                                value: serialPort.path,
+                                label: `${serialPort.path} - ${serialPort.friendlyName}`
+                            }))
+                        }) %>                        
                     </div>
     
                     <div id="tuner-wireless">
                         <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
-                        <div class="form-group">
-                            <label for="xdrd-ip">xdrd ip address:</label>
-                            <input class="input-text w-150" type="text" name="xdrd-ip" id="xdrd-ip" placeholder="127.0.0.1">
-                        </div>  
-                        <div class="form-group">
-                            <label for="xdrd-port">xdrd port:</label>
-                            <input class="input-text w-100" type="text" name="xdrd-port" id="xdrd-port" placeholder="7373">
-                        </div> 
-                        <div class="form-group">
-                            <label for="xdrd-password">xdrd server password:</label>
-                            <input class="input-text w-150" type="password" name="xdrd-password" id="xdrd-password">
-                        </div> 
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
                     </div>
                 </div>
                 </div>
@@ -485,20 +388,14 @@
                         <h3>Startup</h3>
                         <h4>Startup volume</h4>
                         <div class="panel-75 auto" style="height: 48px;">
-                            <input type="range" id="startup-volume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
+                            <input type="range" id="audio-startupVolume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
                         </div>
                         <h4 class="top-10 text-gray" id="volume-percentage-value"></h4>
     
                         <hr>
                         <h4 class="bottom-20">Default frequency</h4>
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="default-freq-enable" aria-label="Enable deafult frequency for first client">
-                            <label for="default-freq-enable"><i class="fa-solid fa-toggle-off m-right-10"></i> Default frequency for first client</label>
-                        </div><br>
-                        <div class="form-group">
-                            <label for="default-freq">Default frequency</label>
-                            <input class="input-text w-150" type="text" placeholder="87.5" name="default-freq" id="default-freq">
-                        </div>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Default frequency for first client', id: 'enableDefaultFreq'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Default frequency', id: 'defaultFreq'}) %>
                     </div>
                     <div class="panel-50 p-bottom-20">
                         <h3>Miscellaneous</h3>
@@ -506,18 +403,12 @@
                             <div class="panel-50 no-bg">
                                 <h4>Bandwidth switch</h4>
                                 <p>Bandwidth switch allows the user to set the bandwidth manually.</p>
-                                <div class="form-group checkbox">
-                                    <input type="checkbox" tabindex="0"  id="toggle-bw" aria-label="Toggle bandwidth switch">
-                                    <label for="toggle-bw"><i class="fa-solid fa-toggle-off m-right-10"></i> Bandwidth switch</label>
-                                </div><br>
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Bandwidth switch', id: 'bwSwitch'}) %><br>
                             </div>
                             <div class="panel-50 no-bg">
                                 <h4>Automatic shutdown</h4>
                                 <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
-                                <div class="form-group checkbox">
-                                    <input type="checkbox" tabindex="0"  id="shutdown-tuner" aria-label="Auto shutdown">
-                                    <label for="shutdown-tuner"><i class="fa-solid fa-toggle-off m-right-10"></i> Auto-shutdown</label>
-                                </div>
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Auto-shutdown', id: 'autoShutdown'}) %><br>
                             </div>
                         </div>
                     </div>
@@ -533,30 +424,21 @@
                         
                         <p>Set your tuner name and description here.<br>This info will be visible to anyone who tunes in. </p>
                         <div class="panel-full no-bg" style="padding-left: 20px; padding-right: 20px;">
-                            <label for="webserver-name" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                            <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="webserver-name" id="webserver-name" placeholder="Fill your server name here." maxlength="32">
+                            <label for="identification-tunerName" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
+                            <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
                             <br>
-                            <label for="webserver-desc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                            <textarea id="webserver-desc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                            <label for="identification-tunerDesc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
+                            <textarea id="identification-tunerDesc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
                         </div>
                     </div>
 
                     <div class="panel-50">
                         <h3>Online map</h3>
                         <p>If your location information is filled,<br>you can add your tuner to a public list.</p>
-                        <p></p>
-                        <div class="form-group checkbox">
-                            <input type="checkbox" tabindex="0"  id="broadcast-tuner" aria-label="Broadcast to map">
-                            <label for="broadcast-tuner"><i class="fa-solid fa-toggle-off m-right-10"></i> Broadcast to map</label>
-                        </div><br>
-                        <div class="form-group">
-                            <label for="owner-contact">Owner contact:</label>
-                            <input class="input-text" type="text" placeholder="Your e-mail, discord..." name="owner-contact" id="owner-contact">
-                        </div>
-                        <div class="form-group">
-                            <label for="broadcast-address">Broadcast address (if using a proxy):</label>
-                            <input class="input-text" type="text" name="broadcast-address" id="broadcast-address">
-                        </div>
+
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Broadcast to map', id: 'identification-broadcastTuner'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: '', placeholder: 'Your e-mail or Discord...', label: 'Owner contact', id: 'identification-contact'}) %>
+                        <%- include('_components', {component: 'text', cssClass: '', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
         
                         <p>Check your tuner at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
                         <p class="text-small text-gray">By activating the <strong>Broadcast to map</strong> option,<br>you agree to the <a href="https://fmdx.org/projects/webserver.php#rules" target="_blank">Terms of Service</a>.</p>
@@ -566,15 +448,9 @@
                 <div class="panel-100">
                     <h3>Location</h3>
                     <p class="text-gray">Location info is useful for automatic identification of stations using RDS.</p>
-                    <div class="form-group">
-                        <label for="lat">Latitude:</label>
-                        <input class="input-text" type="text" name="lat" id="lat">
-                    </div>  
-                    
-                    <div class="form-group">
-                        <label for="lng">Longitude:</label>
-                        <input class="input-text" type="text" name="lng" id="lng">
-                    </div>
+
+                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
                     
                     <div id="map"></div>
                     <br>
@@ -587,46 +463,25 @@
                     <h3>FMLIST Integration</h3>
                     <p>FMLIST integration allows you to get potential DXes logged on the <a href="http://fmlist.org/fm_logmap.php?hours=900" target="_blank" class="text-bold color-4">FMLIST Visual Logbook</a>.<br>
                     Your server also needs to have a valid UUID, which is obtained by registering on maps in the <strong>Identification & Map</strong> tab.</p>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" tabindex="0"  id="fmlist-integration" aria-label="FMLIST integration">
-                        <label for="fmlist-integration"><i class="fa-solid fa-toggle-off m-right-10"></i> FMLIST integration</label>
-                    </div><br>
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'FMLIST integration', id: 'extras-fmlistIntegration'}) %><br>
+
                     <p>You can also fill in your OMID from FMLIST.org, if you want the logs to be saved to your account.</p>
-                    <div class="form-group">
-                        <label for="fmlist-omid">OMID</label>
-                        <input class="input-text w-100" type="text" name="fmlist-omid" id="fmlist-omid" maxlength="5">
-                    </div>
-
+                    <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '', label: 'OMID', id: 'extras-fmlistOmid'}) %>
                 </div>
-
                 <div class="panel-100 p-bottom-20">
                     <h3>Tunnel</h3>
                     <p>When you become a <a href="https://buymeacoffee.com/fmdx" target="_blank"><strong>FMDX.org supporter</strong></a>, you can host your webserver without the need of a public IP address.<br>
                     When you become a supporter, you can message the Founders on Discord for your login details.</p>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" tabindex="0" id="tunnel-enable" aria-label="Enable tunnel">
-                        <label for="tunnel-enable"><i class="fa-solid fa-toggle-off m-right-10"></i> Enable tunnel</label>
-                    </div><br>
-                    <div class="form-group">
-                        <label for="tunnel-subdomain">subdomain name</label>
-                        <input class="input-text w-150" type="text" name="tunnel-subdomain" id="tunnel-subdomain" maxlength="20">.fmtuner.org
-                    </div><br>
-                    <div class="form-group">
-                        <label for="tunnel-username">Username</label>
-                        <input class="input-text w-150" type="text" name="tunnel-username" id="tunnel-username">
-                    </div>
-                    <div class="form-group">
-                        <label for="tunnel-password">Token</label>
-                        <input class="input-text" style="width: 100%; max-width: 400px;" type="password" name="tunnel-token" id="tunnel-token" maxlength="36">
-                    </div><br>
+
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Enable tunnel', id: 'tunnel-enabled'}) %><br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org<br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Username', id: 'tunnel-username'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-250', password: true, placeholder: '', label: 'Token', id: 'tunnel-token'}) %>
+
                     <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" tabindex="0" id="tunnel-lowlatency" aria-label="Low latency mode">
-                        <label for="tunnel-lowlatency"><i class="fa-solid fa-toggle-off m-right-10"></i> Low latency mode</label>
-                    </div>
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Low latency mode', id: 'tunnel-lowLatencyMode'}) %><br>
                 </div>
             </div>
-
         </div>
     </div>
     </div>

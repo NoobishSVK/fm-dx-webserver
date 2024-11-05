@@ -215,10 +215,17 @@ label {
     margin-bottom: 0px !important;
   }
 
-  .settings-heading {
-    font-size: 32px;
-    padding-top: 20px;
+  h2.settings-heading {
+    font-size: 42px;
+    padding: 10px 0;
+    font-weight: 300;
+  }
+
+  h3.settings-heading {
+    font-size: 24px;
     text-transform: uppercase;
+    font-weight: 300;
+    margin-bottom: 5px;
   }
 
   #tuner-wireless {

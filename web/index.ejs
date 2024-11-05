@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FM-DX Webserver [<%= tunerName %>]</title>
+    <title><%= tunerName %> - FM-DX Webserver</title>
     <link href="css/entry.css" type="text/css" rel="stylesheet">
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
@@ -322,51 +322,38 @@
         <div class="modal-panel-content">
             <h1 class="top-25">Settings</h1>
             
-            <div class="form-group top-25">
-                <label for="themes"><i class="fa-solid fa-palette"></i> Theme</label>
-                <div class="dropdown" id="theme-selector">
-                    <input type="text" placeholder="Default" readonly tabindex="0">
-                    <ul class="options" tabindex="-1">
-                        <li class="option" tabindex="0" data-value="theme1">Default</li>
-                        <li class="option" tabindex="0" data-value="theme2">Cappuccino</li>
-                        <li class="option" tabindex="0" data-value="theme3">Nature</li>
-                        <li class="option" tabindex="0" data-value="theme4">Ocean</li>
-                        <li class="option" tabindex="0" data-value="theme5">Terminal</li>
-                        <li class="option" tabindex="0" data-value="theme6">Nightlife</li>
-                        <li class="option" tabindex="0" data-value="theme7">Blurple</li>
-                        <li class="option" tabindex="0" data-value="theme8">Construction</li>
-                        <li class="option" tabindex="0" data-value="theme9">AMOLED</li>
-                    </ul>
-                </div>
+            <div class="panel-full flex-center no-bg m-0">
+                <%- include('_components', { component: 'dropdown', id: 'theme-selector', inputId: 'theme-selector-input', label: 'Theme', cssClass: '', placeholder: 'Default', 
+                options: [
+                    { value: 'theme1', label: 'Default' },
+                    { value: 'theme2', label: 'Cappuccino' },
+                    { value: 'theme3', label: 'Nature' },
+                    { value: 'theme4', label: 'Ocean' },
+                    { value: 'theme5', label: 'Terminal' },
+                    { value: 'theme6', label: 'Nightlife' },
+                    { value: 'theme7', label: 'Blurple' },
+                    { value: 'theme8', label: 'Construction' },
+                    { value: 'theme9', label: 'Amoled' },
+                ]
+                }) %>
             </div>
             
             <% if (device !== 'sdr') { %>
-            <div class="form-group top-25">
-                <label for="signal"><i class="fa-solid fa-signal"></i> Signal units</label>
-                <div class="dropdown" id="signal-selector">
-                    <input type="text" placeholder="dBf" readonly tabindex="0">
-                    <ul class="options" tabindex="-1">
-                        <li class="option" tabindex="0" data-value="dbf">dBf</li>
-                        <li class="option" tabindex="0" data-value="dbuv">dBuV</li>
-                        <li class="option" tabindex="0" data-value="dbm">dBm</li>
-                    </ul>
-                </div>
-            </div><br>
+            <div class="panel-full flex-center no-bg m-0">
+                <%- include('_components', { component: 'dropdown', id: 'signal-selector', inputId: 'signal-selector-input', label: 'Signal units', cssClass: '', placeholder: 'dBf', 
+                options: [
+                    { value: 'dbf', label: 'dBf' },
+                    { value: 'dbuv', label: 'dBuV' },
+                    { value: 'dbm', label: 'dBm' },
+                ]
+                }) %>
+            </div>
             <% } %>
-            
-            <div class="form-group checkbox">
-                <input type="checkbox" tabindex="0"  id="extended-frequency-range" aria-label="Add decimals manually">
-                <label for="extended-frequency-range" class="tooltip" data-tooltip="Enabling this will allow you to enter the decimal point manually.<br>Useful for servers that use upconverters."><i class="fa-solid fa-toggle-off m-right-10"></i> Manual decimals</label>
-            </div>
-            <div class="form-group checkbox">
-                <input type="checkbox" tabindex="0" id="ps-underscores" aria-label="Add underscores to RDS PS">
-                <label for="ps-underscores" class="tooltip" data-tooltip="Enabling this option replaces spaces in RDS PS with underscores."><i class="fa-solid fa-toggle-off m-right-10"></i> RDS PS Underscores</label>
-            </div>
-            <div class="form-group checkbox">
-                <input type="checkbox" tabindex="0" id="imperial-units" aria-label="Imperial units">
-                <label for="imperial-units" class="tooltip" data-tooltip="Enabling this option will show miles in distances instead of kilometers."><i class="fa-solid fa-toggle-off m-right-10"></i> Imperial Units</label>
-            </div>
 
+            <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
+            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
+            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
+            
             <div class="form-group bottom-20 hide-desktop" style="float: none;">
                 <label for="users-online"><i class="fa-solid fa-user"></i> Users online</label>
                 <span class="users-online" name="users-online">0</span>
@@ -375,10 +362,10 @@
             <% if (isAdminAuthenticated) { %>
                 <p class="color-3">You are logged in as an adminstrator.</p>
                     <div class="admin-quick-dashboard">
-                        <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleAdminLock()" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
+                        <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleLock('#dashboard-lock-admin', 'wL1', 'wL0', 'Unlock Tuner (Admin)', 'Lock Tuner (Admin)');" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
                             <i class="fa-solid fa-lock"></i>
                         </div>
-                        <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="togglePasswordLock()" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
+                        <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
                             <i class="fa-solid fa-key"></i>
                         </div>
                         <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">

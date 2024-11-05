@@ -1,0 +1,74 @@
+<%
+switch (component) {
+    /**
+     * Text input & password input tag
+     * @param label Label text
+     * @param id Unique element ID
+     * @param password If true, the element will be rendered as a password instead of plain text input
+     * @param placeholder Placeholder text
+     * @param cssClass Custom CSS class if needed
+    */ 
+    case 'text': 
+%>
+    <div class="form-group">
+        <label for="<%= id %>"><%= label %></label>
+        <input class="input-text <%= cssClass %>"
+        type="<%= (typeof password !== 'undefined' && password == true) ? 'password' : 'text' %>"
+        placeholder="<%= typeof placeholder !== 'undefined' ? placeholder : '' %>"
+        name="<%= id %>"
+        id="<%= id %>">
+    </div>
+<%
+        break;
+
+    /**
+     * Checkbox (toggle button) tag
+     * @param label Label text
+     * @param id Unique element ID
+     * @param iconClass Additional CSS Class for the icon inside the button
+     * @param cssClass Custom CSS class if needed
+    */ 
+    case 'checkbox': 
+%>
+    <div class="form-group checkbox <%= cssClass %>">
+        <input type="checkbox" tabindex="0" id="<%= id %>" aria-label="<%= label %>">
+        <label for="<%= id %>"><i class="fa-solid fa-toggle-off m-right-10 <%= typeof iconClass !== 'undefined' ? iconClass : '' %>"></i> <%= label %></label>
+    </div>
+<%
+        break;
+
+    /**
+     * Dropdown menus
+     * @param inputId Unique ID for the hidden text input of the dropdown
+     * @param id Unique element ID
+     * @param iconClass Additional CSS Class for the icon next to the title (if you want to have one)
+     * @param placeholder Placeholder text
+     * @param cssClass Custom CSS class for the dropdown menu itself if needed
+    */ 
+    case 'dropdown': 
+%>
+    <div class="form-group">
+        <label for="<%= inputId %>"><i class="<%= typeof iconClass !== 'undefined' ? iconClass : '' %>"></i> <%= label %></label>
+        <div class="dropdown <%= cssClass %>" id="<%= id %>" style="margin-right: 0;">
+            <input type="text" placeholder="<%= placeholder %>" id="<%= inputId %>" readonly tabindex="0">
+            <ul class="options" tabindex="0">
+<%
+            options.forEach(function(option) { 
+%>
+                <li class="option" tabindex="0" data-value="<%= option.value %>"><%= option.label %></li>
+<%
+            }); 
+%>
+            </ul>
+        </div>
+    </div>
+<%
+        break;
+
+    default: 
+%>
+    <p>Unknown component: <%= component %></p>
+<%
+        break;
+}
+%>

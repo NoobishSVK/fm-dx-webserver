@@ -222,6 +222,10 @@
     user-select: none;
 }
 
+.clearfix {
+    clear: both;
+}
+
 @media only screen and (max-width: 960px) {
     .text-medium-big {
         font-size: 32px;

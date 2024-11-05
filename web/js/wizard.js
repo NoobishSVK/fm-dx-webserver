@@ -1,40 +1,9 @@
 $(document).ready(function() {
-    if($('.step:visible').index() == 0) {
-        $('.btn-prev').hide();
-    } 
-
-    $('.btn-next').click(function() {
-        var currentStep = $('.step:visible');
-        var nextStep = currentStep.next('.step');
-
-        if (nextStep.length !== 0) {
-            currentStep.hide();
-            nextStep.show();
-            updateProgressBar(nextStep);
-        } else {
-            submitData();
-        }
-
-        updateWizardContent();
-    });
-
-    $('.btn-prev').click(function() {
-        var currentStep = $('.step:visible');
-        var nextStep = currentStep.prev('.step');
-
-        if (nextStep.length !== 0) {
-            currentStep.hide();
-            nextStep.show();
-            updateProgressBar(nextStep);
-        } else {
-            alert('You have reached the beginning of the wizard.');
-        }
-
-        updateWizardContent();
-    });
+    $('.btn-prev').toggle($('.step:visible').index() !== 0);
+    $('.btn-next').click(() => navigateStep(true));
+    $('.btn-prev').click(() => navigateStep(false));    
 });
 
-// Function to update the progress bar buttons
 function updateProgressBar(currentStep) {
     var stepIndex = $('.step').index(currentStep) + 1;
     $('.btn-rounded-cube').removeClass('activated');
@@ -42,21 +11,24 @@ function updateProgressBar(currentStep) {
 }
 
 function updateWizardContent() {
-    if($('.step:visible').index() == 0) {
-        $('.btn-prev').hide();
-    } else {
-        $('.btn-prev').show();
-    }
+    var visibleStepIndex = $('.step:visible').index();
 
-    if($('.step:visible').index() == 3) {
-        setTimeout(function () {
-            map.invalidateSize();
-        }, 200);
-    }
+    $('.btn-prev').toggle(visibleStepIndex !== 0);
+    $('.btn-next').text(visibleStepIndex === 4 ? 'Save' : 'Next');
+
+    visibleStepIndex === 3 && mapReload();
+}
+
+function navigateStep(isNext) {
+    var currentStep = $('.step:visible');
+    var targetStep = isNext ? currentStep.next('.step') : currentStep.prev('.step');
     
-    if($('.step:visible').index() == 4) {
-        $('.btn-next').text('Save');
-    } else {
-        $('.btn-next').text('Next')
+    if (targetStep.length !== 0) {
+        currentStep.hide();
+        targetStep.show();
+        updateProgressBar(targetStep);
+    } else if (isNext) {
+        submitData();
     }
+    updateWizardContent();
 }
