@@ -349,13 +349,73 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../web'));
 app.use('/', endpoints);
 
+// Anti-spam function
+function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
+    const command = message.toString();
+    const now = Date.now();
+    if (endpointName === 'text') logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
+
+    // Initialize user command history if not present
+    if (!userCommandHistory[clientIp]) {
+        userCommandHistory[clientIp] = [];
+    }
+    
+    // Record the current timestamp for the user
+    userCommandHistory[clientIp].push(now);
+    
+    // Remove timestamps older than 20 ms from the history
+    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
+    
+    // Check if there are 8 or more commands in the last 20 ms
+    if (userCommandHistory[clientIp].length >= 8) {
+        logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
+        
+        // Add to banlist if not already banned
+        if (!serverConfig.webserver.banlist.includes(clientIp)) {
+            serverConfig.webserver.banlist.push(clientIp);
+            logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
+            console.log(serverConfig.webserver.banlist);
+            configSave();
+        }
+        
+        ws.close(1008, 'Bot-like behavior detected');
+        return command; // Return command value before closing connection
+    }
+
+    // Update the last message time for general spam detection
+    lastMessageTime = now;
+
+    // Initialize command history for rate-limiting checks
+    if (!userCommands[command]) {
+        userCommands[command] = [];
+    }
+
+    // Record the current timestamp for this command
+    userCommands[command].push(now);
+
+    // Remove timestamps older than 1 second
+    userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
+
+    // If command count exceeds limit, close connection
+    if (userCommands[command].length > lengthCommands) {
+        if (now - lastWarn.time > 1000) { // Check if 1 second has passed
+            logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}" in /${endpointName}. Connection will be terminated.`);
+            lastWarn.time = now; // Update the last warning time
+        }
+        ws.close(1008, 'Spamming detected');
+        return command; // Return command value before closing connection
+    }
+
+    return command; // Return command value for normal execution
+}
+
 /**
  * WEBSOCKET BLOCK
  */
 wss.on('connection', (ws, request) => {
   const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
   let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  const userCommandHistory = {}; 
+  const userCommandHistory = {};
   if (serverConfig.webserver.banlist?.includes(clientIp)) {
     ws.close(1008, 'Banned IP');
     return;
@@ -412,60 +472,11 @@ wss.on('connection', (ws, request) => {
 
   // Anti-spam tracking for each client
   const userCommands = {};
+  let lastWarn = { time: 0 };
 
   ws.on('message', (message) => {
-    const command = message.toString();
-    const now = Date.now();
-    logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
-  
-    // Initialize user command history if not present
-    if (!userCommandHistory[clientIp]) {
-      userCommandHistory[clientIp] = [];
-    }
-  
-    // Record the current timestamp for the user
-    userCommandHistory[clientIp].push(now);
-  
-    // Remove timestamps older than 20 ms from the history
-    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
-  
-    // Check if there are 8 or more commands in the last 20 ms
-    if (userCommandHistory[clientIp].length >= 8) {
-      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
-      
-      // Add to banlist if not already banned
-      if (!serverConfig.webserver.banlist.includes(clientIp)) {
-        serverConfig.webserver.banlist.push(clientIp);
-        logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
-        console.log(serverConfig.webserver.banlist);
-        configSave();
-      }
-      
-      ws.close(1008, 'Bot-like behavior detected');
-      return;
-    }
-  
-    // Update the last message time for general spam detection
-    lastMessageTime = now;
-  
-    // Initialize command history for rate-limiting checks
-    if (!userCommands[command]) {
-      userCommands[command] = [];
-    }
-  
-    // Record the current timestamp for this command
-    userCommands[command].push(now);
-  
-    // Remove timestamps older than 1 second
-    userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-  
-    // If command count exceeds limit, close connection
-    if (userCommands[command].length > 18) {
-      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
-      ws.close(1008, 'Spamming detected');
-      return;
-    }
-  
+    // Anti-spam
+    const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
 
     // Existing command processing logic
     if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
@@ -563,6 +574,11 @@ wss.on('connection', (ws, request) => {
 // CHAT WEBSOCKET BLOCK
 chatWss.on('connection', (ws, request) => {
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+  const userCommandHistory = {};
+  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    ws.close(1008, 'Banned IP');
+    return;
+  }
 
   // Send chat history to the newly connected client
   storage.chatHistory.forEach(function(message) {
@@ -577,36 +593,13 @@ chatWss.on('connection', (ws, request) => {
   };
   ws.send(JSON.stringify(ipMessage));
 
+  // Anti-spam tracking for each client
   const userCommands = {};
+  let lastWarn = { time: 0 };
 
   ws.on('message', function incoming(message) {
-
     // Anti-spam
-    const command = message.toString();
-    const now = Date.now();
-
-    // Update the last message time for general spam detection
-    lastMessageTime = now;
-  
-    // Initialize command history for rate-limiting checks
-    if (!userCommands[command]) {
-      userCommands[command] = [];
-    }
-  
-    // Record the current timestamp for this command
-    userCommands[command].push(now);
-  
-    // Remove timestamps older than 1 second
-    userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-  
-    // If command count exceeds limit, close connection
-    if (userCommands[command].length > 3) {
-      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}". Connection will be terminated.`);
-      ws.close(1008, 'Spamming detected');
-      return;
-    }
-
-
+    const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'chat');
 
     let messageData;
 
@@ -657,14 +650,34 @@ chatWss.on('connection', (ws, request) => {
   });
 });
 
-//additional web socket for using plugins
-pluginsWss.on('connection', (ws, request)  => { 
-    ws.on('message', message => {
+// Additional web socket for using plugins
+pluginsWss.on('connection', (ws, request) => { 
+    const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    const userCommandHistory = {};
+    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+      ws.close(1008, 'Banned IP');
+      return;
+    }
+    // Anti-spam tracking for each client
+    const userCommands = {};
+    let lastWarn = { time: 0 };
 
-        const messageData = JSON.parse(message);
+    ws.on('message', message => {
+        // Anti-spam
+        const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '10', 'data_plugins');
+
+        let messageData;
+
+        try {
+            messageData = JSON.parse(message); // Attempt to parse the JSON
+        } catch (error) {
+            // console.error("Failed to parse message:", error); // Log the error
+            return; // Exit if parsing fails
+        }
+
         const modifiedMessage = JSON.stringify(messageData);
 
-        //Broadcast the message to all other clients
+        // Broadcast the message to all other clients
         pluginsWss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(modifiedMessage); // Send the message to all clients
@@ -701,6 +714,23 @@ httpServer.on('upgrade', (request, socket, head) => {
     sessionMiddleware(request, {}, () => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
+
+            const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+            const userCommandHistory = {};
+            if (serverConfig.webserver.banlist?.includes(clientIp)) {
+              ws.close(1008, 'Banned IP');
+              return;
+            }
+
+            // Anti-spam tracking for each client
+            const userCommands = {};
+            let lastWarn = { time: 0 };
+
+            ws.on('message', function incoming(message) {
+              // Anti-spam
+              const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
+            });
+
       });
     });
   } else if (request.url === '/data_plugins') {
