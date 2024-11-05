@@ -353,7 +353,7 @@ app.use('/', endpoints);
 function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
     const command = message.toString();
     const now = Date.now();
-    logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
+    if (endpointName === 'text') logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
 
     // Initialize user command history if not present
     if (!userCommandHistory[clientIp]) {
