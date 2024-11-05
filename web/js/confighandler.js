@@ -38,7 +38,6 @@ function fetchConfig() {
 
 function populateFields(data, prefix = "") {
   $.each(data, (key, value) => {
-
     if (key === "presets" && Array.isArray(value)) {
       value.forEach((item, index) => {
         const presetId = `${prefix}${prefix ? "-" : ""}${key}-${index + 1}`;
@@ -81,6 +80,16 @@ function populateFields(data, prefix = "") {
     } else {
       $element.val(value);
     }
+    
+    if (key === "plugins" && Array.isArray(value)) {
+      const $options = $element.find('option');
+      $options.each(function() {
+        const dataName = $(this).data('name');
+        if (value.includes(dataName)) {
+          $(this).prop('selected', true);
+        }
+      });
+    }
   });
 }
 
@@ -107,8 +116,20 @@ function updateConfigData(data, prefix = "") {
     if (key === "banlist") {
       const $textarea = $(`#${prefix}${prefix ? "-" : ""}${key}`);
       if ($textarea.length && $textarea.is("textarea")) {
-        data[key] = $textarea.val().split("\n").filter(line => line.trim() !== ""); // Split lines into an array and filter out empty lines
+        data[key] = $textarea.val().split("\n").filter(line => line.trim() !== "");
       }
+      return;
+    }
+
+    if (key === "plugins") {
+      data[key] = [];
+      const $selectedOptions = $element.find('option:selected');
+      $selectedOptions.each(function() {
+        const dataName = $(this).data('name');
+        if (dataName) {
+          data[key].push(dataName);
+        }
+      });
       return;
     }
 

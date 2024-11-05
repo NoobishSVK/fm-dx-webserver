@@ -38,7 +38,10 @@ const logMessage = (type, messages, verbose = false) => {
         if (logs.length > maxConsoleLogLines) logs.shift();
         console.log(logMessage);
     }
-    appendLogToBuffer(logMessage);
+
+    if(type !== 'FFMPEG') {
+        appendLogToBuffer(logMessage);
+    }
 };
 
 const logDebug = (...messages) => logMessage('DEBUG', messages, verboseMode);
