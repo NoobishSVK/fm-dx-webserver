@@ -28,7 +28,7 @@ function navigateStep(isNext) {
         targetStep.show();
         updateProgressBar(targetStep);
     } else if (isNext) {
-        submitData();
+        submitConfig();
     }
     updateWizardContent();
 }
