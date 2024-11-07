@@ -18,8 +18,10 @@ const { allPluginConfigs } = require('./plugins');
 
 // Endpoints
 router.get('/', (req, res) => {
-    if(serverConfig.webserver.banlist.includes(req.connection.remoteAddress || req.headers['x-forwarded-for'])) {
+    let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    if(serverConfig.webserver.banlist.includes(requestIp)) {
         res.render('403');
+        logInfo(`Web client (${requestIp}) is banned`);
         return;
     }
 
