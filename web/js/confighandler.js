@@ -6,7 +6,7 @@ $(document).ready(function() {
 
 function submitConfig() {
   updateConfigData(configData);
-  if (!configData.password || !configData.password.adminPass) {
+  if ($("#password-adminPass").val().length < 1) {
     alert('You need to fill in the admin password before continuing further.');
     return;
   }
