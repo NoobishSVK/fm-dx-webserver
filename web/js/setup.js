@@ -187,5 +187,5 @@ async function loadConsoleLogs() {
     });
     resolve();
   });
-  $("#console-output").scrollTop($("#console-output")[0].scrollHeight);
+  $("#console-output").length ? $("#console-output").scrollTop($("#console-output")[0].scrollHeight) : null;
 }

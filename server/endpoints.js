@@ -222,12 +222,15 @@ router.post('/saveData', (req, res) => {
 });
 
 router.get('/getData', (req, res) => {  
+    if (configExists() === false) {
+        res.json(serverConfig);
+    }
+    
     if(req.session.isAdminAuthenticated) {
         // Check if the file exists
         fs.access(configPath, fs.constants.F_OK, (err) => {
             if (err) {
-                // File does not exist
-                res.status(404).send('Data not found');
+                console.log(err);
             } else {
                 // File exists, send it as the response
                 res.sendFile(path.join(__dirname, '../' + configName + '.json'));

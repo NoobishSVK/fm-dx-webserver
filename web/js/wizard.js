@@ -1,7 +1,7 @@
 $(document).ready(function() {
     $('.btn-prev').toggle($('.step:visible').index() !== 0);
     $('.btn-next').click(() => navigateStep(true));
-    $('.btn-prev').click(() => navigateStep(false));    
+    $('.btn-prev').click(() => navigateStep(false));  
 });
 
 function updateProgressBar(currentStep) {
