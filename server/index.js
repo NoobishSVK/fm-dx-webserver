@@ -229,7 +229,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 function connectToXdrd() {
   const { xdrd } = serverConfig;
 
-  if (xdrd.wirelessConnection) {
+  if (xdrd.wirelessConnection && configExists()) {
     client.connect(xdrd.xdrdPort, xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
       

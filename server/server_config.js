@@ -21,7 +21,7 @@ let serverConfig = {
     chatEnabled: true
   },
   xdrd: {
-    wirelessConnection: "",
+    wirelessConnection: true,
     comPort: "",
     xdrdIp: "127.0.0.1",
     xdrdPort: 7373,
