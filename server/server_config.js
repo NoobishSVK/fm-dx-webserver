@@ -18,7 +18,19 @@ let serverConfig = {
     webserverIp: "0.0.0.0",
     webserverPort: 8080,
     banlist: [],
-    chatEnabled: true
+    chatEnabled: true,
+    tuningLimit: false,
+    tuningLowerLimit: "100",
+    tuningUpperLimit: "108",
+    presets: [
+      "87.5",
+      "87.5",
+      "87.5",
+      "87.5"
+    ],
+    defaultTheme: "theme1",
+    bgImage: "",
+    rdsMode: false
   },
   xdrd: {
     wirelessConnection: true,
@@ -30,20 +42,42 @@ let serverConfig = {
   audio: {
     audioDevice: "Microphone (High Definition Audio Device)",
     audioChannels: 2,
-    audioBitrate: "128k"
+    audioBitrate: "128k",
+    softwareMode: false,
+    startupVolume: "0.95"
   },
   identification: {
     token: null,
     tunerName: "",
     tunerDesc: "",
-    lat: "0",
-    lon: "0",
+    lat: "",
+    lon: "",
     broadcastTuner: false,
     proxyIp: "",
+    contact: null,
   },
   password: {
     tunePass: "",
     adminPass: ""
+  },
+  antennas: {
+    enabled: false,
+    ant1: {
+      enabled: true,
+      name: "Ant A"
+    },
+    ant2: {
+      enabled: true,
+      name: "Ant B"
+    },
+    ant3: {
+      enabled: false,
+      name: "Ant C"
+    },
+    ant4: {
+      enabled: false,
+      name: "Ant D"
+    }
   },
   extras: {
     fmlistIntegration: true,
@@ -64,7 +98,8 @@ let serverConfig = {
   publicTuner: true,
   lockToAdmin: false,
   autoShutdown: false,
-  enableDefaultFreq: false
+  enableDefaultFreq: false,
+  defaultFreq: "87.5"
 };
 
 function deepMerge(target, source)
