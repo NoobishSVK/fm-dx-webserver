@@ -3,30 +3,51 @@ const path = require('path');
 const consoleCmd = require('./console');
 const { serverConfig } = require('./server_config');
 
+let isCopyingFilesInsteadOfJunction = true;
+let showLinkProgress = false;
+
 // Function to read all .js files in a directory
 function readJSFiles(dir) {
     const files = fs.readdirSync(dir);
     return files.filter(file => file.endsWith('.js'));
 }
 
+// Delete "plugins" link if it exists (will be recreated)
+const pluginsPath = path.join(__dirname, '../web/js/plugins');
+const relativePluginsPath = path.relative(__dirname, pluginsPath);
+
+if (fs.existsSync(pluginsPath)) {
+    const stats = fs.lstatSync(pluginsPath);
+    if (stats.isSymbolicLink() || stats.isDirectory()) {
+        // Remove if junction, symlink, or directory
+        fs.rmdirSync(pluginsPath, { recursive: true });
+    } else {
+        // Unlink if hard link
+        fs.unlinkSync(pluginsPath);
+    }
+} else {
+    consoleCmd.logInfo(`Creating link: '${relativePluginsPath}'`);
+}
+
 // Function to parse plugin config from a file
+let fallbackJunction = false;
+let linkMethod;
 function parsePluginConfig(filePath) {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const pluginConfig = {};
 
-    // Assuming pluginConfig is a JavaScript object defined in each .js file
     try {
         const pluginExports = require(filePath);
         Object.assign(pluginConfig, pluginExports.pluginConfig);
 
-        // Check if pluginConfig has frontEndPath defined
         if (pluginConfig.frontEndPath) {
             const sourcePath = path.join(path.dirname(filePath), pluginConfig.frontEndPath);
             const destinationDir = path.join(__dirname, '../web/js/plugins', path.dirname(pluginConfig.frontEndPath));
 
             // Check if the source path exists
             if (!fs.existsSync(sourcePath)) {
-                console.error(`Error: source path ${sourcePath} does not exist.`);
+                const relativeSourcePath = path.relative(__dirname, sourcePath);
+                consoleCmd.logError(`Source path ${relativeSourcePath} does not exist.`);
                 return pluginConfig;
             }
 
@@ -37,26 +58,130 @@ function parsePluginConfig(filePath) {
 
             const destinationFile = path.join(destinationDir, path.basename(sourcePath));
 
-            // Platform-specific handling for symlinks/junctions
-            if (process.platform !== 'win32') {
-                // On Linux, create a symlink
+            // Platform-specific handling for symlinks/hard links
+            if (process.platform === 'win32') {
+                // Check if the "plugins" junction exists and remove it if necessary
+                const pluginsJunctionPath = path.join(__dirname, '../web/js/plugins');
+                if (fs.existsSync(pluginsJunctionPath)) {
+                    try {
+                        const stats = fs.lstatSync(pluginsJunctionPath);
+
+                        if (stats.isSymbolicLink() || stats.isDirectory()) {
+                            const linkTarget = fs.readlinkSync(pluginsJunctionPath);
+                            if (linkTarget && fs.existsSync(linkTarget) && fs.lstatSync(linkTarget).isDirectory()) {
+                                // Remove junction
+                                fs.unlinkSync(pluginsJunctionPath);
+                                const relativeJunctionPath = path.relative(__dirname, pluginsJunctionPath);
+                                if (!fallbackJunction) consoleCmd.logInfo(`Junction removed: ${relativeJunctionPath}`);
+
+                                // Create destination directory now so first plugin hard link can be created
+                                if (!fs.existsSync(destinationDir)) {
+                                    fs.mkdirSync(destinationDir, { recursive: true }); // Create directory recursively
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        if (err.code !== 'EINVAL') {
+                            consoleCmd.logError(`Error checking or removing junction at ${pluginsJunctionPath}: ${err.message}`);
+                        }
+                    }
+                }
+
+                // Attempt to create hard link, fallback to symlink, and then junction if necessary
+                try {
+                    //throw new Error('Dummy error');
+                    fs.linkSync(sourcePath, destinationFile); // Create hard link
+                    const relativeSourcePath = path.relative(__dirname, sourcePath);
+                    const relativeDestinationPath = path.relative(__dirname, destinationFile);
+
+                    if (showLinkProgress) { consoleCmd.logInfo(`Hard link created: '${relativeDestinationPath}'`); }
+                    linkMethod = "Hard link";
+                    setTimeout(() => {
+                        consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);
+                    }, 500);
+                } catch (err) {
+                    if (err.code === 'EEXIST') {
+                        const relativeDestinationPath = path.relative(__dirname, destinationFile);
+
+                        if (showLinkProgress) { consoleCmd.logInfo(`Hard link exists: ${relativeDestinationPath}`); }
+                        setTimeout(() => {
+                            consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);
+                        }, 500);
+                    } else {
+                        // Fallback to symlink if hard link creation fails
+                        try {
+                            if (fs.existsSync(destinationFile)) {
+                                fs.unlinkSync(destinationFile); // Remove existing symlink
+                            }
+                            fs.symlinkSync(sourcePath, destinationFile); // Create symbolic link
+                            const relativeDestinationPath = path.relative(__dirname, destinationFile);
+
+                            if (showLinkProgress) { consoleCmd.logInfo(`Symlink created: '${relativeDestinationPath}'`); }
+                            linkMethod = "Symlink";
+                            setTimeout(() => {
+                                consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);
+                            }, 500);
+                        } catch (err) {
+                            if (err.code !== 'EPERM') {
+                                consoleCmd.logError(`Error creating symlink: ${destinationFile}: ${err.message}`);
+                            }
+                            // If symlink creation fails, attempt to copy files, or create a junction instead
+                            const pluginsDir = path.join(__dirname, '../plugins');
+                            const destinationPluginsDir = path.join(__dirname, '../web/js/plugins');
+
+                            try {
+                              if (isCopyingFilesInsteadOfJunction) {
+                                  const destinationFile = path.join(destinationDir, path.basename(sourcePath));
+                                  fs.copyFileSync(sourcePath, destinationFile);
+                                  const relativeSourcePath = path.relative(__dirname, sourcePath);
+                                  const relativeDestinationPath = path.relative(__dirname, destinationFile);
+
+                                  if (showLinkProgress) { consoleCmd.logInfo(`File copied to: '${relativeDestinationPath}'`); }
+                                  linkMethod = "Files copied";
+                              } else {
+                                    if (fs.existsSync(destinationPluginsDir)) {
+                                        fs.rmSync(destinationPluginsDir, { recursive: true });
+                                    }
+                                    fs.symlinkSync(pluginsDir, destinationPluginsDir, 'junction');
+                                    const relativeJunctionPath = path.relative(__dirname, destinationFile);
+
+                                    if (showLinkProgress) { consoleCmd.logInfo(`Junction created: ${relativeJunctionPath}`); }
+                                    linkMethod = "Junction link";
+                                    setTimeout(function() {
+                                        consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
+                                    }, 500)
+                                    fallbackJunction = true;
+                                }
+                            } catch (err) {
+                                consoleCmd.logError(`Error at: ${destinationPluginsDir}: ${err.message}`);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // If not Windows, create a symlink
                 try {
                     if (fs.existsSync(destinationFile)) {
-                        fs.unlinkSync(destinationFile); // Remove existing file/symlink
+                        fs.unlinkSync(destinationFile); // Remove existing symlink
+                    } else {
+                        const relativeSourcePath = path.relative(__dirname, sourcePath);
+                        const relativeDestinationPath = path.relative(__dirname, destinationFile);
+
+                        if (showLinkProgress) { consoleCmd.logInfo(`Symlink created: '${relativeDestinationPath}'`); }
                     }
-                    fs.symlinkSync(sourcePath, destinationFile);
-                    setTimeout(function() {
-                        consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
-                    }, 500)
+                    fs.symlinkSync(sourcePath, destinationFile); // Create symbolic link
+                    setTimeout(() => {
+                        consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);
+                    }, 500);
                 } catch (err) {
-                    console.error(`Error creating symlink at ${destinationFile}: ${err.message}`);
+                    consoleCmd.logError(`Error creating symlink at ${destinationFile}: ${err.message}`);
                 }
             }
         } else {
-            console.error(`Error: frontEndPath is not defined in ${filePath}`);
+            consoleCmd.logError(`Error: frontEndPath is not defined in ${filePath}`);
         }
     } catch (err) {
-        console.error(`Error parsing plugin config from ${filePath}: ${err.message}`);
+        consoleCmd.logError(`Error parsing plugin config from ${filePath}: ${err.message}`);
     }
 
     return pluginConfig;
@@ -85,30 +210,15 @@ if (!fs.existsSync(webJsPluginsDir)) {
     fs.mkdirSync(webJsPluginsDir, { recursive: true });
 }
 
-// Main function to create symlinks/junctions for plugins
-function createLinks() {
-    const pluginsDir = path.join(__dirname, '../plugins');
-    const destinationPluginsDir = path.join(__dirname, '../web/js/plugins');
-
-    if (process.platform === 'win32') {
-        // On Windows, create a junction
-        try {
-            if (fs.existsSync(destinationPluginsDir)) {
-                fs.rmSync(destinationPluginsDir, { recursive: true });
-            }
-            fs.symlinkSync(pluginsDir, destinationPluginsDir, 'junction');
-            setTimeout(function() {
-                //consoleCmd.logInfo(`Plugin ${pluginConfig.name} ${pluginConfig.version} initialized successfully.`);  
-            }, 500)
-        } catch (err) {
-            console.error(`Error creating junction at ${destinationPluginsDir}: ${err.message}`);
-        }
-    }
-}
-
-// Usage example
+// Run the script
 const allPluginConfigs = collectPluginConfigs();
-createLinks();
+if (linkMethod) {
+  consoleCmd.logInfo(`Plugins initialized successfully using: ${linkMethod}.`);
+}
+if (fallbackJunction) {
+  consoleCmd.logInfo(`Junction created: '..\\web\\js\\plugins'`);
+  consoleCmd.logWarn(`Warning: All files in 'plugins' folder are exposed when using junction link!`);
+}
 
 module.exports = {
     allPluginConfigs
