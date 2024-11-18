@@ -20,7 +20,7 @@ if (fs.existsSync(pluginsPath)) {
     const stats = fs.lstatSync(pluginsPath);
     if (stats.isSymbolicLink() || stats.isDirectory()) {
         // Remove if junction, symlink, or directory
-        fs.rmdirSync(pluginsPath, { recursive: true });
+        fs.rmSync(pluginsPath, { recursive: true });
     } else {
         // Unlink if hard link
         fs.unlinkSync(pluginsPath);
