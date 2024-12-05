@@ -325,6 +325,10 @@ function handleData(wss, receivedData, rdsWss) {
         initialData.bw = receivedLine.substring(1);
         dataToSend.bw = receivedLine.substring(1);
         break;
+      case receivedLine.startsWith('U'): // Spectral
+        initialData.sd = receivedLine.substring(1);
+        dataToSend.sd = receivedLine.substring(1);
+        break;
       case receivedLine.startsWith('Sm'):
         processSignal(receivedLine, false, false);
         break;
