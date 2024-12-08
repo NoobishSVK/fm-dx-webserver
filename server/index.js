@@ -479,7 +479,8 @@ wss.on('connection', (ws, request) => {
     const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
 
     // Existing command processing logic
-    if ((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) {
+    if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
+       ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch == "false")) {
         logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
         return;
     }
