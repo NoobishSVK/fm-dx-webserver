@@ -1,4 +1,5 @@
 /* Libraries / Imports */
+const dns = require('dns');
 const fs = require('fs');
 const https = require('https');
 const koffi = require('koffi');
@@ -7,8 +8,11 @@ const os = require('os');
 const platform = os.platform();
 const cpuArchitecture = os.arch();
 const { configName, serverConfig, configUpdate, configSave } = require('./server_config');
+const { logInfo, logError, logWarn } = require('./console');
 let unicode_type;
 let shared_Library;
+let internetConnectionOn = false;
+let internetConnectionOff = false;
 
 if (platform === 'win32') {
   unicode_type = 'int16_t';
@@ -397,28 +401,59 @@ function handleData(wss, receivedData, rdsWss) {
         break;
     }
   }
+  
+  // Function to check internet connectivity
+  function isOnline(callback) {
+    dns.lookup('fmdx.org', (err) => {
+        if (err) {
+            callback(false); // No internet connection
+        } else {
+            callback(true); // Internet connection is available
+        }
+    });
+  }
 
-  // Get the received TX info
-  fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps)
-  .then((currentTx) => {
-      if (currentTx && currentTx.station !== undefined) {
-          dataToSend.txInfo = {
-              tx: currentTx.station,
-              pol: currentTx.pol,
-              erp: currentTx.erp,
-              city: currentTx.city,
-              itu: currentTx.itu,
-              dist: currentTx.distance,
-              azi: currentTx.azimuth,
-              id: currentTx.id,
-              pi: currentTx.pi,
-              reg: currentTx.reg
-          };
-      }
-  })
-  .catch((error) => {
-      logError("Error fetching Tx info:", error);
+  // Example usage in your function
+  isOnline((online) => {
+    if (online) {
+        // Get the received TX info
+        fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps)
+            .then((currentTx) => {
+                if (currentTx && currentTx.station !== undefined) {
+                    dataToSend.txInfo = {
+                        tx: currentTx.station,
+                        pol: currentTx.pol,
+                        erp: currentTx.erp,
+                        city: currentTx.city,
+                        itu: currentTx.itu,
+                        dist: currentTx.distance,
+                        azi: currentTx.azimuth,
+                        id: currentTx.id,
+                        pi: currentTx.pi,
+                        reg: currentTx.reg
+                    };
+                }
+            })
+            .catch((error) => {
+                logError("Error fetching Tx info:", error);
+            });
+
+        // Log only if the connection is restored and not already logged
+        if (!internetConnectionOn) {
+            logInfo("Internet connection is available.");
+            internetConnectionOn = true; // Set to prevent further logs
+            internetConnectionOff = false; // Reset the disconnection flag
+        }
+    } else {
+        // Log only if the connection is lost and not already logged
+        if (!internetConnectionOff) {
+            logError("No internet connection.");
+            internetConnectionOff = true; // Set to prevent further logs
+            internetConnectionOn = false; // Reset the connection flag
+        }
+    }
   });
+
 
     // Send the updated data to the client
     const dataToSendJSON = JSON.stringify(dataToSend);
