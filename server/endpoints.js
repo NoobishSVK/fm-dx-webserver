@@ -19,7 +19,8 @@ const { allPluginConfigs } = require('./plugins');
 // Endpoints
 router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const normalizedIp = requestIp.replace(/^::ffff:/, '');
+
+    const normalizedIp = requestIp?.replace(/^::ffff:/, '');
     const isBanned = serverConfig.webserver.banlist.some(banEntry => banEntry[0] === normalizedIp);
 
     if (isBanned) {
