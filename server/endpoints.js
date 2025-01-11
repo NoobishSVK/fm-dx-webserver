@@ -272,22 +272,12 @@ router.post('/saveData', (req, res) => {
         if(configExists() === false) {
             firstSetup = true;
         }
-        
-        /* TODO: Refactor to server_config.js */
-        // Save data to a JSON file
-        fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
-            if (err) {
-                logError(err);
-                res.status(500).send('Internal Server Error');
-            } else {
-                logInfo('Server config changed successfully.');
-                if(firstSetup === true) {
-                    res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
-                } else {
-                    res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
-                }
-            }
-        });
+        logInfo('Server config changed successfully.');
+        if(firstSetup === true) {
+            res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
+        } else {
+            res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
+        }
     }
 });
 

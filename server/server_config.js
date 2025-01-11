@@ -100,22 +100,40 @@ let serverConfig = {
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
+  TestTest: "tesst"
 };
 
-function deepMerge(target, source) {
+// Function to add missing fields without overwriting existing values
+function addMissingFields(target, source) {
   Object.keys(source).forEach(function(key) {
-    if (typeof source[key] === 'object' && source[key] !== null) {
-      if (!target[key]) target[key] = {};  // Create missing object
-      deepMerge(target[key], source[key]); // Recursively merge
+    if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (!target[key]) {
+        target[key] = {}; // Create missing object
+      }
+      addMissingFields(target[key], source[key]); // Recursively add missing fields
     } else {
       if (target[key] === undefined) {
-        target[key] = source[key]; // Add missing fields
+        target[key] = source[key]; // Add missing fields only
       }
     }
   });
-  configSave();
 }
 
+// Function to merge new configuration, overwriting existing values
+function deepMerge(target, source) {
+  Object.keys(source).forEach(function(key) {
+    if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (!target[key] || typeof target[key] !== 'object') {
+        target[key] = {}; // Ensure target[key] is an object before merging
+      }
+      deepMerge(target[key], source[key]); // Recursively merge objects
+    } else {
+      target[key] = source[key]; // Overwrite or add the value
+    }
+  });
+}
+
+// Function to update the configuration at runtime
 function configUpdate(newConfig) {
   if (newConfig.webserver && (newConfig.webserver.banlist !== undefined || newConfig.plugins !== undefined)) {
     serverConfig.webserver.banlist = newConfig.webserver.banlist;
@@ -123,9 +141,11 @@ function configUpdate(newConfig) {
     delete newConfig.webserver.banlist;
   }
   
-  deepMerge(serverConfig, newConfig);
+  deepMerge(serverConfig, newConfig); // Overwrite with newConfig values
+  configSave();
 }
 
+// Function to save the configuration to the file system
 function configSave() {
   try {
     fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
@@ -135,20 +155,24 @@ function configSave() {
   }
 }
 
+// Function to check if the configuration file exists
 function configExists() {
   return fs.existsSync(configPath);
 }
 
+// On startup, check for missing fields and add them if necessary
 if (configExists()) {
   const configFileContents = fs.readFileSync(configPath, 'utf8');
   try {
     const configFile = JSON.parse(configFileContents);
-    deepMerge(configFile, serverConfig);
-    serverConfig = configFile;
+    addMissingFields(configFile, serverConfig); // Add only missing fields from serverConfig
+    serverConfig = configFile; // Use the updated configFile as the new serverConfig
+    configSave(); // Save the merged config back to the file
   } catch (err) {
     logError('Error parsing config file:', err);
   }
 }
+
 
 module.exports = {
     configName, serverConfig, configUpdate, configSave, configExists, configPath
