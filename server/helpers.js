@@ -57,7 +57,7 @@ function authenticateWithXdrd(client, salt, password) {
 }
 
 function handleConnect(clientIp, currentUsers, ws) {
-  http.get(`http://ip-api.com/json/${clientIp}/`, (response) => {
+  http.get(`http://ip-api.com/json/${clientIp}`, (response) => {
     let data = '';
 
     response.on('data', (chunk) => {
