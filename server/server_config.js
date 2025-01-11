@@ -113,6 +113,7 @@ function deepMerge(target, source) {
       }
     }
   });
+  configSave();
 }
 
 function configUpdate(newConfig) {
@@ -144,7 +145,6 @@ if (configExists()) {
     const configFile = JSON.parse(configFileContents);
     deepMerge(configFile, serverConfig);
     serverConfig = configFile;
-    configSave();
   } catch (err) {
     logError('Error parsing config file:', err);
   }
