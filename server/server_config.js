@@ -8,7 +8,7 @@ let configName = 'config';
 const index = process.argv.indexOf('--config');
 if (index !== -1 && index + 1 < process.argv.length) {
   configName = process.argv[index + 1];
-  logInfo('Loading with a custom config file:', configName + '.json')
+  logInfo('Loading with a custom config file:', configName + '.json');
 }
 
 const configPath = path.join(__dirname, '../' + configName + '.json');
@@ -99,16 +99,19 @@ let serverConfig = {
   lockToAdmin: false,
   autoShutdown: false,
   enableDefaultFreq: false,
-  defaultFreq: "87.5"
+  defaultFreq: "87.5",
+  testThing: "yes it works"
 };
 
-function deepMerge(target, source)
-{
+function deepMerge(target, source) {
   Object.keys(source).forEach(function(key) {
-    if (typeof target[key] === 'object' && target[key] !== null) {
-      deepMerge(target[key], source[key]);
+    if (typeof source[key] === 'object' && source[key] !== null) {
+      if (!target[key]) target[key] = {};  // Create missing object
+      deepMerge(target[key], source[key]); // Recursively merge
     } else {
-      target[key] = source[key];
+      if (target[key] === undefined) {
+        target[key] = source[key]; // Add missing fields
+      }
     }
   });
 }
@@ -124,7 +127,6 @@ function configUpdate(newConfig) {
   deepMerge(serverConfig, newConfig);
 }
 
-
 function configSave() {
   fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
     if (err) {
@@ -139,9 +141,16 @@ function configExists() {
   return fs.existsSync(configPath);
 }
 
-if (fs.existsSync(configPath)) {
+if (configExists()) {
   const configFileContents = fs.readFileSync(configPath, 'utf8');
-  serverConfig = JSON.parse(configFileContents);
+  try {
+    const configFile = JSON.parse(configFileContents);
+    deepMerge(configFile, serverConfig); 
+    serverConfig = configFile;
+    configSave();
+  } catch (err) {
+    logError('Error parsing config file:', err);
+  }
 }
 
 module.exports = {

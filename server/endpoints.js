@@ -19,7 +19,10 @@ const { allPluginConfigs } = require('./plugins');
 // Endpoints
 router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    if(serverConfig.webserver.banlist.includes(requestIp)) {
+    const normalizedIp = requestIp.replace(/^::ffff:/, '');
+    const isBanned = serverConfig.webserver.banlist.some(banEntry => banEntry[0] === normalizedIp);
+
+    if (isBanned) {
         res.render('403');
         logInfo(`Web client (${requestIp}) is banned`);
         return;
@@ -164,7 +167,12 @@ router.get('/rdsspy', (req, res) => {
 
 router.get('/api', (req, res) => {
     const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, ...dataToSend } = dataHandler.dataToSend;
-    res.json(dataToSend);
+    res.json({
+        ...dataToSend,
+        txInfo: txInfo,
+        ps_errors: ps_errors,
+        ant: ant
+    });
 });
 
 
@@ -212,15 +220,46 @@ router.get('/kick', (req, res) => {
 });
 
 router.get('/addToBanlist', (req, res) => {
-    const ipAddress = req.query.ip; // Extract the IP address parameter from the query string
-    // Terminate the WebSocket connection for the specified IP address
-    if(req.session.isAdminAuthenticated) {
-        helpers.kickClient(ipAddress);
+    const ipAddress = req.query.ip;
+    const location = 'Unknown';
+    const date = Date.now();
+    const reason = req.query.reason;
+
+    userBanData = [ipAddress, location, date, reason];
+
+    if (typeof serverConfig.webserver.banlist !== 'object') {
+        serverConfig.webserver.banlist = [];
     }
-    setTimeout(() => {
-        res.redirect('/setup');
-    }, 500);
+
+    if (req.session.isAdminAuthenticated) {
+        serverConfig.webserver.banlist.push(userBanData);
+        configSave();
+        res.json({ success: true, message: 'IP address added to banlist.' });
+        helpers.kickClient(ipAddress);
+    } else {
+        res.status(403).json({ success: false, message: 'Unauthorized access.' });
+    }
 });
+
+router.get('/removeFromBanlist', (req, res) => {
+    const ipAddress = req.query.ip;
+
+    if (typeof serverConfig.webserver.banlist !== 'object') {
+        serverConfig.webserver.banlist = [];
+    }
+
+    const banIndex = serverConfig.webserver.banlist.findIndex(ban => ban[0] === ipAddress);
+
+    if (banIndex === -1) {
+        return res.status(404).json({ success: false, message: 'IP address not found in banlist.' });
+    }
+
+    serverConfig.webserver.banlist.splice(banIndex, 1);
+    configSave();
+
+    res.json({ success: true, message: 'IP address removed from banlist.' });
+});
+
 
 router.post('/saveData', (req, res) => {
     const data = req.body;
@@ -290,6 +329,7 @@ router.get('/static_data', (req, res) => {
         rdsMode: serverConfig.webserver.rdsMode || false,
         tunerName: serverConfig.identification.tunerName || '',
         tunerDesc: serverConfig.identification.tunerDesc || '',
+        ant: serverConfig.antennas || {}
     });
 });
 

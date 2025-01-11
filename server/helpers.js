@@ -181,12 +181,15 @@ function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userC
   if (userCommandHistory[clientIp].length >= 8) {
       consoleCmd.logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
       
-      // Add to banlist if not already banned
-      if (!serverConfig.webserver.banlist.includes(clientIp)) {
-          serverConfig.webserver.banlist.push(clientIp);
-          consoleCmd.logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
-          configSave();
-      }
+    // Check if the normalized IP is already in the banlist
+    const isAlreadyBanned = serverConfig.webserver.banlist.some(banEntry => banEntry[0] === normalizedClientIp);
+
+    if (!isAlreadyBanned) {
+        // Add the normalized IP to the banlist
+        serverConfig.webserver.banlist.push([normalizedClientIp, 'Unknown', Date.now(), '[Auto ban] Spam']);
+        consoleCmd.logInfo(`User \x1b[90m${normalizedClientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
+        configSave();
+    }
       
       ws.close(1008, 'Bot-like behavior detected');
       return command; // Return command value before closing connection

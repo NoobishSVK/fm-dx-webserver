@@ -210,6 +210,10 @@
     background-color: var(--color-2) !important;
 }
 
+table .input-text {
+    background-color: var(--color-1) !important;
+}
+
 .pointer {
     cursor: pointer;
 }

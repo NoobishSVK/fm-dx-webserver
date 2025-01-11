@@ -9,6 +9,7 @@ $(document).ready(function() {
   
   showPanelFromHash();
   initNav();
+  initBanlist();
 });
 
 /**
@@ -83,6 +84,54 @@ function initNav() {
         $(this).find('a').click();
     }
   });
+}
+
+function initBanlist() {
+  $('.banlist-add').on('click', function(e) {
+    e.preventDefault();
+
+    const ipAddress = $('#banlist-add-ip').val();
+    const reason = $('#banlist-add-reason').val();
+
+    $.ajax({
+        url: '/addToBanlist',
+        method: 'GET',
+        data: { ip: ipAddress, reason: reason },
+        success: function(response) {
+            // Refresh the page if the request was successful
+            if (response.success) {
+                location.reload();
+            } else {
+                console.error('Failed to add to banlist');
+            }
+        },
+        error: function() {
+            console.error('Error occurred during the request');
+        }
+    });
+});
+
+$('.banlist-remove').on('click', function(e) {
+  e.preventDefault();
+
+  const ipAddress = $(this).closest('tr').find('td').first().text();
+
+  $.ajax({
+      url: '/removeFromBanlist',
+      method: 'GET',
+      data: { ip: ipAddress },
+      success: function(response) {
+          if (response.success) {
+              location.reload();
+          } else {
+              console.error('Failed to remove from banlist');
+          }
+      },
+      error: function() {
+          console.error('Error occurred during the request');
+      }
+  });
+});
 }
 
 function toggleNav() {

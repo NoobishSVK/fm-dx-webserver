@@ -112,6 +112,10 @@ label {
     margin-right: 5px;
 }
 
+table .form-group {
+    margin: 0;
+}
+
 #settings, #back-btn, #users-online-container {
     background: transparent;
     border: 0;
