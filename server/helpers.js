@@ -1,4 +1,4 @@
-const https = require('https');
+const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
 const dataHandler = require('./datahandler');
@@ -57,7 +57,7 @@ function authenticateWithXdrd(client, salt, password) {
 }
 
 function handleConnect(clientIp, currentUsers, ws) {
-  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
+  http.get(`https://ip-api.com/json/${clientIp}/`, (response) => {
     let data = '';
 
     response.on('data', (chunk) => {
@@ -70,7 +70,7 @@ function handleConnect(clientIp, currentUsers, ws) {
         const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         const connectionTime = new Date().toLocaleString([], options);
 
-        if (locationInfo.org?.includes("AS205016 HERN Labs AB")) { // anti opera VPN block
+        if (locationInfo.as?.includes("AS205016 HERN Labs AB")) { // anti opera VPN block
           return;
         }      
 
@@ -79,7 +79,7 @@ function handleConnect(clientIp, currentUsers, ws) {
           storage.connectedUsers.push(userData);
           consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
         } else {
-          const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
+          const userLocation = `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
           const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
           storage.connectedUsers.push(userData);
           consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);

@@ -18,7 +18,7 @@ const europe_programmes = [
     "Serious Classical", "Other Music", "Weather", "Finance",
     "Children's Programmes", "Social Affairs", "Religion", "Phone-in",
     "Travel", "Leisure", "Jazz Music", "Country Music", "National Music",
-    "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
+    "Oldies Music", "Folk Music", "Documentary", "Alarm Test", "Alarm"
 ];
 
 const usa_programmes = [
