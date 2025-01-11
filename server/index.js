@@ -5,7 +5,6 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const http = require('http');
 const httpProxy = require('http-proxy');
-const https = require('https');
 const app = express();
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
@@ -17,7 +16,6 @@ const fs = require('fs');
 const path = require('path');
 const net = require('net');
 const client = new net.Socket();
-const crypto = require('crypto');
 const { SerialPort } = require('serialport');
 const tunnel = require('./tunnel')
 
@@ -112,21 +110,6 @@ app.use(bodyParser.json());
 connectToXdrd();
 connectToSerial();
 tunnel.connect();
-
-// Check for working IPv6
-function checkIPv6Support(callback) {
-  const server = net.createServer();
-
-  server.listen(0, '::1', () => {
-    server.close(() => callback(true));
-  }).on('error', (error) => {
-    if (error.code === 'EADDRNOTAVAIL') {
-      callback(false);
-    } else {
-      callback(false);
-    }
-  });
-}
 
 // Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
 isSerialportRetrying = false;
@@ -250,7 +233,7 @@ function connectToXdrd() {
           if (authFlags.receivedPassword === false) {
             authFlags.receivedSalt = line.trim();
             authFlags.receivedPassword = true;
-            authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
+            helpers.authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
           } else {
             if (line.startsWith('a')) {
               authFlags.authMsg = true;
@@ -332,18 +315,6 @@ client.on('error', (err) => {
       break;
   }
 });
-
-function authenticateWithXdrd(client, salt, password) {
-  const sha1 = crypto.createHash('sha1');
-  const saltBuffer = Buffer.from(salt, 'utf-8');
-  const passwordBuffer = Buffer.from(password, 'utf-8');
-  sha1.update(saltBuffer);
-  sha1.update(passwordBuffer);
-
-  const hashedPassword = sha1.digest('hex');
-  client.write(hashedPassword + '\n');
-  client.write('x\n');
-}
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../web'));
@@ -435,50 +406,15 @@ wss.on('connection', (ws, request) => {
     serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
   }
 
-  https.get(`https://ipinfo.io/${clientIp}/json`, (response) => {
-    let data = '';
-
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    response.on('end', () => {
-      try {
-        const locationInfo = JSON.parse(data);
-        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        const connectionTime = new Date().toLocaleString([], options);
-
-        if (locationInfo.org?.includes("AS205016 HERN Labs AB")) { // anti opera VPN block
-          return;
-        }      
-
-        if(locationInfo.country === undefined) {
-          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-        } else {
-          const userLocation = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
-          const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
-        }
-      } catch (error) {
-        logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-      }
-    });
-  }).on('error', (err) => {
-    logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-  });
+  helpers.handleConnect(clientIp, currentUsers, ws);
 
   // Anti-spam tracking for each client
   const userCommands = {};
   let lastWarn = { time: 0 };
 
   ws.on('message', (message) => {
-    // Anti-spam
-    const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
+    const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
 
-    // Existing command processing logic
     if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
        ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
         logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
@@ -491,20 +427,11 @@ wss.on('connection', (ws, request) => {
 
     if (command.startsWith('w') && request.session.isAdminAuthenticated) {
         switch (command) {
-            case 'wL1':
-                serverConfig.lockToAdmin = true;
-                break;
-            case 'wL0':
-                serverConfig.lockToAdmin = false;
-                break;
-            case 'wT0':
-                serverConfig.publicTuner = true;
-                break;
-            case 'wT1':
-                serverConfig.publicTuner = false;
-                break;
-            default:
-                break;
+            case 'wL1': serverConfig.lockToAdmin = true; break;
+            case 'wL0': serverConfig.lockToAdmin = false; break;
+            case 'wT0': serverConfig.publicTuner = true; break;
+            case 'wT1': serverConfig.publicTuner = false; break;
+            default: break;
         }
     }
 
@@ -519,19 +446,9 @@ wss.on('connection', (ws, request) => {
 
     const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};  
 
-    if (serverConfig.publicTuner && !serverConfig.lockToAdmin) {
+    if (serverConfig.publicTuner || (serverConfig.lockToAdmin && isAdminAuthenticated) || (!serverConfig.lockToAdmin && isTuneAuthenticated)) {
       output.write(`${command}\n`);
-    } else {
-      if (serverConfig.lockToAdmin) {
-        if(isAdminAuthenticated) {
-          output.write(`${command}\n`);
-        }
-      } else {
-        if(isTuneAuthenticated) {
-          output.write(`${command}\n`);
-        }
-      }
-    }
+    }    
     
   });
 
@@ -600,55 +517,92 @@ chatWss.on('connection', (ws, request) => {
 
   ws.on('message', function incoming(message) {
     // Anti-spam
-    const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'chat');
+    const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'chat');
 
     let messageData;
 
     try {
       messageData = JSON.parse(message);
     } catch (error) {
-      // console.error("Failed to parse message:", error);
-      // Optionally, send an error response back to the client
       ws.send(JSON.stringify({ error: "Invalid message format" }));
-      return; // Stop processing if JSON parsing fails
+      return;
     }
 
-    messageData.ip = clientIp; // Adding IP address to the message object
+    messageData.ip = clientIp;
     const currentTime = new Date();
     
     const hours = String(currentTime.getHours()).padStart(2, '0');
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
 
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
-      return;
-    }
-
-    if (request.session.isAdminAuthenticated === true) {
-      messageData.admin = true;
-    }
-
-    if (messageData.message.length > 255) {
-      messageData.message = messageData.message.substring(0, 255);
-    }
+    if (serverConfig.webserver.banlist?.includes(clientIp)) { return; }
+    if (request.session.isAdminAuthenticated === true) { messageData.admin = true; }
+    if (messageData.message.length > 255) { messageData.message = messageData.message.substring(0, 255); }
 
     storage.chatHistory.push(messageData);
-    if (storage.chatHistory.length > 50) {
-      storage.chatHistory.shift();
-    }
+    if (storage.chatHistory.length > 50) { storage.chatHistory.shift(); }
     logChat(messageData);
-    
-    const modifiedMessage = JSON.stringify(messageData);
     
     chatWss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(modifiedMessage);
+        // Only include IP for admin clients
+        let responseMessage = { ...messageData };
+  
+        if (request.session.isAdminAuthenticated !== true) {
+          delete responseMessage.ip;
+        }
+  
+        const modifiedMessage = JSON.stringify(responseMessage);
+        client.send(modifiedMessage); 
       }
     });
   });
 
-  ws.on('close', function close() {
-  });
+  ws.on('close', function close() {});
+});
+
+// Additional web socket for using plugins
+pluginsWss.on('connection', (ws, request) => { 
+    const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    const userCommandHistory = {};
+    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+      ws.close(1008, 'Banned IP');
+      return;
+    }
+    // Anti-spam tracking for each client
+    const userCommands = {};
+    let lastWarn = { time: 0 };
+
+    ws.on('message', message => {
+        // Anti-spam
+        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '10', 'data_plugins');
+
+        let messageData;
+
+        try {
+            messageData = JSON.parse(message); // Attempt to parse the JSON
+        } catch (error) {
+            // console.error("Failed to parse message:", error); // Log the error
+            return; // Exit if parsing fails
+        }
+
+        const modifiedMessage = JSON.stringify(messageData);
+
+        // Broadcast the message to all other clients
+        pluginsWss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(modifiedMessage); // Send the message to all clients
+            }
+        });
+    });
+
+    ws.on('close', () => {
+        // logInfo('WebSocket Extra connection closed'); // Use custom logInfo function
+    });
+
+    ws.on('error', error => {
+        logError('WebSocket Extra error: ' + error); // Use custom logError function
+    });
 });
 
 // Additional web socket for using plugins
@@ -729,7 +683,7 @@ httpServer.on('upgrade', (request, socket, head) => {
 
             ws.on('message', function incoming(message) {
               // Anti-spam
-              const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
+              const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
             });
 
       });
@@ -746,9 +700,9 @@ httpServer.on('upgrade', (request, socket, head) => {
 });
 
 app.use(express.static(path.join(__dirname, '../web'))); // Serve the entire web folder to the user
+fmdxList.update();
 
-// Determine ip stack support and start server accordingly
-checkIPv6Support((isIPv6Supported) => {
+helpers.checkIPv6Support((isIPv6Supported) => {
   const ipv4Address = serverConfig.webserver.webserverIp === '0.0.0.0' ? 'localhost' : serverConfig.webserver.webserverIp;
   const ipv6Address = '::'; // This will bind to all available IPv6 interfaces
   const port = serverConfig.webserver.webserverPort;
@@ -775,5 +729,3 @@ checkIPv6Support((isIPv6Supported) => {
     startServer(ipv4Address, false); // Start only on IPv4
   }
 });
-
-fmdxList.update();

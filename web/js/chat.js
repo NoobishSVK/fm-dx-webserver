@@ -35,7 +35,7 @@ $(document).ready(function() {
         } else {
             const chatMessage = `
                 <span class="color-2">[${messageData.time}]</span>
-                ${isAdmin} <strong class="color-5" title="IP Address: ${messageData.ip}">${messageData.nickname}</strong>: 
+                ${isAdmin} <strong class="color-5" title="${typeof messageData.ip !== "undefined" ? 'IP Address: ' + messageData.ip : ''}">${messageData.nickname}</strong>: 
                 <span style="color: var(--color-text-2);">${$('<div/>').text(messageData.message).html()}</span><br>
             `;
             chatMessages.append(chatMessage);

@@ -6,3 +6,4 @@ node_modules/
 /plugins/*
 !/plugins/example/frontend.js
 !/plugins/example.js
+/plugins_configs

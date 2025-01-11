@@ -99,42 +99,59 @@ router.get('/wizard', (req, res) => {
         });
     })
 })
+  
+  router.get('/setup', (req, res) => {
+      let serialPorts; 
+      function loadConfig() {
+        if (fs.existsSync(configPath)) {
+          const configFileContents = fs.readFileSync(configPath, 'utf8');
+          return JSON.parse(configFileContents);
+        }
+        return serverConfig;
+      }
+  
+      if(!req.session.isAdminAuthenticated) {
+          res.render('login');
+          return;
+      }
+      
+      SerialPort.list()
+      .then((deviceList) => {
+          serialPorts = deviceList.map(port => ({
+              path: port.path,
+              friendlyName: port.friendlyName,
+          }));
+          
+          parseAudioDevice((result) => {
+              const processUptimeInSeconds = Math.floor(process.uptime());
+              const formattedProcessUptime = helpers.formatUptime(processUptimeInSeconds);
+              
+              const updatedConfig = loadConfig();  // Reload the config every time
+              res.render('setup', {
+                  isAdminAuthenticated: req.session.isAdminAuthenticated,
+                  videoDevices: result.audioDevices,
+                  audioDevices: result.videoDevices,
+                  serialPorts: serialPorts,
+                  memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+                  processUptime: formattedProcessUptime,
+                  consoleOutput: logs,
+                  plugins: allPluginConfigs,
+                  enabledPlugins: updatedConfig.plugins,
+                  onlineUsers: dataHandler.dataToSend.users,
+                  connectedUsers: storage.connectedUsers,
+                  banlist: updatedConfig.webserver.banlist // Updated banlist from the latest config
+              });
+          });
+      }) 
+  });
+  
 
-router.get('/setup', (req, res) => {
-    let serialPorts; 
+router.get('/rds', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
+});
 
-    if(!req.session.isAdminAuthenticated) {
-        res.render('login');
-        return;
-    }
-    
-    SerialPort.list()
-    .then((deviceList) => {
-        serialPorts = deviceList.map(port => ({
-            path: port.path,
-            friendlyName: port.friendlyName,
-        }));
-        
-        parseAudioDevice((result) => {
-            const processUptimeInSeconds = Math.floor(process.uptime());
-            const formattedProcessUptime = helpers.formatUptime(processUptimeInSeconds);
-            
-            res.render('setup', {
-                isAdminAuthenticated: req.session.isAdminAuthenticated,
-                videoDevices: result.audioDevices,
-                audioDevices: result.videoDevices,
-                serialPorts: serialPorts,
-                memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
-                processUptime: formattedProcessUptime,
-                consoleOutput: logs,
-                plugins: allPluginConfigs,
-                enabledPlugins: serverConfig.plugins,
-                onlineUsers: dataHandler.dataToSend.users,
-                connectedUsers: storage.connectedUsers
-            });
-        });
-    })
-    
+router.get('/rdsspy', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/rds', (req, res) => {
@@ -184,6 +201,17 @@ router.get('/logout', (req, res) => {
 });
 
 router.get('/kick', (req, res) => {
+    const ipAddress = req.query.ip; // Extract the IP address parameter from the query string
+    // Terminate the WebSocket connection for the specified IP address
+    if(req.session.isAdminAuthenticated) {
+        helpers.kickClient(ipAddress);
+    }
+    setTimeout(() => {
+        res.redirect('/setup');
+    }, 500);
+});
+
+router.get('/addToBanlist', (req, res) => {
     const ipAddress = req.query.ip; // Extract the IP address parameter from the query string
     // Terminate the WebSocket connection for the specified IP address
     if(req.session.isAdminAuthenticated) {
@@ -260,6 +288,8 @@ router.get('/static_data', (req, res) => {
         defaultTheme: serverConfig.webserver.defaultTheme || 'theme1',
         bgImage: serverConfig.webserver.bgImage || '',
         rdsMode: serverConfig.webserver.rdsMode || false,
+        tunerName: serverConfig.identification.tunerName || '',
+        tunerDesc: serverConfig.identification.tunerDesc || '',
     });
 });
 

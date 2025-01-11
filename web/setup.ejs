@@ -30,11 +30,14 @@
                     <li role="tab" data-panel="webserver" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="webserver"><i class="fa-solid fa-fw fa-server"></i> Webserver</a>
                     </li>
+                    <li role="tab" data-panel="identification" tabindex="0">
+                        <a href="#" role="tab" tabindex="-1" aria-controls="identification"><i class="fa-solid fa-fw fa-circle-info"></i> Identification & Map</a>
+                    </li>
                     <li role="tab" data-panel="plugins" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="plugins"><i class="fa-solid fa-fw fa-puzzle-piece"></i> Plugins</a>
                     </li>
-                    <li role="tab" data-panel="identification" tabindex="0">
-                        <a href="#" role="tab" tabindex="-1" aria-controls="identification"><i class="fa-solid fa-fw fa-circle-info"></i> Identification & Map</a>
+                    <li role="tab" data-panel="users" tabindex="0">
+                        <a href="#" role="tab" tabindex="-1" aria-controls="users"><i class="fa-solid fa-fw fa-user"></i> User management</a>
                     </li>
                     <li role="tab" data-panel="extras" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="extras"><i class="fa-solid fa-fw fa-star"></i> Extras</a>
@@ -285,6 +288,7 @@
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
+<<<<<<< HEAD
                     </div>
                     <div class="panel-33">
                         <h3>Chat options</h3>
@@ -299,6 +303,8 @@
                             <label for="preset1">Banned users:</label>
                             <textarea id="webserver-banlist" placeholder="123.45.67.8"></textarea>
                         </div>
+                    </div>
+=======
                     </div>
                 </div>
 
@@ -318,6 +324,7 @@
                             <% }); %>
                         </select><br><br>
                         <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
+>>>>>>> 4b6d011 (rewrite update)
                 </div>
 
                 <div class="panel-100 p-bottom-20">
@@ -414,7 +421,121 @@
                     </div>
                 </div>
             </div>
+
+            <div class="panel-full m-0 tab-content no-bg" id="plugins" role="tabpanel">
+                <h2>Plugins</h2>
+                <div class="panel-100 p-bottom-20">
+                    <h3>Plugin list</h3>
+                    <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
+                        Click on the individual plugins to enable/disable them.</p>
+                        <select id="plugin-list" class="multiselect" multiple>
+                            <% plugins.forEach(function(plugin) { %>
+                                <option data-name="<%= plugin.frontEndPath %>" title="<%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]">
+                                    <%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]
+                                </option>
+                            <% }); %>
+                        </select><br><br>
+                        <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
+                </div>
+
+                <div class="panel-100 p-bottom-20">
+                    <h3>Plugin settings</h3>
+                    <div id="plugin-settings">No plugin settings are available.</div>
+                </div>
+            </div>
+
+            <div class="panel-full m-0 tab-content no-bg" id="tuner" role="tabpanel">
+                <h2>Tuner settings</h2>
+                <div class="flex-container contains-dropdown">
+                <div class="panel-33 p-bottom-20">
+                    <h3>Device type</h3>
+                            <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
+                                options: [
+                                    { value: 'tef', label: 'TEF668x / TEA685x' },
+                                    { value: 'xdr', label: 'XDR (F1HD / S10HDiP)' },
+                                    { value: 'sdr', label: 'SDR (RTL-SDR / AirSpy)' },
+                                    { value: 'other', label: 'Other' }
+                                ]
+                            }) %><br>
+                    
+                </div>
+
+                <div class="panel-33 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
+                    <h3>Connection type</h3>
+                    <p class="text-gray">If you want to choose the COM port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
+                    <div class="auto top-10">
+                        <label class="toggleSwitch nolabel" onclick="">
+                            <input id="xdrd-wirelessConnection" type="checkbox" tabindex="0" aria-label="Connection type"/>
+                            <a></a>
+                            <span>
+                                <span class="left-span">Direct</span>
+                                <span class="right-span">TCP/IP</span>
+                            </span>											
+                        </label>
+                    </div>
+                </div>
+                <div class="panel-33 p-bottom-20">
+                    <h3>Device / Server</h3>
+                        
+                    <div id="tuner-usb">
+                        <p class="text-gray">Choose your desired <strong>COM port</strong><br>&nbsp;</p>
+                        <%- include('_components', {
+                            component: 'dropdown',
+                            id: 'deviceList',
+                            inputId: 'xdrd-comPort',
+                            label: 'USB Device',
+                            cssClass: '',
+                            placeholder: 'Choose your USB device',
+                            options: serialPorts.map(serialPort => ({
+                                value: serialPort.path,
+                                label: `${serialPort.path} - ${serialPort.friendlyName}`
+                            }))
+                        }) %>                        
+                    </div>
     
+<<<<<<< HEAD
+                    <div id="tuner-wireless">
+                        <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
+                    </div>
+                </div>
+                </div>
+                <div class="flex-container">
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Startup</h3>
+                        <h4>Startup volume</h4>
+                        <div class="panel-75 auto" style="height: 48px;">
+                            <input type="range" id="audio-startupVolume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
+                        </div>
+                        <h4 class="top-10 text-gray" id="volume-percentage-value"></h4>
+    
+                        <hr>
+                        <h4 class="bottom-20">Default frequency</h4>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Default frequency for first client', id: 'enableDefaultFreq'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Default frequency', id: 'defaultFreq'}) %>
+                    </div>
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Miscellaneous</h3>
+                        <div class="flex-container">
+                            <div class="panel-50 no-bg">
+                                <h4>Bandwidth switch</h4>
+                                <p>Bandwidth switch allows the user to set the bandwidth manually.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Bandwidth switch', id: 'bwSwitch'}) %><br>
+                            </div>
+                            <div class="panel-50 no-bg">
+                                <h4>Automatic shutdown</h4>
+                                <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Auto-shutdown', id: 'autoShutdown'}) %><br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+=======
+>>>>>>> 4b6d011 (rewrite update)
             <div class="panel-full m-0 tab-content no-bg" id="identification" role="tabpanel">
                 <h2>Identification & Map</h2>
 
@@ -457,6 +578,7 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
             <div class="panel-full m-0 tab-content no-bg" id="extras" role="tabpanel">
                 <h2>Extras</h2>
                 <div class="panel-100 p-bottom-20">
@@ -465,6 +587,68 @@
                     Your server also needs to have a valid UUID, which is obtained by registering on maps in the <strong>Identification & Map</strong> tab.</p>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'FMLIST integration', id: 'extras-fmlistIntegration'}) %><br>
 
+=======
+            <div class="panel-full m-0 tab-content no-bg" id="users" role="tabpanel">
+                <h2>User management</h2>
+                <div class="panel-100">
+                    <h3>Chat options</h3>
+                    <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Chat', id: 'webserver-chatEnabled'}) %>     
+                </div>
+
+                <div class="panel-100 p-bottom-20">
+                    <h3>Banlist</h3>
+                    <p>If you have users that don't behave on your server, you can choose to ban them by their IP address.<br>
+                    <span class="text-gray">You can see their IP address by hovering over their nickname. One IP per row.</span></p>
+
+                    <table class="table-big">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Ban date</th>
+                                <th>Reason</th>
+                                <th class="color-5"><i class="fa-solid fa-plus-circle"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (banlist.length > 0) { %>
+                                <% banlist.forEach(bannedUser => { %>
+                                    <tr>
+                                        <% if (Array.isArray(bannedUser)) { %>
+                                            <!-- If it's an array, use its values -->
+                                            <td><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser[0] %>" target="_blank"><%= bannedUser[0] %></a></td>
+                                            <td><%= bannedUser[1] %></td>
+                                            <td class="text-bold"><%= new Date(parseInt(bannedUser[2]) * 1000).toLocaleString() %></td> <!-- Assuming the ban date is a timestamp in seconds -->
+                                            <td><%= bannedUser[3] %></td>
+                                        <% } else { %>
+                                            <!-- If it's just an IP address without additional data, show it as is -->
+                                            <td><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser %>" target="_blank"><%= bannedUser %></a></td>
+                                            <td>Unknown</td>
+                                            <td class="text-bold">Unknown</td>
+                                            <td>Unknown</td>
+                                        <% } %>
+                                        <td><a href="./kick?ip=<%= Array.isArray(bannedUser) ? bannedUser[0] : bannedUser %>"><i class="fa-solid fa-lock-open text-gray"></i></a></td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6" style="text-align: center">The banlist is empty.</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel-full m-0 tab-content no-bg" id="extras" role="tabpanel">
+                <h2>Extras</h2>
+                <div class="panel-100 p-bottom-20">
+                    <h3>FMLIST Integration</h3>
+                    <p>FMLIST integration allows you to get potential DXes logged on the <a href="http://fmlist.org/fm_logmap.php?hours=900" target="_blank" class="text-bold color-4">FMLIST Visual Logbook</a>.<br>
+                    Your server also needs to have a valid UUID, which is obtained by registering on maps in the <strong>Identification & Map</strong> tab.</p>
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'FMLIST integration', id: 'extras-fmlistIntegration'}) %><br>
+
+>>>>>>> 4b6d011 (rewrite update)
                     <p>You can also fill in your OMID from FMLIST.org, if you want the logs to be saved to your account.</p>
                     <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '', label: 'OMID', id: 'extras-fmlistOmid'}) %>
                 </div>

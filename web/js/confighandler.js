@@ -50,14 +50,6 @@ function populateFields(data, prefix = "") {
       return;
     }
 
-    if (key === "banlist" && Array.isArray(value)) {
-      const $textarea = $(`#${prefix}${prefix ? "-" : ""}${key}`);
-      if ($textarea.length && $textarea.is("textarea")) {
-        $textarea.val(value.join("\n"));
-      }
-      return;
-    }
-
     const id = `${prefix}${prefix ? "-" : ""}${key}`;
     const $element = $(`#${id}`);
 
@@ -109,14 +101,6 @@ function updateConfigData(data, prefix = "") {
         } else {
           break;
         }
-      }
-      return;
-    }
-
-    if (key === "banlist") {
-      const $textarea = $(`#${prefix}${prefix ? "-" : ""}${key}`);
-      if ($textarea.length && $textarea.is("textarea")) {
-        data[key] = $textarea.val().split("\n").filter(line => line.trim() !== "");
       }
       return;
     }
