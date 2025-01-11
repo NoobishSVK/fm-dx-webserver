@@ -100,7 +100,6 @@ let serverConfig = {
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
-  testThing: "yes it works"
 };
 
 function deepMerge(target, source) {
@@ -118,23 +117,21 @@ function deepMerge(target, source) {
 
 function configUpdate(newConfig) {
   if (newConfig.webserver && (newConfig.webserver.banlist !== undefined || newConfig.plugins !== undefined)) {
-    // If new banlist is provided, replace the existing one
     serverConfig.webserver.banlist = newConfig.webserver.banlist;
     serverConfig.plugins = newConfig.plugins;
-    delete newConfig.webserver.banlist; // Remove banlist from newConfig to avoid merging
+    delete newConfig.webserver.banlist;
   }
   
   deepMerge(serverConfig, newConfig);
 }
 
 function configSave() {
-  fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
-    if (err) {
-      logError(err);
-    } else {
-      logInfo('Server config saved successfully.');
-    }
-  });
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
+    logInfo('Server config saved successfully.');
+  } catch (err) {
+    logError(err);
+  }
 }
 
 function configExists() {
@@ -145,7 +142,7 @@ if (configExists()) {
   const configFileContents = fs.readFileSync(configPath, 'utf8');
   try {
     const configFile = JSON.parse(configFileContents);
-    deepMerge(configFile, serverConfig); 
+    deepMerge(configFile, serverConfig);
     serverConfig = configFile;
     configSave();
   } catch (err) {
