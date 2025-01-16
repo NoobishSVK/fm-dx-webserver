@@ -82,7 +82,7 @@ function handleConnect(clientIp, currentUsers, ws) {
           const userLocation = `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
           const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
           storage.connectedUsers.push(userData);
-          consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`);
+          consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.country}`);
         }
       } catch (error) {
         console.log(error);
@@ -90,7 +90,7 @@ function handleConnect(clientIp, currentUsers, ws) {
       }
     });
   }).on('error', (err) => {
-    consoleCmd.chunklogInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+    consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
   });
 }
 
@@ -222,7 +222,16 @@ function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userC
   return command; // Return command value for normal execution
 }
 
+const escapeHtml = (unsafe) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, antispamProtection
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, antispamProtection, escapeHtml
 }

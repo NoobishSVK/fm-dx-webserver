@@ -100,7 +100,7 @@ let serverConfig = {
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
-  TestTest: "tesst"
+  bwSwitch: false
 };
 
 // Function to add missing fields without overwriting existing values

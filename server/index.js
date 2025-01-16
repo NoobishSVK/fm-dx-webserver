@@ -5,6 +5,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const http = require('http');
 const httpProxy = require('http-proxy');
+const readline = require('readline');
 const app = express();
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
@@ -72,6 +73,10 @@ if (plugins.length > 0) {
   }, 3000); // Initial delay of 3 seconds for the first plugin
 }
 
+const terminalWidth = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+}).output.columns;
 
 
 console.log(`\x1b[32m
@@ -81,8 +86,9 @@ console.log(`\x1b[32m
 |  _| | |  | |_____| |_| /  \\    \\ V  V /  __/ |_) \\__ \\  __/ |   \\ V /  __/ |   
 |_|   |_|  |_|     |____/_/\\_\\    \\_/\\_/ \\___|_.__/|___/\\___|_|    \\_/ \\___|_|                                                
 `);
-console.log('\x1b[0mFM-DX Webserver', pjson.version);
-console.log('\x1b[90m―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――');
+console.log('\x1b[32m\x1b[2mby Noobish @ \x1b[4mFMDX.org\x1b[0m');
+console.log("v" + pjson.version)
+console.log('\x1b[90m' + '─'.repeat(terminalWidth - 1) + '\x1b[0m');
 
 // Start ffmpeg
 require('./stream/index');
@@ -446,9 +452,9 @@ wss.on('connection', (ws, request) => {
 
     const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};  
 
-    if (serverConfig.publicTuner || (serverConfig.lockToAdmin && isAdminAuthenticated) || (!serverConfig.lockToAdmin && isTuneAuthenticated)) {
+    if ((serverConfig.publicTuner && !serverConfig.lockToAdmin) || isAdminAuthenticated || (!serverConfig.publicTuner && !serverConfig.lockToAdmin && isTuneAuthenticated)) {
       output.write(`${command}\n`);
-    }    
+    }
     
   });
 
@@ -526,6 +532,11 @@ chatWss.on('connection', (ws, request) => {
     } catch (error) {
       ws.send(JSON.stringify({ error: "Invalid message format" }));
       return;
+    }
+
+    // Escape nickname and other potentially unsafe fields
+    if (messageData.nickname) {
+      messageData.nickname = helpers.escapeHtml(messageData.nickname);
     }
 
     messageData.ip = clientIp;

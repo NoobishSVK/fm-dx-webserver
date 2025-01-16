@@ -142,7 +142,7 @@ function toggleNav() {
     if (isMobile) {
       // Do nothing to .admin-wrapper on mobile (since we're overlaying)
       $(".admin-wrapper").css({
-        'margin-left': '0',
+        'margin-left': '32px',
         'width': '100%' // Reset content to full width on close
       });
       $("#navigation").css('margin-left', 'calc(64px - 100vw)');
@@ -216,6 +216,7 @@ async function loadConsoleLogs() {
       const logColors = {
         INFO: "lime",
         DEBUG: "cyan",
+        CHAT: "cyan",
         WARN: "yellow",
         ERROR: "red"
       };

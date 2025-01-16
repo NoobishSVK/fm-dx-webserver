@@ -30,7 +30,7 @@ $(document).ready(function() {
         const isAdmin = messageData.admin ? '<span style="color: #bada55">[ADMIN]</span>' : '';
         
         if (messageData.type === 'clientIp') {
-            chatIdentityNickname.html(isAdmin + " " + savedNickname);
+            chatIdentityNickname.html(isAdmin).append(document.createTextNode(" " + savedNickname));
             chatIdentityNickname.attr('title', messageData.ip);
         } else {
             const chatMessage = `
@@ -49,7 +49,7 @@ $(document).ready(function() {
                     chatMessageCount++;
                     chatMessagesCount.text(chatMessageCount);
                     chatMessagesCount.attr("aria-label", "Chat (" + chatMessageCount + " unread)");
-                    chatButton.removeClass('bg-color-2').addClass('bg-color-4');
+                    chatButton.removeClass('bg-color-2').addClass('blink');
                 }
             }
         }

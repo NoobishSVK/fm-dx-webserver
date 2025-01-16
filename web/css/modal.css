@@ -1,3 +1,12 @@
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-panel, .modal-panel-chat {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -162,7 +171,7 @@
         width: 100%;
     }
     .modal-panel-chat {
-        height: 500px;
+        height: 550px;
     }
     #chat-chatbox {
         height: 333px !important;

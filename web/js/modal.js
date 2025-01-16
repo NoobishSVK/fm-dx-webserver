@@ -10,17 +10,18 @@ $(document).ready(function() {
   function openModal(panel) {
     modal.css("display", "block");
     panel.css("display", "block");
+    $("body").addClass("modal-open"); // Disable body scrolling
     setTimeout(function() {
       modal.css("opacity", 1);
     }, 10);
   }
-
-  // Function to close the modal
+  
   function closeModal() {
     modal.css("opacity", 0);
     setTimeout(function() {
       modal.css("display", "none");
       modalPanel.add(chatPanel).css("display", "none");
+      $("body").removeClass("modal-open"); // Enable body scrolling
     }, 300);
   }
 

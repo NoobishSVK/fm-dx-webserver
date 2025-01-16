@@ -230,6 +230,19 @@ table .input-text {
     clear: both;
 }
 
+.blink {
+    animation: blinker 1.5s infinite;
+}
+
+@keyframes blinker {
+    0% {
+        background-color: var(--color-4);
+    }
+    100% {
+        background-color: var(--color-2);
+    }
+}
+
 @media only screen and (max-width: 960px) {
     .text-medium-big {
         font-size: 32px;

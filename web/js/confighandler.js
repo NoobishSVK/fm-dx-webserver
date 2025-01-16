@@ -38,22 +38,14 @@ function fetchConfig() {
 
 function populateFields(data, prefix = "") {
   $.each(data, (key, value) => {
-    if (key === "presets" && Array.isArray(value)) {
-      value.forEach((item, index) => {
-        const presetId = `${prefix}${prefix ? "-" : ""}${key}-${index + 1}`;
-        const $element = $(`#${presetId}`);
-
-        if ($element.length) {
-          $element.val(item);
-        }
-      });
-      return;
+    if (value === null) {
+      value = ""; // Convert null to an empty string
     }
 
     const id = `${prefix}${prefix ? "-" : ""}${key}`;
     const $element = $(`#${id}`);
 
-    if (typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       populateFields(value, id); 
       return;
     }
@@ -96,7 +88,7 @@ function updateConfigData(data, prefix = "") {
       while (true) {
         const $presetElement = $(`#${prefix}${prefix ? "-" : ""}${key}-${index}`);
         if ($presetElement.length) {
-          data[key].push($presetElement.val());
+          data[key].push($presetElement.val() || null); // Allow null if necessary
           index++;
         } else {
           break;
@@ -117,12 +109,13 @@ function updateConfigData(data, prefix = "") {
       return;
     }
 
-    if (typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       return updateConfigData(value, id);
     }
 
     if ($element.length) {
-      data[key] = typeof value === "boolean" ? $element.is(":checked") : $element.attr("data-value") ?? $element.val();
+      const newValue = $element.attr("data-value") ?? $element.val() ?? null;
+      data[key] = typeof value === "boolean" ? $element.is(":checked") : newValue;
     }
   });
 }
