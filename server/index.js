@@ -506,7 +506,8 @@ chatWss.on('connection', (ws, request) => {
 
   // Send chat history to the newly connected client
   storage.chatHistory.forEach(function(message) {
-    message.history = true; // Adding the history parameter
+    message.history = true;
+    !request.session.isAdminAuthenticated ? delete message.ip : null;
     ws.send(JSON.stringify(message));
   });
 
