@@ -67,7 +67,7 @@ $(document).ready(function() {
     chatButton.click(function() {
         chatMessageCount = 0;
         chatMessagesCount.text(chatMessageCount);
-        chatButton.removeClass('bg-color-4').addClass('bg-color-2');
+        chatButton.removeClass('blink').addClass('bg-color-2');
         chatSendInput.focus();
 
         setTimeout(function() {
