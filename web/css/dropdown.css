@@ -76,9 +76,12 @@
     z-index: 999;
     max-height: 400px;
     overflow-y: auto;
+    border-radius: 0px 0px 25px 25px;
+    scrollbar-width: none;
   }
 
   .dropdown .options.open-top {
+    border-radius: 25px 25px 0px 0px
     transform: initial;
     bottom: 100%;
   }
