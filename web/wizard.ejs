@@ -153,16 +153,16 @@
                     <h2 class="settings-heading">Webserver info</h2>
                     <p class="m-0">In this part, we will set up your webserver info, such as the server name, description and location.</p>
                     <label for="identification-tunerName" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
+                    <input style="width: 100%; max-width: 768px;" class="input-text br-15" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
                     <br>
                     <label for="identification-tunerDesc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                    <textarea id="identification-tunerDesc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                    <textarea id="identification-tunerDesc" name="webserver-desc" class="br-15" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
                     
                     <h3 class="settings-heading">Location</h3>
                     <p>Location info is useful for automatic identification of stations using RDS.</p>
                     <div class="panel-100 no-bg flex-container flex-center">
-                        <%- include('_components', {component: 'text', cssClass: 'w-250', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-250', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
                     </div>
                     <div id="map"></div>
 
