@@ -127,8 +127,8 @@
                             <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Admin lock', id: 'lockToAdmin'}) %><br>
                         </div>
         
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
                     </div>
                 </div>
 
@@ -222,13 +222,13 @@
                     <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Connection</h3>
                         <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
                     </div>
                     <div class="panel-33 p-bottom-20">
                             <h3>Design</h3>
                             <h4>Background image</h4>  
-                            <%- include('_components', {component: 'text', cssClass: '', placeholder: 'Direct image link', label: 'Image link', id: 'webserver-bgImage'}) %><br> 
+                            <%- include('_components', {component: 'text', cssClass: 'br-15', placeholder: 'Direct image link', label: 'Image link', id: 'webserver-bgImage'}) %><br> 
 
                             <h4 class="top-25">Themes</h4>
                             <%- include('_components', { component: 'dropdown', id: 'server-theme-selector', inputId: 'webserver-defaultTheme', label: 'Default server theme', cssClass: '', placeholder: 'Default', 
@@ -250,16 +250,16 @@
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', label: 'Antenna switch', id: 'antennas-enabled'}) %><br>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 1', id: 'antennas-ant1-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant A', label: 'Antenna 1 name', id: 'antennas-ant1-name'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant A', label: 'Antenna 1 name', id: 'antennas-ant1-name'}) %><br>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 2', id: 'antennas-ant2-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant B', label: 'Antenna 2 name', id: 'antennas-ant2-name'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant B', label: 'Antenna 2 name', id: 'antennas-ant2-name'}) %><br>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 3', id: 'antennas-ant3-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant C', label: 'Antenna 3 name', id: 'antennas-ant3-name'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant C', label: 'Antenna 3 name', id: 'antennas-ant3-name'}) %><br>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 4', id: 'antennas-ant4-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'Ant D', label: 'Antenna 4 name', id: 'antennas-ant4-name'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant D', label: 'Antenna 4 name', id: 'antennas-ant4-name'}) %><br>
                     </div>
                 </div>
 
@@ -271,19 +271,19 @@
                         </p>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Limit tuning', id: 'webserver-tuningLimit'}) %><br>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '0', label: 'Lower limit', id: 'webserver-tuningLowerLimit'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '108', label: 'Upper limit', id: 'webserver-tuningUpperLimit'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '0', label: 'Lower limit', id: 'webserver-tuningLowerLimit'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '108', label: 'Upper limit', id: 'webserver-tuningUpperLimit'}) %>
                     </div>
 
                     <div class="panel-50 p-bottom-20">
                         <h3>Presets</h3>
                         <p>You can set up to 4 presets.<br>These presets are accessible with the F1-F4 buttons.<br>
                         <span class="text-gray">Enter frequencies in MHz.</span></p>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 1', id: 'webserver-presets-1'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 2', id: 'webserver-presets-2'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '87.5', label: 'Preset 1', id: 'webserver-presets-1'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '87.5', label: 'Preset 2', id: 'webserver-presets-2'}) %>
                         <br>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 3', id: 'webserver-presets-3'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Preset 4', id: 'webserver-presets-4'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '87.5', label: 'Preset 3', id: 'webserver-presets-3'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '87.5', label: 'Preset 4', id: 'webserver-presets-4'}) %>
                     </div>
                 </div>
 
@@ -370,9 +370,9 @@
     
                     <div id="tuner-wireless">
                         <p class="text-gray">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
                     </div>
                 </div>
                 </div>
@@ -440,10 +440,10 @@
                         <p>Set your tuner name and description here.<br>This info will be visible to anyone who tunes in. </p>
                         <div class="panel-full no-bg" style="padding-left: 20px; padding-right: 20px;">
                             <label for="identification-tunerName" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                            <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
+                            <input style="width: 100%; max-width: 768px;" class="input-text br-15" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
                             <br>
                             <label for="identification-tunerDesc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                            <textarea id="identification-tunerDesc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                            <textarea id="identification-tunerDesc" class="br-15" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
                         </div>
                     </div>
 
@@ -452,8 +452,8 @@
                         <p>If your location information is filled,<br>you can add your tuner to a public list.</p>
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Broadcast to map', id: 'identification-broadcastTuner'}) %><br>
-                        <%- include('_components', {component: 'text', cssClass: '', placeholder: 'Your e-mail or Discord...', label: 'Owner contact', id: 'identification-contact'}) %>
-                        <%- include('_components', {component: 'text', cssClass: '', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'br-15', placeholder: 'Your e-mail or Discord...', label: 'Owner contact', id: 'identification-contact'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'br-15', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
         
                         <p>Check your tuner at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
                         <p class="text-small text-gray">By activating the <strong>Broadcast to map</strong> option,<br>you agree to the <a href="https://fmdx.org/projects/webserver.php#rules" target="_blank">Terms of Service</a>.</p>
@@ -464,8 +464,8 @@
                     <h3>Location</h3>
                     <p class="text-gray">Location info is useful for automatic identification of stations using RDS.</p>
 
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
                     
                     <div id="map"></div>
                     <br>
@@ -496,10 +496,10 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: 'IP address', label: '', id: 'banlist-add-ip'}) %></td>
+                                <td><%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'IP address', label: '', id: 'banlist-add-ip'}) %></td>
                                 <td></td>
                                 <td></td>
-                                <td><%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: 'Ban reason (note)', label: '', id: 'banlist-add-reason'}) %></td>
+                                <td><%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: 'Ban reason (note)', label: '', id: 'banlist-add-reason'}) %></td>
                                 <td class="color-5">
                                     <a href="#" id="banlist-add-link"><i class="fa-solid fa-plus-circle banlist-add"></i></a>
                                 </td>
@@ -542,7 +542,7 @@
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'FMLIST integration', id: 'extras-fmlistIntegration'}) %><br>
 
                     <p>You can also fill in your OMID from FMLIST.org, if you want the logs to be saved to your account.</p>
-                    <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '', label: 'OMID', id: 'extras-fmlistOmid'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '', label: 'OMID', id: 'extras-fmlistOmid'}) %>
                 </div>
                 <div class="panel-100 p-bottom-20">
                     <h3>Tunnel</h3>
@@ -550,9 +550,9 @@
                     When you become a supporter, you can message the Founders on Discord for your login details.</p>
 
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Enable tunnel', id: 'tunnel-enabled'}) %><br>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org<br>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Username', id: 'tunnel-username'}) %>
-                    <%- include('_components', {component: 'text', cssClass: 'w-250', password: true, placeholder: '', label: 'Token', id: 'tunnel-token'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org<br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Username', id: 'tunnel-username'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', password: true, placeholder: '', label: 'Token', id: 'tunnel-token'}) %>
 
                     <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Low latency mode', id: 'tunnel-lowLatencyMode'}) %><br>
