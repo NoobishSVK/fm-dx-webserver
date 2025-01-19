@@ -145,6 +145,7 @@ body.modal-open {
     display: none;
     background-color: var(--color-main);
     border-radius: 15px 15px 0px 0px;
+    overflow-y: hidden;
 }
 
 .modal-panel-chat .modal-panel-sidebar {
