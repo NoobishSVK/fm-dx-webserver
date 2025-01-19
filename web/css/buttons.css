@@ -74,6 +74,7 @@ button:hover {
 }
 
 input[type="text"], textarea, input[type="password"] {
+    border-radius: 15px;
     width: 300px;
     min-height: 48px;
     padding-left: 20px;
@@ -87,7 +88,7 @@ input[type="text"], textarea, input[type="password"] {
 }
 
 input[type="password"]:not(.setup-wrapper input[type="password"]) {
-    border-radius: 15px 0 0 15px;
+    border-radius: 15px;
 }
 
 #tune-buttons input[type="text"] {
