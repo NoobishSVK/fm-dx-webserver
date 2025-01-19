@@ -6,7 +6,7 @@
 * @param background filter color
 */
 const themes = {
-    theme1: [ 'rgb(32, 34, 40)', 'rgb(88, 219, 171)', 'rgb(255, 255, 255)', 'rgb(11, 12, 14)' ], // Retro (Default)
+    theme1: [ 'rgb(32, 34, 40)', 'rgb(88, 219, 171)', 'rgb(255, 255, 255)', 'rgb(11, 12, 14)' ], // Mint
     theme2: [ 'rgb(21, 32, 33)', 'rgb(203, 202, 165)', 'rgb(255, 255, 255)', 'rgb(7, 11, 12)' ], // Cappuccino
     theme3: [ 'rgb(18, 18, 12)', 'rgb(169, 255, 112)', 'rgb(255, 255, 255)', 'rgb(6, 6, 4)' ], // Nature
     theme4: [ 'rgb(12, 28, 27)', 'rgb(104, 247, 238)', 'rgb(255, 255, 255)', 'rgb(4, 10, 9)' ], // Ocean
@@ -29,6 +29,8 @@ $(document).ready(() => {
     const savedTheme = localStorage.getItem('theme');
     const defaultTheme = localStorage.getItem('defaultTheme');
     const savedUnit = localStorage.getItem('signalUnit');
+
+    themeSelector.find('input').val(themeSelector.find('.option[data-value="' + defaultTheme + '"]').text());
     
     if(defaultTheme && themes[defaultTheme]) {
         setTheme(defaultTheme);
