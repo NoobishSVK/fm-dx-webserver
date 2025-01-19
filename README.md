@@ -47,7 +47,7 @@ Join our **Discord community** to get the latest development update info, share 
 5. Open your web browser and navigate to `http:/localhost:8080` to access the web interface.
 
 ## Getting Started (Linux)
-[Click here for the Linux installation tutorial.](https://gist.github.com/bkram/788098558312d2fa71c07dc443e03d10)
+[Click here for the Linux installation tutorial.](https://gist.github.com/jhd6689/b1cf0e8e898af3f5c0b413f58d2eba95)
 
 ## Utilized projects
 
