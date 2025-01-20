@@ -36,8 +36,8 @@
                 <h3 class="settings-heading">Webserver connection</h3>
                 <p class="m-0">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>DO NOT enter your public IP here.</p>
                 <div class="flex-center top-25">
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
-                    <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
                 </div>
             </div>
             <!-- BASIC SETTINGS END -->
@@ -91,9 +91,9 @@
                 <div id="tuner-wireless" class="top-25">
                     <p class="m-0">If you are connecting your tuner <strong>wirelessly</strong>, enter the tuner IP. <br> If you use <strong>xdrd</strong>, use 127.0.0.1 as your IP.</p>
                     <div class="flex-center top-25">
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', label: 'xdrd IP address', id: 'xdrd-xdrdIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', label: 'xdrd port', id: 'xdrd-xdrdPort'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', label: 'xdrd password', id: 'xdrd-xdrdPassword', password: true}) %>
                     </div>
                 </div>
             </div>
@@ -153,16 +153,16 @@
                     <h2 class="settings-heading">Webserver info</h2>
                     <p class="m-0">In this part, we will set up your webserver info, such as the server name, description and location.</p>
                     <label for="identification-tunerName" style="width: 100%;max-width: 768px; margin:auto;">Webserver name:</label>
-                    <input style="width: 100%; max-width: 768px;" class="input-text" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
+                    <input style="width: 100%; max-width: 768px;" class="input-text br-15" type="text" name="identification-tunerName" id="identification-tunerName" placeholder="Fill your server name here." maxlength="32">
                     <br>
                     <label for="identification-tunerDesc" style="width: 100%;max-width: 768px; margin: auto;">Webserver description:</label>
-                    <textarea id="identification-tunerDesc" name="webserver-desc" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
+                    <textarea id="identification-tunerDesc" name="webserver-desc" class="br-15" placeholder="Fill the server description here. You can put useful info here such as your antenna setup. You can use simple markdown." maxlength="255"></textarea>
                     
                     <h3 class="settings-heading">Location</h3>
                     <p>Location info is useful for automatic identification of stations using RDS.</p>
                     <div class="panel-100 no-bg flex-container flex-center">
-                        <%- include('_components', {component: 'text', cssClass: 'w-250', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-250', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', placeholder: '', label: 'Latitude', id: 'identification-lat'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', placeholder: '', label: 'Longitude', id: 'identification-lon'}) %>
                     </div>
                     <div id="map"></div>
 
@@ -179,7 +179,7 @@
                     <p class="text-gray">If you use a proxy / tunnel service, enter the access link here. If you don't know what a proxy is, leave it empty.</p>
 
                     <div class="panel-100 no-bg flex-container flex-center">
-                        <%- include('_components', {component: 'text', cssClass: '', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'br-15', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
                     </div>
                 </div>
             </div>
@@ -191,8 +191,8 @@
 
                 <p>Here we can set the password. Tune password is optional.<br>Setting an admin password allows you to change settings later and setting one up is mandatory.</p>
                 <div class="flex-container flex-center">
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
                 </div>
                 <p>You can now click the <strong>save button</strong> to save your settings. After that, you will need to restart the webserver.</p>
             </div>
