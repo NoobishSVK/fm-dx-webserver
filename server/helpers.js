@@ -164,6 +164,7 @@ function checkIPv6Support(callback) {
 function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
   const command = message.toString();
   const now = Date.now();
+  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
   if (endpointName === 'text') consoleCmd.logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
 
   // Initialize user command history if not present
