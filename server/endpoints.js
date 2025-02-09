@@ -21,11 +21,13 @@ router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     const normalizedIp = requestIp?.replace(/^::ffff:/, '');
-    const isBanned = serverConfig.webserver.banlist.some(banEntry => banEntry[0] === normalizedIp);
-
+    const ipList = normalizedIp.split(',').map(ip => ip.trim()); // in case there are multiple IPs (proxy), we need to check all of them
+    
+    const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
+    
     if (isBanned) {
         res.render('403');
-        logInfo(`Web client (${requestIp}) is banned`);
+        logInfo(`Web client (${normalizedIp}) is banned`);
         return;
     }
 
@@ -391,7 +393,8 @@ router.get('/log_fmlist', (req, res) => {
         client: {
             request_ip: clientIp
         },
-        log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + dataHandler.dataToSend.sig.toFixed(0) + " dBf",
+        type: req.query.type ? req.query.type : 'tropo',
+        log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + (dataHandler.dataToSend.sig - 11.25).toFixed(0) + " dBµV",
     });
 
     const options = {

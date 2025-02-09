@@ -302,7 +302,7 @@ pre {
     position: absolute;
     width: 16px;
     height: 16px;
-    border: 2px solid var(--color-3);
+    border: 2px solid var(--color-text);
     border-radius: 50%;
 }
 

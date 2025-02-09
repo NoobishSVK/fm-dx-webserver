@@ -42,12 +42,28 @@ function populateFields(data, prefix = "") {
       value = ""; // Convert null to an empty string
     }
 
-    const id = `${prefix}${prefix ? "-" : ""}${key}`;
+    let id = `${prefix}${prefix ? "-" : ""}${key}`;
     const $element = $(`#${id}`);
 
-    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      populateFields(value, id); 
-      return;
+    if (typeof value === "object" && value !== null) {
+      if (Array.isArray(value)) {
+        // Handle arrays correctly
+        value.forEach((item, index) => {
+          const arrayId = `${id}-${index + 1}`;
+          const $arrayElement = $(`#${arrayId}`);
+
+          if ($arrayElement.length) {
+            $arrayElement.val(item);
+          } else {
+            console.log(`Element with id ${arrayId} not found`);
+          }
+        });
+        return;
+      } else {
+        // Handle nested objects
+        populateFields(value, id);
+        return;
+      }
     }
 
     if (!$element.length) {
@@ -63,16 +79,6 @@ function populateFields(data, prefix = "") {
       $element.attr('data-value', value);
     } else {
       $element.val(value);
-    }
-    
-    if (key === "plugins" && Array.isArray(value)) {
-      const $options = $element.find('option');
-      $options.each(function() {
-        const dataName = $(this).data('name');
-        if (value.includes(dataName)) {
-          $(this).prop('selected', true);
-        }
-      });
     }
   });
 }

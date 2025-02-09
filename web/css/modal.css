@@ -4,7 +4,6 @@ body.modal-open {
 
 .modal-panel, .modal-panel-chat {
     max-height: 100vh;
-    overflow-y: auto;
 }
 
 .modal {
@@ -99,6 +98,7 @@ body.modal-open {
     width: 64px;
     background-color: var(--color-1);
     cursor: pointer;
+    padding: 5px;
 }
 
 .modal-panel-content {

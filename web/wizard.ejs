@@ -144,6 +144,11 @@
                         ]
                         }) %>
                     </div>
+
+                    <div class="panel-100 no-bg text-center">
+                        <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                    </div>
                 </div>
             </div>
             <!-- AUDIO SETTINGS END -->

@@ -70,9 +70,9 @@
                     
                     <div id="flags-container-desktop" class="panel-33 user-select-none">
                         <h2 class="show-phone">
-                            <div class="data-pty text-color-default"></div>
+                            <div class="data-pty color-4"></div>
                         </h2>
-                        <h3 style="margin-top:0;margin-bottom:0;" class="color-4 flex-center">
+                        <h3 style="margin-top:0;margin-bottom:0;" class="text-color-default flex-center">
                             <span class="data-tp">TP</span>
                             <span style="margin-left: 15px;" class="data-ta">TA</span>
                             <div style="display:inline-block">
@@ -231,9 +231,16 @@
                                 </div>
                             <% } %>
                             <% if (fmlist_integration == true) { %>
-                            <button class="tooltip bg-color-4" id="log-fmlist" 
+                            <button class="tooltip bg-color-4 popup" id="log-fmlist" 
                             data-tooltip="<strong>LOG TO FMLIST</strong><br>Clicking this button logs the current station to FMLIST's visual logbook." aria-label="Log to FMLIST"
-                            style="width: 80px; height: 48px;margin-left: 15px !important;"><i class="fa-solid fa-flag fa-lg"></i></button>
+                            style="width: 80px; height: 48px;margin-left: 15px !important;">
+                                <i class="fa-solid fa-flag fa-lg"></i>
+                                <span class="popup-content">
+                                    Choose the DX propagation type:<br>
+                                        <a class="top-10 bg-color-3 text-bold" style="padding: 10px; border-radius: 15px 0 0 15px; display: inline-block;" id="log-fmlist-tropo">Tropo</a><!--
+                                --><a class="top-10 bg-color-3 text-bold" style="padding: 10px; border-radius: 0 15px 15px 0; display: inline-block;" id="log-fmlist-sporadice">Sporadic-E</a>
+                                </span>
+                            </button>
                             <% } %>
                         </div>
                     </div>
@@ -461,15 +468,15 @@
     <div class="modal-panel-chat">
         <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close chat" tabindex="0"><i class="fa-solid fa-chevron-down"></i></div>
         <div class="modal-panel-content text-left">
-            <div style="text-align: center;">
-                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname">
-                    <button class="br-0 w-100 top-10" style="height: 48px" id="chat-nickname-save">Save</button>
-                <p style="margin: 5px;">
+            <div style="text-align: center;white-space-collapse: collapse;">
+                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
+                    <button class="br-0 w-100 top-10" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
+                <p style="margin: 5px;" class="text-small">
                     Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong> 
                 </p>
             </div>
 
-            <div id="chat-chatbox" class="bg-color-1" style="height: 270px;padding: 10px;overflow-y: auto;">
+            <div id="chat-chatbox" class="bg-color-1" style="height: 258px;padding: 10px;overflow-y: auto;">
             </div>
             
             <div class="flex-container flex-phone" style="align-content: stretch;">

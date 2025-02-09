@@ -204,35 +204,72 @@ $(document).ready(function () {
     initTooltips();
 
     //FMLIST logging
-    $('#log-fmlist').on('click', function() {
-        $.ajax({
-            url: './log_fmlist',
-            method: 'GET',
-            success: function(response) {
-                // Show a success toast with the response message
-                sendToast('success', 'Log successful', response, false, true);
-            },
-            error: function(xhr) {
-                let errorMessage;
-
-                // Handle different error status codes with custom messages
-                switch (xhr.status) {
-                    case 429:
-                        errorMessage = xhr.responseText;
-                        break;
-                    case 500:
-                        errorMessage = 'Server error: ' + xhr.responseText || 'Internal Server Error';
-                        break;
-                    default:
-                        errorMessage = xhr.statusText || 'An error occurred';
-                }
-
-                // Show an error toast with the specific error message
-                sendToast('error', 'Log failed', errorMessage, false, true);
-            }
-        });
+    $('.popup-content').on('click', function(event) {
+        event.stopPropagation();
+        $('.popup-content').removeClass('show');
     });
 
+    $('#log-fmlist').on('click', function() {
+        const logKey = 'fmlistLogChoice'; 
+        const logTimestampKey = 'fmlistLogTimestamp'; 
+        const expirationTime = 10 * 60 * 1000; 
+        const now = Date.now();
+    
+        const storedChoice = localStorage.getItem(logKey);
+        const storedTimestamp = localStorage.getItem(logTimestampKey);
+    
+        if (storedChoice && storedTimestamp && (now - storedTimestamp < expirationTime)) {
+            sendLog(storedChoice); 
+            return;
+        }
+    
+        if (parsedData.txInfo.dist > 700) {
+            $('#log-fmlist .popup-content').addClass('show'); // Show popup if no valid choice
+    
+            $('#log-fmlist-sporadice').off('click').on('click', function () {
+                localStorage.setItem(logKey, './log_fmlist?type=sporadice');
+                localStorage.setItem(logTimestampKey, now);
+                if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=sporadice');
+                $('#log-fmlist .popup-content').removeClass('show');
+            });
+    
+            $('#log-fmlist-tropo').off('click').on('click', function () {
+                localStorage.setItem(logKey, './log_fmlist?type=tropo');
+                localStorage.setItem(logTimestampKey, now);
+                if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=tropo');
+                $('#log-fmlist .popup-content').removeClass('show');
+            });
+        } else {
+            sendLog('./log_fmlist'); 
+        }
+    
+        function sendLog(endpoint) {
+            $.ajax({
+                url: endpoint,
+                method: 'GET',
+                success: function(response) {
+                    sendToast('success', 'Log successful', response, false, true);
+                },
+                error: function(xhr) {
+                    let errorMessage;
+    
+                    switch (xhr.status) {
+                        case 429:
+                            errorMessage = xhr.responseText;
+                            break;
+                        case 500:
+                            errorMessage = 'Server error: ' + (xhr.responseText || 'Internal Server Error');
+                            break;
+                        default:
+                            errorMessage = xhr.statusText || 'An error occurred';
+                    }
+    
+                    sendToast('error', 'Log failed', errorMessage, false, true);
+                }
+            });
+        }
+    });
+    
 });
 
 function getServerTime() {
@@ -1040,40 +1077,55 @@ function toggleLock(buttonSelector, activeMessage, inactiveMessage, activeLabel,
 
 
 function initTooltips() {
-    $('.tooltip').hover(function(e){
+    $('.tooltip').hover(function (e) {
+        // Check if hovered element is NOT `.popup-content`
+        if ($(e.target).closest('.popup-content').length) {
+            return;
+        }
+
         var tooltipText = $(this).data('tooltip');
-        
-        // Add a delay of 500 milliseconds before creating and appending the tooltip
+
+        // Delay tooltip appearance
         $(this).data('timeout', setTimeout(() => {
-            var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
-            if ($('.tooltiptext').length === 0) { $('body').append(tooltip); } // Don't allow more than one tooltip
+            if ($('.tooltip-wrapper').length === 0) {
+                var tooltip = $(`
+                    <div class="tooltip-wrapper">
+                        <div class="tooltiptext">
+                            ${tooltipText}
+                        </div>
+                    </div>
+                `);
+                $('body').append(tooltip);
+            }
 
             var posX = e.pageX;
             var posY = e.pageY;
-
-            var tooltipWidth = tooltip.outerWidth();
-            var tooltipHeight = tooltip.outerHeight();
+            var tooltipEl = $('.tooltiptext');
+            var tooltipWidth = tooltipEl.outerWidth();
+            var tooltipHeight = tooltipEl.outerHeight();
             posX -= tooltipWidth / 2;
             posY -= tooltipHeight + 10;
-            tooltip.css({ top: posY, left: posX, opacity: 1 }); // Set opacity to 1
-            // For touchscreen devices
-            if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
-                setTimeout(() => { $('.tooltiptext').remove(); }, 10000);
-                document.addEventListener('touchstart', function() { setTimeout(() => { $('.tooltiptext').remove(); }, 500); });
-            }
+
+            tooltipEl.css({ top: posY, left: posX, opacity: 1 });
+
         }, 500));
-    }, function() {
-        // Clear the timeout if the mouse leaves before the delay completes
+    }, function () {
         clearTimeout($(this).data('timeout'));
-        $('.tooltiptext').remove();
-        setTimeout(() => { $('.tooltiptext').remove(); }, 500); // Ensure no tooltips remain stuck
-    }).mousemove(function(e){
-        var tooltipWidth = $('.tooltiptext').outerWidth();
-        var tooltipHeight = $('.tooltiptext').outerHeight();
+        setTimeout(() => { $('.tooltip-wrapper').remove(); }, 500);
+    }).mousemove(function (e) {
+        var tooltipEl = $('.tooltiptext');
+        var tooltipWidth = tooltipEl.outerWidth();
+        var tooltipHeight = tooltipEl.outerHeight();
         var posX = e.pageX - tooltipWidth / 2;
         var posY = e.pageY - tooltipHeight - 10;
 
-        $('.tooltiptext').css({ top: posY, left: posX });
+        tooltipEl.css({ top: posY, left: posX });
+    });
+
+    // Prevent the tooltip from showing when hovering over .popup-content
+    $('.popup-content').on('mouseenter', function (e) {
+        clearTimeout($('.tooltip').data('timeout'));
+        $('.tooltip-wrapper').remove(); // Ensure tooltip does not appear
     });
 }
 

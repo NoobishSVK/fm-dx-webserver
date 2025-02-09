@@ -40,12 +40,18 @@ function OnPlayButtonClick(_ev) {
         shouldReconnect = false;
         destroyStream();
         $playbutton.find('.fa-solid').toggleClass('fa-stop fa-play');
+        if ('audioSession' in navigator) {
+            navigator.audioSession.type = "none";
+        }
     } else {
         console.log("Starting stream...");
         shouldReconnect = true;
         createStream();
         Stream.Start();
         $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
+        if ('audioSession' in navigator) {
+            navigator.audioSession.type = "playback"; // Android background play fix
+        }
     }
     $playbutton.addClass('bg-gray').prop('disabled', true);
     setTimeout(() => {

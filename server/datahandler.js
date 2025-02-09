@@ -401,7 +401,7 @@ function handleData(wss, receivedData, rdsWss) {
   // Get the received TX info
   fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps)
   .then((currentTx) => {
-      if (currentTx && currentTx.station !== undefined) {
+      if (currentTx && currentTx.station !== undefined && parseInt(currentTx.distance) < 4000) {
           dataToSend.txInfo = {
               tx: currentTx.station,
               pol: currentTx.pol,

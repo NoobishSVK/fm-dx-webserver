@@ -333,6 +333,52 @@ select:hover {
     background: var(--color-5);
 }
 
+.popup {
+    position: relative;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  .popup .popup-content {
+    visibility: hidden;
+    width: 230px;
+    background-color: var(--color-2-transparent);
+    backdrop-filter: blur(5px);
+    color: var(--color-text);;
+    text-align: center;
+    border-radius: 15px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    top: 125%;
+    left: 50%;
+    margin-left: -115px;
+    border: 3px solid var(--color-3);
+  }
+  
+  .popup .show {
+    visibility: visible;
+  }
+  
+  button[disabled] .popup-content {
+    visibility: hidden;
+  }
+
+  .popup .popup-content::after {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent var(--color-3) transparent;
+  }
+  
+
 @media only screen and (max-width: 768px) {
     #tune-buttons input[type="text"] {
         background-color: var(--color-1-transparent);
