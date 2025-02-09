@@ -45,9 +45,25 @@ function populateFields(data, prefix = "") {
     let id = `${prefix}${prefix ? "-" : ""}${key}`;
     const $element = $(`#${id}`);
 
+    if (key === "plugins" && $element.is('select[multiple]')) {
+      if (Array.isArray(value)) {
+        $element.find('option').each(function() {
+          const $option = $(this);
+          const dataName = $option.data('name');
+          if (value.includes(dataName)) {
+            $option.prop('selected', true);
+          } else {
+            $option.prop('selected', false); 
+          }
+        });
+
+        $element.trigger('change');
+      }
+      return; 
+    }
+
     if (typeof value === "object" && value !== null) {
       if (Array.isArray(value)) {
-        // Handle arrays correctly
         value.forEach((item, index) => {
           const arrayId = `${id}-${index + 1}`;
           const $arrayElement = $(`#${arrayId}`);
@@ -60,7 +76,6 @@ function populateFields(data, prefix = "") {
         });
         return;
       } else {
-        // Handle nested objects
         populateFields(value, id);
         return;
       }
@@ -107,7 +122,7 @@ function updateConfigData(data, prefix = "") {
       data[key] = [];
       const $selectedOptions = $element.find('option:selected');
       $selectedOptions.each(function() {
-        const dataName = $(this).data('name');
+        const dataName = $(this).attr('data-name');
         if (dataName) {
           data[key].push(dataName);
         }

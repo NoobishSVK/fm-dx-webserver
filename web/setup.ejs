@@ -33,8 +33,8 @@
                     <li role="tab" data-panel="identification" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="identification"><i class="fa-solid fa-fw fa-circle-info"></i> Identification & Map</a>
                     </li>
-                    <li role="tab" data-panel="plugins" tabindex="0">
-                        <a href="#" role="tab" tabindex="-1" aria-controls="plugins"><i class="fa-solid fa-fw fa-puzzle-piece"></i> Plugins</a>
+                    <li role="tab" data-panel="plugins-tab" tabindex="0">
+                        <a href="#" role="tab" tabindex="-1" aria-controls="plugins-tab"><i class="fa-solid fa-fw fa-puzzle-piece"></i> Plugins</a>
                     </li>
                     <li role="tab" data-panel="users" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="users"><i class="fa-solid fa-fw fa-user"></i> User management</a>
@@ -297,28 +297,6 @@
 
             </div>
 
-            <div class="panel-full m-0 tab-content no-bg" id="plugins" role="tabpanel">
-                <h2>Plugins</h2>
-                <div class="panel-100 p-bottom-20">
-                    <h3>Plugin list</h3>
-                    <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
-                        Click on the individual plugins to enable/disable them.</p>
-                        <select id="plugin-list" class="multiselect" multiple>
-                            <% plugins.forEach(function(plugin) { %>
-                                <option data-name="<%= plugin.frontEndPath %>" title="<%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]">
-                                    <%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]
-                                </option>
-                            <% }); %>
-                        </select><br><br>
-                        <a href="https://github.com/NoobishSVK/fm-dx-webserver/wiki/Plugin-List" target="_blank">Download new plugins here!</a>
-                </div>
-
-                <div class="panel-100 p-bottom-20">
-                    <h3>Plugin settings</h3>
-                    <div id="plugin-settings">No plugin settings are available.</div>
-                </div>
-            </div>
-
             <div class="panel-full m-0 tab-content no-bg" id="tuner" role="tabpanel">
                 <h2>Tuner settings</h2>
                 <div class="flex-container contains-dropdown">
@@ -408,13 +386,13 @@
                 </div>
             </div>
 
-            <div class="panel-full m-0 tab-content no-bg" id="plugins" role="tabpanel">
+            <div class="panel-full m-0 tab-content no-bg" id="plugins-tab" role="tabpanel">
                 <h2>Plugins</h2>
                 <div class="panel-100 p-bottom-20">
                     <h3>Plugin list</h3>
                     <p>Any compatible <strong>.js</strong> plugin, which is in the "plugins" folder, will be listed here.<br>
                         Click on the individual plugins to enable/disable them.</p>
-                        <select id="plugin-list" class="multiselect" multiple>
+                        <select id="plugins" class="multiselect" multiple>
                             <% plugins.forEach(function(plugin) { %>
                                 <option data-name="<%= plugin.frontEndPath %>" title="<%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]">
                                     <%= plugin.name %> by <%= plugin.author %> [v<%= plugin.version %>]
