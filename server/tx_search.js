@@ -108,7 +108,7 @@ async function processData(data, piCode, rdsPs) {
             weightDistance = Math.abs(distance.distanceKm - 1500);
         }
         let erp = station.erp && station.erp > 0 ? station.erp : 1;
-        let extraWeight = erp >= 10 && distance.distanceKm <= 2500 ? 0.5 : 0;
+        let extraWeight = erp >= 10 && distance.distanceKm <= 400 ? 0.3 : 0;
         const score = ((10 * Math.log10(erp * 1000)) / weightDistance) + extraWeight;
         if (score > maxScore) {
             maxScore = score;
