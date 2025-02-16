@@ -101,5 +101,6 @@
     }
     #dashboard-panel-description {
         backdrop-filter: blur(25px) !important;
+        width: 90%;
     }
 }

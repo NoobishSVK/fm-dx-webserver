@@ -1103,7 +1103,7 @@ function toggleLock(buttonSelector, activeMessage, inactiveMessage, activeLabel,
 }
 
 function showTunerDescription() {
-    let parentDiv = $("#dashboard-panel-description").parent();
+    let parentDiv = $("#tuner-name").parent();
     
     if (!$("#dashboard-panel-description").is(":visible")) {
         parentDiv.css("border-radius", "15px 15px 0 0");

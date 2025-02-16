@@ -67,81 +67,81 @@
                 <% } %>
                 <button id="settings" aria-label="Settings" class="hide-phone"><i class="fa-solid fa-gear"></i></button>
             </div>
-            <div id="dashboard-panel-description" class="hidden-panel">
+        </div>
+    </div>
+    <div id="dashboard-panel-description" class="hidden-panel">
                 
-                <div class="flex-container">
-                    <div class="tuner-desc">
-                        <%- tunerDesc %>
-                        <% if(tuningLimit && tuningLimit == true){ %>
-                            <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
-                        <% } %>
-                    </div>
+        <div class="flex-container">
+            <div class="tuner-desc">
+                <%- tunerDesc %>
+                <% if(tuningLimit && tuningLimit == true){ %>
+                    <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
+                <% } %>
+            </div>
 
-                    <div class="flex-phone" style="margin-left: auto;flex-direction: row-reverse;justify-content: space-around;min-width: 200px;">
-                        <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
-                            <div>
-                                <span class="">Device</span><br>
-                                <span class="text-small color-4">
-                                    <% if (device == 'tef') { %>TEF668x<% } %>
-                                    <% if (device == 'xdr') { %>Sony XDR<% } %>
-                                    <% if (device == 'sdr') { %>SDR<% } %>
-                                </span>
-                            </div>
-                            <div class="color-3 m-10 text-medium">
-                                <i class="fa-solid fa-fw fa-radio"></i>
-                            </div>
-                        </div>
-
-                        <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
-                            <div>
-                                <span class="">Server time</span><br>
-                                <span class="text-small color-4" id="server-time"></span>
-                            </div>
-                            <div class="color-3 m-10 text-medium">
-                                <i class="fa-solid fa-fw fa-stopwatch"></i>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div style="width: 1px;background: var(--color-2);" class="m-10 hide-phone"></div>
-
+            <div class="flex-phone" style="margin-left: auto;flex-direction: row-reverse;justify-content: space-around;min-width: 200px;">
+                <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
                     <div>
-                        <div style="height: 64px;" class="flex-center flex-phone">
-                            <button class="no-bg color-4 hover-brighten" id="preset1" style="padding: 6px; width: 64px; min-width: 64px;">
-                                <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                                <span style="font-size: 10px; color: var(--color-text);" id="preset1-text"></span>
-                            </button>
-    
-                            <button class="no-bg color-4 hover-brighten" id="preset2" style="padding: 6px; width: 64px; min-width: 64px;">
-                                <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                                <span style="font-size: 10px; color: var(--color-text);" id="preset2-text"></span>
-                            </button>
-    
-                            <button class="no-bg color-4 hover-brighten" id="preset3" style="padding: 6px; width: 64px; min-width: 64px;">
-                                <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                                <span style="font-size: 10px; color: var(--color-text);" id="preset3-text"></span>
-                            </button>
-    
-                            <button class="no-bg color-4 hover-brighten" id="preset4" style="padding: 6px; width: 64px; min-width: 64px;">
-                                <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                                <span style="font-size: 10px; color: var(--color-text);" id="preset4-text"></span>
-                            </button>
-                        </div>
-
-                        <div class="flex-container flex-phone" style="align-items: center; height: 64px;">
-                            <div class="color-3 m-10 text-medium">
-                                <i class="fa-solid fa-fw fa-user-tie"></i>
-                            </div>
-                            <div>
-                                <span class="">Owner contact</span><br>
-                                <span class="text-small color-4 text-200-px tooltip" data-tooltip="<%= ownerContact %>" data-tooltip-placement="bottom"><%= ownerContact %></span>
-                            </div>
-                        </div>
+                        <span class="">Device</span><br>
+                        <span class="text-small color-4">
+                            <% if (device == 'tef') { %>TEF668x<% } %>
+                            <% if (device == 'xdr') { %>Sony XDR<% } %>
+                            <% if (device == 'sdr') { %>SDR<% } %>
+                        </span>
                     </div>
+                    <div class="color-3 m-10 text-medium">
+                        <i class="fa-solid fa-fw fa-radio"></i>
+                    </div>
+                </div>
 
+                <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
+                    <div>
+                        <span class="">Server time</span><br>
+                        <span class="text-small color-4" id="server-time"></span>
+                    </div>
+                    <div class="color-3 m-10 text-medium">
+                        <i class="fa-solid fa-fw fa-stopwatch"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="width: 1px;background: var(--color-2);" class="m-10 hide-phone"></div>
+
+            <div>
+                <div style="height: 64px;" class="flex-center flex-phone">
+                    <button class="no-bg color-4 hover-brighten" id="preset1" style="padding: 6px; width: 64px; min-width: 64px;">
+                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+                        <span style="font-size: 10px; color: var(--color-text);" id="preset1-text"></span>
+                    </button>
+
+                    <button class="no-bg color-4 hover-brighten" id="preset2" style="padding: 6px; width: 64px; min-width: 64px;">
+                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+                        <span style="font-size: 10px; color: var(--color-text);" id="preset2-text"></span>
+                    </button>
+
+                    <button class="no-bg color-4 hover-brighten" id="preset3" style="padding: 6px; width: 64px; min-width: 64px;">
+                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+                        <span style="font-size: 10px; color: var(--color-text);" id="preset3-text"></span>
+                    </button>
+
+                    <button class="no-bg color-4 hover-brighten" id="preset4" style="padding: 6px; width: 64px; min-width: 64px;">
+                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+                        <span style="font-size: 10px; color: var(--color-text);" id="preset4-text"></span>
+                    </button>
+                </div>
+
+                <div class="flex-container flex-phone" style="align-items: center; height: 64px;">
+                    <div class="color-3 m-10 text-medium">
+                        <i class="fa-solid fa-fw fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <span class="">Owner contact</span><br>
+                        <span class="text-small color-4 text-200-px tooltip" data-tooltip="<%= ownerContact %>" data-tooltip-placement="bottom"><%= ownerContact %></span>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
     <div class="wrapper-outer" style="z-index: 100;">
