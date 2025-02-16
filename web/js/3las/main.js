@@ -11,6 +11,7 @@ function createStream() {
     try {
         const settings = new _3LAS_Settings();
         Stream = new _3LAS(null, settings);
+        Stream.Volume = $('#volumeSlider').val();
         Stream.ConnectivityCallback = OnConnectivityCallback;
     } catch (error) {
         console.error("Initialization Error: ", error);
