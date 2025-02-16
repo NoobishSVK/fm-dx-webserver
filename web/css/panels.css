@@ -93,21 +93,13 @@
     .panel-90 {
         margin-top: 100px;
     }
-}
-
-/* Laptop compact view */
-@media only screen and (min-width: 960px) and (max-height: 860px) {
-    *[class^="panel-"] {
-        margin-top: 20px;
+    .panel-100-real.bg-phone {
+        background-color: var(--color-1-transparent);
+        backdrop-filteR: blur(5px) !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
-    .panel-90 {
-        margin-top: 0;
-    }
-    .panel-10 {
-        padding-bottom: 20px;
-        padding-right: 20px;
-    }
-    .panel-10.hide-phone {
-        padding: 0;
+    #dashboard-panel-description {
+        backdrop-filter: blur(25px) !important;
     }
 }

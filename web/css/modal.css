@@ -107,11 +107,6 @@ body.modal-open {
     overflow-y: auto;
 }
 
-.modal-panel-content .version-info {
-    margin-top: 20px;
-    width: 100%;
-}
-
 .modal-panel-footer {
     width: 450px;
     height: 100px;
@@ -171,7 +166,7 @@ body.modal-open {
         width: 100%;
     }
     .modal-panel-chat {
-        height: 550px;
+        height: 510px;
     }
     #chat-chatbox {
         height: 333px !important;

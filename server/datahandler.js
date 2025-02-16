@@ -417,7 +417,7 @@ function handleData(wss, receivedData, rdsWss) {
       }
   })
   .catch((error) => {
-      logError("Error fetching Tx info:", error);
+      console.log("Error fetching Tx info:", error);
   });
 
     // Send the updated data to the client

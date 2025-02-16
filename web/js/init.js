@@ -1,9 +1,9 @@
-var currentDate = new Date('Feb 9, 2025 18:00:00');
+var currentDate = new Date('Feb 16, 2025 15:00:00');
 var day = currentDate.getDate();
 var month = currentDate.getMonth() + 1; // Months are zero-indexed, so add 1
 var year = currentDate.getFullYear();
 var formattedDate = day + '/' + month + '/' + year; 
-var currentVersion = 'v1.3.4 [' + formattedDate + ']';
+var currentVersion = 'v1.3.5 [' + formattedDate + ']';
 
 getInitialSettings();
 removeUrlParameters();

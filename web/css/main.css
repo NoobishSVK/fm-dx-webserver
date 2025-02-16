@@ -60,14 +60,22 @@ body {
     min-height: 100%;
 }
 
-#wrapper-outer {
+.wrapper-outer {
     width: 100%;
     height: auto;
     background-color: var(--color-main);
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height:100vh;
+    flex-direction: column;
+}
+
+.wrapper-outer:not(.dashboard-panel) {
+    min-height: calc(100vh - 84px);
+}
+
+.wrapper-outer.wrapper-full {
+    min-height: 100vh;
 }
 
 .wrapper-outer-static {
@@ -79,6 +87,7 @@ body {
     width: 100%;
     max-width: calc(0% + 1180px);
 }
+
 #wrapper.setup-wrapper {
     margin: auto;
     position: static;
@@ -133,15 +142,6 @@ hr {
 
 .table-big th:nth-last-child(1){
       border-radius: 0px 15px 15px 0px;
-}
-
-@media (max-width: 1180px) {
-    #wrapper {
-        position: static;
-        transform: none;
-        margin: 50px auto;
-        width: 100%;
-    }
 }
 
 @media (max-width: 768px) {

@@ -209,7 +209,7 @@ function setTheme(themeName) {
         $(':root').css('--color-main-bright', themeColors[1]);
         $(':root').css('--color-text', themeColors[2]);
         $(':root').css('--color-text-2', textColor2);
-        $('#wrapper-outer').css('background-color', backgroundColorWithOpacity);
+        $('.wrapper-outer').css('background-color', backgroundColorWithOpacity);
     }
 }
 

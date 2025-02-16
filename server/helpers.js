@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const net = require('net');
 const crypto = require('crypto');
 const dataHandler = require('./datahandler');
@@ -56,43 +57,85 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
-function handleConnect(clientIp, currentUsers, ws) {
-  http.get(`http://ip-api.com/json/${clientIp}`, (response) => {
-    let data = '';
+const ipCache = new Map();
 
-    response.on('data', (chunk) => {
+function handleConnect(clientIp, currentUsers, ws, callback) {
+  if (ipCache.has(clientIp)) {
+    // Use cached location info
+    processConnection(clientIp, ipCache.get(clientIp), currentUsers, ws, callback);
+    return;
+  }
+
+  http.get(`http://ip-api.com/json/${clientIp}`, (response) => {
+    let data = "";
+
+    response.on("data", (chunk) => {
       data += chunk;
     });
 
-    response.on('end', () => {
+    response.on("end", () => {
       try {
         const locationInfo = JSON.parse(data);
-        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        const connectionTime = new Date().toLocaleString([], options);
-
-        if (locationInfo.as?.includes("AS205016 HERN Labs AB")) { // anti opera VPN block
-          return;
-        }      
-
-        if(locationInfo.country === undefined) {
-          const userData = { ip: clientIp, location: 'Unknown', time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
-        } else {
-          const userLocation = `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
-          const userData = { ip: clientIp, location: userLocation, time: connectionTime, instance: ws };
-          storage.connectedUsers.push(userData);
-          consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.country}`);
-        }
+        ipCache.set(clientIp, locationInfo); // Store in cache
+        processConnection(clientIp, locationInfo, currentUsers, ws, callback);
       } catch (error) {
-        console.log(error);
-        consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+        console.error("Error parsing location data:", error);
+        callback("User allowed");
       }
     });
-  }).on('error', (err) => {
-    consoleCmd.logInfo(`Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m`);
+  }).on("error", (err) => {
+    console.error("Error fetching location data:", err);
+    callback("User allowed");
   });
 }
+
+function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
+  const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
+  const connectionTime = new Date().toLocaleString([], options);
+
+  https.get("https://fmdx.org/banned_as.json", (banResponse) => {
+    let banData = "";
+
+    banResponse.on("data", (chunk) => {
+      banData += chunk;
+    });
+
+    banResponse.on("end", () => {
+      try {
+        const bannedAS = JSON.parse(banData).banned_as || [];
+
+        if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
+          return callback("User banned");
+        }
+
+        const userLocation =
+          locationInfo.country === undefined
+            ? "Unknown"
+            : `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
+
+        storage.connectedUsers.push({
+          ip: clientIp,
+          location: userLocation,
+          time: connectionTime,
+          instance: ws,
+        });
+
+        consoleCmd.logInfo(
+          `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
+        );
+
+        callback("User allowed");
+      } catch (error) {
+        console.error("Error parsing banned AS list:", error);
+        callback("User allowed");
+      }
+    });
+  }).on("error", (err) => {
+    console.error("Error fetching banned AS list:", err);
+    callback("User allowed");
+  });
+}
+
 
 function formatUptime(uptimeInSeconds) {
   const secondsInMinute = 60;

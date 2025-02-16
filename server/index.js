@@ -326,174 +326,144 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../web'));
 app.use('/', endpoints);
 
-// Anti-spam function
-function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
-    const command = message.toString();
-    const now = Date.now();
-    if (endpointName === 'text') logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
-
-    // Initialize user command history if not present
-    if (!userCommandHistory[clientIp]) {
-        userCommandHistory[clientIp] = [];
-    }
-    
-    // Record the current timestamp for the user
-    userCommandHistory[clientIp].push(now);
-    
-    // Remove timestamps older than 20 ms from the history
-    userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
-    
-    // Check if there are 8 or more commands in the last 20 ms
-    if (userCommandHistory[clientIp].length >= 8) {
-        logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
-        
-        // Add to banlist if not already banned
-        if (!serverConfig.webserver.banlist.includes(clientIp)) {
-            serverConfig.webserver.banlist.push(clientIp);
-            logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
-            console.log(serverConfig.webserver.banlist);
-            configSave();
-        }
-        
-        ws.close(1008, 'Bot-like behavior detected');
-        return command; // Return command value before closing connection
-    }
-
-    // Update the last message time for general spam detection
-    lastMessageTime = now;
-
-    // Initialize command history for rate-limiting checks
-    if (!userCommands[command]) {
-        userCommands[command] = [];
-    }
-
-    // Record the current timestamp for this command
-    userCommands[command].push(now);
-
-    // Remove timestamps older than 1 second
-    userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-
-    // If command count exceeds limit, close connection
-    if (userCommands[command].length > lengthCommands) {
-        if (now - lastWarn.time > 1000) { // Check if 1 second has passed
-            logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}" in /${endpointName}. Connection will be terminated.`);
-            lastWarn.time = now; // Update the last warning time
-        }
-        ws.close(1008, 'Spamming detected');
-        return command; // Return command value before closing connection
-    }
-
-    return command; // Return command value for normal execution
-}
-
 /**
  * WEBSOCKET BLOCK
  */
+const tunerLockTracker = new WeakMap();
+
 wss.on('connection', (ws, request) => {
-  const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
-  let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  const userCommandHistory = {};
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
-    ws.close(1008, 'Banned IP');
-    return;
-  }
+    const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
+    let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    const userCommandHistory = {};
 
-  if (clientIp.includes(',')) {
-    clientIp = clientIp.split(',')[0].trim();
-  }
-
-  if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
-    currentUsers++;
-  }
-  
-  dataHandler.showOnlineUsers(currentUsers);
-
-  if(currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
-    serverConfig.xdrd.wirelessConnection === true ? connectToXdrd() : serialport.write('x\n');
-  }
-
-  helpers.handleConnect(clientIp, currentUsers, ws);
-
-  // Anti-spam tracking for each client
-  const userCommands = {};
-  let lastWarn = { time: 0 };
-
-  ws.on('message', (message) => {
-    const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
-
-    if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
-       ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
-        logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
+    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+        ws.close(1008, 'Banned IP');
         return;
     }
 
-    if (command.includes("\'")) {
-        return;
+    if (clientIp.includes(',')) {
+        clientIp = clientIp.split(',')[0].trim();
     }
 
-    if (command.startsWith('w') && request.session.isAdminAuthenticated) {
-        switch (command) {
-            case 'wL1': serverConfig.lockToAdmin = true; break;
-            case 'wL0': serverConfig.lockToAdmin = false; break;
-            case 'wT0': serverConfig.publicTuner = true; break;
-            case 'wT1': serverConfig.publicTuner = false; break;
-            default: break;
-        }
+    if (clientIp !== '::ffff:127.0.0.1' || 
+        (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.1') || 
+        (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+        currentUsers++;
     }
 
-    if (command.startsWith('T')) {
-        const tuneFreq = Number(command.slice(1)) / 1000;
-        const { tuningLimit, tuningLowerLimit, tuningUpperLimit } = serverConfig.webserver;
-        
-        if (tuningLimit && (tuneFreq < tuningLowerLimit || tuneFreq > tuningUpperLimit) || isNaN(tuneFreq)) {
-            return;
-        }
-    }
+    helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
+      if (result === "User banned") {
+          ws.close(1008, 'Banned IP');
+          return;
+      }
 
-    const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};  
-
-    if ((serverConfig.publicTuner && !serverConfig.lockToAdmin) || isAdminAuthenticated || (!serverConfig.publicTuner && !serverConfig.lockToAdmin && isTuneAuthenticated)) {
-      output.write(`${command}\n`);
-    }
-    
-  });
-
-  ws.on('close', (code, reason) => {
-    if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
-      currentUsers--;
-    }
     dataHandler.showOnlineUsers(currentUsers);
 
-    const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);
-    if (index !== -1) {
-      storage.connectedUsers.splice(index, 1);
+    if (currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
+        serverConfig.xdrd.wirelessConnection ? connectToXdrd() : serialport.write('x\n');
     }
-
-    if(currentUsers === 0) {
-      storage.connectedUsers = [];
-    }
-
-    if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
-      setTimeout(function() {
-        if(currentUsers === 0) {
-          output.write('T' + Math.round(serverConfig.defaultFreq * 1000) +'\n');
-          dataHandler.resetToDefault(dataHandler.dataToSend);
-          dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-          dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
-        }
-      }, 10000)
-    }
-
-    if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
-      client.write('X\n');
-    }
-
-    logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
   });  
 
-  ws.on('error', console.error);
-});
+    const userCommands = {};
+    let lastWarn = { time: 0 };
 
+    ws.on('message', (message) => {
+        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
+
+        if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
+           ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
+            logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
+            return;
+        }
+
+        if (command.includes("\'")) {
+            return;
+        }
+
+        const { isAdminAuthenticated, isTuneAuthenticated } = request.session || {};
+
+        if (command.startsWith('w') && (isAdminAuthenticated || isTuneAuthenticated)) {
+            switch (command) {
+                case 'wL1': 
+                    if (isAdminAuthenticated) serverConfig.lockToAdmin = true; 
+                    break;
+                case 'wL0': 
+                    if (isAdminAuthenticated) serverConfig.lockToAdmin = false; 
+                    break;
+                case 'wT0': 
+                    serverConfig.publicTuner = true; 
+                    if(!isAdminAuthenticated) tunerLockTracker.delete(ws); 
+                    break;
+                case 'wT1': 
+                    serverConfig.publicTuner = false;
+                    if(!isAdminAuthenticated) tunerLockTracker.set(ws, true);
+                    break;
+                default: 
+                    break;
+            }
+        }
+
+        if (command.startsWith('T')) {
+            const tuneFreq = Number(command.slice(1)) / 1000;
+            const { tuningLimit, tuningLowerLimit, tuningUpperLimit } = serverConfig.webserver;
+            
+            if (tuningLimit && (tuneFreq < tuningLowerLimit || tuneFreq > tuningUpperLimit) || isNaN(tuneFreq)) {
+                return;
+            }
+        }
+
+        if ((serverConfig.publicTuner && !serverConfig.lockToAdmin) || isAdminAuthenticated || (!serverConfig.publicTuner && !serverConfig.lockToAdmin && isTuneAuthenticated)) {
+            output.write(`${command}\n`);
+        }
+    });
+
+    ws.on('close', (code, reason) => {
+        if (clientIp !== '::ffff:127.0.0.1' || 
+            (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.1') || 
+            (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+            currentUsers--;
+        }
+        dataHandler.showOnlineUsers(currentUsers);
+
+        const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);
+        if (index !== -1) {
+            storage.connectedUsers.splice(index, 1);
+        }
+
+        if (currentUsers === 0) {
+            storage.connectedUsers = [];
+        }
+
+        if (tunerLockTracker.has(ws)) {
+            logInfo(`User who locked the tuner left. Unlocking the tuner.`);
+            output.write('wT0\n')
+            tunerLockTracker.delete(ws);
+            serverConfig.publicTuner = true;
+        }
+
+        if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && 
+            serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
+            setTimeout(function() {
+                if (currentUsers === 0) {
+                    output.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
+                    dataHandler.resetToDefault(dataHandler.dataToSend);
+                    dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+                    dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
+                }
+            }, 10000);
+        }
+
+        if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
+            client.write('X\n');
+        }
+
+        if (code !== 1008) {
+          logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+        }
+    });
+
+    ws.on('error', console.error);
+});
 
 // CHAT WEBSOCKET BLOCK
 chatWss.on('connection', (ws, request) => {

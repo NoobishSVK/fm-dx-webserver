@@ -49,7 +49,7 @@ $(document).ready(function() {
                     chatMessageCount++;
                     chatMessagesCount.text(chatMessageCount);
                     chatMessagesCount.attr("aria-label", "Chat (" + chatMessageCount + " unread)");
-                    chatButton.removeClass('bg-color-2').addClass('blink');
+                    chatButton.removeClass('bg-color-1').addClass('blink');
                 }
             }
         }
@@ -67,7 +67,7 @@ $(document).ready(function() {
     chatButton.click(function() {
         chatMessageCount = 0;
         chatMessagesCount.text(chatMessageCount);
-        chatButton.removeClass('blink').addClass('bg-color-2');
+        chatButton.removeClass('blink').addClass('bg-color-1');
         chatSendInput.focus();
 
         setTimeout(function() {
