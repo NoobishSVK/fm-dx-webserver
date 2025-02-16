@@ -398,10 +398,8 @@ wss.on('connection', (ws, request) => {
         clientIp = clientIp.split(',')[0].trim();
     }
 
-    if (clientIp !== '::ffff:127.0.0.1' || 
-        (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.1') || 
-        (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
-        currentUsers++;
+    if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+      currentUsers++;
     }
 
     helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
