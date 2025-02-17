@@ -9,6 +9,41 @@ const esSwitchCache = {"lastCheck":0, "esSwitch":false};
 const esFetchInterval = 300000;
 const usStatesGeoJsonUrl = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 let usStatesGeoJson = null;  // To cache the GeoJSON data for US states
+let Latitude = serverConfig.identification.lat;
+let Longitude = serverConfig.identification.lon;
+
+// Create WebSocket URL
+const webserverPort = serverConfig.webserver.webserverPort || 8080; // Fallback to port 8080
+const externalWsUrl = `ws://127.0.0.1:${webserverPort}/data_plugins`;
+const WebSocket = require('ws'); 
+
+// 5-second delay before activation
+setTimeout(() => {
+    const websocket = new WebSocket(externalWsUrl);
+
+    // Event listener to receive data
+    websocket.on('message', (data) => {
+        try {
+            // Parse the received data
+            const parsedData = JSON.parse(data);
+
+            // Check if the dataset is of type GPS
+            if (parsedData.type === "GPS" && parsedData.value) {
+                const gpsData = parsedData.value;
+                const { status, time, lat, lon, alt, mode } = gpsData;
+
+                if (status === "active") {
+                    Latitude = parseFloat(lat);
+                    Longitude = parseFloat(lon);
+                }
+            }
+        } catch (error) {
+            logError("Error processing WebSocket data:", error);
+        }
+    });
+
+}, 5000);
+
 
 // Load the US states GeoJSON data
 async function loadUsStatesGeoJson() {
@@ -67,7 +102,8 @@ async function fetchTx(freq, piCode, rdsPs) {
     if (isNaN(freq)) {
         return;
     }
-    if (now - lastFetchTime < fetchInterval || serverConfig.identification.lat.length < 2 || freq < 87) {
+
+    if (now - lastFetchTime < fetchInterval || Latitude.length < 2 || freq < 87) {
         return Promise.resolve();
     }
 
@@ -125,7 +161,7 @@ async function processData(data, piCode, rdsPs) {
         if (city.stations) {
             for (const station of city.stations) {
                 if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
-                    const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
+                    const distance = haversine(Latitude, Longitude, city.lat, city.lon);
                     evaluateStation(station, city, distance);
                     detectedByPireg = false;
                 }
@@ -140,7 +176,7 @@ async function processData(data, piCode, rdsPs) {
             if (city.stations) {
                 for (const station of city.stations) {
                     if (station.pireg && station.pireg.toUpperCase() === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
-                        const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
+                        const distance = haversine(Latitude, Longitude, city.lat, city.lon);
                         evaluateStation(station, city, distance);
                         detectedByPireg = true;
                     }
@@ -183,12 +219,12 @@ function checkEs() {
 
     if (now - esSwitchCache.lastCheck < esFetchInterval) {
         esSwitch = esSwitchCache.esSwitch;
-    } else if (serverConfig.identification.lat > 20) {
+    } else if (Latitude > 20) {
         esSwitchCache.lastCheck = now;
         fetch(url)
         .then(response => response.json())
         .then(data => {
-            if (serverConfig.identification.lon < -32) {
+            if (Longitude < -32) {
                 if (data.north_america.max_frequency != "No data") {
                     esSwitch = true;
                 }
