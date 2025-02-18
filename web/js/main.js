@@ -986,7 +986,6 @@ const updateDataElements = throttle(function(parsedData) {
     }
     updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
     
-    updateCounter++;
     if (updateCounter % 8 === 0) {
         $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
         $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
