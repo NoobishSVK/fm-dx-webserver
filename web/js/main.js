@@ -514,7 +514,7 @@ function initCanvas() {
                 const y2Axis = scales.y2;
 
                 const gridLineColor = getComputedStyle(document.documentElement).getPropertyValue("--color-2-transparent").trim(); // Grid color using CSS variable
-                const textColor = getComputedStyle(document.documentElement).getPropertyValue("--color-3").trim(); // Use the same color for text labels
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue("--color-5").trim(); // Use the same color for text labels
 
                 ctx.save();
                 ctx.font = "12px Titillium Web";
