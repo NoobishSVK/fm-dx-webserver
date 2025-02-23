@@ -13,8 +13,14 @@ let usStatesGeoJson = null;  // To cache the GeoJSON data for US states
 // Load the US states GeoJSON data
 async function loadUsStatesGeoJson() {
     if (!usStatesGeoJson) {
-        const response = await fetch(usStatesGeoJsonUrl);
-        usStatesGeoJson = await response.json();
+        try {
+            const response = await fetch(usStatesGeoJsonUrl);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            usStatesGeoJson = await response.json();
+        } catch (error) {
+            console.error("Failed to load US States GeoJSON:", error);
+            usStatesGeoJson = null; // Ensure it's null so it can retry later
+        }
     }
 }
 
@@ -79,18 +85,17 @@ async function fetchTx(freq, piCode, rdsPs) {
 
     const url = "https://maps.fmdx.org/api/?freq=" + freq;
 
-    return fetch(url, {
-        redirect: 'manual'
-    })
-        .then(response => response.json())
-        .then(async (data) => {
-            cachedData[freq] = data;
-            await loadUsStatesGeoJson();
-            return processData(data, piCode, rdsPs);
-        })
-        .catch(error => {
-            console.error("Error fetching data:", error);
-        });
+    try {
+        const response = await fetch(url, { redirect: 'manual' });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        cachedData[freq] = data;
+        await loadUsStatesGeoJson();
+        return processData(data, piCode, rdsPs);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return null; // Return null to indicate failure
+    }
 }
 
 async function processData(data, piCode, rdsPs) {
@@ -182,29 +187,28 @@ function checkEs() {
     let esSwitch = false;
 
     if (now - esSwitchCache.lastCheck < esFetchInterval) {
-        esSwitch = esSwitchCache.esSwitch;
-    } else if (serverConfig.identification.lat > 20) {
-        esSwitchCache.lastCheck = now;
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (serverConfig.identification.lon < -32) {
-                if (data.north_america.max_frequency != "No data") {
-                    esSwitch = true;
-                }
-            } else {
-                if (data.europe.max_frequency != "No data") {
-                    esSwitch = true;
-                }
-            }
-            esSwitchCache.esSwitch = esSwitch;
-        })
-        .catch(error => {
-            console.error("Error fetching data:", error);
-        });
+        return esSwitchCache.esSwitch;
     }
 
-    return esSwitch;
+    if (serverConfig.identification.lat > 20) {
+        esSwitchCache.lastCheck = now;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if ((serverConfig.identification.lon < -32 && data.north_america.max_frequency !== "No data") ||
+                    (serverConfig.identification.lon >= -32 && data.europe.max_frequency !== "No data")) {
+                    esSwitchCache.esSwitch = true;
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching Es data:", error);
+            });
+    }
+
+    return esSwitchCache.esSwitch;
 }
 
 function haversine(lat1, lon1, lat2, lon2) {

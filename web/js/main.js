@@ -3,8 +3,8 @@
 
 
 var parsedData, signalChart, previousFreq;
-var signalData = [];
 var data = [];
+var signalData = [];
 let updateCounter = 0;
 let messageCounter = 0; // Count for WebSocket data length returning 0
 let messageData = 800; // Initial value anything above 0
@@ -32,7 +32,7 @@ const usa_programmes = [
 const rdsMode = localStorage.getItem('rdsMode');
 
 $(document).ready(function () {
-    var canvas = $('#signal-canvas')[0];
+    const signalToggle = $("#signal-units-toggle");
     
     var $panel = $('.admin-quick-dashboard');
     var panelWidth = $panel.outerWidth();
@@ -47,12 +47,7 @@ $(document).ready(function () {
             $panel.css('left', -panelWidth);
         }
     });
-    
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    
-    // Start updating the canvas
-    initCanvas();
+
     fillPresets();
     
     signalToggle.on("change", function () {
@@ -205,7 +200,6 @@ $(document).ready(function () {
     $(freqContainer).on("click", function () {
         textInput.focus();
     });
-    initTooltips();
     
     //FMLIST logging
     $('.popup-content').on('click', function(event) {
@@ -273,7 +267,9 @@ $(document).ready(function () {
             });
         }
     });
-    
+
+    initCanvas();
+    initTooltips();
 });
 
 function getServerTime() {
@@ -294,29 +290,21 @@ function getServerTime() {
             
             const serverOptions = {
                 ...options,
-                timeZone: 'Etc/UTC' // Add timeZone only for server time
+                timeZone: 'Etc/UTC'
             };
             
             const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
             
             $("#server-time").text(formattedServerTime);        
-            
-            // Get and format user's local time directly without specifying timeZone:
-            const localTime = new Date();
-            const formattedLocalTime = new Date(localTime).toLocaleString(navigator.language ? navigator.language : 'en-US', options);
-            
-            // Display client time:
-            $("#client-time").text(formattedLocalTime);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error("Error fetching server time:", errorThrown);
-            // Handle error gracefully (e.g., display a fallback message)
         }
     });
 }  
 
 function sendPingRequest() {
-    const timeoutDuration = 15000; // Ping response can become buggy if it exceeds 20 seconds
+    const timeoutDuration = 5000;
     const startTime = new Date().getTime();
     
     const fetchWithTimeout = (url, options, timeout = timeoutDuration) => {
@@ -407,7 +395,6 @@ function sendPingRequest() {
     }
 }
 
-// Automatic UI resume on WebSocket reconnect
 function handleWebSocketMessage(event) {
     if (event.data == 'KICK') {
         console.log('Kick initiated.')
@@ -429,151 +416,161 @@ function handleWebSocketMessage(event) {
 // Attach the message handler
 socket.onmessage = handleWebSocketMessage;
 
-function initCanvas(parsedData) {
-    signalToggle = $("#signal-units-toggle");
-    
-    // Check if signalChart is already initialized
-    if (!signalChart) {
-        const canvas = $('#signal-canvas')[0];
-        const context = canvas.getContext('2d');
-        const maxDataPoints = 300;
-        const pointWidth = (canvas.width - 80) / maxDataPoints;
-        
-        
-        signalChart = {
-            canvas,
-            context,
-            parsedData,
-            maxDataPoints,
-            pointWidth,
-            color2: null,
-            color3: null,
-            color4: null,
-            signalUnit: localStorage.getItem('signalUnit'),
-            offset: 0,
-        };
-        
-        switch(signalChart.signalUnit) {
-            case 'dbuv': signalChart.offset = 11.25; break;
-            case 'dbm': signalChart.offset = 120; break;
-            default: signalChart.offset = 0;
-        }
-        // Initialize colors and signal unit
-        updateChartSettings(signalChart);
-        
-        // Periodically check for color and signal unit updates
-        setInterval(() => {
-            updateChartSettings(signalChart);
-        }, 1000); // Check every 1 second
-    }
-    
-    updateCanvas(parsedData, signalChart);
-}
+const signalBuffer = [];
 
-function updateChartSettings(signalChart) {
-    // Update colors
-    const newColor2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
-    const newColor3 = getComputedStyle(document.documentElement).getPropertyValue('--color-3').trim();
-    const newColor4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-    if (newColor2 !== signalChart.color2 || newColor4 !== signalChart.color4) {
-        signalChart.color2 = newColor2;
-        signalChart.color3 = newColor3;
-        signalChart.color4 = newColor4;
-    }
-    
-    // Update signal unit
-    const newSignalUnit = localStorage.getItem('signalUnit');
-    if (newSignalUnit !== signalChart.signalUnit) {
-        signalChart.signalUnit = newSignalUnit;
-        // Adjust the offset based on the new signal unit
-        switch(newSignalUnit) {
-            case 'dbuv': signalChart.offset = 11.25; break;
-            case 'dbm': signalChart.offset = 120; break;
-            default: signalChart.offset = 0;
-        }
-    }
-}
+function initCanvas() {
+    const ctx = document.getElementById("signal-canvas").getContext("2d");
 
-function updateCanvas(parsedData, signalChart) {
-    const { context, canvas, maxDataPoints, pointWidth, color2, color3, color4, offset } = signalChart;
-    
-    if (data.length > maxDataPoints) {
-        data = data.slice(data.length - maxDataPoints);
-    }
-    
-    const actualLowestValue = Math.min(...data);
-    const actualHighestValue = Math.max(...data);
-    const zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
-    const zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
-    const zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
-    
-    // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.beginPath();
-    
-    const startingIndex = Math.max(0, data.length - maxDataPoints);
-    
-    for (let i = startingIndex; i < data.length; i++) {
-        const x = canvas.width - (data.length - i) * pointWidth - 40;
-        const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-        
-        if (i === startingIndex) {
-            context.moveTo(x, y);
-        } else {
-            const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
-            const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-            const interpolatedX = (x + prevX) / 2;
-            const interpolatedY = (y + prevY) / 2;
-            
-            context.quadraticCurveTo(prevX, prevY, interpolatedX, interpolatedY);
-        }
-    }
-    
-    context.strokeStyle = color4;
-    context.lineWidth = 2;
-    context.stroke();
-    
-    // Draw horizontal lines for lowest, highest, and average values
-    context.strokeStyle = color3;
-    context.lineWidth = 1;
-    
-    // Draw the lowest value line
-    const lowestY = canvas.height - (zoomMinValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    context.beginPath();
-    context.moveTo(40, lowestY - 18);
-    context.lineTo(canvas.width - 40, lowestY - 18);
-    context.stroke();
-    
-    // Draw the highest value line
-    const highestY = canvas.height - (zoomMaxValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    context.beginPath();
-    context.moveTo(40, highestY + 10);
-    context.lineTo(canvas.width - 40, highestY + 10);
-    context.stroke();
-    
-    const avgY = canvas.height / 2;
-    context.beginPath();
-    context.moveTo(40, avgY - 7);
-    context.lineTo(canvas.width - 40, avgY - 7);
-    context.stroke();
-    
-    // Label the lines with their values
-    context.fillStyle = color4;
-    context.font = '12px Titillium Web';
-    
-    context.textAlign = 'right';
-    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
-    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
-    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, 35, avgY - 3);
-    
-    context.textAlign = 'left';
-    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, canvas.width - 35, lowestY - 14);
-    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
-    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
-    
-    setTimeout(() => {
-        requestAnimationFrame(() => updateCanvas(parsedData, signalChart));
-    }, 1000 / 15);
+    window.signalChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: "Signal Strength",
+                borderColor: () => getComputedStyle(document.documentElement).getPropertyValue("--color-4").trim(),
+                borderWidth: 2,
+                fill: {
+                    target: 'start'
+                },
+                backgroundColor: () => getComputedStyle(document.documentElement).getPropertyValue("--color-1-transparent").trim(),
+                tension: 0.6,
+                data: []
+            }]
+        },
+        options: {
+            layout: {
+                padding: {
+                    left: -10,
+                    right: -10,
+                    bottom: -10
+                },
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                point: { radius: 0 },
+            },
+            scales: {
+                x: {
+                    type: "realtime",
+                    ticks: { display: false },
+                    border: { display: false },
+                    grid: { display: false, borderWidth: 0, borderColor: "transparent" },
+                    realtime: {
+                        duration: 30000,
+                        refresh: 75,
+                        delay: 150,
+                        onRefresh: (chart) => {
+                            if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
+
+                            signalBuffer.push(parsedData.sig);
+                            if (signalBuffer.length > 8) {
+                                signalBuffer.shift();
+                            }
+                            const avgSignal = signalBuffer.reduce((sum, val) => sum + val, 0) / signalBuffer.length;
+
+                            chart.data.datasets[0].data.push({
+                                x: Date.now(),
+                                y: avgSignal
+                            });
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    grace: 0.25,
+                    border: { display: false },
+                    ticks: { 
+                        maxTicksLimit: 3, 
+                        display: false // Hide default labels
+                    },
+                    grid: { 
+                        display: false, // Hide default grid lines
+                    },
+                },
+                y2: {
+                    position: 'right', // Position on the right side
+                    beginAtZero: false,
+                    grace: 0.25,
+                    border: { display: false },
+                    ticks: { 
+                        maxTicksLimit: 3, 
+                        display: false // Hide default labels for the right axis
+                    },
+                    grid: { 
+                        display: false, // No grid for right axis
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        },
+        plugins: [{
+            id: 'customYAxisLabels',
+            afterDraw: (chart) => {
+                const { ctx, scales, chartArea } = chart;
+                const yAxis = scales.y;
+                const y2Axis = scales.y2;
+
+                const gridLineColor = getComputedStyle(document.documentElement).getPropertyValue("--color-2-transparent").trim(); // Grid color using CSS variable
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue("--color-3-transparent").trim(); // Use the same color for text labels
+
+                ctx.save();
+                ctx.font = "12px Titillium Web";
+                ctx.fillStyle = textColor;
+                ctx.textAlign = "center";
+
+                const leftX = yAxis.left + 20;
+                const rightX = y2Axis.right - 20;
+
+                const offset = 10;
+
+                yAxis.ticks.forEach((tick, index) => {
+                    const y = yAxis.getPixelForValue(tick.value);
+                    var adjustedY = Math.max(yAxis.top + 13, Math.min(y, yAxis.bottom - 6));
+                    const isMiddleTick = index === Math.floor(yAxis.ticks.length / 2);
+
+                    let adjustedTickValue;
+                    switch(localStorage.getItem("signalUnit")) {
+                        case "dbuv": adjustedTickValue = tick.value - 11.25; break;
+                        case "dbm": adjustedTickValue = tick.value - -120; break;
+                        default: adjustedTickValue = tick.value; break;
+                    }
+                
+                    if (isMiddleTick) { adjustedY += 3; }
+                    ctx.textAlign = 'right';
+                    ctx.fillText(adjustedTickValue.toFixed(1), leftX + 25, adjustedY); 
+
+                    ctx.textAlign = 'left';
+                    ctx.fillText(adjustedTickValue.toFixed(1), rightX - 25, adjustedY); // Right side
+                });
+                
+                const gridLineWidth = 0.5; // Make the lines thinner to avoid overlapping text
+                const adjustedGridTop = chartArea.top + offset;
+                const adjustedGridBottom = chartArea.bottom - offset;
+                const middleY = chartArea.top + chartArea.height / 2;
+                const padding = 45; // 30px inward on both sides
+                
+                // Helper function to draw a horizontal line
+                function drawGridLine(y) {
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left + padding, y);
+                    ctx.lineTo(chartArea.right - padding, y);
+                    ctx.strokeStyle = gridLineColor;
+                    ctx.lineWidth = gridLineWidth;
+                    ctx.stroke();
+                }
+                
+                // Draw the three horizontal grid lines
+                drawGridLine(adjustedGridTop);
+                drawGridLine(adjustedGridBottom);
+                drawGridLine(middleY);
+                
+                ctx.restore();
+            }
+        }]
+    });
 }
 
 let reconnectTimer = null;
@@ -639,14 +636,6 @@ function processString(string, errors) {
     }
     
     return output;
-}
-
-function getCurrentFreq() {
-    currentFreq = $('#data-frequency').text();
-    currentFreq = parseFloat(currentFreq).toFixed(3);
-    currentFreq = parseFloat(currentFreq);
-    
-    return currentFreq;
 }
 
 function checkKey(e) {
@@ -899,14 +888,12 @@ function throttle(fn, wait) {
     return wrapper;
 }
 
-// Utility function to update element's text if changed
 function updateTextIfChanged($element, newText) {
     if ($element.text() !== newText) {
         $element.text(newText);
     }
 }
 
-// Utility function to update element's HTML content if changed
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
@@ -1005,7 +992,7 @@ const updateDataElements = throttle(function(parsedData) {
         $dataRt1.attr('aria-label', parsedData.rt1);
         $('#users-online-container').attr("aria-label", "Online users: " + parsedData.users);
     }
-}, 100); // Update at most once every 100 milliseconds
+}, 75); // Update at most once every 100 milliseconds
 
 let isEventListenerAdded = false;
 
@@ -1114,9 +1101,12 @@ function showTunerDescription() {
             parentDiv.css("border-radius", "");
         }
     });
+    
+    $("#tuner-name i").toggleClass("rotated");
 
     if ($(window).width() < 768) {
         $('.dashboard-panel-plugin-list').slideToggle(300);
+        $('#users-online-container').slideToggle(300);
         $('.chatbutton').slideToggle(300);
         $('#settings').slideToggle(300);
     }

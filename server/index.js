@@ -469,11 +469,9 @@ wss.on('connection', (ws, request) => {
     });
 
     ws.on('close', (code, reason) => {
-        if (clientIp !== '::ffff:127.0.0.1' || 
-            (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.1') || 
-            (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
-            currentUsers--;
-        }
+      if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+        currentUsers--;
+      }
         dataHandler.showOnlineUsers(currentUsers);
 
         const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);

@@ -84,16 +84,20 @@ function handleConnect(clientIp, currentUsers, ws, callback) {
       }
     });
   }).on("error", (err) => {
-    console.error("Error fetching location data:", err);
+    consoleCmd.logError("Error fetching location data:", err.code);
     callback("User allowed");
   });
 }
 
-function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
-  const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
-  const connectionTime = new Date().toLocaleString([], options);
+let bannedASCache = { data: null, timestamp: 0 };
 
-  https.get("https://fmdx.org/banned_as.json", (banResponse) => {
+function fetchBannedAS(callback) {
+  const now = Date.now();
+  if (bannedASCache.data && now - bannedASCache.timestamp < 10 * 60 * 1000) {
+    return callback(null, bannedASCache.data);
+  }
+
+  const req = https.get("https://fmdx.org/banned_as.json", { family: 4 }, (banResponse) => {
     let banData = "";
 
     banResponse.on("data", (chunk) => {
@@ -103,39 +107,60 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
     banResponse.on("end", () => {
       try {
         const bannedAS = JSON.parse(banData).banned_as || [];
-
-        if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
-          return callback("User banned");
-        }
-
-        const userLocation =
-          locationInfo.country === undefined
-            ? "Unknown"
-            : `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
-
-        storage.connectedUsers.push({
-          ip: clientIp,
-          location: userLocation,
-          time: connectionTime,
-          instance: ws,
-        });
-
-        consoleCmd.logInfo(
-          `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
-        );
-
-        callback("User allowed");
+        bannedASCache = { data: bannedAS, timestamp: now };
+        callback(null, bannedAS);
       } catch (error) {
         console.error("Error parsing banned AS list:", error);
-        callback("User allowed");
+        callback(null, []); // Default to allowing user
       }
     });
-  }).on("error", (err) => {
+  });
+
+  // Set timeout for the request (5 seconds)
+  req.setTimeout(5000, () => {
+    console.error("Error: Request timed out while fetching banned AS list.");
+    req.abort();
+    callback(null, []); // Default to allowing user
+  });
+
+  req.on("error", (err) => {
     console.error("Error fetching banned AS list:", err);
-    callback("User allowed");
+    callback(null, []); // Default to allowing user
   });
 }
 
+function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
+  const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
+  const connectionTime = new Date().toLocaleString([], options);
+
+  fetchBannedAS((error, bannedAS) => {
+    if (error) {
+      console.error("Error fetching banned AS list:", error);
+    }
+
+    if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
+      return callback("User banned");
+    }
+
+    const userLocation =
+      locationInfo.country === undefined
+        ? "Unknown"
+        : `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
+
+    storage.connectedUsers.push({
+      ip: clientIp,
+      location: userLocation,
+      time: connectionTime,
+      instance: ws,
+    });
+
+    consoleCmd.logInfo(
+      `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
+    );
+
+    callback("User allowed");
+  });
+}
 
 function formatUptime(uptimeInSeconds) {
   const secondsInMinute = 60;

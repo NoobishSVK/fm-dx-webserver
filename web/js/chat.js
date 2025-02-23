@@ -59,7 +59,7 @@ $(document).ready(function() {
     chatNicknameSave.click(function() {
         const currentNickname = chatNicknameInput.val().trim() || `Anonymous User ${generateRandomString(5)}`;
         localStorage.setItem('nickname', currentNickname);
-        savedNickname = currentNickname; // Update the savedNickname variable
+        savedNickname = currentNickname;
         chatIdentityNickname.text(savedNickname);
         chatNicknameInput.blur();
     });

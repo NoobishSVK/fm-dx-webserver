@@ -4,8 +4,12 @@
     <title><%= tunerName %> - FM-DX Webserver</title>
     <link href="css/entry.css" type="text/css" rel="stylesheet">
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" type="text/css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="css/libs/fontawesome.css" type="text/css" rel="stylesheet">
+    <script src="js/libs/jquery.min.js"></script>
+    <script src="js/libs/chart.umd.min.js"></script>
+    <script src="js/libs/luxon.min.js"></script>
+    <script src="js/libs/chartjs-adapter-luxon.umd.min.js"></script>
+    <script src="js/libs/chartjs-plugin-streaming.min.js"></script>
     
     <link rel="icon" type="image/png" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +20,7 @@
     <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
     
     <script src="js/init.js"></script>
-    
+        
     <!-- 3LAS Scripts for Audio streaming -->
     <script src="js/3las/util/3las.helpers.js"></script>
     <script src="js/3las/util/3las.logging.js"></script>
@@ -39,7 +43,7 @@
     <div class="wrapper-outer dashboard-panel" style="padding-top: 20px; z-index: 10; position: relative;">
         <div class="panel-100-real m-0 flex-container bg-phone flex-phone-column" style="min-height: 64px; max-width: 1160px; margin-top: 10px;align-items: center; justify-content: space-between; padding-left: 20px;padding-right: 10px;">
             <h1 id="tuner-name" class="text-left flex-container flex-phone flex-center" style="padding-bottom: 3px; padding-right: 5px;height: 64px;">
-                <span class="text-200-px" style="max-width: 450px;"><%= tunerName %></span> <i class="fa-solid fa-chevron-down p-left-10" style="font-size: 15px;"></i>
+                <span class="text-200-px" style="max-width: 450px;padding-right: 10px;"><%= tunerName %></span> <i class="fa-solid fa-chevron-down" style="font-size: 15px;"></i>
             </h1>
             <% if(!publicTuner || tunerLock) { %>
             <div class="tuner-status p-10 color-3">
@@ -109,27 +113,16 @@
             <div style="width: 1px;background: var(--color-2);" class="m-10 hide-phone"></div>
 
             <div>
+                <% const presets = [1, 2, 3, 4]; %>
+
                 <div style="height: 64px;" class="flex-center flex-phone">
-                    <button class="no-bg color-4 hover-brighten" id="preset1" style="padding: 6px; width: 64px; min-width: 64px;">
-                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                        <span style="font-size: 10px; color: var(--color-text);" id="preset1-text"></span>
-                    </button>
-
-                    <button class="no-bg color-4 hover-brighten" id="preset2" style="padding: 6px; width: 64px; min-width: 64px;">
-                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                        <span style="font-size: 10px; color: var(--color-text);" id="preset2-text"></span>
-                    </button>
-
-                    <button class="no-bg color-4 hover-brighten" id="preset3" style="padding: 6px; width: 64px; min-width: 64px;">
-                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                        <span style="font-size: 10px; color: var(--color-text);" id="preset3-text"></span>
-                    </button>
-
-                    <button class="no-bg color-4 hover-brighten" id="preset4" style="padding: 6px; width: 64px; min-width: 64px;">
-                        <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                        <span style="font-size: 10px; color: var(--color-text);" id="preset4-text"></span>
-                    </button>
-                </div>
+                    <% presets.forEach(preset => { %>
+                        <button class="no-bg color-4 hover-brighten" id="preset<%= preset %>" style="padding: 6px; width: 64px; min-width: 64px;">
+                            <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+                            <span style="font-size: 10px; color: var(--color-text);" id="preset<%= preset %>-text"></span>
+                        </button>
+                    <% }); %>
+                </div>                
 
                 <div class="flex-container flex-phone" style="align-items: center; height: 64px;">
                     <div class="color-3 m-10 text-medium">
@@ -439,11 +432,6 @@
                                                                 <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
                                                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
                                                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
-                                                                
-                                                                <div class="form-group bottom-20 hide-desktop" style="float: none;">
-                                                                    <label for="users-online"><i class="fa-solid fa-user"></i> Users online</label>
-                                                                    <span class="users-online" name="users-online">0</span>
-                                                                </div>
                                                                 
                                                                 <% if (isAdminAuthenticated) { %>
                                                                     <p class="color-3">You are logged in as an adminstrator.</p>
