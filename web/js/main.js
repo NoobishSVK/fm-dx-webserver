@@ -722,7 +722,6 @@ function checkKey(e) {
             // Handle default case if needed
             break;
         }
-        previousFreq = currentFreq;
     }
 }
 
@@ -1190,13 +1189,25 @@ function initTooltips(target = null) {
         });
     }
     
-    
     function fillPresets() {
+        let hasAnyPreset = false;
+    
         for (let i = 1; i <= 4; i++) {
             let presetText = localStorage.getItem(`preset${i}`);
-            $(`#preset${i}-text`).text(presetText);
-            $(`#preset${i}`).click(function() {
-                tuneTo(Number(presetText));
-            });
+    
+            if (presetText != "null") {
+                hasAnyPreset = true;
+                $(`#preset${i}-text`).text(presetText);
+                $(`#preset${i}`).click(function() {
+                    tuneTo(Number(presetText));
+                });
+            } else {
+                $(`#preset${i}`).hide();
+            }
+        }
+    
+        if (!hasAnyPreset) {
+            $('#preset1').parent().hide();
         }
     }
+    

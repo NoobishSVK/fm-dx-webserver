@@ -105,6 +105,10 @@ a:hover {
     border-bottom: 1px solid var(--color-4);
 }
 
+a.hide-underline:hover {
+    border-bottom: none;
+}
+
 hr {
     color: var(--color-4);
 }

@@ -7,6 +7,8 @@ let lastFetchTime = 0;
 const fetchInterval = 1000;
 const esSwitchCache = {"lastCheck":0, "esSwitch":false};
 const esFetchInterval = 300000;
+var currentPiCode = '';
+var currentRdsPs = '';
 const usStatesGeoJsonUrl = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 let usStatesGeoJson = null;  // To cache the GeoJSON data for US states
 
@@ -73,7 +75,11 @@ async function fetchTx(freq, piCode, rdsPs) {
     if (isNaN(freq)) {
         return;
     }
-    if (now - lastFetchTime < fetchInterval || serverConfig.identification.lat.length < 2 || freq < 87) {
+    if (now - lastFetchTime < fetchInterval
+        || serverConfig.identification.lat.length < 2
+        || freq < 87
+        || (currentPiCode == piCode && currentRdsPs == rdsPs))
+        {
         return Promise.resolve();
     }
 
@@ -90,7 +96,7 @@ async function fetchTx(freq, piCode, rdsPs) {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         cachedData[freq] = data;
-        await loadUsStatesGeoJson();
+        if(serverConfig.webserver.rdsMode == true) await loadUsStatesGeoJson();
         return processData(data, piCode, rdsPs);
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -106,6 +112,8 @@ async function processData(data, piCode, rdsPs) {
     let maxDistance;
     let esMode = checkEs();
     let detectedByPireg = false;
+    currentPiCode = piCode;
+    currentRdsPs = rdsPs;
 
     function evaluateStation(station, city, distance) {
         let weightDistance = distance.distanceKm;

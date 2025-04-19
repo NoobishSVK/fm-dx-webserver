@@ -40,6 +40,7 @@ function tuneDown() {
 }
 
 function tuneTo(freq) {
+    previousFreq = getCurrentFreq();
     socket.send("T" + ((freq).toFixed(1) * 1000));
 }
 

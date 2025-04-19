@@ -166,12 +166,10 @@ $(document).ready(() => {
     $('.version-string').text(currentVersion);
     
     setBg();
-
-    updateIconState();
         
         // Update icons when the checkbox state changes
     $('input[type="checkbox"]').change(function() {
-        updateIconState();
+        updateIconState(this);
     });
 });
 
@@ -180,15 +178,27 @@ function getQueryParameter(name) {
     return urlParams.get(name);
 }
 
-function updateIconState() {
-    $('input[type="checkbox"]').each(function() {
-        var icon = $(this).siblings('label').find('i');
-        if ($(this).is(':checked')) {
+function updateIconState(el) {
+    // If an element is passed, update only that one
+    if (el) {
+        var $checkbox = $(el);
+        var icon = $checkbox.siblings('label').find('i');
+        if ($checkbox.is(':checked')) {
             icon.removeClass('fa-toggle-off').addClass('fa-toggle-on');
         } else {
             icon.removeClass('fa-toggle-on').addClass('fa-toggle-off');
         }
-    });
+    } else {
+        // Otherwise, update all checkboxes
+        $('input[type="checkbox"]').each(function() {
+            var icon = $(this).siblings('label').find('i');
+            if ($(this).is(':checked')) {
+                icon.removeClass('fa-toggle-off').addClass('fa-toggle-on');
+            } else {
+                icon.removeClass('fa-toggle-on').addClass('fa-toggle-off');
+            }
+        });
+    }
 }
 
 function setTheme(themeName) {

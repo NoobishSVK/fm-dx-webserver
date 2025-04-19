@@ -96,6 +96,8 @@ function populateFields(data, prefix = "") {
       $element.val(value);
     }
   });
+  
+  updateIconState();
 }
 
 function updateConfigData(data, prefix = "") {

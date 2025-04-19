@@ -305,7 +305,7 @@ table .input-text {
     .hide-phone {
         display: none;
     }
-    .m-0 {
+    .m-0, .center-phone {
         margin: auto !important;
     }
 }

@@ -206,7 +206,6 @@ const updateInterval = 75;
 var dataToSend = {
   pi: '?',
   freq: 87.500.toFixed(3),
-  prevFreq: 87.500.toFixed(3),
   sig: 0,
   sigRaw: '',
   sigTop: -Infinity,

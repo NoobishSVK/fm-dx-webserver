@@ -9,7 +9,7 @@ function enableAudioStream() {
 
     const flags = `-fflags +nobuffer+flush_packets -flags low_delay -rtbufsize 6192 -probesize 32`;
     const codec = `-acodec pcm_s16le -ar 48000 -ac ${serverConfig.audio.audioChannels}`;
-    const output = `-f s16le -fflags +nobuffer+flush_packets -packetsize 384 -flush_packets 1 -bufsize 960`;
+    const output = `${serverConfig.audio.audioBoost == true ? '$-af "volume=3.5"' : ''} -f s16le -fflags +nobuffer+flush_packets -packetsize 384 -flush_packets 1 -bufsize 960`;
 
     if (process.platform === 'win32') {
         // Windows

@@ -43,6 +43,7 @@ let serverConfig = {
     audioDevice: "Microphone (High Definition Audio Device)",
     audioChannels: 2,
     audioBitrate: "128k",
+    audioBoost: false,
     softwareMode: false,
     startupVolume: "0.95"
   },

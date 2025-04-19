@@ -85,8 +85,7 @@
                     </div>
                 </div>
 
-                <div class="flex-container">
-                    <div class="panel-50 p-bottom-20" style="overflow-x: auto;">
+                    <div class="panel-100-real p-bottom-20" style="overflow-x: auto;">
                         <h3>Current users</h3>
                         <table class="table-big">
                             <thead>
@@ -120,7 +119,7 @@
                         </table>    
                     </div>
                     
-                    <div class="panel-50 p-bottom-20">
+                    <div class="panel-100-real p-bottom-20">
                         <h3>Quick settings</h3>
                         <div class="flex-container flex-center" style="margin: 30px;">
                             <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Public Tuner', id: 'publicTuner'}) %>
@@ -130,7 +129,6 @@
                         <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
                         <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
                     </div>
-                </div>
 
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20 bottom-20">
@@ -208,8 +206,13 @@
                 </div>
 
                 <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20">
-                        <h3>Miscellaneous</h3>
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Volume</h3>
+                        <p>This option will boost the audio volume globally, recommended for the Headless TEF.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Audio Boost', id: 'audio-audioBoost'}) %>
+                    </div>
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Experimental</h3>
                         <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
                     </div>
@@ -524,7 +527,7 @@
                 </div>
                 <div class="panel-100 p-bottom-20">
                     <h3>Tunnel</h3>
-                    <p>When you become a <a href="https://buymeacoffee.com/fmdx" target="_blank"><strong>FMDX.org supporter</strong></a>, you can host your webserver without the need of a public IP address.<br>
+                    <p>When you become an <a href="https://buymeacoffee.com/fmdx" target="_blank"><strong>FMDX.org supporter</strong></a>, you can host your webserver without the need of a public IP address & port forwarding.<br>
                     When you become a supporter, you can message the Founders on Discord for your login details.</p>
 
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Enable tunnel', id: 'tunnel-enabled'}) %><br>
