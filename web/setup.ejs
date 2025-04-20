@@ -217,6 +217,18 @@
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
                     </div>
                 </div>
+                <div class="flex-container">
+                    <div class="panel-50 p-bottom-20">
+                        <h3>FFmpeg</h3>
+                        <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
+                    </div>
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Samplerate Offset</h3>
+                        <p>Using a negative value could eliminate audio buffering issues during long periods of listening. However, a value that’s too low might increase the buffer over time.</p>
+                        <p><input class="panel-33 input-text w-100 auto" type="number" style="min-height: 40px; color: var(--color-text); padding: 10px; padding-left: 10px; box-sizing: border-box; border: 2px solid transparent; font-family: 'Titillium Web', sans-serif;" id="audio-samplerateOffset" min="-10" max="10" step="1" value="0" aria-label="Samplerate offset"></p>
+                    </div>
+                </div>
             </div>
 
             <div class="panel-full m-0 tab-content no-bg" id="webserver" role="tabpanel">
