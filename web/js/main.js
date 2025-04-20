@@ -972,7 +972,6 @@ const updateDataElements = throttle(function(parsedData) {
     }
     updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
     
-    updateCounter++;
     if (updateCounter % 8 === 0) {
         $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
         $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
@@ -996,7 +995,7 @@ const updateDataElements = throttle(function(parsedData) {
 let isEventListenerAdded = false;
 
 function updatePanels(parsedData) {
-    updateCounter++;
+    updateCounter = (updateCounter % 10000) + 1; // Count to 10000 then reset back to 1
     
     signalData.push(parsedData.sig);
     if (signalData.length > 8) {
