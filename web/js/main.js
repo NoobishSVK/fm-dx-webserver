@@ -1168,6 +1168,11 @@ function initTooltips(target = null) {
                 
                 // Apply positioning
                 tooltipEl.css({ top: posY, left: posX, opacity: 1 });
+
+                // For touchscreen devices
+                if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
+                    setTimeout(() => { $('.tooltiptext').remove(); }, 5000);
+                }
                 
             }, 300));
         }, function () {
