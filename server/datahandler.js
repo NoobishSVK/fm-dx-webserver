@@ -433,15 +433,19 @@ function handleData(wss, receivedData, rdsWss) {
 }
 
 // Serialport retry code when port is open but communication is lost (additional code in index.js)
-isSerialportAlive = true;
-lastFrequencyAlive = '87.500';
+let state = {
+  isSerialportAlive: true,
+  isSerialportRetrying: false,
+  lastFrequencyAlive: '87.500'
+};
+
 setInterval(() => {
-  lastFrequencyAlive = initialData.freq;
+  state.lastFrequencyAlive = initialData.freq;
   const serialportElapsedTime = process.hrtime(serialportUpdateTime)[0];
   // Activate serialport retry if handleData has not been executed for over 8 seconds
-  if (checkSerialport && (serialportElapsedTime > 8) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
-    isSerialportAlive = false;
-    isSerialportRetrying = true;
+  if (checkSerialport && (serialportElapsedTime > 8) && !state.isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
+    state.isSerialportAlive = false;
+    state.isSerialportRetrying = true;
   }
 }, 2000);
 
@@ -498,5 +502,5 @@ function processSignal(receivedData, st, stForced) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault
+  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault, state
 };
