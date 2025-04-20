@@ -1,8 +1,11 @@
 "use strict";
 var fs = require('fs');
-const ffmpegStaticPath = require('ffmpeg-static');
-const {serverConfig} = require('../server_config')
+const checkFFmpeg = require('./checkFFmpeg');
+const {serverConfig} = require('../server_config');
 
+let ffmpegStaticPath;
+
+function runStream() {
 /*
     Stdin streamer is part of 3LAS (Low Latency Live Audio Streaming)
     https://github.com/JoJoBond/3LAS
@@ -243,7 +246,7 @@ class FallbackProviderMp3 extends AFallbackProvider {
         return [
             "-fflags", "+nobuffer+flush_packets", "-flags", "low_delay", "-rtbufsize", "32", "-probesize", "32",
             "-f", "s16le",
-            "-ar", this.Server.SampleRate.toString(),
+            "-ar", Number(this.Server.SampleRate.toString()) + Number(serverConfig.audio.samplerateOffset),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
             "-c:a", "libmp3lame",
@@ -274,7 +277,7 @@ class FallbackProviderWav extends AFallbackProvider {
         return [
             "-fflags", "+nobuffer+flush_packets", "-flags", "low_delay", "-rtbufsize", "32", "-probesize", "32",
             "-f", "s16le",
-            "-ar", this.Server.SampleRate.toString(),
+            "-ar", Number(this.Server.SampleRate.toString()) + Number(serverConfig.audio.samplerateOffset),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
             "-c:a", "pcm_s16le",
@@ -328,3 +331,9 @@ for (let i = 2; i < (process.argv.length - 1); i += 2) {
 const Server = StreamServer.Create(Options);
 Server.Run();
 //# sourceMappingURL=3las.server.js.map
+}
+
+checkFFmpeg().then((ffmpegResult) => {
+    ffmpegStaticPath = ffmpegResult;
+    runStream();
+});
