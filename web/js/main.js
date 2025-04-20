@@ -534,7 +534,7 @@ function initCanvas() {
                     let adjustedTickValue;
                     switch(localStorage.getItem("signalUnit")) {
                         case "dbuv": adjustedTickValue = tick.value - 11.25; break;
-                        case "dbm": adjustedTickValue = tick.value - -120; break;
+                        case "dbm": adjustedTickValue = tick.value - 120; break;
                         default: adjustedTickValue = tick.value; break;
                     }
                 
