@@ -682,6 +682,26 @@ pluginsWss.on('connection', (ws, request) => {
     });
 });
 
+function isPortOpen(host, port, timeout = 1000) {
+    return new Promise((resolve) => {
+        const socket = new net.Socket();
+
+        const onError = () => {
+            socket.destroy();
+            resolve(false);
+        };
+
+        socket.setTimeout(timeout);
+        socket.once('error', onError);
+        socket.once('timeout', onError);
+
+        socket.connect(port, host, () => {
+            socket.end();
+            resolve(true);
+        });
+    });
+}
+
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
@@ -691,8 +711,15 @@ httpServer.on('upgrade', (request, socket, head) => {
       });
     });
   } else if (request.url === '/audio') {
-    proxy.ws(request, socket, head);
-  } else if (request.url === '/chat') {
+    isPortOpen('localhost', (Number(serverConfig.webserver.webserverPort) + 10)).then((open) => {
+        if (open) {
+            proxy.ws(request, socket, head);
+        } else {
+            logWarn(`Audio stream port ${(Number(serverConfig.webserver.webserverPort) + 10)} not yet open — skipping proxy connection.`);
+            socket.end(); // close socket so client isn't left hanging
+        }
+    });
+} else if (request.url === '/chat') {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
