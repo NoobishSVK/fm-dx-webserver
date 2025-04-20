@@ -18,7 +18,7 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const { SerialPort } = require('serialport');
-const tunnel = require('./tunnel')
+const tunnel = require('./tunnel');
 
 // File imports
 const helpers = require('./helpers');
@@ -118,12 +118,12 @@ connectToSerial();
 tunnel.connect();
 
 // Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
-isSerialportRetrying = false;
+dataHandler.state.isSerialportRetrying = false;
 
 setInterval(() => {
-  if (!isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
-    isSerialportAlive = true;
-    isSerialportRetrying = true;
+  if (!dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
+    dataHandler.state.isSerialportAlive = true;
+    dataHandler.state.isSerialportRetrying = true;
     if (serialport && serialport.isOpen) {
       logWarn('Communication lost from ' + serverConfig.xdrd.comPort + ', force closing serialport.');
       setTimeout(() => {
@@ -163,7 +163,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     }
     
     logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-    isSerialportAlive = true;
+    dataHandler.state.isSerialportAlive = true;
     setTimeout(() => {
         serialport.write('x\n');
     }, 3000);
@@ -177,12 +177,12 @@ if (serverConfig.xdrd.wirelessConnection === false) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-      } else if (lastFrequencyAlive && isSerialportRetrying) { // Serialport retry code when port is open but communication is lost
-        serialport.write('T' + (lastFrequencyAlive * 1000) + '\n');
+      } else if (dataHandler.state.lastFrequencyAlive && dataHandler.state.isSerialportRetrying) { // Serialport retry code when port is open but communication is lost
+        serialport.write('T' + (dataHandler.state.lastFrequencyAlive * 1000) + '\n');
       } else {
         serialport.write('T87500\n');
       }
-      isSerialportRetrying = false;
+      dataHandler.state.isSerialportRetrying = false;
 
       serialport.write('A0\n');
       serialport.write('F-1\n');
@@ -207,7 +207,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   serialport.on('close', () => {
     logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
     setTimeout(() => {
-        isSerialportRetrying = true;
+        dataHandler.state.isSerialportRetrying = true;
         connectToSerial();
     }, 5000);
   });
