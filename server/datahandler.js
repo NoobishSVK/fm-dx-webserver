@@ -466,7 +466,13 @@ function showOnlineUsers(currentUsers) {
   initialData.users = currentUsers;
 }
 
+let prevFreq = initialData.freq || '87.500';
 function processSignal(receivedData, st, stForced) {
+  if (initialData.freq !== prevFreq) {
+    prevFreq = initialData.freq;
+    dataToSend.ps_errors = '';
+  }
+
   const modifiedData = receivedData.substring(2);
   const parsedValue = parseFloat(modifiedData);
   dataToSend.st = st;
