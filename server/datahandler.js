@@ -139,6 +139,7 @@ const callbacks = {
       dataToSend.rt1 = decode_unicode(rt);
       dataToSend.rt1_errors = decode_errors(rt);
     }
+    dataToSend.rt_flag = flag;
   }, 'callback_rt*'),
 
   ptyn: koffi.register((rds, flag) => (
@@ -222,6 +223,7 @@ var dataToSend = {
   af: [],
   rt0: '',
   rt1: '',
+  rt_flag: '',
   ims: 0,
   eq: 0,
   ant: 0,
