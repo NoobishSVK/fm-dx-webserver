@@ -240,6 +240,8 @@ var dataToSend = {
   country_name: '',
   country_iso: 'UN',
   users: 0,
+  serverTime: null, // For time with local time zone.
+  serverTimeUTC: null, // Optional, UTC time only.
 };
 
 const filterMappings = {
@@ -260,6 +262,22 @@ const ServerStartTime = process.hrtime();
 var serialportUpdateTime = process.hrtime();
 let checkSerialport = false;
 
+// Retrieving local time zone.
+function formatLocalIsoWithOffset(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const milliseconds = date.getMilliseconds().toString().padStart(3, '0');
+    const offsetMinutes = date.getTimezoneOffset();
+    const offsetSign = offsetMinutes <= 0 ? '+' : '-';
+    const offsetHours = Math.abs(Math.floor(offsetMinutes / 60)).toString().padStart(2, '0');
+    const offsetMinutesPart = Math.abs(offsetMinutes % 60).toString().padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${offsetSign}${offsetHours}:${offsetMinutesPart}`;
+}
 
 function handleData(wss, receivedData, rdsWss) {
   // Retrieve the last update time for this client
@@ -418,6 +436,9 @@ function handleData(wss, receivedData, rdsWss) {
   .catch((error) => {
       console.log("Error fetching Tx info:", error);
   });
+
+  dataToSend.serverTime = formatLocalIsoWithOffset(new Date()); // Print time including local time-zone.
+  dataToSend.serverTimeUTC = new Date().toISOString(); // Optional, Print UTC time only.
 
     // Send the updated data to the client
     const dataToSendJSON = JSON.stringify(dataToSend);
