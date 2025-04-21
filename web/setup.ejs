@@ -296,6 +296,16 @@
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
                     </div>
+                    <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
+                        <h3>Transmitter Search Algorithm</h3>
+                        <p>Different modes may help with more accurate transmitter identification depending on your region.</p>
+                        <%- include('_components', { component: 'dropdown', id: 'server-tx-id-algo', inputId: 'webserver-txIdAlgorithm', label: 'Transmitter ID Algorithm', cssClass: '', placeholder: 'Algorithm 1', 
+                        options: [
+                            { value: '0', label: 'Algorithm 1' },
+                            { value: '1', label: 'Algorithm 2' },
+                        ]
+                        }) %>
+                    </div>
                 </div>
 
             </div>

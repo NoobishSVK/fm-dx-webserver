@@ -12,6 +12,21 @@ var currentRdsPs = '';
 const usStatesGeoJsonUrl = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json";
 let usStatesGeoJson = null;  // To cache the GeoJSON data for US states
 
+// Get weighting values based on algorithm setting.
+// Defaults = algorithm 1
+let weightedErp = 10;
+let weightedDist = 400;
+const algorithms = [
+    [10, 400],
+    [30, 500]
+];
+const algoSetting = parseInt(serverConfig.webserver.txIdAlgorithm);
+
+if (typeof algorithms[algoSetting] !== 'undefined') {
+    weightedErp = algorithms[algoSetting][0];
+    weightedDist = algorithms[algoSetting][1];
+}
+
 // Load the US states GeoJSON data
 async function loadUsStatesGeoJson() {
     if (!usStatesGeoJson) {
@@ -121,8 +136,14 @@ async function processData(data, piCode, rdsPs) {
             weightDistance = Math.abs(distance.distanceKm - 1500);
         }
         let erp = station.erp && station.erp > 0 ? station.erp : 1;
-        let extraWeight = erp >= 10 && distance.distanceKm <= 400 ? 0.3 : 0;
-        const score = ((10 * Math.log10(erp * 1000)) / weightDistance) + extraWeight;
+        let extraWeight = erp >= weightedErp && distance.distanceKm <= weightedDist ? 0.3 : 0;
+        let score = 0;
+        // If ERP is 1W, use a simpler formula to avoid zero-scoring.
+        if (erp === 0.001) {
+            score = erp / distance.distanceKm;
+        } else {
+            score = ((10 * Math.log10(erp * 1000)) / weightDistance) + extraWeight;
+        }
         if (score > maxScore) {
             maxScore = score;
             txAzimuth = distance.azimuth;
