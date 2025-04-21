@@ -461,6 +461,7 @@ function initCanvas() {
                         delay: 150,
                         onRefresh: (chart) => {
                             if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
+                            if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
 
                             signalBuffer.push(parsedData.sig);
                             if (signalBuffer.length > 8) {
@@ -572,6 +573,21 @@ function initCanvas() {
         }]
     });
 }
+
+function setRefreshRate(rate) {
+    const rt = signalChart.options.scales.x.realtime;
+    rt.refresh = rate;
+    signalChart.update('none');
+    console.log(`Graph refresh rate set to ${rate} ms`);
+}
+
+window.addEventListener("focus", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(75);
+});
+
+window.addEventListener("blur", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(3000);
+});
 
 let reconnectTimer = null;
 let dataTimeout = null;
