@@ -146,8 +146,16 @@
                     </div>
 
                     <div class="panel-100 no-bg text-center">
-                        <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
-                        <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                        <div class="flex-container">
+                            <div class="panel-50 no-bg">
+                                <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                            </div>
+                            <div class="panel-50 no-bg">
+                                <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
