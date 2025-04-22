@@ -444,6 +444,7 @@ function initCanvas() {
                     bottom: -10
                 },
             },
+            animation: false,
             responsive: true,
             maintainAspectRatio: false,
             elements: {
@@ -459,19 +460,23 @@ function initCanvas() {
                         duration: 30000,
                         refresh: 75,
                         delay: 150,
+                        frameRate: 30, // default is 30
                         onRefresh: (chart) => {
                             if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
+                            if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
 
-                            signalBuffer.push(parsedData.sig);
-                            if (signalBuffer.length > 8) {
-                                signalBuffer.shift();
-                            }
+                            const sig = parsedData.sig;
+                            if (signalBuffer.length > 0 && signalBuffer[signalBuffer.length - 1] === sig) return; // skip if data hasn't changed
+
+                            signalBuffer.push(sig);
+                            if (signalBuffer.length > 8) signalBuffer.shift();
+
                             const avgSignal = signalBuffer.reduce((sum, val) => sum + val, 0) / signalBuffer.length;
 
-                            chart.data.datasets[0].data.push({
-                                x: Date.now(),
-                                y: avgSignal
-                            });
+                            const dataset = chart.data.datasets[0].data;
+                            dataset.push({ x: Date.now(), y: avgSignal });
+
+                            if (dataset.length > 400) dataset.shift(); // duration / refresh
                         }
                     }
                 },
@@ -534,7 +539,7 @@ function initCanvas() {
                     let adjustedTickValue;
                     switch(localStorage.getItem("signalUnit")) {
                         case "dbuv": adjustedTickValue = tick.value - 11.25; break;
-                        case "dbm": adjustedTickValue = tick.value - -120; break;
+                        case "dbm": adjustedTickValue = tick.value - 120; break;
                         default: adjustedTickValue = tick.value; break;
                     }
                 
@@ -572,6 +577,21 @@ function initCanvas() {
         }]
     });
 }
+
+function setRefreshRate(rate) {
+    const rt = signalChart.options.scales.x.realtime;
+    rt.refresh = rate;
+    signalChart.update('none');
+    console.log(`Graph refresh rate set to ${rate} ms`);
+}
+
+window.addEventListener("focus", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(75);
+});
+
+window.addEventListener("blur", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(3000);
+});
 
 let reconnectTimer = null;
 let dataTimeout = null;
@@ -972,7 +992,6 @@ const updateDataElements = throttle(function(parsedData) {
     }
     updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
     
-    updateCounter++;
     if (updateCounter % 8 === 0) {
         $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
         $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
@@ -996,7 +1015,7 @@ const updateDataElements = throttle(function(parsedData) {
 let isEventListenerAdded = false;
 
 function updatePanels(parsedData) {
-    updateCounter++;
+    updateCounter = (updateCounter % 10000) + 1; // Count to 10000 then reset back to 1
     
     signalData.push(parsedData.sig);
     if (signalData.length > 8) {
@@ -1169,6 +1188,11 @@ function initTooltips(target = null) {
                 
                 // Apply positioning
                 tooltipEl.css({ top: posY, left: posX, opacity: 1 });
+
+                // For touchscreen devices
+                if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
+                    setTimeout(() => { $('.tooltiptext').remove(); }, 5000);
+                }
                 
             }, 300));
         }, function () {
