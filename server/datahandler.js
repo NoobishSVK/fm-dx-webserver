@@ -139,6 +139,7 @@ const callbacks = {
       dataToSend.rt1 = decode_unicode(rt);
       dataToSend.rt1_errors = decode_errors(rt);
     }
+    dataToSend.rt_flag = flag;
   }, 'callback_rt*'),
 
   ptyn: koffi.register((rds, flag) => (
@@ -222,6 +223,7 @@ var dataToSend = {
   af: [],
   rt0: '',
   rt1: '',
+  rt_flag: '',
   ims: 0,
   eq: 0,
   ant: 0,
@@ -431,15 +433,19 @@ function handleData(wss, receivedData, rdsWss) {
 }
 
 // Serialport retry code when port is open but communication is lost (additional code in index.js)
-isSerialportAlive = true;
-lastFrequencyAlive = '87.500';
+let state = {
+  isSerialportAlive: true,
+  isSerialportRetrying: false,
+  lastFrequencyAlive: '87.500'
+};
+
 setInterval(() => {
-  lastFrequencyAlive = initialData.freq;
+  state.lastFrequencyAlive = initialData.freq;
   const serialportElapsedTime = process.hrtime(serialportUpdateTime)[0];
   // Activate serialport retry if handleData has not been executed for over 8 seconds
-  if (checkSerialport && (serialportElapsedTime > 8) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
-    isSerialportAlive = false;
-    isSerialportRetrying = true;
+  if (checkSerialport && (serialportElapsedTime > 8) && !state.isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
+    state.isSerialportAlive = false;
+    state.isSerialportRetrying = true;
   }
 }, 2000);
 
@@ -464,7 +470,13 @@ function showOnlineUsers(currentUsers) {
   initialData.users = currentUsers;
 }
 
+let prevFreq = initialData.freq || '87.500';
 function processSignal(receivedData, st, stForced) {
+  if (initialData.freq !== prevFreq) {
+    prevFreq = initialData.freq;
+    dataToSend.ps_errors = '';
+  }
+
   const modifiedData = receivedData.substring(2);
   const parsedValue = parseFloat(modifiedData);
   dataToSend.st = st;
@@ -490,5 +502,5 @@ function processSignal(receivedData, st, stForced) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault
+  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault, state
 };

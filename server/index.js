@@ -18,7 +18,7 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const { SerialPort } = require('serialport');
-const tunnel = require('./tunnel')
+const tunnel = require('./tunnel');
 
 // File imports
 const helpers = require('./helpers');
@@ -118,12 +118,12 @@ connectToSerial();
 tunnel.connect();
 
 // Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
-isSerialportRetrying = false;
+dataHandler.state.isSerialportRetrying = false;
 
 setInterval(() => {
-  if (!isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
-    isSerialportAlive = true;
-    isSerialportRetrying = true;
+  if (!dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
+    dataHandler.state.isSerialportAlive = true;
+    dataHandler.state.isSerialportRetrying = true;
     if (serialport && serialport.isOpen) {
       logWarn('Communication lost from ' + serverConfig.xdrd.comPort + ', force closing serialport.');
       setTimeout(() => {
@@ -163,7 +163,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     }
     
     logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
-    isSerialportAlive = true;
+    dataHandler.state.isSerialportAlive = true;
     setTimeout(() => {
         serialport.write('x\n');
     }, 3000);
@@ -177,12 +177,12 @@ if (serverConfig.xdrd.wirelessConnection === false) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
         dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
         dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-      } else if (lastFrequencyAlive && isSerialportRetrying) { // Serialport retry code when port is open but communication is lost
-        serialport.write('T' + (lastFrequencyAlive * 1000) + '\n');
+      } else if (dataHandler.state.lastFrequencyAlive && dataHandler.state.isSerialportRetrying) { // Serialport retry code when port is open but communication is lost
+        serialport.write('T' + (dataHandler.state.lastFrequencyAlive * 1000) + '\n');
       } else {
         serialport.write('T87500\n');
       }
-      isSerialportRetrying = false;
+      dataHandler.state.isSerialportRetrying = false;
 
       serialport.write('A0\n');
       serialport.write('F-1\n');
@@ -207,7 +207,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   serialport.on('close', () => {
     logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
     setTimeout(() => {
-        isSerialportRetrying = true;
+        dataHandler.state.isSerialportRetrying = true;
         connectToSerial();
     }, 5000);
   });
@@ -421,10 +421,12 @@ wss.on('connection', (ws, request) => {
     ws.on('message', (message) => {
         const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
 
-        if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
-           ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
-            logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command. You may consider blocking this user.`);
-            return;
+        if (!clientIp.includes("127.0.0.1")) {
+            if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
+               ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
+                logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command: ${command.slice(0, 64)}.`);
+                return;
+            }
         }
 
         if (command.includes("\'")) {
@@ -680,6 +682,26 @@ pluginsWss.on('connection', (ws, request) => {
     });
 });
 
+function isPortOpen(host, port, timeout = 1000) {
+    return new Promise((resolve) => {
+        const socket = new net.Socket();
+
+        const onError = () => {
+            socket.destroy();
+            resolve(false);
+        };
+
+        socket.setTimeout(timeout);
+        socket.once('error', onError);
+        socket.once('timeout', onError);
+
+        socket.connect(port, host, () => {
+            socket.end();
+            resolve(true);
+        });
+    });
+}
+
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   if (request.url === '/text') {
@@ -689,8 +711,15 @@ httpServer.on('upgrade', (request, socket, head) => {
       });
     });
   } else if (request.url === '/audio') {
-    proxy.ws(request, socket, head);
-  } else if (request.url === '/chat') {
+    isPortOpen('localhost', (Number(serverConfig.webserver.webserverPort) + 10)).then((open) => {
+        if (open) {
+            proxy.ws(request, socket, head);
+        } else {
+            logWarn(`Audio stream port ${(Number(serverConfig.webserver.webserverPort) + 10)} not yet open — skipping proxy connection.`);
+            socket.end(); // close socket so client isn't left hanging
+        }
+    });
+} else if (request.url === '/chat') {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
