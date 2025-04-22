@@ -30,7 +30,8 @@ let serverConfig = {
     ],
     defaultTheme: "theme1",
     bgImage: "",
-    rdsMode: false
+    rdsMode: false,
+    txIdAlgorithm: 0
   },
   xdrd: {
     wirelessConnection: true,
