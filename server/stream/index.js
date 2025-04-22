@@ -32,7 +32,7 @@ function buildCommand() {
     const baseOptions = {
         flags: '-fflags +nobuffer+flush_packets -flags low_delay -rtbufsize 6192 -probesize 32',
         codec: `-acodec pcm_s16le -ar 48000 -ac ${serverConfig.audio.audioChannels}`,
-        output: '-f s16le -fflags +nobuffer+flush_packets -packetsize 384 -flush_packets 1 -bufsize 960'
+        output: `${serverConfig.audio.audioBoost == true && serverConfig.audio.ffmpeg == true ? '-af "volume=3.5"' : ''} -f s16le -fflags +nobuffer+flush_packets -packetsize 384 -flush_packets 1 -bufsize 960`
     };
 
     if (process.platform === 'win32') {
