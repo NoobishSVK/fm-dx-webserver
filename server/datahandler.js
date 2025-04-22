@@ -354,7 +354,7 @@ function handleData(wss, receivedData, rdsWss) {
             // error correction, but this is a good substitute.
             errorsNew = (legacyRdsPiBuffer.length - 4) << 6;
           } else {
-            pi = '0000';
+            pi = '----';
             errorsNew = (0x03 << 6);
           }
 
