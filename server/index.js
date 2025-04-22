@@ -388,6 +388,7 @@ wss.on('connection', (ws, request) => {
     const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
     let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
     const userCommandHistory = {};
+    const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
     if (serverConfig.webserver.banlist?.includes(clientIp)) {
         ws.close(1008, 'Banned IP');
@@ -509,7 +510,7 @@ wss.on('connection', (ws, request) => {
         }
 
         if (code !== 1008) {
-          logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+          logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);
         }
     });
 

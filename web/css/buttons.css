@@ -308,6 +308,47 @@ input[type="range"]::-moz-range-thumb {
 
 /*  End Toggle Switch  */
 
+.switch {
+    user-select: none;
+}
+.switch input[type=checkbox] {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+}
+.switch input[type=checkbox]:checked + label {
+    background: var(--color-4);
+}
+.switch input[type=checkbox]:checked + label::after {
+    left: calc(100% - 4px);
+    transform: translateX(-100%);
+    background-color: var(--color-1);
+}
+.switch label {
+    cursor: pointer;
+    min-width: 64px;
+    max-width: 64px;
+    height: 38px;
+    background-color: var(--color-1);
+    transition: 0.35s background-color;
+    display: block;
+    border-radius: 24px;
+    margin: 0;
+    position: relative;
+    border: 2px solid var(--color-3);
+}
+.switch label::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 26px;
+    height: 26px;
+    background: var(--color-5);
+    border-radius: 16px;
+    transition: 0.3s;
+}
+
 select {
     height: 42px;
     width: 150px;

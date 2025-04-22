@@ -132,6 +132,7 @@ function fetchBannedAS(callback) {
 function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
   const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
   const connectionTime = new Date().toLocaleString([], options);
+  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
   fetchBannedAS((error, bannedAS) => {
     if (error) {
@@ -155,7 +156,7 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
     });
 
     consoleCmd.logInfo(
-      `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
+      `Web client \x1b[32mconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
     );
 
     callback("User allowed");

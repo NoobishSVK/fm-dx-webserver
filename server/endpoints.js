@@ -179,21 +179,44 @@ router.get('/api', (req, res) => {
 });
 
 
+const loginAttempts = {}; // Format: { 'ip': { count: 1, lastAttempt: 1234567890 } }
+const MAX_ATTEMPTS = 25;
+const WINDOW_MS = 15 * 60 * 1000; 
+
 const authenticate = (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+
+    if (!loginAttempts[ip]) {
+        loginAttempts[ip] = { count: 0, lastAttempt: now };
+    } else if (now - loginAttempts[ip].lastAttempt > WINDOW_MS) {
+        loginAttempts[ip] = { count: 0, lastAttempt: now };
+    }
+
+    if (loginAttempts[ip].count >= MAX_ATTEMPTS) {
+        return res.status(403).json({
+            message: 'Too many login attempts. Please try again later.'
+        });
+    }
+
     const { password } = req.body;
-    
-    // Check if the entered password matches the admin password
+
+    loginAttempts[ip].lastAttempt = now;
+
     if (password === serverConfig.password.adminPass) {
         req.session.isAdminAuthenticated = true;
         req.session.isTuneAuthenticated = true;
-        logInfo('User from ' + req.connection.remoteAddress + ' logged in as an administrator.');
+        logInfo(`User from ${ip} logged in as an administrator.`);
+        loginAttempts[ip].count = 0;
         next();
     } else if (password === serverConfig.password.tunePass) {
         req.session.isAdminAuthenticated = false;
         req.session.isTuneAuthenticated = true;
-        logInfo('User from ' + req.connection.remoteAddress + ' logged in with tune permissions.');
+        logInfo(`User from ${ip} logged in with tune permissions.`);
+        loginAttempts[ip].count = 0;
         next();
     } else {
+        loginAttempts[ip].count += 1;
         res.status(403).json({ message: 'Login failed. Wrong password?' });
     }
 };

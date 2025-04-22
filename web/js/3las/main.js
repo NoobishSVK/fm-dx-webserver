@@ -34,20 +34,17 @@ function OnConnectivityCallback(isConnected) {
     }
 }
 
-function isIOS() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-}
 
 function OnPlayButtonClick(_ev) {
     const $playbutton = $('.playbutton');
-    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAppleiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     if (Stream) {
         console.log("Stopping stream...");
         shouldReconnect = false;
         destroyStream();
         $playbutton.find('.fa-solid').toggleClass('fa-stop fa-play');
-        if (isiOS && 'audioSession' in navigator) {
+        if (isAppleiOS && 'audioSession' in navigator) {
             navigator.audioSession.type = "none";
         }
     } else {
@@ -56,7 +53,7 @@ function OnPlayButtonClick(_ev) {
         createStream();
         Stream.Start();
         $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
-        if (isiOS && 'audioSession' in navigator) {
+        if (isAppleiOS && 'audioSession' in navigator) {
             navigator.audioSession.type = "playback";
         }
     }

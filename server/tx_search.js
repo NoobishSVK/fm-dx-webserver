@@ -87,14 +87,11 @@ async function fetchTx(freq, piCode, rdsPs) {
     const now = Date.now();
     freq = parseFloat(freq);
 
-    if (isNaN(freq)) {
-        return;
-    }
+    if (isNaN(freq)) return;
     if (now - lastFetchTime < fetchInterval
         || serverConfig.identification.lat.length < 2
         || freq < 87
-        || (currentPiCode == piCode && currentRdsPs == rdsPs))
-        {
+        || (currentPiCode == piCode && currentRdsPs == rdsPs)) {
         return Promise.resolve();
     }
 
@@ -107,15 +104,33 @@ async function fetchTx(freq, piCode, rdsPs) {
     const url = "https://maps.fmdx.org/api/?freq=" + freq;
 
     try {
-        const response = await fetch(url, { redirect: 'manual' });
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
+        // Try POST first
+        const postResponse = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ freq }), // You can omit or customize this
+            redirect: 'manual'
+        });
+
+        if (!postResponse.ok) throw new Error(`POST failed: ${postResponse.status}`);
+        const data = await postResponse.json();
         cachedData[freq] = data;
-        if(serverConfig.webserver.rdsMode == true) await loadUsStatesGeoJson();
+        if (serverConfig.webserver.rdsMode === true) await loadUsStatesGeoJson();
         return processData(data, piCode, rdsPs);
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        return null; // Return null to indicate failure
+    } catch (postError) {
+        console.warn("POST failed, trying GET:", postError);
+
+        try {
+            const getResponse = await fetch(url, { redirect: 'manual' });
+            if (!getResponse.ok) throw new Error(`GET failed: ${getResponse.status}`);
+            const data = await getResponse.json();
+            cachedData[freq] = data;
+            if (serverConfig.webserver.rdsMode === true) await loadUsStatesGeoJson();
+            return processData(data, piCode, rdsPs);
+        } catch (getError) {
+            console.error("GET also failed:", getError);
+            return null;
+        }
     }
 }
 

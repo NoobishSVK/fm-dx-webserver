@@ -2,7 +2,6 @@ $(document).ready(function() {
   // Cache jQuery objects for reuse
   var modal = $("#myModal");
   var modalPanel = $(".modal-panel");
-  var chatPanel = $(".modal-panel-chat");
   var openBtn = $("#settings");
   var closeBtn = $(".closeModal, .closeModalButton");
 
@@ -20,7 +19,6 @@ $(document).ready(function() {
     modal.css("opacity", 0);
     setTimeout(function() {
       modal.css("display", "none");
-      modalPanel.add(chatPanel).css("display", "none");
       $("body").removeClass("modal-open"); // Enable body scrolling
     }, 300);
   }
@@ -28,10 +26,6 @@ $(document).ready(function() {
   // Event listeners for the open and close buttons
   openBtn.on("click", function() {
     openModal(modalPanel);
-  });
-
-  $(".chatbutton").on("click", function() {
-    openModal(chatPanel);
   });
 
   closeBtn.on("click", closeModal);

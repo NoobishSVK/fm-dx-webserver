@@ -10,9 +10,29 @@ $(document).ready(function() {
     const chatNicknameInput = $('#chat-nickname');
     const chatNicknameSave = $('#chat-nickname-save');
 
+    $(function () {
+        $("#popup-panel-chat").draggable({
+          handle: ".popup-header"
+        }).resizable({
+          minHeight: 300,
+          minWidth: 250
+        });
+      
+        $(".chatbutton").on("click", function () {
+          $("#popup-panel-chat").fadeIn(200, function () {
+            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+          });
+        });
+      
+        $("#popup-panel-chat .popup-close").on("click", function () {
+          $("#popup-panel-chat").fadeOut(200);
+        });
+      });
+      
+
     // Function to generate a random string
     function generateRandomString(length) {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const characters = 'ABCDEFGHJKMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789';
         let result = '';
         for (let i = 0; i < length; i++) {
             result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -21,7 +41,7 @@ $(document).ready(function() {
     }
 
     // Load nickname from localStorage on page load
-    let savedNickname = localStorage.getItem('nickname') || `Anonymous User ${generateRandomString(5)}`;
+    let savedNickname = localStorage.getItem('nickname') || `User ${generateRandomString(5)}`;
     chatNicknameInput.val(savedNickname);
     chatIdentityNickname.text(savedNickname);
 

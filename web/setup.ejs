@@ -85,6 +85,7 @@
                     </div>
                 </div>
 
+                <div class="flex-container">
                     <div class="panel-100-real p-bottom-20" style="overflow-x: auto;">
                         <h3>Current users</h3>
                         <table class="table-big">
@@ -118,7 +119,9 @@
                             </tbody>
                         </table>    
                     </div>
+                </div>
                     
+                <div class="flex-container">
                     <div class="panel-100-real p-bottom-20">
                         <h3>Quick settings</h3>
                         <div class="flex-container flex-center" style="margin: 30px;">
@@ -129,6 +132,7 @@
                         <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
                         <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
                     </div>
+                </div>
 
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20 bottom-20">
@@ -223,9 +227,10 @@
                         <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
                     </div>
-                    <div class="panel-50 p-bottom-20">
-                        <h3>Samplerate Offset</h3>
-                        <p>Using a negative value could eliminate audio buffering issues during long periods of listening. However, a value that’s too low might increase the buffer over time.</p>
+                    <div class="panel-50 p-botom-20">
+                        <h3>Sample rate Offset</h3>
+                        <p>Using a negative value could eliminate audio buffering issues during long periods of listening. <br>
+                            However, a value that’s too low might increase the buffer over time.</p>
                         <p><input class="panel-33 input-text w-100 auto" type="number" style="min-height: 40px; color: var(--color-text); padding: 10px; padding-left: 10px; box-sizing: border-box; border: 2px solid transparent; font-family: 'Titillium Web', sans-serif;" id="audio-samplerateOffset" min="-10" max="10" step="1" value="0" aria-label="Samplerate offset"></p>
                     </div>
                 </div>
@@ -234,13 +239,13 @@
             <div class="panel-full m-0 tab-content no-bg" id="webserver" role="tabpanel">
                 <h2>Webserver settings</h2>
                 <div class="flex-container contains-dropdown">
-                    <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
+                    <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Connection</h3>
                         <p class="text-gray">Leave the IP at 0.0.0.0 unless you explicitly know you have to change it.<br>Don't enter your public IP here.</p>
                         <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '0.0.0.0', label: 'Webserver IP', id: 'webserver-webserverIp'}) %>
                         <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '8080', label: 'Webserver port', id: 'webserver-webserverPort'}) %><br>
                     </div>
-                    <div class="panel-33 p-bottom-20">
+                    <div class="panel-50 p-bottom-20">
                             <h3>Design</h3>
                             <h4>Background image</h4>  
                             <%- include('_components', {component: 'text', cssClass: 'br-15', placeholder: 'Direct image link', label: 'Image link', id: 'webserver-bgImage'}) %><br> 
@@ -260,21 +265,33 @@
                             ]
                             }) %><br>
                     </div>
-                    <div class="panel-33 p-bottom-20">
+                </div>
+                <div class="flex-container">
+                    <div class="panel-100-real p-bottom-20">
                         <h3>Antennas</h3>
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', label: 'Antenna switch', id: 'antennas-enabled'}) %><br>
 
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 1', id: 'antennas-ant1-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant A', label: 'Antenna 1 name', id: 'antennas-ant1-name'}) %><br>
-
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 2', id: 'antennas-ant2-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant B', label: 'Antenna 2 name', id: 'antennas-ant2-name'}) %><br>
-
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 3', id: 'antennas-ant3-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant C', label: 'Antenna 3 name', id: 'antennas-ant3-name'}) %><br>
-
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 4', id: 'antennas-ant4-enabled'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant D', label: 'Antenna 4 name', id: 'antennas-ant4-name'}) %><br>
+                        <div class="flex-container flex-center p-20">
+                            <div class="flex-container flex-phone flex-column bottom-20" style="margin-left: 15px; margin-right: 15px;">
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 1', id: 'antennas-ant1-enabled'}) %>
+                                <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant A', label: 'Antenna 1 name', id: 'antennas-ant1-name'}) %><br>
+                            </div>
+    
+                            <div class="flex-container flex-phone flex-column bottom-20" style="margin-left: 15px; margin-right: 15px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Antenna 2', id: 'antennas-ant2-enabled'}) %>
+                            <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant B', label: 'Antenna 2 name', id: 'antennas-ant2-name'}) %><br>
+                            </div>
+    
+                            <div class="flex-container flex-phone flex-column bottom-20" style="margin-left: 15px; margin-right: 15px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 3', id: 'antennas-ant3-enabled'}) %>
+                            <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant C', label: 'Antenna 3 name', id: 'antennas-ant3-name'}) %><br>
+                            </div>
+    
+                            <div class="flex-container flex-phone flex-column bottom-20" style="margin-left: 15px; margin-right: 15px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Antenna 4', id: 'antennas-ant4-enabled'}) %>
+                            <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: 'Ant D', label: 'Antenna 4 name', id: 'antennas-ant4-name'}) %><br>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -303,12 +320,12 @@
                 </div>
 
                 <div class="flex-container p-bottom-20">
-                    <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
+                    <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
                     </div>
-                    <div class="panel-33 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
+                    <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Transmitter Search Algorithm</h3>
                         <p>Different modes may help with more accurate transmitter identification depending on your region.</p>
                         <%- include('_components', { component: 'dropdown', id: 'server-tx-id-algo', inputId: 'webserver-txIdAlgorithm', label: 'Transmitter ID Algorithm', cssClass: '', placeholder: 'Algorithm 1', 
@@ -553,9 +570,9 @@
                     When you become a supporter, you can message the Founders on Discord for your login details.</p>
 
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Enable tunnel', id: 'tunnel-enabled'}) %><br>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org<br>
                     <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Username', id: 'tunnel-username'}) %>
                     <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', password: true, placeholder: '', label: 'Token', id: 'tunnel-token'}) %>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org
 
                     <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Low latency mode', id: 'tunnel-lowLatencyMode'}) %><br>

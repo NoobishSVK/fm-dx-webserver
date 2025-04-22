@@ -69,6 +69,9 @@
     .panel-75 {
         width: 90%;
     }
+    .no-bg-phone {
+        background-color: transparent;
+    }
     .panel-33 h2 {
         padding: 20px;
         padding-top: 5px;
@@ -81,7 +84,6 @@
         margin: auto;
         width: 90%;
         margin-bottom: 20px;
-        background-color: transparent;
     }
     *[class^="panel-"]:not(.no-bg):not(.no-filter):not(#ps-container),
     .panel-100.w-100::before {

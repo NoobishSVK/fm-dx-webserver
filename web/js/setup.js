@@ -20,34 +20,48 @@ $(document).ready(function() {
 function mapCreate() {
   if (!(typeof map == "object")) {
     map = L.map('map', {
-      center: [40,0],
+      center: [40, 0],
       zoom: 3
     });
+  } else {
+    map.setZoom(3).panTo([40, 0]);
   }
-  else {
-    map.setZoom(3).panTo([40,0]);
-  }
-  
+
   L.tileLayer(tilesURL, {
     attribution: mapAttrib,
     maxZoom: 19
   }).addTo(map);
 
+  // Check for initial lat/lon values
+  const latVal = parseFloat($('#identification-lat').val());
+  const lonVal = parseFloat($('#identification-lon').val());
+
+  if (!isNaN(latVal) && !isNaN(lonVal)) {
+    const initialLatLng = L.latLng(latVal, lonVal);
+    pin = L.marker(initialLatLng, { riseOnHover: true, draggable: true }).addTo(map);
+    map.setView(initialLatLng, 8); // Optional: Zoom in closer to the pin
+
+    pin.on('dragend', function(ev) {
+      $('#identification-lat').val(ev.target.getLatLng().lat.toFixed(6));
+      $('#identification-lon').val(ev.target.getLatLng().lng.toFixed(6));
+    });
+  }
+
   map.on('click', function(ev) {
-    $('#identification-lat').val((ev.latlng.lat).toFixed(6));
-    $('#identification-lon').val((ev.latlng.lng).toFixed(6));
-    
+    $('#identification-lat').val(ev.latlng.lat.toFixed(6));
+    $('#identification-lon').val(ev.latlng.lng.toFixed(6));
+
     if (typeof pin == "object") {
       pin.setLatLng(ev.latlng);
     } else {
-      pin = L.marker(ev.latlng,{ riseOnHover:true,draggable:true });
-      pin.addTo(map);
-      pin.on('dragend',function(ev) {
-        $('#identification-lat').val((ev.latlng.lat).toFixed(6));
-        $('#identification.lon').val((ev.latlng.lng).toFixed(6));
+      pin = L.marker(ev.latlng, { riseOnHover: true, draggable: true }).addTo(map);
+      pin.on('dragend', function(ev) {
+        $('#identification-lat').val(ev.target.getLatLng().lat.toFixed(6));
+        $('#identification-lon').val(ev.target.getLatLng().lng.toFixed(6));
       });
     }
   });
+
   mapReload();
 }
 

@@ -86,10 +86,6 @@ body.modal-open {
     background-color: var(--color-main);
 }
 
-.modal-panel .flex-container {
-    align-items: stretch;
-}
-
 .modal-panel h1 {
     font-size: 42px;
 }
@@ -124,7 +120,6 @@ body.modal-open {
 
 .modal-panel label {
     width: 200px;
-    margin: auto;
 }
 
 .modal-panel-chat {
@@ -147,6 +142,37 @@ body.modal-open {
     border-radius: 15px 15px 0px 0px;
 }
 
+/* Popup Windows */
+.popup-window {
+    width: 500px;
+    background: var(--color-1-transparent);
+    backdrop-filter: blur(5px);
+    position: absolute !important;
+    border-radius: 15px;
+    display: none;
+    overflow: hidden;
+    border: 3px solid var(--color-1);
+    z-index: 100;
+  }
+
+  .popup-header {
+    padding: 8px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .popup-close {
+    background: none;
+    border: none;
+    color: var(--color-3);
+    font-size: 16px;
+    cursor: pointer;
+    max-width: 24px;
+    margin-left: auto;
+  }
+
 @media only screen and (max-width: 768px) {
     .modal-content {
         min-width: 90% !important;
@@ -165,11 +191,9 @@ body.modal-open {
     .modal-panel {
         width: 100%;
     }
-    .modal-panel-chat {
-        height: 510px;
-    }
-    #chat-chatbox {
-        height: 333px !important;
+
+    .popup-window {
+        width: 90%;
     }
 }
 

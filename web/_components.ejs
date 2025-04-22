@@ -29,10 +29,13 @@ switch (component) {
      * @param cssClass Custom CSS class if needed
     */ 
     case 'checkbox': 
-%>
-    <div class="form-group checkbox <%= cssClass %>">
-        <input type="checkbox" tabindex="0" id="<%= id %>" aria-label="<%= label %>">
-        <label for="<%= id %>"><i class="fa-solid fa-toggle-off m-right-10 <%= typeof iconClass !== 'undefined' ? iconClass : '' %>"></i> <%= label %></label>
+%>    
+    <div class="form-group">
+        <div class="switch flex-container flex-phone flex-phone-column flex-phone-center">
+            <input type="checkbox" tabindex="0" id="<%= id %>" aria-label="<%= label %>" />
+            <label for="<%= id %>"></label>
+            <span class="text-smaller text-uppercase text-bold color-4 p-10"><%= label %></span>
+        </div>
     </div>
 <%
         break;

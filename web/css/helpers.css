@@ -119,6 +119,10 @@
     align-items: center;
 }
 
+.flex-column {
+    flex-direction: column;
+}
+
 .hover-brighten {
     transition: 0.3s ease background-color;
 }
@@ -301,6 +305,10 @@ table .input-text {
     }
     .flex-phone-column {
         flex-flow: column;
+    }
+    .flex-phone-center {
+        align-items: center;
+        justify-content: center;
     }
     .hide-phone {
         display: none;

@@ -5,7 +5,10 @@
     <link href="css/entry.css" type="text/css" rel="stylesheet">
     <link href="css/flags.min.css" type="text/css" rel="stylesheet">
     <link href="css/libs/fontawesome.css" type="text/css" rel="stylesheet">
+    <link href="css/libs/jquery-ui.min.css" type="text/css" rel="stylesheet">
+    <!--<link href="css/libs/jquery-ui.theme.min.css" type="text/css" rel="stylesheet">-->
     <script src="js/libs/jquery.min.js"></script>
+    <script src="js/libs/jquery-ui.min.js"></script>
     <script src="js/libs/chart.umd.min.js"></script>
     <script src="js/libs/luxon.min.js"></script>
     <script src="js/libs/chartjs-adapter-luxon.umd.min.js"></script>
@@ -178,7 +181,7 @@
                             </div>
                             
                             <div class="flex-container">
-                                <div class="panel-33 hover-brighten tooltip" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
+                                <div class="panel-33 hover-brighten tooltip no-bg-phone" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
                                     <h2 class="signal-heading">PI CODE</h2>
                                     <div class="text-small text-gray highest-signal-container">
                                         <span id="data-regular-pi">&nbsp;</span>
@@ -186,12 +189,12 @@
                                     <span id="data-pi" class="text-big text-uppercase"></span>
                                 </div>
                                 
-                                <div class="panel-33 hover-brighten" id="freq-container">
+                                <div class="panel-33 hover-brighten no-bg-phone" id="freq-container">
                                     <h2>FREQUENCY</h2>
                                     <span id="data-frequency" class="text-big"></span>
                                 </div>
                                 
-                                <div class="panel-33">
+                                <div class="panel-33 no-bg-phone">
                                     <h2 class="signal-heading">SIGNAL</h2>
                                     <div class="text-small text-gray highest-signal-container">
                                         <i class="fa-solid fa-arrow-up"></i>
@@ -334,7 +337,7 @@
                                             </div>
                                             
                                             <div class="flex-container flex-phone flex-phone-column">
-                                                <div class="panel-75 hover-brighten" id="rt-container" style="height: 100px;">
+                                                <div class="panel-75 hover-brighten no-bg-phone" id="rt-container" style="height: 100px;">
                                                     <h2 style="margin-top: 4px;">RADIOTEXT</h2>
                                                     <div id="data-rt0">
                                                         <span></span>
@@ -345,7 +348,7 @@
                                                     <hr class="hide-desktop">
                                                 </div>
                                                 
-                                                <div class="panel-33 hover-brighten tooltip" style="min-height: 91px;" 
+                                                <div class="panel-33 hover-brighten tooltip no-bg-phone" style="min-height: 91px;" 
                                                 data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
                                                     <div id="data-station-container">
                                                         <h2 style="margin-top: 0;" class="mb-0">
@@ -364,7 +367,7 @@
                                         </div>
                                         
                                         <div class="panel-10 no-bg center-phone" style="margin-left: 0; margin-top: 0; margin-right: 0;display:flex;">
-                                            <div class="panel-100" style="margin-left: 0;">
+                                            <div class="panel-100 no-bg-phone" style="margin-left: 0;">
                                                 <h2 class="bottom-10">AF</h2>
                                                 <div id="af-list" style="text-align: center;">
                                                     <ul>   </ul>
@@ -373,7 +376,7 @@
 
                                                 </div>
                                                 </div>
-                                                <div id="flags-container-phone" class="panel-33">
+                                                <div id="flags-container-phone" class="panel-33 no-bg-phone">
                                                     <h2 class="show-phone">
                                                         <div class="data-pty text-color-default"></div>
                                                     </h2>
@@ -392,6 +395,30 @@
                                                             </span>
                                                             <span style="margin-left: 15px;" class="data-ms">MS</span>
                                                         </h3>
+                                                    </div>
+                                                </div>
+
+                                                <div class="popup-window" id="popup-panel-chat">
+                                                    <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
+                                                        <div class="popup-header hover-brighten flex-center text-medium-big"><button class="popup-close">✖</button></div>
+                                                        <div class="popup-content text-left flex-container flex-phone flex-column" style="flex: 1;">
+                                                            <div style="text-align: center;white-space-collapse: collapse;">
+                                                                <div class="flex-phone flex-container flex-center top-10">
+                                                                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
+                                                                    <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
+                                                                </div>
+                                                                <p style="margin: 5px;" class="text-small">
+                                                                    Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong> 
+                                                                </p>
+                                                            </div>
+                                                            
+                                                            <div id="chat-chatbox" class="bg-color-1" style="padding: 10px; overflow-y: auto; flex-grow: 1; min-height: 0; flex-basis: 0; min-height: 120px;"></div>
+                                                            
+                                                            <div class="flex-container flex-phone">
+                                                                <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
+                                                                <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 48px;"><i class="fa-solid fa-paper-plane"></i></button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
     
@@ -430,9 +457,11 @@
                                                                 </div>
                                                                 <% } %>
                                                                 
-                                                                <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
-                                                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
-                                                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
+                                                                <div class="auto" style="max-width: 215px;">
+                                                                    <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
+                                                                    <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
+                                                                    <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
+                                                                </div>
                                                                 
                                                                 <% if (isAdminAuthenticated) { %>
                                                                     <p class="color-3">You are logged in as an adminstrator.</p>
@@ -497,29 +526,6 @@
                                                                                 <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
                                                                                     Join our <strong>FMDX.org Discord</strong> community!
                                                                                 </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                    <div class="modal-panel-chat">
-                                                                        <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close chat" tabindex="0"><i class="fa-solid fa-chevron-down"></i></div>
-                                                                        <div class="modal-panel-content text-left">
-                                                                            <div style="text-align: center;white-space-collapse: collapse;">
-                                                                                <div class="flex-phone flex-container flex-center top-10">
-                                                                                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
-                                                                                    <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
-                                                                                </div>
-                                                                                <p style="margin: 5px;" class="text-small">
-                                                                                    Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong> 
-                                                                                </p>
-                                                                            </div>
-                                                                            
-                                                                            <div id="chat-chatbox" class="bg-color-1" style="height: 258px;padding: 10px;overflow-y: auto;">
-                                                                            </div>
-                                                                            
-                                                                            <div class="flex-container flex-phone" style="align-content: stretch;">
-                                                                                <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
-                                                                                <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 48px;"><i class="fa-solid fa-paper-plane"></i></button>
                                                                             </div>
                                                                         </div>
                                                                     </div>
