@@ -2,7 +2,8 @@ var audioStreamRestartInterval;
 var elapsedTimeConnectionWatchdog;
 var _3LAS_Settings = /** @class */ (function () {
     function _3LAS_Settings() {
-        this.SocketHost = document.location.hostname ? document.location.hostname : "127.0.0.1";
+        this.SocketHost = location.hostname ? location.hostname : "127.0.0.1";
+        this.SocketPort = location.port;
         this.SocketPath = "/";
         this.Fallback = new Fallback_Settings();
     }
@@ -69,14 +70,14 @@ var _3LAS = /** @class */ (function () {
         console.log("Stream connection watchdog active.");
         let intervalReconnectWatchdog = setInterval(() => {
             if (Stream) {
-                var endTimeConnectionWatchdog = performance.now();
+                let endTimeConnectionWatchdog = performance.now();
                 elapsedTimeConnectionWatchdog = endTimeConnectionWatchdog - window.startTimeConnectionWatchdog;
-                //console.log(`Stream frame elapsed time: ${elapsedTimeConnectionWatchdog} ms`);
+                //console.log(`Stream frame elapsed time: ${parseInt(elapsedTimeConnectionWatchdog)} ms`);
                 if (elapsedTimeConnectionWatchdog > 2000 && shouldReconnect) {
                     clearInterval(intervalReconnectWatchdog);
                     setTimeout(() => {
                         clearInterval(intervalReconnectWatchdog);
-                        console.log("Unstable internet connection detected, reconnecting (" + elapsedTimeConnectionWatchdog + " ms)...");
+                        console.log("Unstable internet connection detected, reconnecting... (" + parseInt(elapsedTimeConnectionWatchdog) + " ms)");
                         this.Stop();
                         this.Start();
                     }, 2000);
@@ -93,10 +94,10 @@ var _3LAS = /** @class */ (function () {
             this.WakeLock.Begin();
         try {
             if (window.location.protocol === 'https:') { 
-                this.WebSocket = new WebSocketClient(this.Logger, 'wss://' + this.Settings.SocketHost + ':' + location.port.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
+                this.WebSocket = new WebSocketClient(this.Logger, 'wss://' + this.Settings.SocketHost + ':' + this.Settings.SocketPort.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
             }
             else {
-                this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + location.port.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
+                this.WebSocket = new WebSocketClient(this.Logger, 'ws://' + this.Settings.SocketHost + ':' + this.Settings.SocketPort.toString() + window.location.pathname + 'audio' , this.OnSocketError.bind(this), this.OnSocketConnect.bind(this), this.OnSocketDataReady.bind(this), this.OnSocketDisconnect.bind(this));
             }
             this.Logger.Log("Init of WebSocketClient succeeded");
             this.Logger.Log("Trying to connect to server.");

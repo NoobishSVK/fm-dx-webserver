@@ -103,18 +103,29 @@ var WakeLock = /** @class */ (function () {
             try {
                 navigator.wakeLock.request("screen").then(function (obj) {
                     _this.Logger.Log("WakeLock request successful. Lock acquired.");
-                    _this.LockElement = obj;
+                    _this.LockElement = obj; // Not an audio/video element
+                    console.log("WakeLock request successful.");
                 }, function () {
                     _this.Logger.Log("WakeLock request failed.");
+                    console.log("WakeLock request failed.");
                 });
             }
             catch (err) {
                 this.Logger.Log("WakeLock request failed.");
+                console.log("WakeLock request failed.");
             }
         }
         else {
             this.Logger.Log("WakeLock video loop started.");
-            this.LockElement.play();
+            
+            // Ensure it's an audio/video element before calling play()
+            if (_this.LockElement instanceof HTMLMediaElement) {
+                _this.LockElement.play().catch(err => {
+                    console.error("LockElement failed:", err);
+                });
+            } else {
+                console.warn("LockElement not a media element or already assigned.");
+            }
         }
     };
     WakeLock.AddSourceToVideo = function (element, type, dataURI) {
