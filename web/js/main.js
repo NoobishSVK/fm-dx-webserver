@@ -444,6 +444,7 @@ function initCanvas() {
                     bottom: -10
                 },
             },
+            animation: false,
             responsive: true,
             maintainAspectRatio: false,
             elements: {
@@ -459,20 +460,23 @@ function initCanvas() {
                         duration: 30000,
                         refresh: 75,
                         delay: 150,
+                        frameRate: 30, // default is 30
                         onRefresh: (chart) => {
                             if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
                             if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
 
-                            signalBuffer.push(parsedData.sig);
-                            if (signalBuffer.length > 8) {
-                                signalBuffer.shift();
-                            }
+                            const sig = parsedData.sig;
+                            if (signalBuffer.length > 0 && signalBuffer[signalBuffer.length - 1] === sig) return; // skip if data hasn't changed
+
+                            signalBuffer.push(sig);
+                            if (signalBuffer.length > 8) signalBuffer.shift();
+
                             const avgSignal = signalBuffer.reduce((sum, val) => sum + val, 0) / signalBuffer.length;
 
-                            chart.data.datasets[0].data.push({
-                                x: Date.now(),
-                                y: avgSignal
-                            });
+                            const dataset = chart.data.datasets[0].data;
+                            dataset.push({ x: Date.now(), y: avgSignal });
+
+                            if (dataset.length > 400) dataset.shift(); // duration / refresh
                         }
                     }
                 },
