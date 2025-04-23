@@ -15,8 +15,11 @@ if (platform === 'win32') {
   shared_Library=path.join(__dirname, "libraries", "librdsparser.dll");
 } else if (platform === 'linux') {
   unicode_type = 'int32_t';
-  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so");
-} 
+  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so"); 
+} else if (platform === 'darwin') {
+  unicode_type = 'int32_t';
+  shared_Library=path.join(__dirname, "libraries", "librdsparser" + ".dylib");
+}
 
 const lib = koffi.load(shared_Library);
 const { fetchTx } = require('./tx_search.js');
