@@ -129,6 +129,8 @@ function fetchBannedAS(callback) {
   });
 }
 
+const recentBannedIps = new Map(); // Store clientIp -> timestamp
+
 function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
   const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
   const connectionTime = new Date().toLocaleString([], options);
@@ -140,6 +142,14 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
     }
 
     if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
+      const now = Date.now();
+      const lastSeen = recentBannedIps.get(normalizedClientIp) || 0;
+
+      if (now - lastSeen > 300 * 1000) {
+        consoleCmd.logWarn(`Banned AS list client kicked (${normalizedClientIp})`);
+        recentBannedIps.set(normalizedClientIp, now);
+      }
+
       return callback("User banned");
     }
 
