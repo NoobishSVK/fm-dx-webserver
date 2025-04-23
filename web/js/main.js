@@ -466,8 +466,6 @@ function initCanvas() {
                             if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
 
                             const sig = parsedData.sig;
-                            if (signalBuffer.length > 0 && signalBuffer[signalBuffer.length - 1] === sig) return; // skip if data hasn't changed
-
                             signalBuffer.push(sig);
                             if (signalBuffer.length > 8) signalBuffer.shift();
 
