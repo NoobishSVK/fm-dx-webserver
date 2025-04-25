@@ -1,436 +1,437 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title><%= tunerName %> - FM-DX Webserver</title>
-    <link href="css/entry.css" type="text/css" rel="stylesheet">
-    <link href="css/flags.min.css" type="text/css" rel="stylesheet">
-    <link href="css/libs/fontawesome.css" type="text/css" rel="stylesheet">
-    <link href="css/libs/jquery-ui.min.css" type="text/css" rel="stylesheet">
-    <!--<link href="css/libs/jquery-ui.theme.min.css" type="text/css" rel="stylesheet">-->
-    <script src="js/libs/jquery.min.js"></script>
-    <script src="js/libs/jquery-ui.min.js"></script>
-    <script src="js/libs/chart.umd.min.js"></script>
-    <script src="js/libs/luxon.min.js"></script>
-    <script src="js/libs/chartjs-adapter-luxon.umd.min.js"></script>
-    <script src="js/libs/chartjs-plugin-streaming.min.js"></script>
-    
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <meta property="og:title" content="FM-DX WebServer [<%= tunerName %>]">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
-    <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
-    
-    <script src="js/init.js"></script>
-        
-    <!-- 3LAS Scripts for Audio streaming -->
-    <script src="js/3las/util/3las.helpers.js"></script>
-    <script src="js/3las/util/3las.logging.js"></script>
-    <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
-    <script src="js/3las/fallback/3las.formatreader.js"></script>
-    <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
-    <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
-    <script src="js/3las/util/3las.websocketclient.js"></script>
-    <script src="js/3las/fallback/3las.fallback.js"></script>
-    <script src="js/3las/3las.js"></script>
-    <script src="js/3las/main.js"></script>
-    <script type="text/javascript">
-        window.addEventListener('load', Init, false);
-        document.ontouchmove  = function(e){ 
-            e.preventDefault(); 
-        }
-    </script>
+  <title><%= tunerName %> - FM-DX Webserver</title>
+  <link href="css/entry.css" type="text/css" rel="stylesheet">
+  <link href="css/flags.min.css" type="text/css" rel="stylesheet">
+  <link href="css/libs/fontawesome.css" type="text/css" rel="stylesheet">
+  <link href="css/libs/jquery-ui.min.css" type="text/css" rel="stylesheet">
+  <!--<link href="css/libs/jquery-ui.theme.min.css" type="text/css" rel="stylesheet">-->
+  <script src="js/libs/jquery.min.js"></script>
+  <script src="js/libs/jquery-ui.min.js"></script>
+  <script src="js/libs/chart.umd.min.js"></script>
+  <script src="js/libs/luxon.min.js"></script>
+  <script src="js/libs/chartjs-adapter-luxon.umd.min.js"></script>
+  <script src="js/libs/chartjs-plugin-streaming.min.js"></script>
+
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="FM-DX WebServer [<%= tunerName %>]">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
+  <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
+
+  <script src="js/init.js"></script>
+
+  <!-- 3LAS Scripts for Audio streaming -->
+  <script src="js/3las/util/3las.helpers.js"></script>
+  <script src="js/3las/util/3las.logging.js"></script>
+  <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
+  <script src="js/3las/fallback/3las.formatreader.js"></script>
+  <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
+  <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
+  <script src="js/3las/util/3las.websocketclient.js"></script>
+  <script src="js/3las/fallback/3las.fallback.js"></script>
+  <script src="js/3las/3las.js"></script>
+  <script src="js/3las/main.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('load', Init, false);
+    document.ontouchmove = function(e) {
+      e.preventDefault();
+    }
+  </script>
 </head>
+
 <body>
-    <div class="wrapper-outer dashboard-panel" style="padding-top: 20px; z-index: 10; position: relative;">
-        <div class="panel-100-real m-0 flex-container bg-phone flex-phone-column" style="min-height: 64px; max-width: 1160px; margin-top: 10px;align-items: center; justify-content: space-between; padding-left: 20px;padding-right: 10px;">
-            <h1 id="tuner-name" class="text-left flex-container flex-phone flex-center" style="padding-bottom: 3px; padding-right: 5px;height: 64px;">
-                <span class="text-200-px" style="max-width: 450px;padding-right: 10px;"><%= tunerName %></span> <i class="fa-solid fa-chevron-down" style="font-size: 15px;"></i>
-            </h1>
-            <% if(!publicTuner || tunerLock) { %>
-            <div class="tuner-status p-10 color-3">
-                <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip fa-lg" aria-label="Only people with tune password can tune." data-tooltip="Only people with tune password can tune."></i>
-                <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip fa-lg" aria-label="Tuner is currently locked to admin." data-tooltip="Tuner is currently locked to admin."></i>
-                <% } %>
-            </div>
-            <% } %>
-            <div class="flex-container flex-phone" style="flex: 1;overflow-x: auto;align-items: center;">
-                <div class="plugin-list scroll-left">
-                    <i class="fa-solid fa-chevron-left fa-lg color-4"></i>
-                </div>
-                <div class="dashboard-panel-plugin-list flex-container hide-phone" style="flex: 1;overflow-x: auto;">
-                    <div class="flex-container scrollable-container"></div>
-                </div>
-                <div class="plugin-list scroll-right">
-                    <i class="fa-solid fa-chevron-right fa-lg color-4"></i>
-                </div>
-            </div>
-            <div style="margin-left: auto;" class="dashboard-panel-plugin-content"></div>
-            <div>
-                <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button> 
-                <% if (chatEnabled) { %>
-                    <button class="chatbutton hide-phone" aria-label="Chatbox"><i class="fa-solid fa-comments"></i></button>
-                <% } %>
-                <button id="settings" aria-label="Settings" class="hide-phone"><i class="fa-solid fa-gear"></i></button>
-            </div>
+  <div class="wrapper-outer dashboard-panel" style="padding-top: 20px; z-index: 10; position: relative;">
+    <div class="panel-100-real m-0 flex-container bg-phone flex-phone-column" style="min-height: 64px; max-width: 1160px; margin-top: 10px;align-items: center; justify-content: space-between; padding-left: 20px;padding-right: 10px;">
+      <h1 id="tuner-name" class="text-left flex-container flex-phone flex-center" style="padding-bottom: 3px; padding-right: 5px;height: 64px;">
+        <span class="text-200-px" style="max-width: 450px;padding-right: 10px;"><%= tunerName %></span> <i class="fa-solid fa-chevron-down" style="font-size: 15px;"></i>
+      </h1>
+      <% if(!publicTuner || tunerLock) { %>
+      <div class="tuner-status p-10 color-3">
+        <% if (!publicTuner) { %><i class="fa-solid fa-key pointer tooltip fa-lg" aria-label="Only people with tune password can tune." data-tooltip="Only people with tune password can tune."></i>
+        <% } if (tunerLock) { %><i class="fa-solid fa-lock pointer tooltip fa-lg" aria-label="Tuner is currently locked to admin." data-tooltip="Tuner is currently locked to admin."></i>
+        <% } %>
+      </div>
+      <% } %>
+      <div class="flex-container flex-phone" style="flex: 1;overflow-x: auto;align-items: center;">
+        <div class="plugin-list scroll-left">
+          <i class="fa-solid fa-chevron-left fa-lg color-4"></i>
         </div>
-    </div>
-    <div id="dashboard-panel-description" class="hidden-panel">
-                
-        <div class="flex-container">
-            <div class="tuner-desc">
-                <%- tunerDesc %>
-                <% if(tuningLimit && tuningLimit == true){ %>
-                    <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
-                <% } %>
-            </div>
-
-            <div class="flex-phone" style="margin-left: auto;flex-direction: row-reverse;justify-content: space-around;min-width: 200px;">
-                <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
-                    <div>
-                        <span class="">Device</span><br>
-                        <span class="text-small color-4">
-                            <% if (device == 'tef') { %>TEF668x<% } %>
-                            <% if (device == 'xdr') { %>Sony XDR<% } %>
-                            <% if (device == 'sdr') { %>SDR<% } %>
-                        </span>
-                    </div>
-                    <div class="color-3 m-10 text-medium">
-                        <i class="fa-solid fa-fw fa-radio"></i>
-                    </div>
-                </div>
-
-                <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
-                    <div>
-                        <span class="">Server time</span><br>
-                        <span class="text-small color-4" id="server-time"></span>
-                    </div>
-                    <div class="color-3 m-10 text-medium">
-                        <i class="fa-solid fa-fw fa-stopwatch"></i>
-                    </div>
-                </div>
-
-            </div>
-
-            <div style="width: 1px;background: var(--color-2);" class="m-10 hide-phone"></div>
-
-            <div>
-                <% const presets = [1, 2, 3, 4]; %>
-
-                <div style="height: 64px;" class="flex-center flex-phone">
-                    <% presets.forEach(preset => { %>
-                        <button class="no-bg color-4 hover-brighten" id="preset<%= preset %>" style="padding: 6px; width: 64px; min-width: 64px;">
-                            <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
-                            <span style="font-size: 10px; color: var(--color-text);" id="preset<%= preset %>-text"></span>
-                        </button>
-                    <% }); %>
-                </div>                
-
-                <div class="flex-container flex-phone" style="align-items: center; height: 64px;">
-                    <div class="color-3 m-10 text-medium">
-                        <i class="fa-solid fa-fw fa-user-tie"></i>
-                    </div>
-                    <div>
-                        <span class="">Owner contact</span><br>
-                        <span class="text-small color-4 text-200-px tooltip" data-tooltip="<%= ownerContact %>" data-tooltip-placement="bottom"><%= ownerContact %></span>
-                    </div>
-                </div>
-            </div>
-
+        <div class="dashboard-panel-plugin-list flex-container hide-phone" style="flex: 1;overflow-x: auto;">
+          <div class="flex-container scrollable-container"></div>
         </div>
+        <div class="plugin-list scroll-right">
+          <i class="fa-solid fa-chevron-right fa-lg color-4"></i>
+        </div>
+      </div>
+      <div style="margin-left: auto;" class="dashboard-panel-plugin-content"></div>
+      <div>
+        <button id="users-online-container" class="hide-phone" aria-label="Online users"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
+        <% if (chatEnabled) { %>
+        <button class="chatbutton hide-phone" aria-label="Chatbox"><i class="fa-solid fa-comments"></i></button>
+        <% } %>
+        <button id="settings" aria-label="Settings" class="hide-phone"><i class="fa-solid fa-gear"></i></button>
+      </div>
     </div>
-    <div class="wrapper-outer" style="z-index: 100;">
-        <div id="wrapper">
-                <div class="canvas-container hide-phone">
-                    <canvas id="signal-canvas"></canvas>
+  </div>
+  <div id="dashboard-panel-description" class="hidden-panel">
+
+    <div class="flex-container">
+      <div class="tuner-desc">
+        <%- tunerDesc %>
+        <% if(tuningLimit && tuningLimit == true){ %>
+        <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
+        <% } %>
+      </div>
+
+      <div class="flex-phone" style="margin-left: auto;flex-direction: row-reverse;justify-content: space-around;min-width: 200px;">
+        <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
+          <div>
+            <span class="">Device</span><br>
+            <span class="text-small color-4">
+              <% if (device == 'tef') { %>TEF668x<% } %>
+              <% if (device == 'xdr') { %>Sony XDR<% } %>
+              <% if (device == 'sdr') { %>SDR<% } %>
+            </span>
+          </div>
+          <div class="color-3 m-10 text-medium">
+            <i class="fa-solid fa-fw fa-radio"></i>
+          </div>
+        </div>
+
+        <div class="flex-container flex-phone" style="text-align: right;justify-content: right;align-items: center; height: 64px;">
+          <div>
+            <span class="">Server time</span><br>
+            <span class="text-small color-4" id="server-time"></span>
+          </div>
+          <div class="color-3 m-10 text-medium">
+            <i class="fa-solid fa-fw fa-stopwatch"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="width: 1px;background: var(--color-2);" class="m-10 hide-phone"></div>
+
+      <div>
+        <% const presets = [1, 2, 3, 4]; %>
+
+        <div style="height: 64px;" class="flex-center flex-phone">
+          <% presets.forEach(preset => { %>
+          <button class="no-bg color-4 hover-brighten" id="preset<%= preset %>" style="padding: 6px; width: 64px; min-width: 64px;">
+            <i class="fa-solid fa-wave-square fa-lg top-10"></i><br>
+            <span style="font-size: 10px; color: var(--color-text);" id="preset<%= preset %>-text"></span>
+          </button>
+          <% }); %>
+        </div>
+
+        <div class="flex-container flex-phone" style="align-items: center; height: 64px;">
+          <div class="color-3 m-10 text-medium">
+            <i class="fa-solid fa-fw fa-user-tie"></i>
+          </div>
+          <div>
+            <span class="">Owner contact</span><br>
+            <span class="text-small color-4 text-200-px tooltip" data-tooltip="<%= ownerContact %>" data-tooltip-placement="bottom"><%= ownerContact %></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="wrapper-outer" style="z-index: 100;">
+    <div id="wrapper">
+      <div class="canvas-container hide-phone">
+        <canvas id="signal-canvas"></canvas>
+      </div>
+
+      <div class="flex-container">
+        <div class="panel-100 no-bg" style="margin-top: 0; margin-left: 0;">
+          <div class="flex-container">
+            <div class="panel-75 flex-container no-bg">
+              <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
+                <button class="playbutton" aria-label="Play / Stop"><i class="fa-solid fa-play fa-lg"></i></button>
+              </div>
+              <div class="panel-100 m-0 hover-brighten flex-center tooltip" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
+                <span class="text-big" id="data-ps"></span>
+              </div>
+            </div>
+
+            <div id="flags-container-desktop" class="panel-33 user-select-none">
+              <h2 class="show-phone">
+                <div class="data-pty color-4"></div>
+              </h2>
+              <h3 style="margin-top:0;margin-bottom:0;" class="text-color-default flex-center">
+                <span class="data-tp">TP</span>
+                <span style="margin-left: 15px;" class="data-ta">TA</span>
+                <div style="display:inline-block">
+                  <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
                 </div>
-                
-                <div class="flex-container">
-                    <div class="panel-100 no-bg" style="margin-top: 0; margin-left: 0;">
-                        <div class="flex-container">
-                            <div class="panel-75 flex-container no-bg">
-                                <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
-                                    <button class="playbutton" aria-label="Play / Stop"><i class="fa-solid fa-play fa-lg"></i></button>
-                                </div>
-                                <div class="panel-100 m-0 hover-brighten flex-center tooltip" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
-                                    <span class="text-big" id="data-ps"></span>
-                                </div>
-                            </div>
-                            
-                            <div id="flags-container-desktop" class="panel-33 user-select-none">
-                                <h2 class="show-phone">
-                                    <div class="data-pty color-4"></div>
-                                </h2>
-                                <h3 style="margin-top:0;margin-bottom:0;" class="text-color-default flex-center">
-                                    <span class="data-tp">TP</span>
-                                    <span style="margin-left: 15px;" class="data-ta">TA</span>
-                                    <div style="display:inline-block">
-                                        <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
-                                    </div>
-                                    <span class="pointer stereo-container" style="position: relative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
-                                        <div class="circle-container">
-                                            <div class="circle data-st circle1"></div>
-                                            <div class="circle data-st circle2"></div>
-                                        </div>
-                                        <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
-                                        </span>                                                               
-                                        <span style="margin-left: 15px;" class="data-ms">MS</span>
-                                    </h3>
-                                </div>
-                            </div>
-                            
-                            <div class="flex-container">
-                                <div class="panel-33 hover-brighten tooltip no-bg-phone" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
-                                    <h2 class="signal-heading">PI CODE</h2>
-                                    <div class="text-small text-gray highest-signal-container">
-                                        <span id="data-regular-pi">&nbsp;</span>
-                                    </div>
-                                    <span id="data-pi" class="text-big text-uppercase"></span>
-                                </div>
-                                
-                                <div class="panel-33 hover-brighten no-bg-phone" id="freq-container">
-                                    <h2>FREQUENCY</h2>
-                                    <span id="data-frequency" class="text-big"></span>
-                                </div>
-                                
-                                <div class="panel-33 no-bg-phone">
-                                    <h2 class="signal-heading">SIGNAL</h2>
-                                    <div class="text-small text-gray highest-signal-container">
-                                        <i class="fa-solid fa-arrow-up"></i>
-                                        <span id="data-signal-highest"></span>
-                                        <% if (device == 'sdr') { %> <span>dB SNR</span> <% } else { %> <span class="signal-units"></span> <% } %>
-                                    </div>
-                                    <div class="text-big">
-                                        <span id="data-signal"></span><!--
+                <span class="pointer stereo-container" style="position: relative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+                  <div class="circle-container">
+                    <div class="circle data-st circle1"></div>
+                    <div class="circle data-st circle2"></div>
+                  </div>
+                  <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
+                </span>
+                <span style="margin-left: 15px;" class="data-ms">MS</span>
+              </h3>
+            </div>
+          </div>
+
+          <div class="flex-container">
+            <div class="panel-33 hover-brighten tooltip no-bg-phone" id="pi-code-container" data-tooltip="Clicking on the PI code will show the current station on a map.">
+              <h2 class="signal-heading">PI CODE</h2>
+              <div class="text-small text-gray highest-signal-container">
+                <span id="data-regular-pi">&nbsp;</span>
+              </div>
+              <span id="data-pi" class="text-big text-uppercase"></span>
+            </div>
+
+            <div class="panel-33 hover-brighten no-bg-phone" id="freq-container">
+              <h2>FREQUENCY</h2>
+              <span id="data-frequency" class="text-big"></span>
+            </div>
+
+            <div class="panel-33 no-bg-phone">
+              <h2 class="signal-heading">SIGNAL</h2>
+              <div class="text-small text-gray highest-signal-container">
+                <i class="fa-solid fa-arrow-up"></i>
+                <span id="data-signal-highest"></span>
+                <% if (device == 'sdr') { %> <span>dB SNR</span> <% } else { %> <span class="signal-units"></span> <% } %>
+              </div>
+              <div class="text-big">
+                <span id="data-signal"></span>
+                <!--
                                         --><span id="data-signal-decimal" class="text-medium-big" style="opacity:0.7;"></span>
-                                        <% if (device == 'sdr') { %> <span class="text-medium">dB SNR</span> <% } else { %> <span class="signal-units text-medium">dBf</span> <% } %>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex-container flex-phone flex-phone-column">
-                                <div class="panel-33 no-bg filter-controls" style="height: 48px;">
-                                    <div class="flex-container no-filter flex-phone h-100">
-                                        <div class="panel-75 no-bg h-100 m-0 hide-desktop m-right-20 button-play-mobile" style="margin-right: 20px;">
-                                            <button class="playbutton" aria-label="Play/Stop"><i class="fa-solid fa-play"></i></button>
-                                        </div>
-                                        
-                                        <% if (antennas.enabled == true) { %>
-                                            <div class="panel-50 no-bg h-100 br-0 m-0 dropdown dropdown-up" id="data-ant" style="margin-right: 25px;">
-                                                <input type="text" placeholder="Ant A" readonly tabindex="0">
-                                                <ul class="options open-top" tabindex="-1">
-                                                    <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
-                                                    <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
-                                                    <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
-                                                    <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
-                                                </ul>
-                                            </div>
-                                            <% } %>
-                                            
-                                            <div class="panel-50 no-bg br-0 h-100 m-0 button-eq">
-                                                <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 kHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
-                                                <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
-                                            </div>
-                                            <div class="panel-50 no-bg br-0 h-100 m-0 button-ims">
-                                                <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
-                                                <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="panel-33 flex-container flex-phone no-bg" id="tune-buttons">
-                                        <button id="freq-down" aria-label="Tune down"><i class="fa-solid fa-chevron-left"></i></button>
-                                        <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency" autocomplete="off" aria-label="Current frequency: ">
-                                        <button id="freq-up" aria-label="Tune up"><i class="fa-solid fa-chevron-right"></i></button>
-                                    </div>
-                                    
-                                    <div class="panel-33 hide-phone no-bg">
-                                        <div class="flex-container">
-                                            <span class="panel-100-real m-0" style="height: 48px;">
-                                                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"  aria-label="Volume slider">
-                                            </span>
-                                            <% if (device == 'tef' && bwSwitch == true) { %>
-                                                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
-                                                    <input type="text" placeholder="Auto BW" readonly tabindex="0">
-                                                    <ul class="options open-top" tabindex="-1">
-                                                        <li data-value="0" class="option" tabindex="0">Auto</li>
-                                                        <li data-value="56000" class="option" tabindex="0">56 kHz</li>
-                                                        <li data-value="64000" class="option" tabindex="0">64 kHz</li>
-                                                        <li data-value="72000" class="option" tabindex="0">72 kHz</li>
-                                                        <li data-value="84000" class="option" tabindex="0">84 kHz</li>
-                                                        <li data-value="97000" class="option" tabindex="0">97 kHz</li>
-                                                        <li data-value="114000" class="option" tabindex="0">114 kHz</li>
-                                                        <li data-value="133000" class="option" tabindex="0">133 kHz</li>
-                                                        <li data-value="151000" class="option" tabindex="0">151 kHz</li>
-                                                        <li data-value="184000" class="option" tabindex="0">184 kHz</li>
-                                                        <li data-value="200000" class="option" tabindex="0">200 kHz</li>
-                                                        <li data-value="217000" class="option" tabindex="0">217 kHz</li>
-                                                        <li data-value="236000" class="option" tabindex="0">236 kHz</li>
-                                                        <li data-value="254000" class="option" tabindex="0">254 kHz</li>
-                                                        <li data-value="287000" class="option" tabindex="0">287 kHz</li>
-                                                        <li data-value="311000" class="option" tabindex="0">311 kHz</li>
-                                                    </ul>
-                                                </div>
-                                                <% } %>
-                                                
-                                                <% if (device == 'xdr' && bwSwitch == true) { %>
-                                                    <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
-                                                        <input type="text" placeholder="Auto BW" readonly tabindex="0">
-                                                        <ul class="options open-top" tabindex="-1">
-                                                            <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
-                                                            <li data-value="55000" data-value2="0" class="option" tabindex="0">55 kHz</li>
-                                                            <li data-value="73000" data-value2="1" class="option" tabindex="0">73 kHz</li>
-                                                            <li data-value="90000" data-value2="2" class="option" tabindex="0">90 kHz</li>
-                                                            <li data-value="108000" data-value2="3" class="option" tabindex="0">108 kHz</li>
-                                                            <li data-value="125000" data-value2="4" class="option" tabindex="0">125 kHz</li>
-                                                            <li data-value="142000" data-value2="5" class="option" tabindex="0">142 kHz</li>
-                                                            <li data-value="159000" data-value2="6" class="option" tabindex="0">159 kHz</li>
-                                                            <li data-value="177000" data-value2="7" class="option" tabindex="0">177 kHz</li>
-                                                            <li data-value="194000" data-value2="8" class="option" tabindex="0">194 kHz</li>
-                                                            <li data-value="211000" data-value2="9" class="option" tabindex="0">211 kHz</li>
-                                                            <li data-value="229000" data-value2="10" class="option" tabindex="0">229 kHz</li>
-                                                            <li data-value="246000" data-value2="11" class="option" tabindex="0">246 kHz</li>
-                                                            <li data-value="263000" data-value2="12" class="option" tabindex="0">263 kHz</li>
-                                                            <li data-value="281000" data-value2="13" class="option" tabindex="0">281 kHz</li>
-                                                            <li data-value="298000" data-value2="14" class="option" tabindex="0">298 kHz</li>
-                                                            <li data-value="309000" data-value2="15" class="option" tabindex="0">309 kHz</li>
-                                                        </ul>
-                                                    </div>
-                                                    <% } %>
-                                                    
-                                                    <% if (device == 'sdr' && bwSwitch == true) { %>
-                                                        <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
-                                                            <input type="text" placeholder="Auto BW" readonly tabindex="0">
-                                                            <ul class="options open-top" tabindex="-1">
-                                                                <li data-value="0" class="option" tabindex="0">Auto</li>
-                                                                <li data-value="4000" class="option" tabindex="0">4 kHz</li>
-                                                                <li data-value="8000" class="option" tabindex="0">8 kHz</li>
-                                                                <li data-value="10000" class="option" tabindex="0">10 kHz</li>
-                                                                <li data-value="20000" class="option" tabindex="0">20 kHz</li>
-                                                                <li data-value="30000" class="option" tabindex="0">30 kHz</li>
-                                                                <li data-value="50000" class="option" tabindex="0">50 kHz</li>
-                                                                <li data-value="75000" class="option" tabindex="0">75 kHz</li>
-                                                                <li data-value="100000" class="option" tabindex="0">100 kHz</li>
-                                                                <li data-value="125000" class="option" tabindex="0">125 kHz</li>
-                                                                <li data-value="150000" class="option" tabindex="0">150 kHz</li>
-                                                                <li data-value="175000" class="option" tabindex="0">175 kHz</li>
-                                                                <li data-value="200000" class="option" tabindex="0">200 kHz</li>
-                                                                <li data-value="225000" class="option" tabindex="0">225 kHz</li>
-                                                            </ul>
-                                                        </div>
-                                                        <% } %>
-                                                        <% if (fmlist_integration == true) { %>
-                                                            <button class="tooltip bg-color-4 popup" id="log-fmlist" 
-                                                            data-tooltip="<strong>LOG TO FMLIST</strong><br>Clicking this button logs the current station to FMLIST's visual logbook." aria-label="Log to FMLIST"
-                                                            style="width: 80px; height: 48px;margin-left: 15px !important;">
-                                                            <i class="fa-solid fa-flag fa-lg"></i>
-                                                            <span class="popup-content">
-                                                                Choose the DX propagation type:<br>
-                                                                <a class="top-10 bg-color-3 text-bold" style="padding: 10px; border-radius: 15px 0 0 15px; display: inline-block;" id="log-fmlist-tropo">Tropo</a><!--
+                <% if (device == 'sdr') { %> <span class="text-medium">dB SNR</span> <% } else { %> <span class="signal-units text-medium">dBf</span> <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-container flex-phone flex-phone-column">
+            <div class="panel-33 no-bg filter-controls" style="height: 48px;">
+              <div class="flex-container no-filter flex-phone h-100">
+                <div class="panel-75 no-bg h-100 m-0 hide-desktop m-right-20 button-play-mobile" style="margin-right: 20px;">
+                  <button class="playbutton" aria-label="Play/Stop"><i class="fa-solid fa-play"></i></button>
+                </div>
+
+                <% if (antennas.enabled == true) { %>
+                <div class="panel-50 no-bg h-100 br-0 m-0 dropdown dropdown-up" id="data-ant" style="margin-right: 25px;">
+                  <input type="text" placeholder="Ant A" readonly tabindex="0">
+                  <ul class="options open-top" tabindex="-1">
+                    <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
+                    <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
+                    <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
+                    <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
+                  </ul>
+                </div>
+                <% } %>
+
+                <div class="panel-50 no-bg br-0 h-100 m-0 button-eq">
+                  <% if (device == 'tef') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="EQ Filter" data-tooltip="<strong>The cEQ filter can reduce bandwidth below 56 kHz.</strong><br><br>Useful for weak stations next to strong ones,<br>although it may pick up more interference."><span class="text-bold">cEQ</span></button><% } %>
+                  <% if (device == 'xdr') { %><button id="data-eq" style="border-radius: 15px 0px 0px 15px;" class="tooltip" aria-label="RF+ Filter" data-tooltip="<strong>The RF+ filter increases gain by 5dB</strong>"><span class="text-bold">RF+</span></button><% } %>
+                </div>
+                <div class="panel-50 no-bg br-0 h-100 m-0 button-ims">
+                  <% if (device == 'tef') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
+                  <% if (device == 'xdr') { %><button id="data-ims" style="border-radius: 0px 15px 15px 0px;" class="tooltip" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-33 flex-container flex-phone no-bg" id="tune-buttons">
+              <button id="freq-down" aria-label="Tune down"><i class="fa-solid fa-chevron-left"></i></button>
+              <input type="text" id="commandinput" inputmode="numeric" placeholder="Frequency" autocomplete="off" aria-label="Current frequency: ">
+              <button id="freq-up" aria-label="Tune up"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <div class="panel-33 hide-phone no-bg">
+              <div class="flex-container">
+                <span class="panel-100-real m-0" style="height: 48px;">
+                  <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume slider">
+                </span>
+                <% if (device == 'tef' && bwSwitch == true) { %>
+                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
+                  <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                  <ul class="options open-top" tabindex="-1">
+                    <li data-value="0" class="option" tabindex="0">Auto</li>
+                    <li data-value="56000" class="option" tabindex="0">56 kHz</li>
+                    <li data-value="64000" class="option" tabindex="0">64 kHz</li>
+                    <li data-value="72000" class="option" tabindex="0">72 kHz</li>
+                    <li data-value="84000" class="option" tabindex="0">84 kHz</li>
+                    <li data-value="97000" class="option" tabindex="0">97 kHz</li>
+                    <li data-value="114000" class="option" tabindex="0">114 kHz</li>
+                    <li data-value="133000" class="option" tabindex="0">133 kHz</li>
+                    <li data-value="151000" class="option" tabindex="0">151 kHz</li>
+                    <li data-value="184000" class="option" tabindex="0">184 kHz</li>
+                    <li data-value="200000" class="option" tabindex="0">200 kHz</li>
+                    <li data-value="217000" class="option" tabindex="0">217 kHz</li>
+                    <li data-value="236000" class="option" tabindex="0">236 kHz</li>
+                    <li data-value="254000" class="option" tabindex="0">254 kHz</li>
+                    <li data-value="287000" class="option" tabindex="0">287 kHz</li>
+                    <li data-value="311000" class="option" tabindex="0">311 kHz</li>
+                  </ul>
+                </div>
+                <% } %>
+
+                <% if (device == 'xdr' && bwSwitch == true) { %>
+                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
+                  <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                  <ul class="options open-top" tabindex="-1">
+                    <li data-value="0" data-value2="-1" class="option" tabindex="0">Auto</li>
+                    <li data-value="55000" data-value2="0" class="option" tabindex="0">55 kHz</li>
+                    <li data-value="73000" data-value2="1" class="option" tabindex="0">73 kHz</li>
+                    <li data-value="90000" data-value2="2" class="option" tabindex="0">90 kHz</li>
+                    <li data-value="108000" data-value2="3" class="option" tabindex="0">108 kHz</li>
+                    <li data-value="125000" data-value2="4" class="option" tabindex="0">125 kHz</li>
+                    <li data-value="142000" data-value2="5" class="option" tabindex="0">142 kHz</li>
+                    <li data-value="159000" data-value2="6" class="option" tabindex="0">159 kHz</li>
+                    <li data-value="177000" data-value2="7" class="option" tabindex="0">177 kHz</li>
+                    <li data-value="194000" data-value2="8" class="option" tabindex="0">194 kHz</li>
+                    <li data-value="211000" data-value2="9" class="option" tabindex="0">211 kHz</li>
+                    <li data-value="229000" data-value2="10" class="option" tabindex="0">229 kHz</li>
+                    <li data-value="246000" data-value2="11" class="option" tabindex="0">246 kHz</li>
+                    <li data-value="263000" data-value2="12" class="option" tabindex="0">263 kHz</li>
+                    <li data-value="281000" data-value2="13" class="option" tabindex="0">281 kHz</li>
+                    <li data-value="298000" data-value2="14" class="option" tabindex="0">298 kHz</li>
+                    <li data-value="309000" data-value2="15" class="option" tabindex="0">309 kHz</li>
+                  </ul>
+                </div>
+                <% } %>
+
+                <% if (device == 'sdr' && bwSwitch == true) { %>
+                <div class="panel-50 w-150 no-bg h-100 m-0 dropdown dropdown-up" id="data-bw" style="margin-left: 15px !important;">
+                  <input type="text" placeholder="Auto BW" readonly tabindex="0">
+                  <ul class="options open-top" tabindex="-1">
+                    <li data-value="0" class="option" tabindex="0">Auto</li>
+                    <li data-value="4000" class="option" tabindex="0">4 kHz</li>
+                    <li data-value="8000" class="option" tabindex="0">8 kHz</li>
+                    <li data-value="10000" class="option" tabindex="0">10 kHz</li>
+                    <li data-value="20000" class="option" tabindex="0">20 kHz</li>
+                    <li data-value="30000" class="option" tabindex="0">30 kHz</li>
+                    <li data-value="50000" class="option" tabindex="0">50 kHz</li>
+                    <li data-value="75000" class="option" tabindex="0">75 kHz</li>
+                    <li data-value="100000" class="option" tabindex="0">100 kHz</li>
+                    <li data-value="125000" class="option" tabindex="0">125 kHz</li>
+                    <li data-value="150000" class="option" tabindex="0">150 kHz</li>
+                    <li data-value="175000" class="option" tabindex="0">175 kHz</li>
+                    <li data-value="200000" class="option" tabindex="0">200 kHz</li>
+                    <li data-value="225000" class="option" tabindex="0">225 kHz</li>
+                  </ul>
+                </div>
+                <% } %>
+                <% if (fmlist_integration == true) { %>
+                <button class="tooltip bg-color-4 popup" id="log-fmlist" data-tooltip="<strong>LOG TO FMLIST</strong><br>Clicking this button logs the current station to FMLIST's visual logbook." aria-label="Log to FMLIST" style="width: 80px; height: 48px;margin-left: 15px !important;">
+                  <i class="fa-solid fa-flag fa-lg"></i>
+                  <span class="popup-content">
+                    Choose the DX propagation type:<br>
+                    <a class="top-10 bg-color-3 text-bold" style="padding: 10px; border-radius: 15px 0 0 15px; display: inline-block;" id="log-fmlist-tropo">Tropo</a>
+                    <!--
                                                                 --><a class="top-10 bg-color-3 text-bold" style="padding: 10px; border-radius: 0 15px 15px 0; display: inline-block;" id="log-fmlist-sporadice">Sporadic-E</a>
-                                                            </span>
-                                                        </button>
-                                                        <% } %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="flex-container flex-phone flex-phone-column">
-                                                <div class="panel-75 hover-brighten no-bg-phone" id="rt-container" style="height: 100px;">
-                                                    <h2 style="margin-top: 4px;">RADIOTEXT</h2>
-                                                    <div id="data-rt0">
-                                                        <span></span>
-                                                    </div>
-                                                    <div id="data-rt1">
-                                                        <span></span>
-                                                    </div>
-                                                    <hr class="hide-desktop">
-                                                </div>
-                                                
-                                                <div class="panel-33 hover-brighten tooltip no-bg-phone" style="min-height: 91px;" 
-                                                data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
-                                                    <div id="data-station-container">
-                                                        <h2 style="margin-top: 0;" class="mb-0">
-                                                            <span id="data-station-name"></span>
-                                                        </h2>
-                                                        <h4 class="m-0">
-                                                            <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
-                                                        </h4>
-                                                        <span class="text-small">
-                                                            <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                        </div>
-                                        
-                                        <div class="panel-10 no-bg center-phone" style="margin-left: 0; margin-top: 0; margin-right: 0;display:flex;">
-                                            <div class="panel-100 no-bg-phone" style="margin-left: 0;">
-                                                <h2 class="bottom-10">AF</h2>
-                                                <div id="af-list" style="text-align: center;">
-                                                    <ul>   </ul>
-                                                </div>
-                                                </div>
+                  </span>
+                </button>
+                <% } %>
+              </div>
+            </div>
+          </div>
 
-                                                </div>
-                                                </div>
-                                                <div id="flags-container-phone" class="panel-33 no-bg-phone">
-                                                    <h2 class="show-phone">
-                                                        <div class="data-pty text-color-default"></div>
-                                                    </h2>
-                                                    <h3 style="margin-top:0;margin-bottom:0;" class="colornode-4 flex-center">
-                                                        <span class="data-tp">TP</span>
-                                                        <span style="margin-left: 15px;" class="data-ta">TA</span>
-                                                        <div style="display:inline-block">
-                                                            <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
-                                                        </div>
-                                                        <span class="pointer stereo-container" style="position: noderelative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
-                                                            <div class="circle-container">
-                                                                <div class="circle data-st circle1"></div>
-                                                                <div class="circle data-st circle2"></div>
-                                                            </div>
-                                                            <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
-                                                            </span>
-                                                            <span style="margin-left: 15px;" class="data-ms">MS</span>
-                                                        </h3>
-                                                    </div>
-                                                </div>
+          <div class="flex-container flex-phone flex-phone-column">
+            <div class="panel-75 hover-brighten no-bg-phone" id="rt-container" style="height: 100px;">
+              <h2 style="margin-top: 4px;">RADIOTEXT</h2>
+              <div id="data-rt0">
+                <span></span>
+              </div>
+              <div id="data-rt1">
+                <span></span>
+              </div>
+              <hr class="hide-desktop">
+            </div>
 
-                                                <div class="popup-window" id="popup-panel-chat">
-                                                    <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
-                                                        <div class="popup-header hover-brighten flex-center text-medium-big"><button class="popup-close">✖</button></div>
-                                                        <div class="popup-content text-left flex-container flex-phone flex-column" style="flex: 1;">
-                                                            <div style="text-align: center;white-space-collapse: collapse;">
-                                                                <div class="flex-phone flex-container flex-center top-10">
-                                                                    <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
-                                                                    <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
-                                                                </div>
-                                                                <p style="margin: 5px;" class="text-small">
-                                                                    Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong> 
-                                                                </p>
-                                                            </div>
-                                                            
-                                                            <div id="chat-chatbox" class="bg-color-1" style="padding: 10px; overflow-y: auto; flex-grow: 1; min-height: 0; flex-basis: 0; min-height: 120px;"></div>
-                                                            
-                                                            <div class="flex-container flex-phone">
-                                                                <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
-                                                                <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 48px;"><i class="fa-solid fa-paper-plane"></i></button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-    
-                                                    <div id="myModal" class="modal">
-                                                        <div class="modal-panel">
-                                                            <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
-                                                                <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close settings" tabindex="0"><i class="fa-solid fa-chevron-right"></i></div>
-                                                                <div class="modal-panel-content">
-                                                                    <h1 class="top-25">Settings</h1>
-                                                                    
-                                                                    <div class="panel-full flex-center no-bg m-0">
-                                                                        <%- include('_components', { component: 'dropdown', id: 'theme-selector', inputId: 'theme-selector-input', label: 'Theme', cssClass: '', placeholder: 'Default', 
+            <div class="panel-33 hover-brighten tooltip no-bg-phone" style="min-height: 91px;" data-tooltip="This panel contains the current TX info when RDS is loaded.<br><strong>Clicking on this panel copies the info into the clipboard.</strong>">
+              <div id="data-station-container">
+                <h2 style="margin-top: 0;" class="mb-0">
+                  <span id="data-station-name"></span>
+                </h2>
+                <h4 class="m-0">
+                  <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
+                </h4>
+                <span class="text-small">
+                  <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="panel-10 no-bg center-phone" style="margin-left: 0; margin-top: 0; margin-right: 0;display:flex;">
+          <div class="panel-100 no-bg-phone" style="margin-left: 0;">
+            <h2 class="bottom-10">AF</h2>
+            <div id="af-list" style="text-align: center;">
+              <ul> </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div id="flags-container-phone" class="panel-33 no-bg-phone">
+        <h2 class="show-phone">
+          <div class="data-pty text-color-default"></div>
+        </h2>
+        <h3 style="margin-top:0;margin-bottom:0;" class="colornode-4 flex-center">
+          <span class="data-tp">TP</span>
+          <span style="margin-left: 15px;" class="data-ta">TA</span>
+          <div style="display:inline-block">
+            <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
+          </div>
+          <span class="pointer stereo-container" style="position: noderelative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+            <div class="circle-container">
+              <div class="circle data-st circle1"></div>
+              <div class="circle data-st circle2"></div>
+            </div>
+            <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
+          </span>
+          <span style="margin-left: 15px;" class="data-ms">MS</span>
+        </h3>
+      </div>
+    </div>
+
+    <div class="popup-window" id="popup-panel-chat">
+      <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
+        <div class="popup-header hover-brighten flex-center text-medium-big"><button class="popup-close">✖</button></div>
+        <div class="popup-content text-left flex-container flex-phone flex-column" style="flex: 1;">
+          <div style="text-align: center;white-space-collapse: collapse;">
+            <div class="flex-phone flex-container flex-center top-10">
+              <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
+              <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
+            </div>
+            <p style="margin: 5px;" class="text-small">
+              Current identity: <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong>
+            </p>
+          </div>
+
+          <div id="chat-chatbox" class="bg-color-1" style="padding: 10px; overflow-y: auto; flex-grow: 1; min-height: 0; flex-basis: 0; min-height: 120px;"></div>
+
+          <div class="flex-container flex-phone">
+            <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
+            <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 48px;"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="myModal" class="modal">
+      <div class="modal-panel">
+        <div class="flex-container flex-phone" style="height: calc(100% - 100px)">
+          <div class="modal-panel-sidebar hover-brighten flex-center text-medium-big closeModal" role="button" aria-label="Close settings" tabindex="0"><i class="fa-solid fa-chevron-right"></i></div>
+          <div class="modal-panel-content">
+            <h1 class="top-25">Settings</h1>
+
+            <div class="panel-full flex-center no-bg m-0">
+              <%- include('_components', { component: 'dropdown', id: 'theme-selector', inputId: 'theme-selector-input', label: 'Theme', cssClass: '', placeholder: 'Default', 
                                                                         options: [
                                                                         { value: 'theme1', label: 'Mint' },
                                                                         { value: 'theme2', label: 'Cappuccino' },
@@ -443,102 +444,102 @@
                                                                         { value: 'theme9', label: 'Amoled' },
                                                                         ]
                                                                     }) %>
-                                                                </div>
-                                                                
-                                                                <% if (device !== 'sdr') { %>
-                                                                    <div class="panel-full flex-center no-bg m-0">
-                                                                        <%- include('_components', { component: 'dropdown', id: 'signal-selector', inputId: 'signal-selector-input', label: 'Signal units', cssClass: '', placeholder: 'dBf', 
+            </div>
+
+            <% if (device !== 'sdr') { %>
+            <div class="panel-full flex-center no-bg m-0">
+              <%- include('_components', { component: 'dropdown', id: 'signal-selector', inputId: 'signal-selector-input', label: 'Signal units', cssClass: '', placeholder: 'dBf', 
                                                                         options: [
                                                                         { value: 'dbf', label: 'dBf' },
                                                                         { value: 'dbuv', label: 'dBuV' },
                                                                         { value: 'dbm', label: 'dBm' },
                                                                         ]
                                                                     }) %>
-                                                                </div>
-                                                                <% } %>
-                                                                
-                                                                <div class="auto" style="max-width: 215px;">
-                                                                    <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
-                                                                    <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
-                                                                    <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
-                                                                </div>
-                                                                
-                                                                <% if (isAdminAuthenticated) { %>
-                                                                    <p class="color-3">You are logged in as an adminstrator.</p>
-                                                                    <div class="admin-quick-dashboard">
-                                                                        <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleLock('#dashboard-lock-admin', 'wL1', 'wL0', 'Unlock Tuner (Admin)', 'Lock Tuner (Admin)');" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
-                                                                            <i class="fa-solid fa-lock"></i>
-                                                                        </div>
-                                                                        <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
-                                                                            <i class="fa-solid fa-key"></i>
-                                                                        </div>
-                                                                        <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
-                                                                            <i class="fa-solid fa-user"></i>
-                                                                        </div>
-                                                                        <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
-                                                                            <i class="fa-solid fa-sign-out"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                    <% } else if (isTuneAuthenticated) { %>
-                                                                        <p class="color-3">You are logged in and can control the receiver.</p>
-                                                                        <div class="admin-quick-dashboard">
-                                                                            <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until disconnect" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until disconnect">
-                                                                                <i class="fa-solid fa-key"></i>
-                                                                            </div>
-                                                                            <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
-                                                                                <i class="fa-solid fa-sign-out"></i>
-                                                                            </div>
-                                                                        </div>
-                                                                        <% } else { %>
-                                                                            <form action="./login" method="post" id="login-form" class="top-25">
-                                                                                <input type="password" id="password" name="password" placeholder="Password" style="width: 145px; border-radius: 15px 0 0 15px" required>
-                                                                                <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -2px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
-                                                                                    <i class="fa-solid fa-right-to-bracket"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                            <% } %>
-                                                                            <div id="login-message" class="color-3">&nbsp;</div>
+            </div>
+            <% } %>
 
-                                                                            <div class="version-info">
-                                                                                <p class="m-0">
-                                                                                    FM-DX Webserver <span style="color: var(--color-3);" class="version-string"></span>
-                                                                                </p>
-                                                                                <p class="text-small m-0 color-3">by <a href="https://fmdx.org" target="_blank">FMDX.org</a></p>
-                                                                                <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
-                                                                                <br>
-                                                                                    <p class="text-small color-3" id="current-ping"></p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="modal-panel-footer flex-container flex-phone">
-                                                                            <div class="modal-panel-sidebar" style="font-size: 22px;">
-                                                                                <div class="flex-center" style="height: 50px">
-                                                                                    <i class="fa-solid fa-hand-holding-medical"></i>
-                                                                                </div>
-                                                                                <div class="flex-center" style="height: 50px">
-                                                                                    <i class="fa-brands fa-discord"></i>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="modal-panel-content">
-                                                                                <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
-                                                                                    <strong>Support</strong> the developer!
-                                                                                </div>
-                                                                                <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
-                                                                                    Join our <strong>FMDX.org Discord</strong> community!
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div id="toast-container"></div>
-                                                            <script src="js/websocket.js"></script>
-                                                            <script src="js/webserver.js"></script>
-                                                            <% if (!noPlugins) { %>
-                                                                <% plugins?.forEach(function(plugin) { %>
-                                                                    <script src="js/plugins/<%= plugin %>"></script>
-                                                                    <% }); %>
-                                                                    <% } %>
-                                                                </body>
-                                                                </html>
-                                                                
+            <div class="auto" style="max-width: 215px;">
+              <%- include('_components', {component: 'checkbox', cssClass: 'top-25', label: 'Manual decimals', id: 'extended-frequency-range'}) %>
+              <%- include('_components', {component: 'checkbox', cssClass: '', label: 'RDS PS Underscores', id: 'ps-underscores'}) %>
+              <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Imperial units', id: 'imperial-units'}) %>
+            </div>
+
+            <% if (isAdminAuthenticated) { %>
+            <p class="color-3">You are logged in as an adminstrator.</p>
+            <div class="admin-quick-dashboard">
+              <div class="icon tooltip <% if (tunerLock) { %>active<% } %>" id="dashboard-lock-admin" onClick="toggleLock('#dashboard-lock-admin', 'wL1', 'wL0', 'Unlock Tuner (Admin)', 'Lock Tuner (Admin)');" role="button" aria-label="Toggle admin lock until restart" tabindex="0" data-tooltip="Toggle admin lock<br>Lasts until restart">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                <i class="fa-solid fa-sign-out"></i>
+              </div>
+            </div>
+            <% } else if (isTuneAuthenticated) { %>
+            <p class="color-3">You are logged in and can control the receiver.</p>
+            <div class="admin-quick-dashboard">
+              <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until disconnect" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until disconnect">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
+                <i class="fa-solid fa-sign-out"></i>
+              </div>
+            </div>
+            <% } else { %>
+            <form action="./login" method="post" id="login-form" class="top-25">
+              <input type="password" id="password" name="password" placeholder="Password" style="width: 145px; border-radius: 15px 0 0 15px" required>
+              <button type="submit" class="br-0 top-10 tooltip" style="height: 46px; width: 50px; margin-left: -2px;border-radius: 0 15px 15px 0;" role="button" aria-label="Log in" tabindex="0" data-tooltip="Log in">
+                <i class="fa-solid fa-right-to-bracket"></i>
+              </button>
+            </form>
+            <% } %>
+            <div id="login-message" class="color-3">&nbsp;</div>
+
+            <div class="version-info">
+              <p class="m-0">
+                FM-DX Webserver <span style="color: var(--color-3);" class="version-string"></span>
+              </p>
+              <p class="text-small m-0 color-3">by <a href="https://fmdx.org" target="_blank">FMDX.org</a></p>
+              <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
+              <br>
+              <p class="text-small color-3" id="current-ping"></p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-panel-footer flex-container flex-phone">
+          <div class="modal-panel-sidebar" style="font-size: 22px;">
+            <div class="flex-center" style="height: 50px">
+              <i class="fa-solid fa-hand-holding-medical"></i>
+            </div>
+            <div class="flex-center" style="height: 50px">
+              <i class="fa-brands fa-discord"></i>
+            </div>
+          </div>
+          <div class="modal-panel-content">
+            <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://buymeacoffee.com/noobish')">
+              <strong>Support</strong> the developer!
+            </div>
+            <div class="hover-brighten br-0 bg-color-1" style="height: 50px;padding:12px;" onclick="window.open('https://discord.com/invite/ZAVNdS74mC')">
+              Join our <strong>FMDX.org Discord</strong> community!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toast-container"></div>
+  <script src="js/websocket.js"></script>
+  <script src="js/webserver.js"></script>
+  <% if (!noPlugins) { %>
+  <% plugins?.forEach(function(plugin) { %>
+  <script src="js/plugins/<%= plugin %>"></script>
+  <% }); %>
+  <% } %>
+</body>
+
+</html>
