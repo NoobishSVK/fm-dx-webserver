@@ -188,7 +188,20 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
-      serialport.write('G00\n');
+      // cEQ and iMS combinations
+      if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "0") {
+        serialport.write("G00\n"); // Both Disabled
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "0") {
+        serialport.write(`G10\n`);
+      } else if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "1") {
+        serialport.write(`G01\n`);
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "1") {
+        serialport.write("G11\n"); // Both Enabled
+      }
+      // Handle stereo mode
+      if (serverConfig.stereoStartup === "1") {
+        serialport.write("B1\n"); // Mono
+      }
       serverConfig.audio.startupVolume 
         ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
         : serialport.write('Y100\n');
@@ -485,8 +498,32 @@ wss.on('connection', (ws, request) => {
 
         if (currentUsers === 0) {
             storage.connectedUsers = [];
-            output.write('W0\n');
-            output.write('B0\n');
+
+            if (serverConfig.bwAutoNoUsers === "1") {
+                output.write("W0\n"); // Auto BW 'Enabled'
+            }
+
+            // cEQ and iMS combinations
+            if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "1") {
+                output.write("G00\n"); // Both Disabled
+            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "0") {
+                output.write(`G0${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "1") {
+                output.write(`G${dataHandler.dataToSend.eq}0\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "0") {
+                output.write(`G1${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
+                output.write(`G${dataHandler.dataToSend.eq}1\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
+                output.write("G11\n"); // Both Enabled
+            }
+
+            // Handle stereo mode
+            if (serverConfig.stereoNoUsers === "1") {
+                output.write("B0\n");
+            } else if (serverConfig.stereoNoUsers === "2") {
+                output.write("B1\n");
+            }
         }
 
         if (tunerLockTracker.has(ws)) {
