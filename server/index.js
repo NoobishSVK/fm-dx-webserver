@@ -171,7 +171,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     setTimeout(() => {
       serialport.write('Q0\n');
       serialport.write('M0\n');
-      serialport.write('Z0\n');
+      serialport.write(`Z${serverConfig.antennaStartup}\n`); // Antenna on startup
 
       if (serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
@@ -523,6 +523,17 @@ wss.on('connection', (ws, request) => {
                 output.write("B0\n");
             } else if (serverConfig.stereoNoUsers === "2") {
                 output.write("B1\n");
+            }
+
+            // Handle Antenna selection
+            if (serverConfig.antennaNoUnsers === "1") {
+                output.write("Z0\n");
+            } else if (serverConfig.antennaNoUnsers === "2") {
+                output.write("Z1\n");
+            } else if (serverConfig.antennaNoUnsers === "3") {
+                output.write("Z2\n");
+            } else if (serverConfig.antennaNoUnsers === "4") {
+                output.write("Z3\n");
             }
         }
 
