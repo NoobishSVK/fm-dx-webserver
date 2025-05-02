@@ -466,11 +466,19 @@
                                     { value: '1', label: 'Mono' },
                                 ]
                             }) %><br>
+                            <%- include('_components', { component: 'dropdown', id: 'antennaStartup-dropdown', inputId: 'antennaStartup', label: 'Antenna', cssClass: '', placeholder: 'Antenna 0 (Default)', 
+                                options: [
+                                    { value: '0', label: 'Antenna 0 (Default)' },
+                                    { value: '1', label: 'Antenna 1' },
+                                    { value: '2', label: 'Antenna 2' },
+                                    { value: '3', label: 'Antenna 3' },
+                                ]
+                            }) %><br>
                         </div>
                     </div>
                 </div>
                 <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 10; padding-bottom: 100px;">
+                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 160px;">
                         <h3>On no active users</h3>
                         <h4>Settings take effect immediately after saving</h4>
                         <div class="flex-container flex-center p-20">
@@ -517,6 +525,15 @@
                                     { value: '0', label: 'Unchanged' },
                                     { value: '1', label: 'Stereo' },
                                     { value: '2', label: 'Mono' },
+                                ]
+                            }) %><br>
+                            <%- include('_components', { component: 'dropdown', id: 'antennaNoUnsers-dropdown', inputId: 'antennaNoUnsers', label: 'Antenna', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Antenna 0' },
+                                    { value: '2', label: 'Antenna 1' },
+                                    { value: '3', label: 'Antenna 2' },
+                                    { value: '4', label: 'Antenna 3' },
                                 ]
                             }) %><br>
                         </div>
