@@ -217,18 +217,18 @@
                     </div>
                     <div class="panel-50 p-bottom-20">
                         <h3>Experimental</h3>
-                        <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
+                        <p>If you use a USB audio card on Linux, enabling this option might fix your audio issues.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
                     </div>
                 </div>
                 <div class="flex-container">
-                    <div class="panel-50 p-bottom-20">
+                    <div class="panel-50 p-bottom-20 bottom-20">
                         <h3>FFmpeg</h3>
                         <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
                     </div>
-                    <div class="panel-50 p-botom-20">
-                        <h3>Sample rate Offset</h3>
+                    <div class="panel-50 p-botom-20 bottom-20">
+                        <h3>Sample rate offset</h3>
                         <p>Using a negative value could eliminate audio buffering issues during long periods of listening. <br>
                             However, a value that’s too low might increase the buffer over time.</p>
                         <p><input class="panel-33 input-text w-100 auto" type="number" style="min-height: 40px; color: var(--color-text); padding: 10px; padding-left: 10px; box-sizing: border-box; border: 2px solid transparent; font-family: 'Titillium Web', sans-serif;" id="audio-samplerateOffset" min="-10" max="10" step="1" value="0" aria-label="Samplerate offset"></p>
@@ -325,7 +325,7 @@
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
                     </div>
-                    <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
+                    <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px; padding-bottom: 80px;">
                         <h3>Transmitter Search Algorithm</h3>
                         <p>Different modes may help with more accurate transmitter identification depending on your region.</p>
                         <%- include('_components', { component: 'dropdown', id: 'server-tx-id-algo', inputId: 'webserver-txIdAlgorithm', label: 'Transmitter ID Algorithm', cssClass: '', placeholder: 'Algorithm 1', 
@@ -423,6 +423,102 @@
                                 <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Auto-shutdown', id: 'autoShutdown'}) %><br>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="panel-100-real p-bottom-20" style="z-index: 10; padding-bottom: 80px;">
+                        <h3>On startup</h3>
+                        <h4>Settings take effect on server launch</h4>
+                        <div class="flex-container flex-center p-20">
+                            <% if (device === 'tef') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'ceqStartup-dropdown', inputId: 'ceqStartup', label: 'cEQ', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+
+                                <%- include('_components', { component: 'dropdown', id: 'imsStartup-dropdown', inputId: 'imsStartup', label: 'iMS', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } else if (device === 'xdr') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'rfStartup-dropdown', inputId: 'ceqStartup', label: 'RF+', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+
+                                <%- include('_components', { component: 'dropdown', id: 'ifStartup-dropdown', inputId: 'imsStartup', label: 'IF+', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } %>
+                            <%- include('_components', { component: 'dropdown', id: 'stereoStartup-dropdown', inputId: 'stereoStartup', label: 'Stereo Mode', cssClass: '', placeholder: 'Stereo (Default)', 
+                                options: [
+                                    { value: '0', label: 'Stereo (Default)' },
+                                    { value: '1', label: 'Mono' },
+                                ]
+                            }) %><br>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 10; padding-bottom: 100px;">
+                        <h3>On no active users</h3>
+                        <h4>Settings take effect immediately after saving</h4>
+                        <div class="flex-container flex-center p-20">
+                            <%- include('_components', { component: 'dropdown', id: 'bwAutoNoUsers-dropdown', inputId: 'bwAutoNoUsers', label: 'Auto BW', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Enabled' },
+                                ]
+                            }) %><br>
+                            <% if (device === 'tef') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'ceqNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'cEQ+', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+
+                                <%- include('_components', { component: 'dropdown', id: 'imsNoUsers-dropdown', inputId: 'imsNoUsers', label: 'iMS', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } else if (device === 'xdr') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'rfNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'RF+', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                                <%- include('_components', { component: 'dropdown', id: 'ifNoUsers-dropdown', inputId: 'imsNoUsers', label: 'IF+', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } %>
+                            <%- include('_components', { component: 'dropdown', id: 'stereoNoUsers-dropdown', inputId: 'stereoNoUsers', label: 'Stereo Mode', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Stereo' },
+                                    { value: '2', label: 'Mono' },
+                                ]
+                            }) %><br>
                         </div>
                     </div>
                 </div>
