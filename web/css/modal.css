@@ -194,6 +194,7 @@ body.modal-open {
 
     .popup-window {
         width: 90%;
+        height: 60%;
     }
 }
 

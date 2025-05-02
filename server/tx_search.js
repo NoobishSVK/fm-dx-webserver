@@ -208,7 +208,9 @@ async function processData(data, piCode, rdsPs) {
 
     if (matchingStation) {
         return {
-            station: detectedByPireg ? matchingStation.station.replace("R.", "Radio ") + ' ' + matchingStation.regname : matchingStation.station.replace("R.", "Radio "),
+            station: detectedByPireg
+            ? `${matchingStation.station.replace("R.", "Radio ")}${matchingStation.regname ? ' ' + matchingStation.regname : ''}`
+            : matchingStation.station.replace("R.", "Radio "),
             pol: matchingStation.pol.toUpperCase(),
             erp: matchingStation.erp && matchingStation.erp > 0 ? matchingStation.erp : '?',
             city: matchingCity.name,

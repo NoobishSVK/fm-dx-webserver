@@ -187,7 +187,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       serialport.write('A0\n');
       serialport.write('F-1\n');
       serialport.write('W0\n');
-      serialport.write('D0\n');
+      serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
       serialport.write('G00\n');
       serverConfig.audio.startupVolume 
         ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
@@ -271,6 +271,7 @@ function connectToXdrd() {
               dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
               client.write('A0\n');
               client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
+              serverConfig.webserver.rdsMode ? client.write('D1\n') : client.write('D0\n');
               client.off('data', authDataHandler);
               return;
             }
@@ -484,6 +485,8 @@ wss.on('connection', (ws, request) => {
 
         if (currentUsers === 0) {
             storage.connectedUsers = [];
+            output.write('W0\n');
+            output.write('B0\n');
         }
 
         if (tunerLockTracker.has(ws)) {

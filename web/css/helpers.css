@@ -76,8 +76,20 @@
     margin: 10px;
 }
 
+.m-left-5 {
+    margin-left: 5px;
+}
+
+.m-left-15 {
+    margin-left: 15px !important;
+}
+
 .m-left-20 {
     margin-left: 20px;
+}
+
+.m-right-5 {
+    margin-right: 5px; 
 }
 
 .m-right-10 {
@@ -130,6 +142,10 @@
 .hover-brighten:hover {
     cursor: pointer;
     background-color: var(--color-2-transparent);
+}
+
+.text-center {
+    text-align: center;
 }
 
 .text-left {
@@ -205,6 +221,10 @@
 
 .bottom-50 {
     margin-bottom: 50px;
+}
+
+.p-0 {
+    padding: 0;
 }
 
 .p-10 {

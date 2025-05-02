@@ -130,6 +130,28 @@ input[type="text"], textarea, input[type="password"] {
       border-radius: 0 15px 15px 0;
 }
 
+.settings, .users-online-container, .chatbutton, .button-dark {
+    background: transparent;
+    border: 0;
+    color: var(--color-4);
+    font-size: 16px;
+    width: 48px;
+    height: 48px;
+    text-align: center;
+    border-radius: 15px;
+    transition: 300ms ease background;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.chatbutton, .settings, .button-dark {
+    background-color: var(--color-1);
+}
+
+.settings:hover, .users-online-container:hover, .chatbutton:hover {
+    background: var(--color-2);
+}
+
 input[type="range"] {
     margin: 0;
     /* removing default appearance */
@@ -314,7 +336,7 @@ input[type="range"]::-moz-range-thumb {
 .switch input[type=checkbox] {
     height: 0;
     width: 0;
-    visibility: hidden;
+    margin: 0;
 }
 .switch input[type=checkbox]:checked + label {
     background: var(--color-4);
@@ -374,7 +396,7 @@ select:hover {
     background: var(--color-5);
 }
 
-.popup {
+.mini-popup {
     position: relative;
     cursor: pointer;
     -webkit-user-select: none;
@@ -383,7 +405,7 @@ select:hover {
     user-select: none;
   }
   
-  .popup .popup-content {
+  .mini-popup .mini-popup-content {
     visibility: hidden;
     width: 230px;
     background-color: var(--color-2-transparent);
@@ -400,15 +422,15 @@ select:hover {
     border: 3px solid var(--color-3);
   }
   
-  .popup .show {
+  .mini-popup .show {
     visibility: visible;
   }
   
-  button[disabled] .popup-content {
+  button[disabled] .mini-popup-content {
     visibility: hidden;
   }
 
-  .popup .popup-content::after {
+  .mini-popup .mini-popup-content::after {
     content: "";
     position: absolute;
     bottom: calc(100% + 3px);
@@ -423,5 +445,9 @@ select:hover {
 @media only screen and (max-width: 768px) {
     #tune-buttons input[type="text"] {
         background-color: var(--color-1-transparent);
+        height: 64px;
+    }
+    #tune-buttons button {
+        height: 64px;
     }
 }

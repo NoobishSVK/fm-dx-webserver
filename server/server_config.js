@@ -85,6 +85,7 @@ let serverConfig = {
   },
   extras: {
     fmlistIntegration: true,
+    fmlistAdminOnly: false,
     fmlistOmid: "",
   },
   tunnel: {

@@ -62,7 +62,7 @@ router.get('/', (req, res) => {
             tunerLock: serverConfig.lockToAdmin,
             publicTuner: serverConfig.publicTuner,
             ownerContact: serverConfig.identification.contact,
-            antennas: serverConfig.antennas ? serverConfig.antennas : {},
+            antennas: serverConfig.antennas,
             tuningLimit: serverConfig.webserver.tuningLimit,
             tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
@@ -70,8 +70,9 @@ router.get('/', (req, res) => {
             device: serverConfig.device,
             noPlugins,
             plugins: serverConfig.plugins,
-            fmlist_integration: typeof(serverConfig.extras?.fmlistIntegration) !== undefined ? serverConfig.extras?.fmlistIntegration : true,
-            bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
+            fmlist_integration: serverConfig.extras.fmlistIntegration,
+            fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
+            bwSwitch: serverConfig.bwSwitch
         });
     }
 });
@@ -380,15 +381,14 @@ router.get('/log_fmlist', (req, res) => {
         return;
     }
 
-    if (serverConfig.extras?.fmlistIntegration === false) {
-        res.status(500).send('FMLIST Integration is not enabled on this server.');
+    if (serverConfig.extras.fmlistIntegration === false || serverConfig.extras.fmlistAdminOnly && !isTuneAuthenticated) {
+        res.status(500).send('FMLIST Integration is not available.');
         return;
     }
 
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const txId = dataHandler.dataToSend.txInfo.id; // Extract the ID
 
-    // Check if the ID can be logged (i.e., not logged within the last 60 minutes)
     if (!canLog(txId)) {
         res.status(429).send(`ID ${txId} was already logged recently. Please wait before logging again.`);
         return;

@@ -157,4 +157,8 @@ hr {
     .setup-wrapper h2 {
         display: initial;
     }
+
+    .wrapper-outer {
+        justify-content: flex-start;
+    }
 }

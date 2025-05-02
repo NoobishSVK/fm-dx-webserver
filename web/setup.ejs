@@ -560,6 +560,8 @@
                     <p>FMLIST integration allows you to get potential DXes logged on the <a href="http://fmlist.org/fm_logmap.php?hours=900" target="_blank" class="text-bold color-4">FMLIST Visual Logbook</a>.<br>
                     Your server also needs to have a valid UUID, which is obtained by registering on maps in the <strong>Identification & Map</strong> tab.</p>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'FMLIST integration', id: 'extras-fmlistIntegration'}) %><br>
+                    <p>If you don't feel comfortable with the general public logging on your server, you can make this feature available only for people with a password</p>
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Admin-only logging', id: 'extras-fmlistAdminOnly'}) %><br>
 
                     <p>You can also fill in your OMID from FMLIST.org, if you want the logs to be saved to your account.</p>
                     <%- include('_components', {component: 'text', cssClass: 'w-100 br-15', placeholder: '', label: 'OMID', id: 'extras-fmlistOmid'}) %>

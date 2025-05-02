@@ -1,11 +1,17 @@
 $(document).ready(function() {
-  // Cache jQuery objects for reuse
   var modal = $("#myModal");
   var modalPanel = $(".modal-panel");
-  var openBtn = $("#settings");
+  var openBtn = $(".settings");
   var closeBtn = $(".closeModal, .closeModalButton");
-
-  // Function to open the modal
+  
+  initPopups();
+  
+  openBtn.on("click", function() {
+    openModal(modalPanel);
+  });
+  
+  closeBtn.on("click", closeModal);
+  
   function openModal(panel) {
     modal.css("display", "block");
     panel.css("display", "block");
@@ -22,25 +28,37 @@ $(document).ready(function() {
       $("body").removeClass("modal-open"); // Enable body scrolling
     }, 300);
   }
+  
 
-  // Event listeners for the open and close buttons
-  openBtn.on("click", function() {
-    openModal(modalPanel);
-  });
-
-  closeBtn.on("click", closeModal);
-
-  // Close the modal when clicking outside of it
-  $(document).on("click", function(event) {
+  $(document).on("click", function(event) { // Close the modal when clicking outside of it
     if ($(event.target).is(modal)) {
       closeModal();
     }
   });
-
-  // Close the modal when pressing ESC key
-  $(document).on("keydown", function(event) {
+  
+  $(document).on("keydown", function(event) { // Close the modal when pressing ESC key
     if (event.key === "Escape") {
       closeModal();
     }
   });
+
+  $(".tuner-mobile-settings").on("click", function () {
+    $(".popup-window").fadeOut(200);
+    $("#popup-panel-mobile-settings").fadeIn(200);
 });
+});
+
+function initPopups() {
+  $(".popup-window").draggable({
+    handle: ".popup-header",
+    containment: "body" 
+  }).resizable({
+    minHeight: 330,
+    minWidth: 350,
+    containment: "body"
+  });
+  
+  $(".popup-close").on("click", function () {
+    $(".popup-window").fadeOut(200);
+  });
+}

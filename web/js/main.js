@@ -178,11 +178,11 @@ $(document).ready(function () {
     var freqContainer = $('#freq-container')[0];
     var txContainer = $('#data-station-container')[0];
     
-    $("#data-eq").click(function () {
+    $(".data-eq").click(function () {
         toggleButtonState("eq");
     });
     
-    $("#data-ims").click(function () {
+    $(".data-ims").click(function () {
         toggleButtonState("ims");
     });
     
@@ -207,7 +207,7 @@ $(document).ready(function () {
         $('.popup-content').removeClass('show');
     });
     
-    $('#log-fmlist').on('click', function() {
+    $('.log-fmlist').on('click', function() {
         const logKey = 'fmlistLogChoice'; 
         const logTimestampKey = 'fmlistLogTimestamp'; 
         const expirationTime = 10 * 60 * 1000; 
@@ -222,20 +222,20 @@ $(document).ready(function () {
         }
         
         if (parsedData.txInfo.dist > 700) {
-            $('#log-fmlist .popup-content').addClass('show'); // Show popup if no valid choice
+            $('.log-fmlist .mini-popup-content').addClass('show'); // Show popup if no valid choice
             
-            $('#log-fmlist-sporadice').off('click').on('click', function () {
+            $('.log-fmlist-sporadice').off('click').on('click', function () {
                 localStorage.setItem(logKey, './log_fmlist?type=sporadice');
                 localStorage.setItem(logTimestampKey, now);
                 if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=sporadice');
-                $('#log-fmlist .popup-content').removeClass('show');
+                $('.log-fmlist .mini-popup-content').removeClass('show');
             });
             
-            $('#log-fmlist-tropo').off('click').on('click', function () {
+            $('.log-fmlist-tropo').off('click').on('click', function () {
                 localStorage.setItem(logKey, './log_fmlist?type=tropo');
                 localStorage.setItem(logTimestampKey, now);
                 if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=tropo');
-                $('#log-fmlist .popup-content').removeClass('show');
+                $('.log-fmlist .mini-popup-content').removeClass('show');
             });
         } else {
             sendLog('./log_fmlist'); 
@@ -696,7 +696,7 @@ function checkKey(e) {
                 tuneUp();
                 break;
             case 46:
-                let $dropdown = $("#data-ant");
+                let $dropdown = $(".data-ant");
                 let $input = $dropdown.find("input");
                 let $options = $dropdown.find("ul.options .option");
         
@@ -870,8 +870,8 @@ const $dataPs = $('#data-ps');
 const $dataSt = $('.data-st');
 const $dataRt0 = $('#data-rt0 span');
 const $dataRt1 = $('#data-rt1 span');
-const $dataAntInput = $('#data-ant input');
-const $dataBwInput = $('#data-bw input');
+const $dataAntInput = $('.data-ant input');
+const $dataBwInput = $('.data-bw input');
 const $dataStationContainer = $('#data-station-container');
 const $dataTp = $('.data-tp');
 const $dataTa = $('.data-ta');
@@ -961,12 +961,12 @@ const updateDataElements = throttle(function(parsedData) {
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
     
-    $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
+    $dataAntInput.val($('.data-ant li[data-value="' + parsedData.ant + '"]').first().text());
     
-    if(parsedData.bw < 500) {
-        $dataBwInput.val($('#data-bw li[data-value2="' + parsedData.bw + '"]').text());
+    if (parsedData.bw < 500) {
+        $dataBwInput.val($('.data-bw li[data-value2="' + parsedData.bw + '"]').first().text());
     } else {
-        $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
+        $dataBwInput.val($('.data-bw li[data-value="' + parsedData.bw + '"]').first().text());
     }
     
     if (parsedData.txInfo.tx.length > 1) {
@@ -984,9 +984,9 @@ const updateDataElements = throttle(function(parsedData) {
     }
     
     if(parsedData.txInfo.tx.length > 1 && parsedData.txInfo.dist > 150 && parsedData.txInfo.dist < 4000) {
-        $('#log-fmlist').removeAttr('disabled').removeClass('btn-disabled cursor-disabled');
+        $('.log-fmlist').removeAttr('disabled').removeClass('btn-disabled cursor-disabled');
     } else {
-        $('#log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
+        $('.log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
     }
     updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
     
@@ -1006,7 +1006,7 @@ const updateDataElements = throttle(function(parsedData) {
         $dataPs.attr('aria-label', parsedData.ps);
         $dataRt0.attr('aria-label', parsedData.rt0);
         $dataRt1.attr('aria-label', parsedData.rt1);
-        $('#users-online-container').attr("aria-label", "Online users: " + parsedData.users);
+        $('.users-online-container').attr("aria-label", "Online users: " + parsedData.users);
     }
 }, 75); // Update at most once every 100 milliseconds
 
@@ -1067,14 +1067,24 @@ function createListItem(element) {
 
 function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
-    if (value == 0) {
-        button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
-        button.attr('aria-description', 'Off');
+    
+    if (button.length === 0) {
+        button = $("." + buttonId);
+    }
+    
+    if (button.length > 0) {
+        if (value == 0) {
+            button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
+            button.attr('aria-description', 'Off');
+        } else {
+            button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
+            button.attr('aria-description', 'On');
+        }
     } else {
-        button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
-        button.attr('aria-description', 'On');
+        console.log("Button not found!");
     }
 }
+
 
 function toggleButtonState(buttonId) {
     parsedData[buttonId] = 1 - parsedData[buttonId]; // Toggle between 0 and 1
@@ -1122,9 +1132,6 @@ function showTunerDescription() {
 
     if ($(window).width() < 768) {
         $('.dashboard-panel-plugin-list').slideToggle(300);
-        $('#users-online-container').slideToggle(300);
-        $('.chatbutton').slideToggle(300);
-        $('#settings').slideToggle(300);
     }
 }
 
