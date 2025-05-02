@@ -411,7 +411,10 @@
 
         <div style="width: calc(50% - 32px);text-align: center;">
           <button class="users-online-container" aria-label="Online users" style="display: inline-block;"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
-          <button class="chatbutton m-10" aria-label="Chatbox" style="display: inline-block;"><i class="fa-solid fa-message"></i></button>
+          
+          <% if (chatEnabled) { %>
+            <button class="chatbutton m-10" aria-label="Chatbox" style="display: inline-block;"><i class="fa-solid fa-message"></i></button>
+          <% } %>
         </div>
         
         <div style="width: 64px;text-align: center;">
