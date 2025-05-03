@@ -381,7 +381,7 @@ router.get('/log_fmlist', (req, res) => {
         return;
     }
 
-    if (serverConfig.extras.fmlistIntegration === false || serverConfig.extras.fmlistAdminOnly && !isTuneAuthenticated) {
+    if (serverConfig.extras.fmlistIntegration === false || (serverConfig.extras.fmlistAdminOnly && !req.session.isTuneAuthenticated)) {
         res.status(500).send('FMLIST Integration is not available.');
         return;
     }
