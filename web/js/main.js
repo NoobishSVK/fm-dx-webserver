@@ -656,6 +656,26 @@ function processString(string, errors) {
     return output;
 }
 
+// Set input placeholder to current antenna
+const inputContainer = document.querySelector('#data-ant');
+
+if (inputContainer) {
+  const input = inputContainer.querySelector('input[readonly][placeholder]');
+
+  if (input) {
+    const defaultPlaceholder = "Ant A";
+    const interval = setInterval(() => {
+      const val = input.value;
+      if (val && val !== defaultPlaceholder && input.placeholder !== val) {
+        input.placeholder = val;
+        clearInterval(interval);
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+  }
+}
+
 function checkKey(e) {
     e = e || window.event;
     
