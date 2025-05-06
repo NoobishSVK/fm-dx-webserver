@@ -24,7 +24,36 @@ const signalUnits = {
     dbm: ['dBm'],
 };
 
-$(document).ready(() => {
+function getInitialSettings() {
+    $.ajax({
+        url: './static_data',
+        dataType: 'json',
+        success: function (data) {
+
+            ['qthLatitude', 'qthLongitude', 'defaultTheme', 'bgImage', 'rdsMode'].forEach(key => {
+                if (data[key] !== undefined) {
+                    localStorage.setItem(key, data[key]);
+                }
+            });
+            
+            data.presets.forEach((preset, index) => {
+                localStorage.setItem(`preset${index + 1}`, preset);
+            });
+            
+            // Wait for AJAX success before setting theme and background image
+            getTheme();
+            setBg();
+        },
+        error: function (error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+getInitialSettings();
+
+function getTheme() {
+    // Themes
     const themeSelector = $('#theme-selector');
     const savedTheme = localStorage.getItem('theme');
     const defaultTheme = localStorage.getItem('defaultTheme');
@@ -52,7 +81,6 @@ $(document).ready(() => {
         setTheme(selectedTheme);
         themeSelector.find('input').val($(event.target).text()); // Set the text of the clicked option to the input
         localStorage.setItem('theme', selectedTheme);
-        setBg();
     });
     
     const signalSelector = $('#signal-selector');
@@ -71,6 +99,49 @@ $(document).ready(() => {
         localStorage.setItem('signalUnit', selectedSignalUnit);
     });
     
+    // Settings
+    var extendedFreqRange = localStorage.getItem("extendedFreqRange");
+    if (extendedFreqRange === "true") {
+        $("#extended-frequency-range").prop("checked", true);
+    }
+    
+    $("#extended-frequency-range").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("extendedFreqRange", isChecked);
+    });
+    
+    const psUnderscoreParameter = getQueryParameter('psUnderscores');
+    if(psUnderscoreParameter) {
+        $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
+    }
+    
+    var psUnderscores = localStorage.getItem("psUnderscores");
+    if (psUnderscores) {
+        $("#ps-underscores").prop("checked", JSON.parse(psUnderscores));
+        localStorage.setItem("psUnderscores", psUnderscores);
+    }
+    
+    $("#ps-underscores").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("psUnderscores", isChecked);
+    });
+
+    var imperialUnits = localStorage.getItem("imperialUnits");
+    if (imperialUnits) {
+        $("#imperial-units").prop("checked", JSON.parse(imperialUnits));
+        localStorage.setItem("imperialUnits", imperialUnits);
+    }
+    
+    $("#imperial-units").change(function() {
+        var isChecked = $(this).is(":checked");
+        localStorage.setItem("imperialUnits", isChecked);
+    });
+    
+    $('.version-string').text(currentVersion);
+
+}
+
+$(document).ready(() => {
     $('#login-form').submit(function (event) {
         event.preventDefault();
         
@@ -126,46 +197,6 @@ $(document).ready(() => {
         });
     });
     
-    var extendedFreqRange = localStorage.getItem("extendedFreqRange");
-    if (extendedFreqRange === "true") {
-        $("#extended-frequency-range").prop("checked", true);
-    }
-    
-    $("#extended-frequency-range").change(function() {
-        var isChecked = $(this).is(":checked");
-        localStorage.setItem("extendedFreqRange", isChecked);
-    });
-    
-    const psUnderscoreParameter = getQueryParameter('psUnderscores');
-    if(psUnderscoreParameter) {
-        $("#ps-underscores").prop("checked", JSON.parse(psUnderscoreParameter));
-    }
-    
-    var psUnderscores = localStorage.getItem("psUnderscores");
-    if (psUnderscores) {
-        $("#ps-underscores").prop("checked", JSON.parse(psUnderscores));
-        localStorage.setItem("psUnderscores", psUnderscores);
-    }
-    
-    $("#ps-underscores").change(function() {
-        var isChecked = $(this).is(":checked");
-        localStorage.setItem("psUnderscores", isChecked);
-    });
-
-    var imperialUnits = localStorage.getItem("imperialUnits");
-    if (imperialUnits) {
-        $("#imperial-units").prop("checked", JSON.parse(imperialUnits));
-        localStorage.setItem("imperialUnits", imperialUnits);
-    }
-    
-    $("#imperial-units").change(function() {
-        var isChecked = $(this).is(":checked");
-        localStorage.setItem("imperialUnits", isChecked);
-    });
-    
-    $('.version-string').text(currentVersion);
-    
-    setBg();
 });
 
 function getQueryParameter(name) {
