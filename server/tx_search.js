@@ -18,7 +18,8 @@ let weightedErp = 10;
 let weightedDist = 400;
 const algorithms = [
     [10, 400],
-    [30, 500]
+    [30, 500],
+    [5, 400]
 ];
 const algoSetting = parseInt(serverConfig.webserver.txIdAlgorithm);
 
@@ -80,6 +81,41 @@ function getStateForCoordinates(lat, lon) {
         }
     }
     return null;
+}
+
+/**
+ * Compares the standardized rdsPs string with the station's PS value.
+ * The rdsPs string is standardized by replacing spaces with underscores and converting to lowercase.
+ * The station's PS value is split into tokens (e.g., "__mdr___ _kultur_" -> ["__mdr___", "_kultur_"]).
+ * The function iterates through all tokens and checks if any token yields at least three valid (non "_" ) matches.
+ * Only positions where rdsPs is not an underscore are compared.
+ * If at least three valid matches are found for any token, the function returns true.
+ */
+function validPsCompare(rdsPs, stationPs) {
+    // Standardize the rdsPs string: replace spaces with underscores and convert to lowercase.
+    const standardizedRdsPs = rdsPs.replace(/ /g, '_').toLowerCase();
+    
+    // Split stationPs into tokens (e.g., "__mdr___ _kultur_" -> ["__mdr___", "_kultur_"])
+    const psTokens = stationPs.split(/\s+/).filter(token => token.length > 0).map(token => token.toLowerCase());
+       
+    // Iterate through all tokens and check if any token yields at least three valid (non "_" ) matches.
+    for (let token of psTokens) {
+        // If the token's length does not match the standardized rdsPs length, skip this token.
+        if (token.length !== standardizedRdsPs.length) continue;
+        
+        let matchCount = 0;
+        for (let i = 0; i < standardizedRdsPs.length; i++) {
+            // Skip this position if the character in standardizedRdsPs is an underscore.
+            if (standardizedRdsPs[i] === '_') continue;
+            if (token[i] === standardizedRdsPs[i]) {
+                matchCount++;
+            }
+        }
+        if (matchCount >= 3) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Fetch data from maps
@@ -145,50 +181,42 @@ async function processData(data, piCode, rdsPs) {
     currentPiCode = piCode;
     currentRdsPs = rdsPs;
 
-    function evaluateStation(station, city, distance) {
-        let weightDistance = distance.distanceKm;
-        if (esMode && distance.distanceKm > 500) {
-            weightDistance = Math.abs(distance.distanceKm - 1500);
-        }
-        let erp = station.erp && station.erp > 0 ? station.erp : 1;
-        let extraWeight = erp >= weightedErp && distance.distanceKm <= weightedDist ? 0.3 : 0;
-        let score = 0;
-        // If ERP is 1W, use a simpler formula to avoid zero-scoring.
-        if (erp === 0.001) {
-            score = erp / distance.distanceKm;
-        } else {
-            score = ((10 * Math.log10(erp * 1000)) / weightDistance) + extraWeight;
-        }
-        if (score > maxScore) {
-            maxScore = score;
-            txAzimuth = distance.azimuth;
-            matchingStation = station;
-            matchingCity = city;
-            maxDistance = distance.distanceKm;
-        }
-    }
-
-    // First attempt: Try to match station using the piCode
+    // First, collect all stations that match the piCode (without PS comparison).
+    let stationsForPi = [];
     for (const cityId in data.locations) {
         const city = data.locations[cityId];
         if (city.stations) {
             for (const station of city.stations) {
-                if (station.pi === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
-                    const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
-                    evaluateStation(station, city, distance);
-                    detectedByPireg = false;
+                if (station.pi === piCode.toUpperCase() && !station.extra) {
+                    stationsForPi.push({ station, city });
                 }
             }
         }
     }
 
-    // Fallback to pireg if no match is found
+    if (stationsForPi.length > 0) {
+        for (const { station, city } of stationsForPi) {
+            if (station.ps && validPsCompare(rdsPs, station.ps)) {
+                const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
+                evaluateStation(station, city, distance);
+                detectedByPireg = false;
+            }
+        }
+    }
+
+    // Fallback: Check using pireg if no match was found using the piCode (with valid PS comparison)
     if (!matchingStation) {
         for (const cityId in data.locations) {
             const city = data.locations[cityId];
             if (city.stations) {
                 for (const station of city.stations) {
-                    if (station.pireg && station.pireg.toUpperCase() === piCode.toUpperCase() && !station.extra && station.ps && station.ps.toLowerCase().includes(rdsPs.replace(/ /g, '_').replace(/^_*(.*?)_*$/, '$1').toLowerCase())) {
+                    if (
+                        station.pireg &&
+                        station.pireg.toUpperCase() === piCode.toUpperCase() &&
+                        !station.extra &&
+                        station.ps &&
+                        validPsCompare(rdsPs, station.ps)
+                    ) {
                         const distance = haversine(serverConfig.identification.lat, serverConfig.identification.lon, city.lat, city.lon);
                         evaluateStation(station, city, distance);
                         detectedByPireg = true;
@@ -220,10 +248,33 @@ async function processData(data, piCode, rdsPs) {
             id: matchingStation.id,
             pi: matchingStation.pi,
             foundStation: true,
-            reg: detectedByPireg
+            reg: detectedByPireg,
         };
     } else {
         return;
+    }
+
+    function evaluateStation(station, city, distance) {
+        let weightDistance = distance.distanceKm;
+        if (esMode && distance.distanceKm > 500) {
+            weightDistance = Math.abs(distance.distanceKm - 1500);
+        }
+        let erp = station.erp && station.erp > 0 ? station.erp : 1;
+        let extraWeight = erp >= weightedErp && distance.distanceKm <= weightedDist ? 0.3 : 0;
+        let score = 0;
+        // If ERP is 1W, use a simpler formula to avoid zero-scoring.
+        if (erp === 0.001) {
+            score = erp / distance.distanceKm;
+        } else {
+            score = ((10 * Math.log10(erp * 1000)) / weightDistance) + extraWeight;
+        }
+        if (score > maxScore) {
+            maxScore = score;
+            txAzimuth = distance.azimuth;
+            matchingStation = station;
+            matchingCity = city;
+            maxDistance = distance.distanceKm;
+        }
     }
 }
 
