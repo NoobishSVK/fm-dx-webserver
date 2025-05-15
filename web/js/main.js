@@ -976,7 +976,6 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
-        updateHtmlIfChanged($('#data-station-others'), parsedData.txInfo.otherMatches > 0 ? ('<span>+' + parsedData.txInfo.otherMatches +'</span>') : '');
         const txDistance = localStorage.getItem('imperialUnits') == "true" ? (Number(parsedData.txInfo.dist) * 0.621371192).toFixed(0) + " mi" : parsedData.txInfo.dist + " km";
         updateTextIfChanged($('#data-station-distance'), txDistance);
         $dataStationContainer.css('display', 'block');

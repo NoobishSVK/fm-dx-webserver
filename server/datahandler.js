@@ -416,8 +416,7 @@ function handleData(wss, receivedData, rdsWss) {
               azi: currentTx.azimuth,
               id: currentTx.id,
               pi: currentTx.pi,
-              reg: currentTx.reg,
-              otherMatches: currentTx.others
+              reg: currentTx.reg
           };
       }
   })

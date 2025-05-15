@@ -149,10 +149,10 @@ function evaluateStation(station) {
     return score;
 }
 
-// Fetch data from maps
+// Fetch data from cached database
 async function fetchTx(freq, piCode, rdsPs) {
     let match = null;
-    let multiMatches = [];
+    // let multiMatches = [];
     const now = Date.now();
     freq = parseFloat(freq);
 
@@ -192,7 +192,7 @@ async function fetchTx(freq, piCode, rdsPs) {
             loc.score = evaluateStation(loc);
         }
         match = filteredLocations.reduce((max, obj) => obj.score > max.score ? obj : max, filteredLocations[0]);
-        multiMatches = filteredLocations.filter(obj => obj !== match);
+        // multiMatches = filteredLocations.filter(obj => obj !== match);
     } else if (filteredLocations.length === 1) {
         match = filteredLocations[0];
     }
@@ -218,7 +218,7 @@ async function fetchTx(freq, piCode, rdsPs) {
             pi: match.pi,
             foundStation: true,
             reg: match.detectedByPireg,
-            others: multiMatches.length,
+            // others: multiMatches,
         };
     } else {
         return Promise.resolve();
