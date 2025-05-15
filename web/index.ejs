@@ -287,7 +287,7 @@
                   <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
                 </h4>
                 <span class="text-small">
-                  <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span>
+                  <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span> <span id="data-station-others"></span>
                 </span>
               </div>
             </div>
@@ -402,6 +402,17 @@
             <input class="bg-color-2" type="text" id="chat-send-message" name="chat-send-message" placeholder="Send message..." style="background-color: var(--color-2);width: 100%;">
             <button aria-label="Send message" class="chat-send-message-btn br-0" style="width: 80px; height: 48px;"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-window" id="popup-panel-transmitters">
+      <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
+        <div class="popup-header hover-brighten flex-center">
+          <p class="color-4" style="margin: 0; padding-left: 10px;">Possible transmitters</p>
+          <button class="popup-close">✖</button>
+        </div>
+        <div id="alternative-txes" class="popup-content text-left flex-container flex-phone flex-column p-10" style="flex: 1;">
         </div>
       </div>
     </div>

@@ -416,7 +416,7 @@ router.get('/log_fmlist', (req, res) => {
         client: {
             request_ip: clientIp
         },
-        type: (req.query.type && dataHandler.dataToSend.txInfo.dist > 700) ? req.query.type : 'tropo',
+        type: req.query.type ? req.query.type : 'tropo',
         log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + (dataHandler.dataToSend.sig - 11.25).toFixed(0) + " dBµV",
     });
 
