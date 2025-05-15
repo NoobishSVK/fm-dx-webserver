@@ -119,6 +119,14 @@ label {
     font-size: 20px;
 }
 
+#data-station-others span {
+    color: var(--color-main);
+    background: var(--color-4);
+    margin-left: 4px;
+    padding: 0 5px;
+    border-radius: 3px;
+}
+
 .highest-signal-container {
     margin-bottom: -20px !important;
 }

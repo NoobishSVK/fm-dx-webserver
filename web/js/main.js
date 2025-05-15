@@ -905,6 +905,33 @@ function throttle(fn, wait) {
     return wrapper;
 }
 
+function buildAltTxList(txList) {
+    const wrapper = '<div class="panel-100 flex-container flex-phone" style="background:none;backdrop-filter:none;">';
+    let outString = '';
+    outString += wrapper;
+    for (let i = 0; i < txList.length; i++) {
+        const tx = txList[i];
+        outString += `<div class="panel-50 hover-brighten no-bg-phone" style="min-height: 91px;">
+              <div id="data-station-container-${i}" style="display: block;">
+                <h2 style="margin-top: 0;" class="mb-0">
+                  <span id="data-station-name-${i}">${tx.station.replace("R.", "Radio ").replace(/%/g, '%25')}</span>
+                </h2>
+                <h4 class="m-0">
+                  <span id="data-station-city-${i}" style="font-size: 16px;">${tx.name}</span> <span class="text-small">[<span id="data-station-itu">G</span>]</span>
+                </h4>
+                <span class="text-small">
+                  <span id="data-station-erp">${tx.erp}</span> kW [<span id="data-station-pol">${tx.pol.toUpperCase()}</span>] <span class="text-gray">•</span> <span id="data-station-distance">${tx.distanceKm.toFixed(0)} km</span> <span class="text-gray">•</span> <span id="data-station-azimuth">${tx.azimuth.toFixed(0)}°</span>
+                </span>
+              </div>
+            </div>`;
+        if (i % 2 !== 0) {
+            outString += `</div>${wrapper}`;
+        }
+    }
+    outString += '</div>';
+    return outString;
+}
+
 function updateTextIfChanged($element, newText) {
     if ($element.text() !== newText) {
         $element.text(newText);
@@ -976,7 +1003,10 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
+        updateHtmlIfChanged($('#data-station-others'), parsedData.txInfo.otherMatches.length > 0 ? ('<span>+' + parsedData.txInfo.otherMatches.length +'</span>') : '');
         const txDistance = localStorage.getItem('imperialUnits') == "true" ? (Number(parsedData.txInfo.dist) * 0.621371192).toFixed(0) + " mi" : parsedData.txInfo.dist + " km";
+        const altTxInfo = buildAltTxList(parsedData.txInfo.otherMatches);
+        updateHtmlIfChanged($('#alternative-txes'), altTxInfo);
         updateTextIfChanged($('#data-station-distance'), txDistance);
         $dataStationContainer.css('display', 'block');
     } else {

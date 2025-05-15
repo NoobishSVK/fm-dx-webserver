@@ -45,7 +45,12 @@ $(document).ready(function() {
   $(".tuner-mobile-settings").on("click", function () {
     $(".popup-window").fadeOut(200);
     $("#popup-panel-mobile-settings").fadeIn(200);
-});
+  });
+
+  $("#data-station-others").on("click", function () {
+    $(".popup-window").fadeOut(200);
+    $("#popup-panel-transmitters").fadeIn(200);
+  });
 });
 
 function initPopups() {
