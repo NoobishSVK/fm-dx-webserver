@@ -162,7 +162,7 @@ router.get('/rdsspy', (req, res) => {
 });
 
 router.get('/rds', (req, res) => {
-    res.send('Please c onnect using a WebSocket compatible app to obtain RDS stream.');
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/rdsspy', (req, res) => {
@@ -344,6 +344,7 @@ router.get('/static_data', (req, res) => {
         defaultTheme: serverConfig.webserver.defaultTheme || 'theme1',
         bgImage: serverConfig.webserver.bgImage || '',
         rdsMode: serverConfig.webserver.rdsMode || false,
+        rdsTimeout: serverConfig.webserver.rdsTimeout || 0,
         tunerName: serverConfig.identification.tunerName || '',
         tunerDesc: serverConfig.identification.tunerDesc || '',
         ant: serverConfig.antennas || {}

@@ -323,7 +323,12 @@
                     <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>RDS Mode</h3>
                         <p>You can switch between American (RBDS) / Global (RDS) mode here.</p>
-                        <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %><br>
+                        <%- include('_components', {component: 'checkbox', cssClass: 'bottom-20', iconClass: '', label: 'American RDS mode (RBDS)', id: 'webserver-rdsMode'}) %>
+                        <h3>RDS Timeout</h3>
+                        <p>If no data is received, RDS will be automatically cleared after a timeout.<br>
+                        <span class="text-gray">Enter timeout in seconds or 0 to disable.</span><br></p>
+
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '0', label: 'RDS Timeout', id: 'webserver-rdsTimeout'}) %>
                     </div>
                     <div class="panel-50 p-bottom-20" style="padding-left: 20px; padding-right: 20px;">
                         <h3>Transmitter Search Algorithm</h3>

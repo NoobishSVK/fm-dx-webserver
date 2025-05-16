@@ -14,7 +14,7 @@ function getInitialSettings() {
         dataType: 'json',
         success: function (data) {
 
-            ['qthLatitude', 'qthLongitude', 'defaultTheme', 'bgImage', 'rdsMode'].forEach(key => {
+            ['qthLatitude', 'qthLongitude', 'defaultTheme', 'bgImage', 'rdsMode', 'rdsTimeout'].forEach(key => {
                 if (data[key] !== undefined) {
                     localStorage.setItem(key, data[key]);
                 }
