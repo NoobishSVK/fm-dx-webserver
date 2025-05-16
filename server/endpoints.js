@@ -146,6 +146,7 @@ router.get('/wizard', (req, res) => {
                   enabledPlugins: updatedConfig.plugins,
                   onlineUsers: dataHandler.dataToSend.users,
                   connectedUsers: storage.connectedUsers,
+                  device: serverConfig.device,
                   banlist: updatedConfig.webserver.banlist // Updated banlist from the latest config
               });
           });
