@@ -918,7 +918,7 @@ function throttle(fn, wait) {
 }
 
 function buildAltTxList(txList) {
-    const wrapper = '<div class="panel-100-real m-0 flex-container flex-phone" style="background:none;backdrop-filter:none;">';
+    const wrapper = '<div class="panel-100-real m-0" style="background:none;backdrop-filter:none;">';
     let outString = '';
     outString += wrapper;
     for (let i = 0; i < txList.length; i++) {
