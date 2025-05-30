@@ -264,7 +264,27 @@ const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
 const ServerStartTime = process.hrtime();
 var serialportUpdateTime = process.hrtime();
 let checkSerialport = false;
+let rdsTimeoutTimer = null;
 
+function rdsReceived() {
+  if (rdsTimeoutTimer) {
+    clearTimeout(rdsTimeoutTimer);
+    rdsTimeoutTimer = null;
+  }
+  if (serverConfig.webserver.rdsTimeout && serverConfig.webserver.rdsTimeout != 0) {
+    rdsTimeoutTimer = setInterval(rdsReset, serverConfig.webserver.rdsTimeout * 1000);
+  }
+}
+
+function rdsReset() {
+  resetToDefault(dataToSend);
+  dataToSend.af.length = 0;
+  rdsparser.clear(rds);
+  if (rdsTimeoutTimer) {
+    clearTimeout(rdsTimeoutTimer);
+    rdsTimeoutTimer = null;
+  }
+}
 
 function handleData(wss, receivedData, rdsWss) {
   // Retrieve the last update time for this client
@@ -280,6 +300,7 @@ function handleData(wss, receivedData, rdsWss) {
         dataToSend.bw = receivedLine.substring(1);
         break;
       case receivedLine.startsWith('P'): // PI Code
+        rdsReceived();
         modifiedData = receivedLine.slice(1);
         legacyRdsPiBuffer = modifiedData;
         if (dataToSend.pi.length >= modifiedData.length || dataToSend.pi == '?') {
@@ -289,16 +310,11 @@ function handleData(wss, receivedData, rdsWss) {
       case receivedLine.startsWith('T'): // Frequency
         modifiedData = receivedLine.substring(1).split(",")[0];
 
-        if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
-          resetToDefault(dataToSend);
-          rdsparser.clear(rds);
-          dataToSend.af = [];
+        rdsReset();
+        if((modifiedData / 1000).toFixed(3) == dataToSend.freq) {
           return; // Prevent tune spamming using scrollwheel
         }
 
-        resetToDefault(dataToSend);
-        dataToSend.af.length = 0;
-        rdsparser.clear(rds);
         parsedValue = parseFloat(modifiedData);
 
         if (!isNaN(parsedValue)) {
@@ -315,6 +331,7 @@ function handleData(wss, receivedData, rdsWss) {
       case receivedLine.startsWith('Z'): // Antenna
         dataToSend.ant = receivedLine.substring(1);
         initialData.ant = receivedLine.substring(1);
+        rdsReset();
         break;
       case receivedLine.startsWith('G'): // EQ / iMS (RF+/IF+)
         const mapping = filterMappings[receivedLine];
@@ -342,6 +359,7 @@ function handleData(wss, receivedData, rdsWss) {
           processSignal(receivedLine, false, true);
           break;
       case receivedLine.startsWith('R'): // RDS HEX
+        rdsReceived();
         modifiedData = receivedLine.slice(1);
         dataToSend.rds = true;
 
@@ -357,7 +375,7 @@ function handleData(wss, receivedData, rdsWss) {
             // error correction, but this is a good substitute.
             errorsNew = (legacyRdsPiBuffer.length - 4) << 6;
           } else {
-            pi = '----';
+            pi = '0000';
             errorsNew = (0x03 << 6);
           }
 
@@ -371,28 +389,14 @@ function handleData(wss, receivedData, rdsWss) {
         }
 
         rdsWss.clients.forEach((client) => {
-          let dataString = modifiedData.toString();
-          let lastTwoChars = dataString.slice(-2);
-          let lastByteValue = parseInt(lastTwoChars, 16);
+          const errors = parseInt(modifiedData.slice(-2), 16);
+          let data = (((errors & 0xC0) == 0) ? modifiedData.slice(0, 4) : '----');
+          data += (((errors & 0x30) == 0) ? modifiedData.slice(4, 8) : '----');
+          data += (((errors & 0x0C) == 0) ? modifiedData.slice(8, 12) : '----');
+          data += (((errors & 0x03) == 0) ? modifiedData.slice(12, 16) : '----');
 
-          let truncatedString = dataString.slice(0, -2);
-
-          if ((lastByteValue & 0x03) !== 0) {
-            truncatedString = truncatedString.slice(0, 4) + '----' + truncatedString.slice(8);
-          }
-
-          if ((lastByteValue & 0x30) !== 0) {
-            truncatedString = truncatedString.slice(0, 8) + '----' + truncatedString.slice(12);
-          }
-
-          if ((lastByteValue & 0x0C) !== 0) {
-            truncatedString = truncatedString.slice(0, 12) + '----';
-          }
-
-          let newDataString = "G:\r\n" + truncatedString + "\r\n\r\n";
-
-          let finalBuffer = Buffer.from(newDataString, 'utf-8');
-
+          const newDataString = "G:\r\n" + data + "\r\n\r\n";
+          const finalBuffer = Buffer.from(newDataString, 'utf-8');
           client.send(finalBuffer);
         });
 

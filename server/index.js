@@ -214,7 +214,10 @@ if (serverConfig.xdrd.wirelessConnection === false) {
   return serialport;
 }
 }
+
 // xdrd connection
+let authFlags = {};
+
 function connectToXdrd() {
   const { xdrd } = serverConfig;
 
@@ -222,75 +225,71 @@ function connectToXdrd() {
     client.connect(xdrd.xdrdPort, xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
       
-      let authFlags = {
+      authFlags = {
         authMsg: false,
         firstClient: false,
         receivedSalt: '',
         receivedPassword: false,
         messageCount: 0,
       };
-      
-      const authDataHandler = (data) => {
-        authFlags.messageCount++
-        const receivedData = data.toString();
-        const lines = receivedData.split('\n');
-
-        for (const line of lines) {
-          if (authFlags.receivedPassword === false) {
-            authFlags.receivedSalt = line.trim();
-            authFlags.receivedPassword = true;
-            helpers.authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
-          } else {
-            if (line.startsWith('a')) {
-              authFlags.authMsg = true;
-              logWarn('Authentication with xdrd failed. Is your password set correctly?');
-            } else if (line.startsWith('o1,')) {
-              authFlags.firstClient = true;
-            } else if (line.startsWith('T') && line.length <= 7) {
-              const freq = line.slice(1) / 1000;
-              dataHandler.dataToSend.freq = freq.toFixed(3);
-            } else if (line.startsWith('OK')) {
-              authFlags.authMsg = true;
-              logInfo('Authentication with xdrd successful.');
-            } else if (line.startsWith('G')) {
-              const value = line.substring(1); 
-              dataHandler.initialData.eq = value.charAt(0);
-              dataHandler.dataToSend.eq = value.charAt(0); 
-              dataHandler.initialData.ims = value.charAt(1); 
-              dataHandler.dataToSend.ims = value.charAt(1);         
-            } else if (line.startsWith('Z')) {
-              let modifiedLine = line.slice(1);
-              dataHandler.initialData.ant = modifiedLine;
-              dataHandler.dataToSend.ant = modifiedLine;
-            }
-            
-            if (authFlags.authMsg === true && authFlags.firstClient === true) {
-              client.write('x\n');
-              client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
-              dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-              dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-              client.write('A0\n');
-              client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
-              serverConfig.webserver.rdsMode ? client.write('D1\n') : client.write('D0\n');
-              client.off('data', authDataHandler);
-              return;
-            }
-          }
-        }
-      };
-      
-      client.on('data', (data) => {
-        helpers.resolveDataBuffer(data, wss, rdsWss);
-        if (authFlags.authMsg == true && authFlags.messageCount > 1) {
-          // If the limit is reached, remove the 'data' event listener
-          client.off('data', authDataHandler);
-          return;
-          }
-          authDataHandler(data);
-      });
     });
   }
 }
+
+client.on('data', (data) => {
+  const { xdrd } = serverConfig;
+  
+  helpers.resolveDataBuffer(data, wss, rdsWss);
+  if (authFlags.authMsg == true && authFlags.messageCount > 1) {
+    return;
+  }
+
+  authFlags.messageCount++;
+  const receivedData = data.toString();
+  const lines = receivedData.split('\n');
+
+  for (const line of lines) {
+    if (authFlags.receivedPassword === false) {
+      authFlags.receivedSalt = line.trim();
+      authFlags.receivedPassword = true;
+      helpers.authenticateWithXdrd(client, authFlags.receivedSalt, xdrd.xdrdPassword);
+    } else {
+      if (line.startsWith('a')) {
+        authFlags.authMsg = true;
+        logWarn('Authentication with xdrd failed. Is your password set correctly?');
+      } else if (line.startsWith('o1,')) {
+        authFlags.firstClient = true;
+      } else if (line.startsWith('T') && line.length <= 7) {
+        const freq = line.slice(1) / 1000;
+        dataHandler.dataToSend.freq = freq.toFixed(3);
+      } else if (line.startsWith('OK')) {
+        authFlags.authMsg = true;
+        logInfo('Authentication with xdrd successful.');
+      } else if (line.startsWith('G')) {
+        const value = line.substring(1);
+        dataHandler.initialData.eq = value.charAt(0);
+        dataHandler.dataToSend.eq = value.charAt(0);
+        dataHandler.initialData.ims = value.charAt(1);
+        dataHandler.dataToSend.ims = value.charAt(1);
+      } else if (line.startsWith('Z')) {
+        let modifiedLine = line.slice(1);
+        dataHandler.initialData.ant = modifiedLine;
+        dataHandler.dataToSend.ant = modifiedLine;
+      }
+
+      if (authFlags.authMsg === true && authFlags.firstClient === true) {
+        client.write('x\n');
+        client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
+        dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
+        dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
+        client.write('A0\n');
+        client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
+        serverConfig.webserver.rdsMode ? client.write('D1\n') : client.write('D0\n');
+        return;
+      }
+    }
+  }
+});
 
 client.on('close', () => {
   if(serverConfig.autoShutdown === false) {
