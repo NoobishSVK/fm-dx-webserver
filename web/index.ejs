@@ -23,8 +23,6 @@
   <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
   <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
 
-  <script src="js/init.js"></script>
-
   <!-- 3LAS Scripts for Audio streaming -->
   <script src="js/3las/util/3las.helpers.js"></script>
   <script src="js/3las/util/3las.logging.js"></script>
@@ -267,6 +265,19 @@
           </div>
 
           <div class="flex-container flex-phone flex-phone-column">
+            <div id="data-ant-container" class="hide-desktop" style="padding-left: 18px;padding-right: 18px;margin-top: -20px;">
+              <% if (antennas.enabled == true) { %>
+                <div class="panel-100-real no-bg h-100 br-0 dropdown data-ant" id="data-ant-phone" style="max-height: 48px;width: 50%;">
+                  <input type="text" placeholder="Ant A" readonly tabindex="0" style="border-radius: 0 0 15px 15px;">
+                  <ul class="options open-top" tabindex="-1">
+                    <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
+                    <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
+                    <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
+                    <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
+                  </ul>
+                </div>
+                <% } %>
+              </div>
             <div class="panel-75 hover-brighten no-bg-phone" id="rt-container" style="height: 100px;">
               <h2 style="margin-top: 4px;">RADIOTEXT</h2>
               <div id="data-rt0">
@@ -287,7 +298,7 @@
                   <span id="data-station-city" style="font-size: 16px;"></span> <span class="text-small">[<span id="data-station-itu"></span>]</span>
                 </h4>
                 <span class="text-small">
-                  <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span> <span id="data-station-others"></span>
+                  <span id="data-station-erp"></span> kW [<span id="data-station-pol"></span>] <span class="text-gray">•</span> <span id="data-station-distance"></span> <span class="text-gray">•</span> <span id="data-station-azimuth"></span> <span id="data-station-others hide-phone" style="opacity: 0.7;"></span>
                 </span>
               </div>
             </div>
@@ -346,17 +357,6 @@
                 </div>
               <% } %> 
 
-              <% if (antennas.enabled == true) { %>
-                <div class="panel-100-real no-bg h-100 br-0 dropdown data-ant" id="data-ant-phone" style="max-height: 48px;width: 50%;margin-left: 5px;">
-                  <input type="text" placeholder="Ant A" readonly tabindex="0">
-                  <ul class="options" tabindex="-1">
-                    <% if(antennas.ant1.enabled == true) { %><li data-value="0" class="option" tabindex="0"><%= antennas.ant1.name %></li><% } %>
-                    <% if(antennas.ant2.enabled == true) { %><li data-value="1" class="option" tabindex="0"><%= antennas.ant2.name %></li><% } %>
-                    <% if(antennas.ant3.enabled == true) { %><li data-value="2" class="option" tabindex="0"><%= antennas.ant3.name %></li><% } %>
-                    <% if(antennas.ant4.enabled == true) { %><li data-value="3" class="option" tabindex="0"><%= antennas.ant4.name %></li><% } %>
-                  </ul>
-                </div>
-                <% } %>
             </div>
             
             <p class="flex-phone flex-center">Filters</p>
@@ -409,10 +409,10 @@
     <div class="popup-window" id="popup-panel-transmitters">
       <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
         <div class="popup-header hover-brighten flex-center">
-          <p class="color-4" style="margin: 0; padding-left: 10px;">Possible transmitters</p>
+          <p class="color-4" style="margin: 0; padding-left: 10px;">Other possible transmitters</p>
           <button class="popup-close">✖</button>
         </div>
-        <div id="alternative-txes" class="popup-content text-left flex-container flex-phone flex-column p-10" style="flex: 1;">
+        <div id="alternative-txes" class="popup-content text-left flex-container flex-phone flex-column" style="flex: 1;">
         </div>
       </div>
     </div>

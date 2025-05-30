@@ -64,17 +64,29 @@ $(document).ready(function () {
     
     // Check if device is an iPhone to prevent zoom on button press
     if (/iPhone|iPod|iPad/.test(navigator.userAgent) && !window.MSStream) {
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.addEventListener('touchstart', function(e) {
-                // Prevent default zoom behavior
-                e.preventDefault();
-                // Allow default button action after short delay
-                setTimeout(() => {
-                    e.target.click();
-                }, 0);
-            });
+        // Handle touchstart for buttons to prevent zoom
+        $('.button').on('touchstart', function(e) {
+            e.preventDefault();
+            let target = this;
+            setTimeout(function() {
+                target.click();
+            }, 0);
         });
+
+        // Prevent zooming on input focus by modifying the viewport
+        let $viewportMeta = $('meta[name=viewport]');
+        if ($viewportMeta.length) {
+            let content = $viewportMeta.attr('content');
+            let re = /maximum\-scale=[0-9\.]+/g;
+
+            if (re.test(content)) {
+                content = content.replace(re, 'maximum-scale=1.0');
+            } else {
+                content += ', maximum-scale=1.0';
+            }
+
+            $viewportMeta.attr('content', content);
+        }
     }
     
     const textInput = $('#commandinput');
@@ -83,7 +95,7 @@ $(document).ready(function () {
         const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent)) {
-            socket.send("T" + (Math.round(inputValue * 1000)));
+            tuneTo(inputValue);
             // Clear the input field if needed
             textInput.val('');
         }
@@ -111,9 +123,8 @@ $(document).ready(function () {
             }
         }
         if (event.key === 'Enter') {
-            const inputValue = textInput.val();
             if (socket.readyState === WebSocket.OPEN) {
-                socket.send("T" + (Math.round(inputValue * 1000)));
+                tuneTo(textInput.val());
             }
             textInput.val('');
         }
@@ -703,10 +714,12 @@ function checkKey(e) {
                 if ($options.length === 0) return; // No antennas available
         
                 // Find the currently selected antenna
-                let currentText = $input.attr("placeholder").trim();
+                let currentText = $input.val().trim();
                 let currentIndex = $options.index($options.filter(function () {
                     return $(this).text().trim() === currentText;
                 }));
+
+                console.log(currentIndex, currentText);
         
                 // Cycle to the next option
                 let nextIndex = (currentIndex + 1) % $options.length;
@@ -716,7 +729,6 @@ function checkKey(e) {
                 $input.attr("placeholder", $nextOption.text());
                 $input.data("value", $nextOption.data("value"));
         
-                // Send socket message (e.g., "Z0", "Z1", ...)
                 let socketMessage = "Z" + $nextOption.data("value");
                 socket.send(socketMessage);
             break;
@@ -906,20 +918,19 @@ function throttle(fn, wait) {
 }
 
 function buildAltTxList(txList) {
-    const wrapper = '<div class="panel-100 flex-container flex-phone" style="background:none;backdrop-filter:none;">';
+    const wrapper = '<div class="panel-100-real m-0 flex-container flex-phone" style="background:none;backdrop-filter:none;">';
     let outString = '';
     outString += wrapper;
     for (let i = 0; i < txList.length; i++) {
         const tx = txList[i];
-        outString += `<div class="panel-50 hover-brighten no-bg-phone" style="min-height: 91px;">
-              <div id="data-station-container-${i}" style="display: block;">
+        outString += `<div class="panel-100-real m-0 hover-brighten no-bg-phone m-0 br-0 p-10" style="min-height: 72px;padding-left: 20px;">
+              <div id="data-station-container-${i}" style="display: block;" class="text-left">
                 <h2 style="margin-top: 0;" class="mb-0">
                   <span id="data-station-name-${i}">${tx.station.replace("R.", "Radio ").replace(/%/g, '%25')}</span>
                 </h2>
-                <h4 class="m-0">
-                  <span id="data-station-city-${i}" style="font-size: 16px;">${tx.name}</span> <span class="text-small">[<span id="data-station-itu">G</span>]</span>
-                </h4>
-                <span class="text-small">
+                <span id="data-station-city-${i}" style="font-size: 16px;">${tx.name}</span> <span class="text-small">[<span id="data-station-itu-${i}">${tx.itu}</span>]</span>
+                <span class="text-small" style="opacity: 0.8;">
+                  <span style="margin-left: 20px;">&nbsp;</span>
                   <span id="data-station-erp">${tx.erp}</span> kW [<span id="data-station-pol">${tx.pol.toUpperCase()}</span>] <span class="text-gray">•</span> <span id="data-station-distance">${tx.distanceKm.toFixed(0)} km</span> <span class="text-gray">•</span> <span id="data-station-azimuth">${tx.azimuth.toFixed(0)}°</span>
                 </span>
               </div>

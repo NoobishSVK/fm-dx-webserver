@@ -11,9 +11,8 @@ $(document).ready(function() {
     const chatNicknameSave = $('#chat-nickname-save');
     
     $(".chatbutton").on("click", function () {
-        $("#popup-panel-chat").fadeIn(200, function () {
-            chatMessages.scrollTop(chatMessages[0].scrollHeight);
-        });
+        togglePopup("#popup-panel-chat");
+        chatMessages.scrollTop(chatMessages[0].scrollHeight);
     });
     
     // Function to generate a random string

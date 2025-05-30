@@ -1,3 +1,7 @@
+const versionDate = new Date('May 30, 2025 21:00:00');
+const currentVersion = `v1.3.9 [${versionDate.getDate()}/${versionDate.getMonth() + 1}/${versionDate.getFullYear()}]`;
+
+
 function loadScript(src) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');

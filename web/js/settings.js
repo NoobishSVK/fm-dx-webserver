@@ -25,6 +25,112 @@ const signalUnits = {
 };
 
 $(document).ready(() => {
+    
+    getInitialSettings();
+    
+    $('#login-form').submit(function (event) {
+        event.preventDefault();
+        
+        $.ajax({
+            type: 'POST',
+            url: './login',
+            data: $(this).serialize(),
+            success: function (data) {
+                sendToast('success', 'Login success!', data.message, false, true);
+                setTimeout(function () {
+                    location.reload(true);
+                }, 1750);
+            },
+            error: function (xhr, status, error) {
+                if (xhr.status === 403) {
+                    sendToast('error', 'Login failed!', xhr.responseJSON.message, false, true);
+                }
+            }
+        });
+    });    
+    
+    $('.logout-link').click(function (event) {
+        event.preventDefault();
+        
+        $.ajax({
+            type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
+            url: './logout',
+            success: function (data) {
+                sendToast('success', 'Logout success!', data.message, false, true);
+                setTimeout(function () {
+                    location.reload(true);
+                }, 1000);
+            },
+            error: function (xhr, status, error) {
+                if (xhr.status === 403) {
+                    sendToast('error', 'Logout failed!', xhr.responseJSON.message, false, true);
+                }
+            }
+        });
+    });
+});
+
+function getQueryParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+function setTheme(themeName) {
+    const themeColors = themes[themeName];
+    if (themeColors) {
+        // Extracting the RGBA components from themeColors[2] for --color-text-2
+        const rgbaComponentsText = themeColors[2].match(/(\d+(\.\d+)?)/g);
+        const opacityText = parseFloat(rgbaComponentsText[3]);
+        const newOpacityText = opacityText * 0.75;
+        const textColor2 = `rgba(${rgbaComponentsText[0]}, ${rgbaComponentsText[1]}, ${rgbaComponentsText[2]})`;
+
+        // Extracting the RGBA components from themeColors[0] for background color
+        const rgbaComponentsBackground = themeColors[3].match(/(\d+(\.\d+)?)/g);
+        const backgroundOpacity = 0.75;
+        const backgroundColorWithOpacity = `rgba(${rgbaComponentsBackground[0]}, ${rgbaComponentsBackground[1]}, ${rgbaComponentsBackground[2]}, ${backgroundOpacity})`;
+
+        $(':root').css('--color-main', themeColors[0]);
+        $(':root').css('--color-main-bright', themeColors[1]);
+        $(':root').css('--color-text', themeColors[2]);
+        $(':root').css('--color-text-2', textColor2);
+        $('.wrapper-outer').css('background-color', backgroundColorWithOpacity);
+    }
+}
+
+function setBg() {
+    const disableBackgroundParameter = getQueryParameter('disableBackground');
+    if(localStorage.getItem('bgImage').length > 5 && localStorage.getItem('theme') != 'theme9' && disableBackgroundParameter != 'true') {
+        $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
+    } else {
+        $('body').css('background', 'var(--color-main)');
+    }
+}
+
+function getInitialSettings() {
+    $.ajax({
+        url: './static_data',
+        dataType: 'json',
+        success: function (data) {
+
+            ['qthLatitude', 'qthLongitude', 'defaultTheme', 'bgImage', 'rdsMode', 'rdsTimeout'].forEach(key => {
+                if (data[key] !== undefined) {
+                    localStorage.setItem(key, data[key]);
+                }
+            });
+            
+            data.presets.forEach((preset, index) => {
+                localStorage.setItem(`preset${index + 1}`, preset);
+            });
+
+            loadInitialSettings();
+        },
+        error: function (error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+function loadInitialSettings() {
     const themeSelector = $('#theme-selector');
     const savedTheme = localStorage.getItem('theme');
     const defaultTheme = localStorage.getItem('defaultTheme');
@@ -70,62 +176,7 @@ $(document).ready(() => {
         signalSelector.find('input').val($(event.target).text()); // Set the text of the clicked option to the input
         localStorage.setItem('signalUnit', selectedSignalUnit);
     });
-    
-    $('#login-form').submit(function (event) {
-        event.preventDefault();
-        
-        // Perform an AJAX request to the /login endpoint
-        $.ajax({
-            type: 'POST',
-            url: './login',
-            data: $(this).serialize(),
-            success: function (data) {
-                // Update the content on the page with the message from the response
-                sendToast('success', 'Login success!', data.message, false, true);
 
-                //$('#login-message').text(data.message);
-                setTimeout(function () {
-                    location.reload(true);
-                }, 1750);
-            },
-            error: function (xhr, status, error) {
-                // Handle error response
-                if (xhr.status === 403) {
-                    // Update the content on the page with the message from the error response
-                    sendToast('error', 'Login failed!', xhr.responseJSON.message, false, true);
-                } else {
-                    // Handle other types of errors if needed
-                    console.error('Error:', status, error);
-                }
-            }
-        });
-    });    
-    
-    $('.logout-link').click(function (event) {
-        event.preventDefault();
-        
-        $.ajax({
-            type: 'GET',  // Assuming the logout is a GET request, adjust accordingly
-            url: './logout',
-            success: function (data) {
-                sendToast('success', 'Logout success!', data.message, false, true);
-                setTimeout(function () {
-                    location.reload(true);
-                }, 1000);
-            },
-            error: function (xhr, status, error) {
-                // Handle error response
-                if (xhr.status === 403) {
-                    // Update the content on the page with the message from the error response
-                    sendToast('error', 'Logout failed!', xhr.responseJSON.message, false, true);
-                } else {
-                    // Handle other types of errors if needed
-                    console.error('Error:', status, error);
-                }
-            }
-        });
-    });
-    
     var extendedFreqRange = localStorage.getItem("extendedFreqRange");
     if (extendedFreqRange === "true") {
         $("#extended-frequency-range").prop("checked", true);
@@ -166,41 +217,4 @@ $(document).ready(() => {
     $('.version-string').text(currentVersion);
     
     setBg();
-});
-
-function getQueryParameter(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
 }
-
-function setTheme(themeName) {
-    const themeColors = themes[themeName];
-    if (themeColors) {
-        // Extracting the RGBA components from themeColors[2] for --color-text-2
-        const rgbaComponentsText = themeColors[2].match(/(\d+(\.\d+)?)/g);
-        const opacityText = parseFloat(rgbaComponentsText[3]);
-        const newOpacityText = opacityText * 0.75;
-        const textColor2 = `rgba(${rgbaComponentsText[0]}, ${rgbaComponentsText[1]}, ${rgbaComponentsText[2]})`;
-
-        // Extracting the RGBA components from themeColors[0] for background color
-        const rgbaComponentsBackground = themeColors[3].match(/(\d+(\.\d+)?)/g);
-        const backgroundOpacity = 0.75;
-        const backgroundColorWithOpacity = `rgba(${rgbaComponentsBackground[0]}, ${rgbaComponentsBackground[1]}, ${rgbaComponentsBackground[2]}, ${backgroundOpacity})`;
-
-        $(':root').css('--color-main', themeColors[0]);
-        $(':root').css('--color-main-bright', themeColors[1]);
-        $(':root').css('--color-text', themeColors[2]);
-        $(':root').css('--color-text-2', textColor2);
-        $('.wrapper-outer').css('background-color', backgroundColorWithOpacity);
-    }
-}
-
-function setBg() {
-    const disableBackgroundParameter = getQueryParameter('disableBackground');
-    if(localStorage.getItem('bgImage').length > 5 && localStorage.getItem('theme') != 'theme9' && disableBackgroundParameter != 'true') {
-        $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
-    } else {
-        $('body').css('background', 'var(--color-main)');
-    }
-}
-

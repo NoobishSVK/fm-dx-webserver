@@ -43,13 +43,11 @@ $(document).ready(function() {
   });
 
   $(".tuner-mobile-settings").on("click", function () {
-    $(".popup-window").fadeOut(200);
-    $("#popup-panel-mobile-settings").fadeIn(200);
+    togglePopup("#popup-panel-mobile-settings");
   });
-
+  
   $("#data-station-others").on("click", function () {
-    $(".popup-window").fadeOut(200);
-    $("#popup-panel-transmitters").fadeIn(200);
+    togglePopup("#popup-panel-transmitters");
   });
 });
 
@@ -66,4 +64,15 @@ function initPopups() {
   $(".popup-close").on("click", function () {
     $(".popup-window").fadeOut(200);
   });
+}
+
+function togglePopup(targetSelector) {
+  const $target = $(targetSelector);
+
+  if ($target.is(":visible")) {
+    $target.fadeOut(200);
+  } else {
+    $(".popup-window").fadeOut(200);
+    $target.fadeIn(200);
+  }
 }

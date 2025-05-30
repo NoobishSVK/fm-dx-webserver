@@ -20,7 +20,7 @@ function parseMarkdown(parsed) {
   parsed = parsed.replace(italicRegex, '<em>$1</em>');
   
   var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
-  parsed = parsed.replace(linkRegex, '<a href="$2">$1</a>');
+  parsed = parsed.replace(linkRegex, '<a href="$2" target="_blank">$1</a>');
   
   parsed = parsed.replace(/\n/g, '<br>');
   
