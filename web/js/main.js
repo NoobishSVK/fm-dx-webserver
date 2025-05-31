@@ -3,8 +3,8 @@
 
 
 var parsedData, signalChart, previousFreq;
-var signalData = [];
 var data = [];
+var signalData = [];
 let updateCounter = 0;
 let messageCounter = 0; // Count for WebSocket data length returning 0
 let messageData = 800; // Initial value anything above 0
@@ -18,7 +18,7 @@ const europe_programmes = [
     "Serious Classical", "Other Music", "Weather", "Finance",
     "Children's Programmes", "Social Affairs", "Religion", "Phone-in",
     "Travel", "Leisure", "Jazz Music", "Country Music", "National Music",
-    "Oldies Music", "Folk Music", "Documentary", "Alarm Test"
+    "Oldies Music", "Folk Music", "Documentary", "Alarm Test", "Alarm"
 ];
 
 const usa_programmes = [
@@ -32,15 +32,15 @@ const usa_programmes = [
 const rdsMode = localStorage.getItem('rdsMode');
 
 $(document).ready(function () {
-    var canvas = $('#signal-canvas')[0];
-
+    const signalToggle = $("#signal-units-toggle");
+    
     var $panel = $('.admin-quick-dashboard');
     var panelWidth = $panel.outerWidth();
-  
+    
     $(document).mousemove(function(e) {
         var mouseX = e.pageX;
         var panelLeft = parseInt($panel.css('left'));
-    
+        
         if (mouseX <= 10 || (panelLeft === 4 && mouseX <= 100)) {
             $panel.css('left', '4px');
         } else {
@@ -48,16 +48,11 @@ $(document).ready(function () {
         }
     });
 
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-
-    // Start updating the canvas
-    initCanvas();
     fillPresets();
-
+    
     signalToggle.on("change", function () {
         const signalText = localStorage.getItem('signalUnit');
-
+        
         if (signalText == 'dbuv') {
             signalText.text('dBµV');
         } else if (signalText == 'dbf') {
@@ -66,45 +61,57 @@ $(document).ready(function () {
             signalText.text('dBm');
         }
     });
-
+    
     // Check if device is an iPhone to prevent zoom on button press
     if (/iPhone|iPod|iPad/.test(navigator.userAgent) && !window.MSStream) {
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.addEventListener('touchstart', function(e) {
-                // Prevent default zoom behavior
-                e.preventDefault();
-                // Allow default button action after short delay
-                setTimeout(() => {
-                    e.target.click();
-                }, 0);
-            });
+        // Handle touchstart for buttons to prevent zoom
+        $('.button').on('touchstart', function(e) {
+            e.preventDefault();
+            let target = this;
+            setTimeout(function() {
+                target.click();
+            }, 0);
         });
+
+        // Prevent zooming on input focus by modifying the viewport
+        let $viewportMeta = $('meta[name=viewport]');
+        if ($viewportMeta.length) {
+            let content = $viewportMeta.attr('content');
+            let re = /maximum\-scale=[0-9\.]+/g;
+
+            if (re.test(content)) {
+                content = content.replace(re, 'maximum-scale=1.0');
+            } else {
+                content += ', maximum-scale=1.0';
+            }
+
+            $viewportMeta.attr('content', content);
+        }
     }
-
+    
     const textInput = $('#commandinput');
-
+    
     textInput.on('change blur', function (event) {
         const inputValue = Number(textInput.val());
         // Check if the user agent contains 'iPhone'
         if (/iPhone/i.test(navigator.userAgent)) {
-            socket.send("T" + (Math.round(inputValue * 1000)));
+            tuneTo(inputValue);
             // Clear the input field if needed
             textInput.val('');
         }
     });
-
+    
     textInput.on('keyup', function (event) {
-
+        
         if (event.key !== 'Backspace' && localStorage.getItem('extendedFreqRange') != "true") {
             let inputValue = textInput.val();
             inputValue = inputValue.replace(/[^0-9.]/g, '');
-
+            
             if (inputValue.includes("..")) {
                 inputValue = inputValue.slice(0, inputValue.lastIndexOf('.')) + inputValue.slice(inputValue.lastIndexOf('.') + 1);
                 textInput.val(inputValue);
             }
-
+            
             if (!inputValue.includes(".")) {
                 if (inputValue.startsWith('10') && inputValue.length > 2) {
                     inputValue = inputValue.slice(0, 3) + '.' + inputValue.slice(3);
@@ -116,38 +123,37 @@ $(document).ready(function () {
             }
         }
         if (event.key === 'Enter') {
-            const inputValue = textInput.val();
             if (socket.readyState === WebSocket.OPEN) {
-                socket.send("T" + (Math.round(inputValue * 1000)));
+                tuneTo(textInput.val());
             }
             textInput.val('');
         }
     });
-
+    
     document.onkeydown = function(event) {
         if (!event.repeat) {
             checkKey(event);
         }
     };
     
-
+    
     let lastExecutionTime = 0;
     const throttleDelay = 100; // Time in ms
     $('#freq-container').on('wheel keypress', function (e) {
         e.preventDefault();
         const now = Date.now();
-    
+        
         if (now - lastExecutionTime < throttleDelay) {
             // Ignore this event as it's within the throttle delay
             return;
         }
-    
+        
         lastExecutionTime = now; // Update the last execution time
-    
+        
         getCurrentFreq();
         var delta = e.originalEvent.deltaY;
         var adjustment = 0;
-    
+        
         if (e.shiftKey) {
             adjustment = e.altKey ? 1 : 0.01;
         } else if (e.ctrlKey) {
@@ -160,17 +166,21 @@ $(document).ready(function () {
             }
             return false;
         }
-    
+        
         var newFreq = currentFreq + (delta > 0 ? -adjustment : adjustment);
         socket.send("T" + (Math.round(newFreq * 1000)));
         return false;
     });
-
+    
     setInterval(getServerTime, 10000);
     getServerTime();
     setInterval(sendPingRequest, 5000);
     sendPingRequest();
-
+    
+    $("#tuner-name").click(function() {
+        showTunerDescription();
+    });
+    
     var freqUpButton = $('#freq-up')[0];
     var freqDownButton = $('#freq-down')[0];
     var psContainer = $('#ps-container')[0];
@@ -178,19 +188,19 @@ $(document).ready(function () {
     var piCodeContainer = $('#pi-code-container')[0];
     var freqContainer = $('#freq-container')[0];
     var txContainer = $('#data-station-container')[0];
-
-    $("#data-eq").click(function () {
+    
+    $(".data-eq").click(function () {
         toggleButtonState("eq");
     });
-
-    $("#data-ims").click(function () {
+    
+    $(".data-ims").click(function () {
         toggleButtonState("ims");
     });
-
+    
     $("#volumeSlider").on('mouseup', function() {
         $('#volumeSlider').blur();
     })
-
+    
     $(freqUpButton).on("click", tuneUp);
     $(freqDownButton).on("click", tuneDown);
     $(psContainer).on("click", copyPs);
@@ -201,81 +211,111 @@ $(document).ready(function () {
     $(freqContainer).on("click", function () {
         textInput.focus();
     });
-    initTooltips();
-
+    
     //FMLIST logging
-    $('#log-fmlist').on('click', function() {
-        $.ajax({
-            url: './log_fmlist',
-            method: 'GET',
-            success: function(response) {
-                // Show a success toast with the response message
-                sendToast('success', 'Log successful', response, false, true);
-            },
-            error: function(xhr) {
-                let errorMessage;
-
-                // Handle different error status codes with custom messages
-                switch (xhr.status) {
-                    case 429:
+    $('.popup-content').on('click', function(event) {
+        event.stopPropagation();
+        $('.popup-content').removeClass('show');
+    });
+    
+    $('.log-fmlist').on('click', function() {
+        const logKey = 'fmlistLogChoice'; 
+        const logTimestampKey = 'fmlistLogTimestamp'; 
+        const expirationTime = 10 * 60 * 1000; 
+        const now = Date.now();
+        
+        const storedChoice = localStorage.getItem(logKey);
+        const storedTimestamp = localStorage.getItem(logTimestampKey);
+        
+        if (storedChoice && storedTimestamp && (now - storedTimestamp < expirationTime)) {
+            sendLog(storedChoice); 
+            return;
+        }
+        
+        if (parsedData.txInfo.dist > 700) {
+            $('.log-fmlist .mini-popup-content').addClass('show'); // Show popup if no valid choice
+            
+            $('.log-fmlist-sporadice').off('click').on('click', function () {
+                localStorage.setItem(logKey, './log_fmlist?type=sporadice');
+                localStorage.setItem(logTimestampKey, now);
+                if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=sporadice');
+                $('.log-fmlist .mini-popup-content').removeClass('show');
+            });
+            
+            $('.log-fmlist-tropo').off('click').on('click', function () {
+                localStorage.setItem(logKey, './log_fmlist?type=tropo');
+                localStorage.setItem(logTimestampKey, now);
+                if(parsedData.txInfo.dist > 700) sendLog('./log_fmlist?type=tropo');
+                $('.log-fmlist .mini-popup-content').removeClass('show');
+            });
+        } else {
+            sendLog('./log_fmlist'); 
+        }
+        
+        function sendLog(endpoint) {
+            $.ajax({
+                url: endpoint,
+                method: 'GET',
+                success: function(response) {
+                    sendToast('success', 'Log successful', response, false, true);
+                },
+                error: function(xhr) {
+                    let errorMessage;
+                    
+                    switch (xhr.status) {
+                        case 429:
                         errorMessage = xhr.responseText;
                         break;
-                    case 500:
-                        errorMessage = 'Server error: ' + xhr.responseText || 'Internal Server Error';
+                        case 500:
+                        errorMessage = 'Server error: ' + (xhr.responseText || 'Internal Server Error');
                         break;
-                    default:
+                        default:
                         errorMessage = xhr.statusText || 'An error occurred';
+                    }
+                    
+                    sendToast('error', 'Log failed', errorMessage, false, true);
                 }
-
-                // Show an error toast with the specific error message
-                sendToast('error', 'Log failed', errorMessage, false, true);
-            }
-        });
+            });
+        }
     });
 
+    initCanvas();
+    initTooltips();
 });
 
 function getServerTime() {
     $.ajax({
-      url: "./server_time",
-      dataType: "json",
-      success: function(data) {
-        const serverTimeUtc = data.serverTime;
-  
-        const options = {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        };
-  
-        const serverOptions = {
-          ...options,
-          timeZone: 'Etc/UTC' // Add timeZone only for server time
-        };
-  
-        const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
-        
-        $("#server-time").text(formattedServerTime);        
-  
-        // Get and format user's local time directly without specifying timeZone:
-        const localTime = new Date();
-        const formattedLocalTime = new Date(localTime).toLocaleString(navigator.language ? navigator.language : 'en-US', options);
-  
-        // Display client time:
-        $("#client-time").text(formattedLocalTime);
-      },
-      error: function(jqXHR, textStatus, errorThrown) {
-        console.error("Error fetching server time:", errorThrown);
-        // Handle error gracefully (e.g., display a fallback message)
-      }
+        url: "./server_time",
+        dataType: "json",
+        success: function(data) {
+            const serverTimeUtc = data.serverTime;
+            
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            };
+            
+            const serverOptions = {
+                ...options,
+                timeZone: 'Etc/UTC'
+            };
+            
+            const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
+            
+            $("#server-time").text(formattedServerTime);        
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error fetching server time:", errorThrown);
+        }
     });
-  }  
-  
+}  
+
 function sendPingRequest() {
-    const timeoutDuration = 15000; // Ping response can become buggy if it exceeds 20 seconds
+    const timeoutDuration = 5000;
     const startTime = new Date().getTime();
     
     const fetchWithTimeout = (url, options, timeout = timeoutDuration) => {
@@ -283,37 +323,37 @@ function sendPingRequest() {
             const timerTimeout = setTimeout(() => {
                 reject(new Error('Request timed out'));
             }, timeout);
-
+            
             fetch(url, options)
-                .then(response => {
-                    clearTimeout(timerTimeout);
-                    resolve(response);
-                })
-                .catch(error => {
-                    clearTimeout(timerTimeout);
-                    reject(error);
-                });
+            .then(response => {
+                clearTimeout(timerTimeout);
+                resolve(response);
+            })
+            .catch(error => {
+                clearTimeout(timerTimeout);
+                reject(error);
+            });
         });
     };
-
+    
     fetchWithTimeout('./ping', { cache: 'no-store' }, timeoutDuration)
-        .then(response => {
-            const endTime = new Date().getTime();
-            const pingTime = endTime - startTime;
-            $('#current-ping').text(`Ping: ${pingTime}ms`);
-            pingTimeLimit = false;
-        })
-        .catch(error => {
-            console.warn('Ping request failed');
-            $('#current-ping').text(`Ping: unknown`);
-            if (!pingTimeLimit) { // Force reconnection as WebSocket could be unresponsive even though it's reported as OPEN
-              if (messageLength === 0) window.socket.close(1000, 'Normal closure');
-              if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
-              console.log("Reconnecting due to high ping...");
-              pingTimeLimit = true;
-            }
-        });
-        
+    .then(response => {
+        const endTime = new Date().getTime();
+        const pingTime = endTime - startTime;
+        $('#current-ping').text(`Ping: ${pingTime}ms`);
+        pingTimeLimit = false;
+    })
+    .catch(error => {
+        console.warn('Ping request failed');
+        $('#current-ping').text(`Ping: unknown`);
+        if (!pingTimeLimit) { // Force reconnection as WebSocket could be unresponsive even though it's reported as OPEN
+            if (messageLength === 0) window.socket.close(1000, 'Normal closure');
+            if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+            console.log("Reconnecting due to high ping...");
+            pingTimeLimit = true;
+        }
+    });
+    
     function handleMessage(message) {
         messageData = JSON.parse(message.data.length);
         socket.removeEventListener('message', handleMessage);
@@ -324,21 +364,21 @@ function sendPingRequest() {
     
     // Force reconnection if no WebSocket data after several queries
     if (messageLength === 0) {
-      messageCounter++;
-      if (messageCounter === 5) {
-        messageCounter = 0;
-        window.socket.close(1000, 'Normal closure');
-        if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
-        console.log("Reconnecting due to no data received...");
-      }
+        messageCounter++;
+        if (messageCounter === 5) {
+            messageCounter = 0;
+            window.socket.close(1000, 'Normal closure');
+            if (connectionLost) sendToast('warning', 'Connection lost', 'Attempting to reconnect...', false, false);
+            console.log("Reconnecting due to no data received...");
+        }
     } else {
-      messageCounter = 0;
+        messageCounter = 0;
     }
     
     // Automatic reconnection on WebSocket close
     if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
         socket = new WebSocket(socketAddress);
-
+        
         socket.onopen = () => {
             sendToast('info', 'Connected', 'Reconnected successfully!', false, false);
         };
@@ -353,34 +393,33 @@ function sendPingRequest() {
         };
     }
     if (connectionLost) {
-      if (dataTimeout == dataTimeoutPrevious) {
-        connectionLost = true;
-      } else {
-        setTimeout(() => {
-          window.socket.close(1000, 'Normal closure'); // Force reconnection to unfreeze browser UI
-        }, 8000); // Timeout must be higher than TIMEOUT_DURATION
-        connectionLost = false;
-        requiresAudioStreamRestart = true;
-        console.log("Radio data restored.");
-      }
+        if (dataTimeout == dataTimeoutPrevious) {
+            connectionLost = true;
+        } else {
+            setTimeout(() => {
+                window.socket.close(1000, 'Normal closure'); // Force reconnection to unfreeze browser UI
+            }, 8000); // Timeout must be higher than TIMEOUT_DURATION
+            connectionLost = false;
+            requiresAudioStreamRestart = true;
+            console.log("Radio data restored.");
+        }
     }
 }
 
-// Automatic UI resume on WebSocket reconnect
 function handleWebSocketMessage(event) {
     if (event.data == 'KICK') {
         console.log('Kick initiated.')
         setTimeout(() => {
-          window.location.href = '/403';
+            window.location.href = '/403';
         }, 500);
         return;
     }
-
+    
     parsedData = JSON.parse(event.data);
-
+    
     resetDataTimeout();
     updatePanels(parsedData);
-
+    
     const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
     const averageSignal = sum / signalData.length;
     data.push(averageSignal);
@@ -388,152 +427,180 @@ function handleWebSocketMessage(event) {
 // Attach the message handler
 socket.onmessage = handleWebSocketMessage;
 
-function initCanvas(parsedData) {
-    signalToggle = $("#signal-units-toggle");
+const signalBuffer = [];
 
-    // Check if signalChart is already initialized
-    if (!signalChart) {
-        const canvas = $('#signal-canvas')[0];
-        const context = canvas.getContext('2d');
-        const maxDataPoints = 300;
-        const pointWidth = (canvas.width - 80) / maxDataPoints;
-        
+function initCanvas() {
+    const ctx = document.getElementById("signal-canvas").getContext("2d");
 
-        signalChart = {
-            canvas,
-            context,
-            parsedData,
-            maxDataPoints,
-            pointWidth,
-            color2: null,
-            color3: null,
-            color4: null,
-            signalUnit: localStorage.getItem('signalUnit'),
-            offset: 0,
-        };
+    window.signalChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: "Signal Strength",
+                borderColor: () => getComputedStyle(document.documentElement).getPropertyValue("--color-4").trim(),
+                borderWidth: 2,
+                fill: {
+                    target: 'start'
+                },
+                backgroundColor: () => getComputedStyle(document.documentElement).getPropertyValue("--color-1-transparent").trim(),
+                tension: 0.6,
+                data: []
+            }]
+        },
+        options: {
+            layout: {
+                padding: {
+                    left: -10,
+                    right: -10,
+                    bottom: -10
+                },
+            },
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                point: { radius: 0 },
+            },
+            scales: {
+                x: {
+                    type: "realtime",
+                    ticks: { display: false },
+                    border: { display: false },
+                    grid: { display: false, borderWidth: 0, borderColor: "transparent" },
+                    realtime: {
+                        duration: 30000,
+                        refresh: 75,
+                        delay: 150,
+                        frameRate: 30, // default is 30
+                        onRefresh: (chart) => {
+                            if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
+                            if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
 
-        switch(signalChart.signalUnit) {
-            case 'dbuv': signalChart.offset = 11.25; break;
-            case 'dbm': signalChart.offset = 120; break;
-            default: signalChart.offset = 0;
-        }
-        // Initialize colors and signal unit
-        updateChartSettings(signalChart);
-        
-        // Periodically check for color and signal unit updates
-        setInterval(() => {
-            updateChartSettings(signalChart);
-        }, 1000); // Check every 1 second
-    }
+                            const sig = parsedData.sig;
+                            signalBuffer.push(sig);
+                            if (signalBuffer.length > 8) signalBuffer.shift();
 
-    updateCanvas(parsedData, signalChart);
+                            const avgSignal = signalBuffer.reduce((sum, val) => sum + val, 0) / signalBuffer.length;
+
+                            const dataset = chart.data.datasets[0].data;
+                            dataset.push({ x: Date.now(), y: avgSignal });
+
+                            if (dataset.length > 400) dataset.shift(); // duration / refresh
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    grace: 0.25,
+                    border: { display: false },
+                    ticks: { 
+                        maxTicksLimit: 3, 
+                        display: false // Hide default labels
+                    },
+                    grid: { 
+                        display: false, // Hide default grid lines
+                    },
+                },
+                y2: {
+                    position: 'right', // Position on the right side
+                    beginAtZero: false,
+                    grace: 0.25,
+                    border: { display: false },
+                    ticks: { 
+                        maxTicksLimit: 3, 
+                        display: false // Hide default labels for the right axis
+                    },
+                    grid: { 
+                        display: false, // No grid for right axis
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        },
+        plugins: [{
+            id: 'customYAxisLabels',
+            afterDraw: (chart) => {
+                const { ctx, scales, chartArea } = chart;
+                const yAxis = scales.y;
+                const y2Axis = scales.y2;
+
+                const gridLineColor = getComputedStyle(document.documentElement).getPropertyValue("--color-2-transparent").trim(); // Grid color using CSS variable
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue("--color-5").trim(); // Use the same color for text labels
+
+                ctx.save();
+                ctx.font = "12px Titillium Web";
+                ctx.fillStyle = textColor;
+                ctx.textAlign = "center";
+
+                const leftX = yAxis.left + 20;
+                const rightX = y2Axis.right - 20;
+
+                const offset = 10;
+
+                yAxis.ticks.forEach((tick, index) => {
+                    const y = yAxis.getPixelForValue(tick.value);
+                    var adjustedY = Math.max(yAxis.top + 13, Math.min(y, yAxis.bottom - 6));
+                    const isMiddleTick = index === Math.floor(yAxis.ticks.length / 2);
+
+                    let adjustedTickValue;
+                    switch(localStorage.getItem("signalUnit")) {
+                        case "dbuv": adjustedTickValue = tick.value - 11.25; break;
+                        case "dbm": adjustedTickValue = tick.value - 120; break;
+                        default: adjustedTickValue = tick.value; break;
+                    }
+                
+                    if (isMiddleTick) { adjustedY += 3; }
+                    ctx.textAlign = 'right';
+                    ctx.fillText(adjustedTickValue.toFixed(1), leftX + 25, adjustedY); 
+
+                    ctx.textAlign = 'left';
+                    ctx.fillText(adjustedTickValue.toFixed(1), rightX - 25, adjustedY); // Right side
+                });
+                
+                const gridLineWidth = 0.5; // Make the lines thinner to avoid overlapping text
+                const adjustedGridTop = chartArea.top + offset;
+                const adjustedGridBottom = chartArea.bottom - offset;
+                const middleY = chartArea.top + chartArea.height / 2;
+                const padding = 45; // 30px inward on both sides
+                
+                // Helper function to draw a horizontal line
+                function drawGridLine(y) {
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left + padding, y);
+                    ctx.lineTo(chartArea.right - padding, y);
+                    ctx.strokeStyle = gridLineColor;
+                    ctx.lineWidth = gridLineWidth;
+                    ctx.stroke();
+                }
+                
+                // Draw the three horizontal grid lines
+                drawGridLine(adjustedGridTop);
+                drawGridLine(adjustedGridBottom);
+                drawGridLine(middleY);
+                
+                ctx.restore();
+            }
+        }]
+    });
 }
 
-function updateChartSettings(signalChart) {
-    // Update colors
-    const newColor2 = getComputedStyle(document.documentElement).getPropertyValue('--color-2').trim();
-    const newColor3 = getComputedStyle(document.documentElement).getPropertyValue('--color-3').trim();
-    const newColor4 = getComputedStyle(document.documentElement).getPropertyValue('--color-4').trim();
-    if (newColor2 !== signalChart.color2 || newColor4 !== signalChart.color4) {
-        signalChart.color2 = newColor2;
-        signalChart.color3 = newColor3;
-        signalChart.color4 = newColor4;
-    }
-
-    // Update signal unit
-    const newSignalUnit = localStorage.getItem('signalUnit');
-    if (newSignalUnit !== signalChart.signalUnit) {
-        signalChart.signalUnit = newSignalUnit;
-        // Adjust the offset based on the new signal unit
-        switch(newSignalUnit) {
-            case 'dbuv': signalChart.offset = 11.25; break;
-            case 'dbm': signalChart.offset = 120; break;
-            default: signalChart.offset = 0;
-        }
-    }
+function setRefreshRate(rate) {
+    const rt = signalChart.options.scales.x.realtime;
+    rt.refresh = rate;
+    signalChart.update('none');
+    console.log(`Graph refresh rate set to ${rate} ms`);
 }
 
-function updateCanvas(parsedData, signalChart) {
-    const { context, canvas, maxDataPoints, pointWidth, color2, color3, color4, offset } = signalChart;
+window.addEventListener("focus", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(75);
+});
 
-    if (data.length > maxDataPoints) {
-        data = data.slice(data.length - maxDataPoints);
-    }
-
-    const actualLowestValue = Math.min(...data);
-    const actualHighestValue = Math.max(...data);
-    const zoomMinValue = actualLowestValue - ((actualHighestValue - actualLowestValue) / 2);
-    const zoomMaxValue = actualHighestValue + ((actualHighestValue - actualLowestValue) / 2);
-    const zoomAvgValue = (zoomMaxValue - zoomMinValue) / 2 + zoomMinValue;
-
-    // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.beginPath();
-
-    const startingIndex = Math.max(0, data.length - maxDataPoints);
-
-    for (let i = startingIndex; i < data.length; i++) {
-        const x = canvas.width - (data.length - i) * pointWidth - 40;
-        const y = canvas.height - (data[i] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-
-        if (i === startingIndex) {
-            context.moveTo(x, y);
-        } else {
-            const prevX = canvas.width - (data.length - i + 1) * pointWidth - 40;
-            const prevY = canvas.height - (data[i - 1] - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-            const interpolatedX = (x + prevX) / 2;
-            const interpolatedY = (y + prevY) / 2;
-
-            context.quadraticCurveTo(prevX, prevY, interpolatedX, interpolatedY);
-        }
-    }
-
-    context.strokeStyle = color4;
-    context.lineWidth = 2;
-    context.stroke();
-
-    // Draw horizontal lines for lowest, highest, and average values
-    context.strokeStyle = color3;
-    context.lineWidth = 1;
-
-    // Draw the lowest value line
-    const lowestY = canvas.height - (zoomMinValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    context.beginPath();
-    context.moveTo(40, lowestY - 18);
-    context.lineTo(canvas.width - 40, lowestY - 18);
-    context.stroke();
-
-    // Draw the highest value line
-    const highestY = canvas.height - (zoomMaxValue - zoomMinValue) * (canvas.height / (zoomMaxValue - zoomMinValue));
-    context.beginPath();
-    context.moveTo(40, highestY + 10);
-    context.lineTo(canvas.width - 40, highestY + 10);
-    context.stroke();
-
-    const avgY = canvas.height / 2;
-    context.beginPath();
-    context.moveTo(40, avgY - 7);
-    context.lineTo(canvas.width - 40, avgY - 7);
-    context.stroke();
-
-    // Label the lines with their values
-    context.fillStyle = color4;
-    context.font = '12px Titillium Web';
-
-    context.textAlign = 'right';
-    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, 35, lowestY - 14);
-    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, 35, highestY + 14);
-    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, 35, avgY - 3);
-
-    context.textAlign = 'left';
-    context.fillText(`${(zoomMinValue - offset).toFixed(1)}`, canvas.width - 35, lowestY - 14);
-    context.fillText(`${(zoomMaxValue - offset).toFixed(1)}`, canvas.width - 35, highestY + 14);
-    context.fillText(`${(zoomAvgValue - offset).toFixed(1)}`, canvas.width - 35, avgY - 3);
-
-    setTimeout(() => {
-        requestAnimationFrame(() => updateCanvas(parsedData, signalChart));
-    }, 1000 / 15);
-}
+window.addEventListener("blur", () => {
+    if (isAndroid || isIOS || isIPadOS) setRefreshRate(3000);
+});
 
 let reconnectTimer = null;
 let dataTimeout = null;
@@ -560,12 +627,12 @@ socket.onmessage = (event) => {
         }, 500);
         return;
     }
-
+    
     parsedData = JSON.parse(event.data);
-
+    
     resetDataTimeout();
     updatePanels(parsedData);
-
+    
     const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
     const averageSignal = sum / signalData.length;
     data.push(averageSignal);
@@ -587,7 +654,7 @@ function processString(string, errors) {
     const alpha_range = 50;
     const max_error = 10;
     errors = errors?.split(',');
-
+    
     for (let i = 0; i < string.length; i++) {
         alpha = parseInt(errors[i]) * (alpha_range / (max_error + 1));
         if (alpha) {
@@ -596,25 +663,17 @@ function processString(string, errors) {
             output += escapeHTML(string[i]);
         }
     }
-
+    
     return output;
-}
-
-function getCurrentFreq() {
-    currentFreq = $('#data-frequency').text();
-    currentFreq = parseFloat(currentFreq).toFixed(3);
-    currentFreq = parseFloat(currentFreq);
-
-    return currentFreq;
 }
 
 function checkKey(e) {
     e = e || window.event;
-
+    
     if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) {
         return;
     }
-
+    
     if ($('#password:focus').length > 0
     || $('#chat-send-message:focus').length > 0
     || $('#volumeSlider:focus').length > 0
@@ -622,9 +681,9 @@ function checkKey(e) {
     || $('.option:focus').length > 0) {
         return; 
     }
-
+    
     getCurrentFreq();
-
+    
     if (socket.readyState === WebSocket.OPEN) {
         switch (e.keyCode) {
             case 66: // Back to previous frequency
@@ -636,7 +695,7 @@ function checkKey(e) {
             case 83: // Screenshot (S key)
                 break;
             case 38:
-		        socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
+                socket.send("T" + (Math.round(currentFreq*1000) + ((currentFreq > 30) ? 10 : 1)));
                 break;
             case 40:
                 socket.send("T" + (Math.round(currentFreq*1000) - ((currentFreq > 30) ? 10 : 1)));
@@ -647,27 +706,52 @@ function checkKey(e) {
             case 39:
                 tuneUp();
                 break;
+            case 46:
+                let $dropdown = $(".data-ant");
+                let $input = $dropdown.find("input");
+                let $options = $dropdown.find("ul.options .option");
+        
+                if ($options.length === 0) return; // No antennas available
+        
+                // Find the currently selected antenna
+                let currentText = $input.val().trim();
+                let currentIndex = $options.index($options.filter(function () {
+                    return $(this).text().trim() === currentText;
+                }));
+
+                console.log(currentIndex, currentText);
+        
+                // Cycle to the next option
+                let nextIndex = (currentIndex + 1) % $options.length;
+                let $nextOption = $options.eq(nextIndex);
+        
+                // Update UI
+                $input.attr("placeholder", $nextOption.text());
+                $input.data("value", $nextOption.data("value"));
+        
+                let socketMessage = "Z" + $nextOption.data("value");
+                socket.send(socketMessage);
+            break;
             case 112: // F1
                 e.preventDefault();
                 tuneTo(Number(localStorage.getItem('preset1')));
-                break;
+            break;
             case 113: // F2
                 e.preventDefault();
                 tuneTo(Number(localStorage.getItem('preset2')));
-                break;
+            break;
             case 114: // F3
                 e.preventDefault();
                 tuneTo(Number(localStorage.getItem('preset3')));
-                break;
+            break;
             case 115: // F4
                 e.preventDefault();
                 tuneTo(Number(localStorage.getItem('preset4')));
-                break;
+            break;
             default:
-                // Handle default case if needed
-                break;
+            // Handle default case if needed
+            break;
         }
-        previousFreq = currentFreq;
     }
 }
 
@@ -678,7 +762,7 @@ async function copyPs() {
     var signal = $('#data-signal').text();
     var signalDecimal = $('#data-signal-decimal').text();
     var signalUnit = $('.signal-units').eq(0).text();
-
+    
     try {
         await copyToClipboard(frequency + " - " + pi + " | " + ps + " [" + signal + signalDecimal + " " + signalUnit + "]");
     } catch (error) {
@@ -694,7 +778,7 @@ async function copyTx() {
     const stationItu = $('#data-station-itu').text();
     const stationDistance = $('#data-station-distance').text();
     const stationErp = $('#data-station-erp').text();
-
+    
     try {
         await copyToClipboard(frequency + " - " + pi + " | " + stationName + " [" + stationCity + ", " + stationItu + "] - " + stationDistance + " | " + stationErp + " kW");
     } catch (error) {
@@ -705,7 +789,7 @@ async function copyTx() {
 async function copyRt() {
     var rt0 = $('#data-rt0 span').text();
     var rt1 = $('#data-rt1 span').text();
-
+    
     try {
         await copyToClipboard("[0] RT: " + rt0 + "\n[1] RT: " + rt1);
     } catch (error) {
@@ -717,9 +801,9 @@ function copyToClipboard(textToCopy) {
     // Navigator clipboard api needs a secure context (https)
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(textToCopy)
-            .catch(function (err) {
-                console.error('Error:', err);
-            });
+        .catch(function (err) {
+            console.error('Error:', err);
+        });
     } else {
         var textArea = $('<textarea></textarea>');
         textArea.val(textToCopy);
@@ -727,10 +811,10 @@ function copyToClipboard(textToCopy) {
             'position': 'absolute',
             'left': '-999999px'
         });
-
+        
         $('body').prepend(textArea);
         textArea.select();
-
+        
         try {
             document.execCommand('copy');
         } catch (error) {
@@ -746,9 +830,9 @@ function findOnMaps() {
     var pi = $('#data-pi').text();
     var latitude = localStorage.getItem('qthLongitude');
     var longitude = localStorage.getItem('qthLatitude');
-
+    
     frequency > 74 ? frequency = frequency.toFixed(1) : null;
-
+    
     var url = `https://maps.fmdx.org/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
     window.open(url, "_blank");
 }
@@ -758,33 +842,33 @@ function updateSignalUnits(parsedData, averageSignal) {
     const signalUnit = localStorage.getItem('signalUnit');
     let currentSignal;
     let highestSignal = parsedData.sigTop;
-
+    
     currentSignal = averageSignal
     let signalText = $('.signal-units');
     let signalValue;
-
+    
     switch (signalUnit) {
         case 'dbuv':
-            signalValue = currentSignal - 11.25;
-            highestSignal = highestSignal - 11.25;
-            signalText.text('dBµV');
-            break;
-
+        signalValue = currentSignal - 11.25;
+        highestSignal = highestSignal - 11.25;
+        signalText.text('dBµV');
+        break;
+        
         case 'dbm':
-            signalValue = currentSignal - 120;
-            highestSignal = highestSignal - 120;
-            signalText.text('dBm');
-            break;
-
+        signalValue = currentSignal - 120;
+        highestSignal = highestSignal - 120;
+        signalText.text('dBm');
+        break;
+        
         default:
-            signalValue = currentSignal;
-            signalText.text('dBf');
-            break;
+        signalValue = currentSignal;
+        signalText.text('dBf');
+        break;
     }
-
+    
     const formatted = (Math.round(signalValue * 10) / 10).toFixed(1);
     const [integerPart, decimalPart] = formatted.split('.');
-
+    
     $('#data-signal-highest').text(Number(highestSignal).toFixed(1));
     $('#data-signal').text(integerPart);
     $('#data-signal-decimal').text('.' + decimalPart);
@@ -798,8 +882,8 @@ const $dataPs = $('#data-ps');
 const $dataSt = $('.data-st');
 const $dataRt0 = $('#data-rt0 span');
 const $dataRt1 = $('#data-rt1 span');
-const $dataAntInput = $('#data-ant input');
-const $dataBwInput = $('#data-bw input');
+const $dataAntInput = $('.data-ant input');
+const $dataBwInput = $('.data-bw input');
 const $dataStationContainer = $('#data-station-container');
 const $dataTp = $('.data-tp');
 const $dataTa = $('.data-ta');
@@ -809,38 +893,62 @@ const $dataPty = $('.data-pty');
 
 // Throttling function to limit the frequency of updates
 function throttle(fn, wait) {
-  let isThrottled = false, savedArgs, savedThis;
-
-  function wrapper() {
-    if (isThrottled) {
-      savedArgs = arguments;
-      savedThis = this;
-      return;
+    let isThrottled = false, savedArgs, savedThis;
+    
+    function wrapper() {
+        if (isThrottled) {
+            savedArgs = arguments;
+            savedThis = this;
+            return;
+        }
+        
+        fn.apply(this, arguments);
+        isThrottled = true;
+        
+        setTimeout(function() {
+            isThrottled = false;
+            if (savedArgs) {
+                wrapper.apply(savedThis, savedArgs);
+                savedArgs = savedThis = null;
+            }
+        }, wait);
     }
-
-    fn.apply(this, arguments);
-    isThrottled = true;
-
-    setTimeout(function() {
-      isThrottled = false;
-      if (savedArgs) {
-        wrapper.apply(savedThis, savedArgs);
-        savedArgs = savedThis = null;
-      }
-    }, wait);
-  }
-
-  return wrapper;
+    
+    return wrapper;
 }
 
-// Utility function to update element's text if changed
+function buildAltTxList(txList) {
+    const wrapper = '<div class="panel-100-real m-0" style="background:none;backdrop-filter:none;">';
+    let outString = '';
+    outString += wrapper;
+    for (let i = 0; i < txList.length; i++) {
+        const tx = txList[i];
+        outString += `<div class="panel-100-real m-0 hover-brighten no-bg-phone m-0 br-0 p-10" style="min-height: 72px;padding-left: 20px;">
+              <div id="data-station-container-${i}" style="display: block;" class="text-left">
+                <h2 style="margin-top: 0;" class="mb-0">
+                  <span id="data-station-name-${i}">${tx.station.replace("R.", "Radio ").replace(/%/g, '%25')}</span>
+                </h2>
+                <span id="data-station-city-${i}" style="font-size: 16px;">${tx.name}</span> <span class="text-small">[<span id="data-station-itu-${i}">${tx.itu}</span>]</span>
+                <span class="text-small" style="opacity: 0.8;">
+                  <span style="margin-left: 20px;">&nbsp;</span>
+                  <span id="data-station-erp">${tx.erp}</span> kW [<span id="data-station-pol">${tx.pol.toUpperCase()}</span>] <span class="text-gray">•</span> <span id="data-station-distance">${tx.distanceKm.toFixed(0)} km</span> <span class="text-gray">•</span> <span id="data-station-azimuth">${tx.azimuth.toFixed(0)}°</span>
+                </span>
+              </div>
+            </div>`;
+        if (i % 2 !== 0) {
+            outString += `</div>${wrapper}`;
+        }
+    }
+    outString += '</div>';
+    return outString;
+}
+
 function updateTextIfChanged($element, newText) {
     if ($element.text() !== newText) {
         $element.text(newText);
     }
 }
 
-// Utility function to update element's HTML content if changed
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
@@ -852,24 +960,23 @@ const updateDataElements = throttle(function(parsedData) {
     updateTextIfChanged($dataFrequency, parsedData.freq);
     $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
     updateHtmlIfChanged($dataPi, parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
-
+    
     if ($('#ps-underscores').is(':checked')) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');
     }
     updateHtmlIfChanged($dataPs, parsedData.ps === '?' ? "<span class='opacity-half'>?</span>" : processString(parsedData.ps, parsedData.ps_errors));
-
-    let stereoColor;
+    
     if(parsedData.st) {
-        stereoColor = 'var(--color-4)';
+        $dataSt.parent().removeClass('opacity-half');
     } else {
-        stereoColor = 'var(--color-3)';
+        $dataSt.parent().addClass('opacity-half');
     }
-
+    
     if(parsedData.stForced) {
         if (!parsedData.st) {
-          stereoColor = 'gray';
+            stereoColor = 'gray';
         } else {
-          stereoColor = 'var(--color-4)';
+            stereoColor = 'var(--color-4)';
         }
         $('.data-st.circle1').css('left', '4px');
         $('.data-st.circle2').css('display', 'none');
@@ -877,30 +984,29 @@ const updateDataElements = throttle(function(parsedData) {
         $('.data-st.circle1').css('left', '0px');
         $('.data-st.circle2').css('display', 'block');
     }
-    $dataSt.css('border', '2px solid ' + stereoColor);
-
+    
     updateHtmlIfChanged($dataRt0, processString(parsedData.rt0, parsedData.rt0_errors));
     updateHtmlIfChanged($dataRt1, processString(parsedData.rt1, parsedData.rt1_errors));
-
+    
     updateTextIfChanged($dataPty, rdsMode == 'true' ? usa_programmes[parsedData.pty] : europe_programmes[parsedData.pty]);
-
+    
     if (parsedData.rds === true) {
         $flagDesktopCointainer.css('background-color', 'var(--color-2-transparent)');
     } else {
         $flagDesktopCointainer.css('background-color', 'var(--color-1-transparent)');
     }
-
+    
     $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
-
-    $dataAntInput.val($('#data-ant li[data-value="' + parsedData.ant + '"]').text());
-
-    if(parsedData.bw < 500) {
-        $dataBwInput.val($('#data-bw li[data-value2="' + parsedData.bw + '"]').text());
+    
+    $dataAntInput.val($('.data-ant li[data-value="' + parsedData.ant + '"]').first().text());
+    
+    if (parsedData.bw < 500) {
+        $dataBwInput.val($('.data-bw li[data-value2="' + parsedData.bw + '"]').first().text());
     } else {
-        $dataBwInput.val($('#data-bw li[data-value="' + parsedData.bw + '"]').text());
+        $dataBwInput.val($('.data-bw li[data-value="' + parsedData.bw + '"]').first().text());
     }
-
+    
     if (parsedData.txInfo.tx.length > 1) {
         updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx.replace(/%/g, '%25'));
         updateTextIfChanged($('#data-station-erp'), parsedData.txInfo.erp);
@@ -908,21 +1014,23 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
+        updateHtmlIfChanged($('#data-station-others'), parsedData.txInfo.otherMatches.length > 0 ? ('<span>+' + parsedData.txInfo.otherMatches.length +'</span>') : '');
         const txDistance = localStorage.getItem('imperialUnits') == "true" ? (Number(parsedData.txInfo.dist) * 0.621371192).toFixed(0) + " mi" : parsedData.txInfo.dist + " km";
+        const altTxInfo = buildAltTxList(parsedData.txInfo.otherMatches);
+        updateHtmlIfChanged($('#alternative-txes'), altTxInfo);
         updateTextIfChanged($('#data-station-distance'), txDistance);
         $dataStationContainer.css('display', 'block');
     } else {
         $dataStationContainer.removeAttr('style');
     }
-
+    
     if(parsedData.txInfo.tx.length > 1 && parsedData.txInfo.dist > 150 && parsedData.txInfo.dist < 4000) {
-        $('#log-fmlist').removeAttr('disabled').removeClass('btn-disabled cursor-disabled');
+        $('.log-fmlist').removeAttr('disabled').removeClass('btn-disabled cursor-disabled');
     } else {
-        $('#log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
+        $('.log-fmlist').attr('disabled', 'true').addClass('btn-disabled cursor-disabled');
     }
     updateHtmlIfChanged($('#data-regular-pi'), parsedData.txInfo.reg === true ? parsedData.txInfo.pi : '&nbsp;');
-
-    updateCounter++;
+    
     if (updateCounter % 8 === 0) {
         $dataTp.html(parsedData.tp === 0 ? "<span class='opacity-half'>TP</span>" : "TP");
         $dataTa.html(parsedData.ta === 0 ? "<span class='opacity-half'>TA</span>" : "TA");
@@ -934,49 +1042,49 @@ const updateDataElements = throttle(function(parsedData) {
             )
         );
     }
-
+    
     if (updateCounter % 30 === 0) {
         $dataPs.attr('aria-label', parsedData.ps);
         $dataRt0.attr('aria-label', parsedData.rt0);
         $dataRt1.attr('aria-label', parsedData.rt1);
-        $('#users-online-container').attr("aria-label", "Online users: " + parsedData.users);
+        $('.users-online-container').attr("aria-label", "Online users: " + parsedData.users);
     }
-}, 100); // Update at most once every 100 milliseconds
+}, 75); // Update at most once every 100 milliseconds
 
 let isEventListenerAdded = false;
 
 function updatePanels(parsedData) {
-    updateCounter++;
-
+    updateCounter = (updateCounter % 10000) + 1; // Count to 10000 then reset back to 1
+    
     signalData.push(parsedData.sig);
     if (signalData.length > 8) {
         signalData.shift(); // Remove the oldest element
     }
     const sum = signalData.reduce((acc, strNum) => acc + parseFloat(strNum), 0);
     const averageSignal = sum / signalData.length;
-
+    
     const sortedAf = parsedData.af.sort(compareNumbers);
     const scaledArray = sortedAf.map(element => element / 1000);
-
+    
     const listContainer = $('#af-list');
     const scrollTop = listContainer.scrollTop();
     let ul = listContainer.find('ul');
-
+    
     if (!ul.length) {
         ul = $('<ul></ul>');
         listContainer.append(ul);
     }
-
+    
     if (updateCounter % 3 === 0) {
-
+        
         updateButtonState("data-eq", parsedData.eq);
         updateButtonState("data-ims", parsedData.ims);
-
+        
         // Only update #af-list on every 3rd call
         ul.html('');
         const listItems = scaledArray.map(createListItem);
         ul.append(listItems);
-
+        
         // Add the event listener only once
         if (!isEventListenerAdded) {
             ul.on('click', 'a', function () {
@@ -985,10 +1093,10 @@ function updatePanels(parsedData) {
             });
             isEventListenerAdded = true;
         }
-
+        
         listContainer.scrollTop(scrollTop);
     }
-
+    
     updateDataElements(parsedData);
     updateSignalUnits(parsedData, averageSignal);
     $('.users-online').text(parsedData.users);
@@ -1000,14 +1108,24 @@ function createListItem(element) {
 
 function updateButtonState(buttonId, value) {
     var button = $("#" + buttonId);
-    if (value == 0) {
-        button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
-        button.attr('aria-description', 'Off');
+    
+    if (button.length === 0) {
+        button = $("." + buttonId);
+    }
+    
+    if (button.length > 0) {
+        if (value == 0) {
+            button.hasClass("btn-disabled") ? null : button.addClass("btn-disabled");
+            button.attr('aria-description', 'Off');
+        } else {
+            button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
+            button.attr('aria-description', 'On');
+        }
     } else {
-        button.hasClass("btn-disabled") ? button.removeClass("btn-disabled") : null;
-        button.attr('aria-description', 'On');
+        console.log("Button not found!");
     }
 }
+
 
 function toggleButtonState(buttonId) {
     parsedData[buttonId] = 1 - parsedData[buttonId]; // Toggle between 0 and 1
@@ -1026,7 +1144,7 @@ function toggleForcedStereo() {
 
 function toggleLock(buttonSelector, activeMessage, inactiveMessage, activeLabel, inactiveLabel) {
     let $lockButton = $(buttonSelector);
-
+    
     if ($lockButton.hasClass('active')) {
         socket.send(inactiveMessage);
         $lockButton.attr('aria-label', inactiveLabel);
@@ -1038,51 +1156,128 @@ function toggleLock(buttonSelector, activeMessage, inactiveMessage, activeLabel,
     }
 }
 
-
-function initTooltips() {
-    $('.tooltip').hover(function(e){
-        var tooltipText = $(this).data('tooltip');
-        
-        // Add a delay of 500 milliseconds before creating and appending the tooltip
-        $(this).data('timeout', setTimeout(() => {
-            var tooltip = $('<div class="tooltiptext"></div>').html(tooltipText);
-            if ($('.tooltiptext').length === 0) { $('body').append(tooltip); } // Don't allow more than one tooltip
-
-            var posX = e.pageX;
-            var posY = e.pageY;
-
-            var tooltipWidth = tooltip.outerWidth();
-            var tooltipHeight = tooltip.outerHeight();
-            posX -= tooltipWidth / 2;
-            posY -= tooltipHeight + 10;
-            tooltip.css({ top: posY, left: posX, opacity: 1 }); // Set opacity to 1
-            // For touchscreen devices
-            if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
-                setTimeout(() => { $('.tooltiptext').remove(); }, 10000);
-                document.addEventListener('touchstart', function() { setTimeout(() => { $('.tooltiptext').remove(); }, 500); });
-            }
-        }, 500));
-    }, function() {
-        // Clear the timeout if the mouse leaves before the delay completes
-        clearTimeout($(this).data('timeout'));
-        $('.tooltiptext').remove();
-        setTimeout(() => { $('.tooltiptext').remove(); }, 500); // Ensure no tooltips remain stuck
-    }).mousemove(function(e){
-        var tooltipWidth = $('.tooltiptext').outerWidth();
-        var tooltipHeight = $('.tooltiptext').outerHeight();
-        var posX = e.pageX - tooltipWidth / 2;
-        var posY = e.pageY - tooltipHeight - 10;
-
-        $('.tooltiptext').css({ top: posY, left: posX });
+function showTunerDescription() {
+    let parentDiv = $("#tuner-name").parent();
+    
+    if (!$("#dashboard-panel-description").is(":visible")) {
+        parentDiv.css("border-radius", "15px 15px 0 0");
+    }
+    
+    $("#dashboard-panel-description").slideToggle(300, function() {
+        if (!$(this).is(":visible")) {
+            parentDiv.css("border-radius", "");
+        }
     });
-}
+    
+    $("#tuner-name i").toggleClass("rotated");
 
-function fillPresets() {
-    for (let i = 1; i <= 4; i++) {
-        let presetText = localStorage.getItem(`preset${i}`);
-        $(`#preset${i}`).text(presetText);
-        $(`#preset${i}`).click(function() {
-            tuneTo(Number(presetText));
-        });
+    if ($(window).width() < 768) {
+        $('.dashboard-panel-plugin-list').slideToggle(300);
     }
 }
+
+function initTooltips(target = null) {
+    // Define scope: all tooltips or specific one if target is provided
+    const tooltips = target ? $(target) : $('.tooltip');
+    
+    // Unbind existing event handlers before rebinding to avoid duplication
+    tooltips.off('mouseenter mouseleave');
+    
+    tooltips.hover(function () {
+        if ($(this).closest('.popup-content').length) {
+            return;
+        }
+        
+        var tooltipText = $(this).data('tooltip');
+        var placement = $(this).data('tooltip-placement') || 'top'; // Default to 'top'
+        
+        // Clear existing timeouts
+        $(this).data('timeout', setTimeout(() => {
+            $('.tooltip-wrapper').remove();
+            
+            var tooltip = $(`
+                <div class="tooltip-wrapper">
+                    <div class="tooltiptext">${tooltipText}</div>
+                </div>
+            `);
+                $('body').append(tooltip);
+                
+                var tooltipEl = $('.tooltiptext');
+                var tooltipWidth = tooltipEl.outerWidth();
+                var tooltipHeight = tooltipEl.outerHeight();
+                var targetEl = $(this);
+                var targetOffset = targetEl.offset();
+                var targetWidth = targetEl.outerWidth();
+                var targetHeight = targetEl.outerHeight();
+                
+                // Compute position
+                var posX, posY;
+                switch (placement) {
+                    case 'bottom':
+                    posX = targetOffset.left + targetWidth / 2 - tooltipWidth / 2;
+                    posY = targetOffset.top + targetHeight + 10;
+                    break;
+                    case 'left':
+                    posX = targetOffset.left - tooltipWidth - 10;
+                    posY = targetOffset.top + targetHeight / 2 - tooltipHeight / 2;
+                    break;
+                    case 'right':
+                    posX = targetOffset.left + targetWidth + 10;
+                    posY = targetOffset.top + targetHeight / 2 - tooltipHeight / 2;
+                    break;
+                    case 'top':
+                    default:
+                    posX = targetOffset.left + targetWidth / 2 - tooltipWidth / 2;
+                    posY = targetOffset.top - tooltipHeight - 10;
+                    break;
+                }
+                
+                // Apply positioning
+                tooltipEl.css({ top: posY, left: posX, opacity: 1 });
+
+                // For touchscreen devices
+                if ((/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) && ('ontouchstart' in window || navigator.maxTouchPoints)) {
+                    setTimeout(() => { $('.tooltiptext').remove(); }, 5000);
+                }
+                
+            }, 300));
+        }, function () {
+            clearTimeout($(this).data('timeout'));
+            
+            setTimeout(() => {
+                $('.tooltip-wrapper').fadeOut(300, function () {
+                    $(this).remove(); 
+                });
+            }, 100); 
+        });
+        
+        $('.popup-content').off('mouseenter').on('mouseenter', function () {
+            clearTimeout($('.tooltip').data('timeout'));
+            $('.tooltip-wrapper').fadeOut(300, function () {
+                $(this).remove(); 
+            });
+        });
+    }
+    
+    function fillPresets() {
+        let hasAnyPreset = false;
+    
+        for (let i = 1; i <= 4; i++) {
+            let presetText = localStorage.getItem(`preset${i}`);
+    
+            if (presetText != "null") {
+                hasAnyPreset = true;
+                $(`#preset${i}-text`).text(presetText);
+                $(`#preset${i}`).click(function() {
+                    tuneTo(Number(presetText));
+                });
+            } else {
+                $(`#preset${i}`).hide();
+            }
+        }
+    
+        if (!hasAnyPreset) {
+            $('#preset1').parent().hide();
+        }
+    }
+    

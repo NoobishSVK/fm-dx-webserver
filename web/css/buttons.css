@@ -86,10 +86,6 @@ input[type="text"], textarea, input[type="password"] {
     caret-color: var(--color-4);
 }
 
-input[type="password"]:not(.setup-wrapper input[type="password"]) {
-    border-radius: 15px 0 0 15px;
-}
-
 #tune-buttons input[type="text"] {
     width: 50%;
     height: 48px;
@@ -132,6 +128,28 @@ input[type="password"]:not(.setup-wrapper input[type="password"]) {
   
 #freq-up {
       border-radius: 0 15px 15px 0;
+}
+
+.settings, .users-online-container, .chatbutton, .button-dark {
+    background: transparent;
+    border: 0;
+    color: var(--color-4);
+    font-size: 16px;
+    width: 48px;
+    height: 48px;
+    text-align: center;
+    border-radius: 15px;
+    transition: 300ms ease background;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.chatbutton, .settings, .button-dark {
+    background-color: var(--color-1);
+}
+
+.settings:hover, .users-online-container:hover, .chatbutton:hover {
+    background: var(--color-2);
 }
 
 input[type="range"] {
@@ -312,6 +330,47 @@ input[type="range"]::-moz-range-thumb {
 
 /*  End Toggle Switch  */
 
+.switch {
+    user-select: none;
+}
+.switch input[type=checkbox] {
+    height: 0;
+    width: 0;
+    margin: 0;
+}
+.switch input[type=checkbox]:checked + label {
+    background: var(--color-4);
+}
+.switch input[type=checkbox]:checked + label::after {
+    left: calc(100% - 4px);
+    transform: translateX(-100%);
+    background-color: var(--color-1);
+}
+.switch label {
+    cursor: pointer;
+    min-width: 64px;
+    max-width: 64px;
+    height: 38px;
+    background-color: var(--color-1);
+    transition: 0.35s background-color;
+    display: block;
+    border-radius: 24px;
+    margin: 0;
+    position: relative;
+    border: 2px solid var(--color-3);
+}
+.switch label::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 26px;
+    height: 26px;
+    background: var(--color-5);
+    border-radius: 16px;
+    transition: 0.3s;
+}
+
 select {
     height: 42px;
     width: 150px;
@@ -337,8 +396,58 @@ select:hover {
     background: var(--color-5);
 }
 
+.mini-popup {
+    position: relative;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  .mini-popup .mini-popup-content {
+    visibility: hidden;
+    width: 230px;
+    background-color: var(--color-2-transparent);
+    backdrop-filter: blur(5px);
+    color: var(--color-text);;
+    text-align: center;
+    border-radius: 15px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    top: 125%;
+    left: 50%;
+    margin-left: -115px;
+    border: 3px solid var(--color-3);
+  }
+  
+  .mini-popup .show {
+    visibility: visible;
+  }
+  
+  button[disabled] .mini-popup-content {
+    visibility: hidden;
+  }
+
+  .mini-popup .mini-popup-content::after {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent var(--color-3) transparent;
+  }
+  
+
 @media only screen and (max-width: 768px) {
     #tune-buttons input[type="text"] {
         background-color: var(--color-1-transparent);
+        height: 64px;
+    }
+    #tune-buttons button {
+        height: 64px;
     }
 }

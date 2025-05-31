@@ -40,9 +40,18 @@ function tuneDown() {
 }
 
 function tuneTo(freq) {
-    socket.send("T" + ((freq).toFixed(1) * 1000));
+    previousFreq = getCurrentFreq();
+    socket.send("T" + ((parseFloat(freq)) * 1000).toFixed(3));
 }
 
 function resetRDS() {
     socket.send("T0");
+}
+
+function getCurrentFreq() {
+    currentFreq = $('#data-frequency').text();
+    currentFreq = parseFloat(currentFreq).toFixed(3);
+    currentFreq = parseFloat(currentFreq);
+    
+    return currentFreq;
 }

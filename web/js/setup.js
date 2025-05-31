@@ -9,6 +9,7 @@ $(document).ready(function() {
   
   showPanelFromHash();
   initNav();
+  initBanlist();
 });
 
 /**
@@ -19,34 +20,48 @@ $(document).ready(function() {
 function mapCreate() {
   if (!(typeof map == "object")) {
     map = L.map('map', {
-      center: [40,0],
+      center: [40, 0],
       zoom: 3
     });
+  } else {
+    map.setZoom(3).panTo([40, 0]);
   }
-  else {
-    map.setZoom(3).panTo([40,0]);
-  }
-  
+
   L.tileLayer(tilesURL, {
     attribution: mapAttrib,
     maxZoom: 19
   }).addTo(map);
 
+  // Check for initial lat/lon values
+  const latVal = parseFloat($('#identification-lat').val());
+  const lonVal = parseFloat($('#identification-lon').val());
+
+  if (!isNaN(latVal) && !isNaN(lonVal)) {
+    const initialLatLng = L.latLng(latVal, lonVal);
+    pin = L.marker(initialLatLng, { riseOnHover: true, draggable: true }).addTo(map);
+    map.setView(initialLatLng, 8); // Optional: Zoom in closer to the pin
+
+    pin.on('dragend', function(ev) {
+      $('#identification-lat').val(ev.target.getLatLng().lat.toFixed(6));
+      $('#identification-lon').val(ev.target.getLatLng().lng.toFixed(6));
+    });
+  }
+
   map.on('click', function(ev) {
-    $('#identification-lat').val((ev.latlng.lat).toFixed(6));
-    $('#identification-lon').val((ev.latlng.lng).toFixed(6));
-    
+    $('#identification-lat').val(ev.latlng.lat.toFixed(6));
+    $('#identification-lon').val(ev.latlng.lng.toFixed(6));
+
     if (typeof pin == "object") {
       pin.setLatLng(ev.latlng);
     } else {
-      pin = L.marker(ev.latlng,{ riseOnHover:true,draggable:true });
-      pin.addTo(map);
-      pin.on('dragend',function(ev) {
-        $('#identification-lat').val((ev.latlng.lat).toFixed(6));
-        $('#identification.lon').val((ev.latlng.lng).toFixed(6));
+      pin = L.marker(ev.latlng, { riseOnHover: true, draggable: true }).addTo(map);
+      pin.on('dragend', function(ev) {
+        $('#identification-lat').val(ev.target.getLatLng().lat.toFixed(6));
+        $('#identification-lon').val(ev.target.getLatLng().lng.toFixed(6));
       });
     }
   });
+
   mapReload();
 }
 
@@ -85,6 +100,54 @@ function initNav() {
   });
 }
 
+function initBanlist() {
+  $('.banlist-add').on('click', function(e) {
+    e.preventDefault();
+
+    const ipAddress = $('#banlist-add-ip').val();
+    const reason = $('#banlist-add-reason').val();
+
+    $.ajax({
+        url: '/addToBanlist',
+        method: 'GET',
+        data: { ip: ipAddress, reason: reason },
+        success: function(response) {
+            // Refresh the page if the request was successful
+            if (response.success) {
+                location.reload();
+            } else {
+                console.error('Failed to add to banlist');
+            }
+        },
+        error: function() {
+            console.error('Error occurred during the request');
+        }
+    });
+});
+
+$('.banlist-remove').on('click', function(e) {
+  e.preventDefault();
+
+  const ipAddress = $(this).closest('tr').find('td').first().text();
+
+  $.ajax({
+      url: '/removeFromBanlist',
+      method: 'GET',
+      data: { ip: ipAddress },
+      success: function(response) {
+          if (response.success) {
+              location.reload();
+          } else {
+              console.error('Failed to remove from banlist');
+          }
+      },
+      error: function() {
+          console.error('Error occurred during the request');
+      }
+  });
+});
+}
+
 function toggleNav() {
   const navOpen = $("#navigation").css('margin-left') === '0px';
   const isMobile = window.innerWidth <= 768;
@@ -93,7 +156,7 @@ function toggleNav() {
     if (isMobile) {
       // Do nothing to .admin-wrapper on mobile (since we're overlaying)
       $(".admin-wrapper").css({
-        'margin-left': '0',
+        'margin-left': '32px',
         'width': '100%' // Reset content to full width on close
       });
       $("#navigation").css('margin-left', 'calc(64px - 100vw)');
@@ -167,6 +230,7 @@ async function loadConsoleLogs() {
       const logColors = {
         INFO: "lime",
         DEBUG: "cyan",
+        CHAT: "cyan",
         WARN: "yellow",
         ERROR: "red"
       };

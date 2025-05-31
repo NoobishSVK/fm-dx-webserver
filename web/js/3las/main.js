@@ -11,6 +11,7 @@ function createStream() {
     try {
         const settings = new _3LAS_Settings();
         Stream = new _3LAS(null, settings);
+        Stream.Volume = $('#volumeSlider').val();
         Stream.ConnectivityCallback = OnConnectivityCallback;
     } catch (error) {
         console.error("Initialization Error: ", error);
@@ -33,20 +34,30 @@ function OnConnectivityCallback(isConnected) {
     }
 }
 
+
 function OnPlayButtonClick(_ev) {
     const $playbutton = $('.playbutton');
+    const isAppleiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
     if (Stream) {
         console.log("Stopping stream...");
         shouldReconnect = false;
         destroyStream();
         $playbutton.find('.fa-solid').toggleClass('fa-stop fa-play');
+        if (isAppleiOS && 'audioSession' in navigator) {
+            navigator.audioSession.type = "none";
+        }
     } else {
         console.log("Starting stream...");
         shouldReconnect = true;
         createStream();
         Stream.Start();
         $playbutton.find('.fa-solid').toggleClass('fa-play fa-stop');
+        if (isAppleiOS && 'audioSession' in navigator) {
+            navigator.audioSession.type = "playback";
+        }
     }
+
     $playbutton.addClass('bg-gray').prop('disabled', true);
     setTimeout(() => {
         $playbutton.removeClass('bg-gray').prop('disabled', false);

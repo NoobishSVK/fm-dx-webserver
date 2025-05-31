@@ -38,32 +38,47 @@ function fetchConfig() {
 
 function populateFields(data, prefix = "") {
   $.each(data, (key, value) => {
-    if (key === "presets" && Array.isArray(value)) {
-      value.forEach((item, index) => {
-        const presetId = `${prefix}${prefix ? "-" : ""}${key}-${index + 1}`;
-        const $element = $(`#${presetId}`);
-
-        if ($element.length) {
-          $element.val(item);
-        }
-      });
-      return;
+    if (value === null) {
+      value = ""; // Convert null to an empty string
     }
 
-    if (key === "banlist" && Array.isArray(value)) {
-      const $textarea = $(`#${prefix}${prefix ? "-" : ""}${key}`);
-      if ($textarea.length && $textarea.is("textarea")) {
-        $textarea.val(value.join("\n"));
-      }
-      return;
-    }
-
-    const id = `${prefix}${prefix ? "-" : ""}${key}`;
+    let id = `${prefix}${prefix ? "-" : ""}${key}`;
     const $element = $(`#${id}`);
 
-    if (typeof value === "object" && !Array.isArray(value)) {
-      populateFields(value, id); 
-      return;
+    if (key === "plugins" && $element.is('select[multiple]')) {
+      if (Array.isArray(value)) {
+        $element.find('option').each(function() {
+          const $option = $(this);
+          const dataName = $option.data('name');
+          if (value.includes(dataName)) {
+            $option.prop('selected', true);
+          } else {
+            $option.prop('selected', false); 
+          }
+        });
+
+        $element.trigger('change');
+      }
+      return; 
+    }
+
+    if (typeof value === "object" && value !== null) {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          const arrayId = `${id}-${index + 1}`;
+          const $arrayElement = $(`#${arrayId}`);
+
+          if ($arrayElement.length) {
+            $arrayElement.val(item);
+          } else {
+            console.log(`Element with id ${arrayId} not found`);
+          }
+        });
+        return;
+      } else {
+        populateFields(value, id);
+        return;
+      }
     }
 
     if (!$element.length) {
@@ -80,16 +95,6 @@ function populateFields(data, prefix = "") {
     } else {
       $element.val(value);
     }
-    
-    if (key === "plugins" && Array.isArray(value)) {
-      const $options = $element.find('option');
-      $options.each(function() {
-        const dataName = $(this).data('name');
-        if (value.includes(dataName)) {
-          $(this).prop('selected', true);
-        }
-      });
-    }
   });
 }
 
@@ -104,7 +109,7 @@ function updateConfigData(data, prefix = "") {
       while (true) {
         const $presetElement = $(`#${prefix}${prefix ? "-" : ""}${key}-${index}`);
         if ($presetElement.length) {
-          data[key].push($presetElement.val());
+          data[key].push($presetElement.val() || null); // Allow null if necessary
           index++;
         } else {
           break;
@@ -113,19 +118,11 @@ function updateConfigData(data, prefix = "") {
       return;
     }
 
-    if (key === "banlist") {
-      const $textarea = $(`#${prefix}${prefix ? "-" : ""}${key}`);
-      if ($textarea.length && $textarea.is("textarea")) {
-        data[key] = $textarea.val().split("\n").filter(line => line.trim() !== "");
-      }
-      return;
-    }
-
     if (key === "plugins") {
       data[key] = [];
       const $selectedOptions = $element.find('option:selected');
       $selectedOptions.each(function() {
-        const dataName = $(this).data('name');
+        const dataName = $(this).attr('data-name');
         if (dataName) {
           data[key].push(dataName);
         }
@@ -133,12 +130,13 @@ function updateConfigData(data, prefix = "") {
       return;
     }
 
-    if (typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       return updateConfigData(value, id);
     }
 
     if ($element.length) {
-      data[key] = typeof value === "boolean" ? $element.is(":checked") : $element.attr("data-value") ?? $element.val();
+      const newValue = $element.attr("data-value") ?? $element.val() ?? null;
+      data[key] = typeof value === "boolean" ? $element.is(":checked") : newValue;
     }
   });
 }

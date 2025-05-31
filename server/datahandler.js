@@ -15,8 +15,11 @@ if (platform === 'win32') {
   shared_Library=path.join(__dirname, "libraries", "librdsparser.dll");
 } else if (platform === 'linux') {
   unicode_type = 'int32_t';
-  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so");
-} 
+  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so"); 
+} else if (platform === 'darwin') {
+  unicode_type = 'int32_t';
+  shared_Library=path.join(__dirname, "libraries", "librdsparser" + ".dylib");
+}
 
 const lib = koffi.load(shared_Library);
 const { fetchTx } = require('./tx_search.js');
@@ -139,6 +142,7 @@ const callbacks = {
       dataToSend.rt1 = decode_unicode(rt);
       dataToSend.rt1_errors = decode_errors(rt);
     }
+    dataToSend.rt_flag = flag;
   }, 'callback_rt*'),
 
   ptyn: koffi.register((rds, flag) => (
@@ -206,7 +210,6 @@ const updateInterval = 75;
 var dataToSend = {
   pi: '?',
   freq: 87.500.toFixed(3),
-  prevFreq: 87.500.toFixed(3),
   sig: 0,
   sigRaw: '',
   sigTop: -Infinity,
@@ -223,6 +226,7 @@ var dataToSend = {
   af: [],
   rt0: '',
   rt1: '',
+  rt_flag: '',
   ims: 0,
   eq: 0,
   ant: 0,
@@ -260,7 +264,27 @@ const resetToDefault = dataToSend => Object.assign(dataToSend, initialData);
 const ServerStartTime = process.hrtime();
 var serialportUpdateTime = process.hrtime();
 let checkSerialport = false;
+let rdsTimeoutTimer = null;
 
+function rdsReceived() {
+  if (rdsTimeoutTimer) {
+    clearTimeout(rdsTimeoutTimer);
+    rdsTimeoutTimer = null;
+  }
+  if (serverConfig.webserver.rdsTimeout && serverConfig.webserver.rdsTimeout != 0) {
+    rdsTimeoutTimer = setInterval(rdsReset, serverConfig.webserver.rdsTimeout * 1000);
+  }
+}
+
+function rdsReset() {
+  resetToDefault(dataToSend);
+  dataToSend.af.length = 0;
+  rdsparser.clear(rds);
+  if (rdsTimeoutTimer) {
+    clearTimeout(rdsTimeoutTimer);
+    rdsTimeoutTimer = null;
+  }
+}
 
 function handleData(wss, receivedData, rdsWss) {
   // Retrieve the last update time for this client
@@ -276,6 +300,7 @@ function handleData(wss, receivedData, rdsWss) {
         dataToSend.bw = receivedLine.substring(1);
         break;
       case receivedLine.startsWith('P'): // PI Code
+        rdsReceived();
         modifiedData = receivedLine.slice(1);
         legacyRdsPiBuffer = modifiedData;
         if (dataToSend.pi.length >= modifiedData.length || dataToSend.pi == '?') {
@@ -285,16 +310,11 @@ function handleData(wss, receivedData, rdsWss) {
       case receivedLine.startsWith('T'): // Frequency
         modifiedData = receivedLine.substring(1).split(",")[0];
 
-        if((modifiedData / 1000).toFixed(3) == dataToSend.freq) { 
-          resetToDefault(dataToSend);
-          rdsparser.clear(rds);
-          dataToSend.af = [];
+        rdsReset();
+        if((modifiedData / 1000).toFixed(3) == dataToSend.freq) {
           return; // Prevent tune spamming using scrollwheel
         }
 
-        resetToDefault(dataToSend);
-        dataToSend.af.length = 0;
-        rdsparser.clear(rds);
         parsedValue = parseFloat(modifiedData);
 
         if (!isNaN(parsedValue)) {
@@ -311,6 +331,7 @@ function handleData(wss, receivedData, rdsWss) {
       case receivedLine.startsWith('Z'): // Antenna
         dataToSend.ant = receivedLine.substring(1);
         initialData.ant = receivedLine.substring(1);
+        rdsReset();
         break;
       case receivedLine.startsWith('G'): // EQ / iMS (RF+/IF+)
         const mapping = filterMappings[receivedLine];
@@ -338,6 +359,7 @@ function handleData(wss, receivedData, rdsWss) {
           processSignal(receivedLine, false, true);
           break;
       case receivedLine.startsWith('R'): // RDS HEX
+        rdsReceived();
         modifiedData = receivedLine.slice(1);
         dataToSend.rds = true;
 
@@ -367,28 +389,14 @@ function handleData(wss, receivedData, rdsWss) {
         }
 
         rdsWss.clients.forEach((client) => {
-          let dataString = modifiedData.toString();
-          let lastTwoChars = dataString.slice(-2);
-          let lastByteValue = parseInt(lastTwoChars, 16);
+          const errors = parseInt(modifiedData.slice(-2), 16);
+          let data = (((errors & 0xC0) == 0) ? modifiedData.slice(0, 4) : '----');
+          data += (((errors & 0x30) == 0) ? modifiedData.slice(4, 8) : '----');
+          data += (((errors & 0x0C) == 0) ? modifiedData.slice(8, 12) : '----');
+          data += (((errors & 0x03) == 0) ? modifiedData.slice(12, 16) : '----');
 
-          let truncatedString = dataString.slice(0, -2);
-
-          if ((lastByteValue & 0x03) !== 0) {
-            truncatedString = truncatedString.slice(0, 4) + '----' + truncatedString.slice(8);
-          }
-
-          if ((lastByteValue & 0x30) !== 0) {
-            truncatedString = truncatedString.slice(0, 8) + '----' + truncatedString.slice(12);
-          }
-
-          if ((lastByteValue & 0x0C) !== 0) {
-            truncatedString = truncatedString.slice(0, 12) + '----';
-          }
-
-          let newDataString = "G:\r\n" + truncatedString + "\r\n\r\n";
-
-          let finalBuffer = Buffer.from(newDataString, 'utf-8');
-
+          const newDataString = "G:\r\n" + data + "\r\n\r\n";
+          const finalBuffer = Buffer.from(newDataString, 'utf-8');
           client.send(finalBuffer);
         });
 
@@ -401,7 +409,7 @@ function handleData(wss, receivedData, rdsWss) {
   // Get the received TX info
   fetchTx(parseFloat(dataToSend.freq).toFixed(1), dataToSend.pi, dataToSend.ps)
   .then((currentTx) => {
-      if (currentTx && currentTx.station !== undefined) {
+      if (currentTx && currentTx.station !== undefined && parseInt(currentTx.distance) < 4000) {
           dataToSend.txInfo = {
               tx: currentTx.station,
               pol: currentTx.pol,
@@ -412,12 +420,13 @@ function handleData(wss, receivedData, rdsWss) {
               azi: currentTx.azimuth,
               id: currentTx.id,
               pi: currentTx.pi,
-              reg: currentTx.reg
+              reg: currentTx.reg,
+              otherMatches: currentTx.others
           };
       }
   })
   .catch((error) => {
-      logError("Error fetching Tx info:", error);
+      console.log("Error fetching Tx info:", error);
   });
 
     // Send the updated data to the client
@@ -432,15 +441,19 @@ function handleData(wss, receivedData, rdsWss) {
 }
 
 // Serialport retry code when port is open but communication is lost (additional code in index.js)
-isSerialportAlive = true;
-lastFrequencyAlive = '87.500';
+let state = {
+  isSerialportAlive: true,
+  isSerialportRetrying: false,
+  lastFrequencyAlive: '87.500'
+};
+
 setInterval(() => {
-  lastFrequencyAlive = initialData.freq;
+  state.lastFrequencyAlive = initialData.freq;
   const serialportElapsedTime = process.hrtime(serialportUpdateTime)[0];
   // Activate serialport retry if handleData has not been executed for over 8 seconds
-  if (checkSerialport && (serialportElapsedTime > 8) && !isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
-    isSerialportAlive = false;
-    isSerialportRetrying = true;
+  if (checkSerialport && (serialportElapsedTime > 8) && !state.isSerialportRetrying && serverConfig.xdrd.wirelessConnection === false) {
+    state.isSerialportAlive = false;
+    state.isSerialportRetrying = true;
   }
 }, 2000);
 
@@ -465,7 +478,13 @@ function showOnlineUsers(currentUsers) {
   initialData.users = currentUsers;
 }
 
+let prevFreq = initialData.freq || '87.500';
 function processSignal(receivedData, st, stForced) {
+  if (initialData.freq !== prevFreq) {
+    prevFreq = initialData.freq;
+    dataToSend.ps_errors = '';
+  }
+
   const modifiedData = receivedData.substring(2);
   const parsedValue = parseFloat(modifiedData);
   dataToSend.st = st;
@@ -491,5 +510,5 @@ function processSignal(receivedData, st, stForced) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault
+  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault, state
 };

@@ -1,51 +1,78 @@
 $(document).ready(function() {
-  // Cache jQuery objects for reuse
   var modal = $("#myModal");
   var modalPanel = $(".modal-panel");
-  var chatPanel = $(".modal-panel-chat");
-  var openBtn = $("#settings");
+  var openBtn = $(".settings");
   var closeBtn = $(".closeModal, .closeModalButton");
-
-  // Function to open the modal
+  
+  initPopups();
+  
+  openBtn.on("click", function() {
+    openModal(modalPanel);
+  });
+  
+  closeBtn.on("click", closeModal);
+  
   function openModal(panel) {
     modal.css("display", "block");
     panel.css("display", "block");
+    $("body").addClass("modal-open"); // Disable body scrolling
     setTimeout(function() {
       modal.css("opacity", 1);
     }, 10);
   }
-
-  // Function to close the modal
+  
   function closeModal() {
     modal.css("opacity", 0);
     setTimeout(function() {
       modal.css("display", "none");
-      modalPanel.add(chatPanel).css("display", "none");
+      $("body").removeClass("modal-open"); // Enable body scrolling
     }, 300);
   }
+  
 
-  // Event listeners for the open and close buttons
-  openBtn.on("click", function() {
-    openModal(modalPanel);
-  });
-
-  $(".chatbutton").on("click", function() {
-    openModal(chatPanel);
-  });
-
-  closeBtn.on("click", closeModal);
-
-  // Close the modal when clicking outside of it
-  $(document).on("click", function(event) {
+  $(document).on("click", function(event) { // Close the modal when clicking outside of it
     if ($(event.target).is(modal)) {
       closeModal();
     }
   });
-
-  // Close the modal when pressing ESC key
-  $(document).on("keydown", function(event) {
+  
+  $(document).on("keydown", function(event) { // Close the modal when pressing ESC key
     if (event.key === "Escape") {
       closeModal();
     }
   });
+
+  $(".tuner-mobile-settings").on("click", function () {
+    togglePopup("#popup-panel-mobile-settings");
+  });
+  
+  $("#data-station-others").on("click", function () {
+    togglePopup("#popup-panel-transmitters");
+  });
 });
+
+function initPopups() {
+  $(".popup-window").draggable({
+    handle: ".popup-header",
+    containment: "body" 
+  }).resizable({
+    minHeight: 330,
+    minWidth: 350,
+    containment: "body"
+  });
+  
+  $(".popup-close").on("click", function () {
+    $(".popup-window").fadeOut(200);
+  });
+}
+
+function togglePopup(targetSelector) {
+  const $target = $(targetSelector);
+
+  if ($target.is(":visible")) {
+    $target.fadeOut(200);
+  } else {
+    $(".popup-window").fadeOut(200);
+    $target.fadeIn(200);
+  }
+}

@@ -8,7 +8,7 @@ let configName = 'config';
 const index = process.argv.indexOf('--config');
 if (index !== -1 && index + 1 < process.argv.length) {
   configName = process.argv[index + 1];
-  logInfo('Loading with a custom config file:', configName + '.json')
+  logInfo('Loading with a custom config file:', configName + '.json');
 }
 
 const configPath = path.join(__dirname, '../' + configName + '.json');
@@ -30,7 +30,9 @@ let serverConfig = {
     ],
     defaultTheme: "theme1",
     bgImage: "",
-    rdsMode: false
+    rdsMode: false,
+    rdsTimeout: 0,
+    txIdAlgorithm: 0
   },
   xdrd: {
     wirelessConnection: true,
@@ -43,8 +45,11 @@ let serverConfig = {
     audioDevice: "Microphone (High Definition Audio Device)",
     audioChannels: 2,
     audioBitrate: "128k",
+    audioBoost: false,
     softwareMode: false,
-    startupVolume: "0.95"
+    startupVolume: "0.95",
+    ffmpeg: false,
+    samplerateOffset: "0"
   },
   identification: {
     token: null,
@@ -81,6 +86,7 @@ let serverConfig = {
   },
   extras: {
     fmlistIntegration: true,
+    fmlistAdminOnly: false,
     fmlistOmid: "",
   },
   tunnel: {
@@ -99,50 +105,80 @@ let serverConfig = {
   lockToAdmin: false,
   autoShutdown: false,
   enableDefaultFreq: false,
-  defaultFreq: "87.5"
+  defaultFreq: "87.5",
+  bwSwitch: false
 };
 
-function deepMerge(target, source)
-{
+// Function to add missing fields without overwriting existing values
+function addMissingFields(target, source) {
   Object.keys(source).forEach(function(key) {
-    if (typeof target[key] === 'object' && target[key] !== null) {
-      deepMerge(target[key], source[key]);
+    if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (!target[key]) {
+        target[key] = {}; // Create missing object
+      }
+      addMissingFields(target[key], source[key]); // Recursively add missing fields
     } else {
-      target[key] = source[key];
+      if (target[key] === undefined) {
+        target[key] = source[key]; // Add missing fields only
+      }
     }
   });
 }
 
+// Function to merge new configuration, overwriting existing values
+function deepMerge(target, source) {
+  Object.keys(source).forEach(function(key) {
+    if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (!target[key] || typeof target[key] !== 'object') {
+        target[key] = {}; // Ensure target[key] is an object before merging
+      }
+      deepMerge(target[key], source[key]); // Recursively merge objects
+    } else {
+      target[key] = source[key]; // Overwrite or add the value
+    }
+  });
+}
+
+// Function to update the configuration at runtime
 function configUpdate(newConfig) {
   if (newConfig.webserver && (newConfig.webserver.banlist !== undefined || newConfig.plugins !== undefined)) {
-    // If new banlist is provided, replace the existing one
     serverConfig.webserver.banlist = newConfig.webserver.banlist;
     serverConfig.plugins = newConfig.plugins;
-    delete newConfig.webserver.banlist; // Remove banlist from newConfig to avoid merging
+    delete newConfig.webserver.banlist;
   }
   
-  deepMerge(serverConfig, newConfig);
+  deepMerge(serverConfig, newConfig); // Overwrite with newConfig values
+  configSave();
 }
 
-
+// Function to save the configuration to the file system
 function configSave() {
-  fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
-    if (err) {
-      logError(err);
-    } else {
-      logInfo('Server config saved successfully.');
-    }
-  });
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
+    logInfo('Server config saved successfully.');
+  } catch (err) {
+    logError(err);
+  }
 }
 
+// Function to check if the configuration file exists
 function configExists() {
   return fs.existsSync(configPath);
 }
 
-if (fs.existsSync(configPath)) {
+// On startup, check for missing fields and add them if necessary
+if (configExists()) {
   const configFileContents = fs.readFileSync(configPath, 'utf8');
-  serverConfig = JSON.parse(configFileContents);
+  try {
+    const configFile = JSON.parse(configFileContents);
+    addMissingFields(configFile, serverConfig); // Add only missing fields from serverConfig
+    serverConfig = configFile; // Use the updated configFile as the new serverConfig
+    configSave(); // Save the merged config back to the file
+  } catch (err) {
+    logError('Error parsing config file:', err);
+  }
 }
+
 
 module.exports = {
     configName, serverConfig, configUpdate, configSave, configExists, configPath

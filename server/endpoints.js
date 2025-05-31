@@ -19,9 +19,15 @@ const { allPluginConfigs } = require('./plugins');
 // Endpoints
 router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    if(serverConfig.webserver.banlist.includes(requestIp)) {
+
+    const normalizedIp = requestIp?.replace(/^::ffff:/, '');
+    const ipList = normalizedIp.split(',').map(ip => ip.trim()); // in case there are multiple IPs (proxy), we need to check all of them
+    
+    const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
+    
+    if (isBanned) {
         res.render('403');
-        logInfo(`Web client (${requestIp}) is banned`);
+        logInfo(`Web client (${normalizedIp}) is banned`);
         return;
     }
 
@@ -56,7 +62,7 @@ router.get('/', (req, res) => {
             tunerLock: serverConfig.lockToAdmin,
             publicTuner: serverConfig.publicTuner,
             ownerContact: serverConfig.identification.contact,
-            antennas: serverConfig.antennas ? serverConfig.antennas : {},
+            antennas: serverConfig.antennas,
             tuningLimit: serverConfig.webserver.tuningLimit,
             tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
             tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
@@ -64,8 +70,9 @@ router.get('/', (req, res) => {
             device: serverConfig.device,
             noPlugins,
             plugins: serverConfig.plugins,
-            fmlist_integration: typeof(serverConfig.extras?.fmlistIntegration) !== undefined ? serverConfig.extras?.fmlistIntegration : true,
-            bwSwitch: serverConfig.bwSwitch ? serverConfig.bwSwitch : false
+            fmlist_integration: serverConfig.extras.fmlistIntegration,
+            fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
+            bwSwitch: serverConfig.bwSwitch
         });
     }
 });
@@ -99,46 +106,63 @@ router.get('/wizard', (req, res) => {
         });
     })
 })
+  
+  router.get('/setup', (req, res) => {
+      let serialPorts; 
+      function loadConfig() {
+        if (fs.existsSync(configPath)) {
+          const configFileContents = fs.readFileSync(configPath, 'utf8');
+          return JSON.parse(configFileContents);
+        }
+        return serverConfig;
+      }
+  
+      if(!req.session.isAdminAuthenticated) {
+          res.render('login');
+          return;
+      }
+      
+      SerialPort.list()
+      .then((deviceList) => {
+          serialPorts = deviceList.map(port => ({
+              path: port.path,
+              friendlyName: port.friendlyName,
+          }));
+          
+          parseAudioDevice((result) => {
+              const processUptimeInSeconds = Math.floor(process.uptime());
+              const formattedProcessUptime = helpers.formatUptime(processUptimeInSeconds);
+              
+              const updatedConfig = loadConfig();  // Reload the config every time
+              res.render('setup', {
+                  isAdminAuthenticated: req.session.isAdminAuthenticated,
+                  videoDevices: result.audioDevices,
+                  audioDevices: result.videoDevices,
+                  serialPorts: serialPorts,
+                  memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+                  processUptime: formattedProcessUptime,
+                  consoleOutput: logs,
+                  plugins: allPluginConfigs,
+                  enabledPlugins: updatedConfig.plugins,
+                  onlineUsers: dataHandler.dataToSend.users,
+                  connectedUsers: storage.connectedUsers,
+                  banlist: updatedConfig.webserver.banlist // Updated banlist from the latest config
+              });
+          });
+      }) 
+  });
+  
 
-router.get('/setup', (req, res) => {
-    let serialPorts; 
+router.get('/rds', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
+});
 
-    if(!req.session.isAdminAuthenticated) {
-        res.render('login');
-        return;
-    }
-    
-    SerialPort.list()
-    .then((deviceList) => {
-        serialPorts = deviceList.map(port => ({
-            path: port.path,
-            friendlyName: port.friendlyName,
-        }));
-        
-        parseAudioDevice((result) => {
-            const processUptimeInSeconds = Math.floor(process.uptime());
-            const formattedProcessUptime = helpers.formatUptime(processUptimeInSeconds);
-            
-            res.render('setup', {
-                isAdminAuthenticated: req.session.isAdminAuthenticated,
-                videoDevices: result.audioDevices,
-                audioDevices: result.videoDevices,
-                serialPorts: serialPorts,
-                memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
-                processUptime: formattedProcessUptime,
-                consoleOutput: logs,
-                plugins: allPluginConfigs,
-                enabledPlugins: serverConfig.plugins,
-                onlineUsers: dataHandler.dataToSend.users,
-                connectedUsers: storage.connectedUsers
-            });
-        });
-    })
-    
+router.get('/rdsspy', (req, res) => {
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/rds', (req, res) => {
-    res.send('Please c onnect using a WebSocket compatible app to obtain RDS stream.');
+    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
 router.get('/rdsspy', (req, res) => {
@@ -147,25 +171,53 @@ router.get('/rdsspy', (req, res) => {
 
 router.get('/api', (req, res) => {
     const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, ...dataToSend } = dataHandler.dataToSend;
-    res.json(dataToSend);
+    res.json({
+        ...dataToSend,
+        txInfo: txInfo,
+        ps_errors: ps_errors,
+        ant: ant
+    });
 });
 
 
+const loginAttempts = {}; // Format: { 'ip': { count: 1, lastAttempt: 1234567890 } }
+const MAX_ATTEMPTS = 25;
+const WINDOW_MS = 15 * 60 * 1000; 
+
 const authenticate = (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+
+    if (!loginAttempts[ip]) {
+        loginAttempts[ip] = { count: 0, lastAttempt: now };
+    } else if (now - loginAttempts[ip].lastAttempt > WINDOW_MS) {
+        loginAttempts[ip] = { count: 0, lastAttempt: now };
+    }
+
+    if (loginAttempts[ip].count >= MAX_ATTEMPTS) {
+        return res.status(403).json({
+            message: 'Too many login attempts. Please try again later.'
+        });
+    }
+
     const { password } = req.body;
-    
-    // Check if the entered password matches the admin password
+
+    loginAttempts[ip].lastAttempt = now;
+
     if (password === serverConfig.password.adminPass) {
         req.session.isAdminAuthenticated = true;
         req.session.isTuneAuthenticated = true;
-        logInfo('User from ' + req.connection.remoteAddress + ' logged in as an administrator.');
+        logInfo(`User from ${ip} logged in as an administrator.`);
+        loginAttempts[ip].count = 0;
         next();
     } else if (password === serverConfig.password.tunePass) {
         req.session.isAdminAuthenticated = false;
         req.session.isTuneAuthenticated = true;
-        logInfo('User from ' + req.connection.remoteAddress + ' logged in with tune permissions.');
+        logInfo(`User from ${ip} logged in with tune permissions.`);
+        loginAttempts[ip].count = 0;
         next();
     } else {
+        loginAttempts[ip].count += 1;
         res.status(403).json({ message: 'Login failed. Wrong password?' });
     }
 };
@@ -194,6 +246,48 @@ router.get('/kick', (req, res) => {
     }, 500);
 });
 
+router.get('/addToBanlist', (req, res) => {
+    const ipAddress = req.query.ip;
+    const location = 'Unknown';
+    const date = Date.now();
+    const reason = req.query.reason;
+
+    userBanData = [ipAddress, location, date, reason];
+
+    if (typeof serverConfig.webserver.banlist !== 'object') {
+        serverConfig.webserver.banlist = [];
+    }
+
+    if (req.session.isAdminAuthenticated) {
+        serverConfig.webserver.banlist.push(userBanData);
+        configSave();
+        res.json({ success: true, message: 'IP address added to banlist.' });
+        helpers.kickClient(ipAddress);
+    } else {
+        res.status(403).json({ success: false, message: 'Unauthorized access.' });
+    }
+});
+
+router.get('/removeFromBanlist', (req, res) => {
+    const ipAddress = req.query.ip;
+
+    if (typeof serverConfig.webserver.banlist !== 'object') {
+        serverConfig.webserver.banlist = [];
+    }
+
+    const banIndex = serverConfig.webserver.banlist.findIndex(ban => ban[0] === ipAddress);
+
+    if (banIndex === -1) {
+        return res.status(404).json({ success: false, message: 'IP address not found in banlist.' });
+    }
+
+    serverConfig.webserver.banlist.splice(banIndex, 1);
+    configSave();
+
+    res.json({ success: true, message: 'IP address removed from banlist.' });
+});
+
+
 router.post('/saveData', (req, res) => {
     const data = req.body;
     let firstSetup;
@@ -204,22 +298,12 @@ router.post('/saveData', (req, res) => {
         if(configExists() === false) {
             firstSetup = true;
         }
-        
-        /* TODO: Refactor to server_config.js */
-        // Save data to a JSON file
-        fs.writeFile(configPath, JSON.stringify(serverConfig, null, 2), (err) => {
-            if (err) {
-                logError(err);
-                res.status(500).send('Internal Server Error');
-            } else {
-                logInfo('Server config changed successfully.');
-                if(firstSetup === true) {
-                    res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
-                } else {
-                    res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
-                }
-            }
-        });
+        logInfo('Server config changed successfully.');
+        if(firstSetup === true) {
+            res.status(200).send('Data saved successfully!\nPlease, restart the server to load your configuration.');
+        } else {
+            res.status(200).send('Data saved successfully!\nSome settings may need a server restart to apply.');
+        }
     }
 });
 
@@ -260,6 +344,10 @@ router.get('/static_data', (req, res) => {
         defaultTheme: serverConfig.webserver.defaultTheme || 'theme1',
         bgImage: serverConfig.webserver.bgImage || '',
         rdsMode: serverConfig.webserver.rdsMode || false,
+        rdsTimeout: serverConfig.webserver.rdsTimeout || 0,
+        tunerName: serverConfig.identification.tunerName || '',
+        tunerDesc: serverConfig.identification.tunerDesc || '',
+        ant: serverConfig.antennas || {}
     });
 });
 
@@ -294,15 +382,14 @@ router.get('/log_fmlist', (req, res) => {
         return;
     }
 
-    if (serverConfig.extras?.fmlistIntegration === false) {
-        res.status(500).send('FMLIST Integration is not enabled on this server.');
+    if (serverConfig.extras.fmlistIntegration === false || (serverConfig.extras.fmlistAdminOnly && !req.session.isTuneAuthenticated)) {
+        res.status(500).send('FMLIST Integration is not available.');
         return;
     }
 
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const txId = dataHandler.dataToSend.txInfo.id; // Extract the ID
 
-    // Check if the ID can be logged (i.e., not logged within the last 60 minutes)
     if (!canLog(txId)) {
         res.status(429).send(`ID ${txId} was already logged recently. Please wait before logging again.`);
         return;
@@ -330,7 +417,8 @@ router.get('/log_fmlist', (req, res) => {
         client: {
             request_ip: clientIp
         },
-        log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + dataHandler.dataToSend.sig.toFixed(0) + " dBf",
+        type: (req.query.type && dataHandler.dataToSend.txInfo.dist > 700) ? req.query.type : 'tropo',
+        log_msg: "Logged PS: " + dataHandler.dataToSend.ps.replace(/\s+/g, '_') + ", PI: " + dataHandler.dataToSend.pi + ", Signal: " + (dataHandler.dataToSend.sig - 11.25).toFixed(0) + " dBµV",
     });
 
     const options = {

@@ -14,9 +14,25 @@ h1 {
 }
 
 h1#tuner-name {
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 300;
     text-transform: initial;
+    user-select: none;
+    cursor: pointer;
+    transition: 0.3s ease color;
+}
+
+#tuner-name i {
+    transition: transform 0.3s ease;
+}
+
+#tuner-name i.rotated {
+    transform: rotate(180deg);
+}
+
+
+h1#tuner-name:hover {
+    color: var(--color-main-bright);
 }
 
 h2 {
@@ -43,7 +59,8 @@ h4 {
 
 .tooltiptext {
     position: absolute;
-    background-color: var(--color-3);
+    background-color: var(--color-2);
+    border: 2px solid var(--color-3);
     color: var(--color-text);
     text-align: center;
     font-size: 14px;
@@ -54,7 +71,7 @@ h4 {
     transition: opacity 0.3s ease;
 }
 
-p#tuner-desc {
+p.tuner-desc {
     margin: 0;
 }
 
@@ -67,12 +84,13 @@ label {
 }
 
 .canvas-container {
-    width: 100%;
-    height: 175px;
-}
-
-#data-ant {
-    margin-right: 15px !important;
+    width: calc(100% - 20px);
+    height: 140px;
+    overflow: hidden;
+    border-radius: 15px;
+    margin-left: 10px;
+    margin-right: 10px;
+    position: relative;
 }
 
 #data-ps, #data-rt0, #data-rt1 {
@@ -101,6 +119,14 @@ label {
     font-size: 20px;
 }
 
+#data-station-others span {
+    color: var(--color-main);
+    background: var(--color-4);
+    margin-left: 4px;
+    padding: 0 5px;
+    border-radius: 3px;
+}
+
 .highest-signal-container {
     margin-bottom: -20px !important;
 }
@@ -112,61 +138,40 @@ label {
     margin-right: 5px;
 }
 
-#settings, #back-btn, #users-online-container {
-    background: transparent;
-    border: 0;
-    color: var(--color-text);
+table .form-group {
+    margin: 0;
+}
+
+.hidden-panel {
+    display: none; 
     position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 16px;
-    width: 64px;
-    height: 64px;
-    line-height: 64px;
-    text-align: center;
-    border-radius: 50%;
-    transition: 500ms ease background;
-    cursor: pointer;
+    left: 50%;
+    transform:translateX(-50%);
+    width: 100%;
+    max-width: 1160px;
+    background: var(--color-1-transparent);
+    backdrop-filter: blur(5px);
+    text-align: left;
+    padding: 20px;
+    z-index: 10;
+    border-radius: 0 0 15px 15px;
 }
 
-.chatbutton.hide-desktop {
-    background: transparent;
-    border: 0;
-    color: var(--color-text);
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    font-size: 16px;
-    width: 64px;
-    height: 64px;
-    line-height: 64px;
-    text-align: center;
-    border-radius: 50%;
-    transition: 500ms ease background;
-    cursor: pointer;
-}
-
-#settings:hover, #back-btn:hover, #users-online-container:hover {
-    background: var(--color-3);
-}
-
-#users-online-container {
+.users-online-container {
     top: 80px;
 }
 
-#back-btn {
-    left: 15px;
-    right: auto;
+#af-list {
+    overflow-y: auto;
+    max-height: 345px;
 }
 
 #af-list ul {
-    display:list-item;
+    display: list-item;
     padding: 0;
     list-style-type: none;
-    margin-bottom: 0;
+    margin: 0;
     font-size: 14px;
-    max-height: 380px;
-    overflow-y: auto;
 }
 
 #af-list a {
@@ -181,64 +186,40 @@ label {
     padding: 5px;
 }
 
-.checkbox input[type="checkbox"] {
-    padding: 0;
-    height: initial;
-    width: initial;
-    margin-bottom: 0;
-    display: none;
-    cursor: pointer;
-  }
-  
-  .checkbox label {
-    cursor: pointer;
-    display: block;
-    user-select: none;
-    padding: 7px 20px;
-    border-radius: 15px;
-    text-align: center;
-    border: 2px solid var(--color-4);
-    box-sizing: border-box;
-    transition: 0.35s ease background-color, 0.35s ease color;
-  }
-  .checkbox label:hover {
-    background-color: var(--color-2);
-  }
-  
- .form-group input:checked + label {
+.form-group input:checked + label {
     background-color: var(--color-4);
     color: var(--color-main);
-  }
+}
 
-  .tuner-info {
+.tuner-info {
     margin-top: 0px !important;
     margin-bottom: 0px !important;
-  }
+}
 
-  h2.settings-heading {
+h2.settings-heading {
     font-size: 42px;
     padding: 10px 0;
     font-weight: 300;
-  }
+}
 
-  h3.settings-heading {
+h3.settings-heading {
     font-size: 24px;
     text-transform: uppercase;
     font-weight: 300;
     margin-bottom: 5px;
-  }
+}
 
-  #tuner-wireless {
+#tuner-wireless {
     display: none;
-  }
+}
 
-  #flags-container-phone,
-  #flags-container-desktop {
+#flags-container-phone,
+#flags-container-desktop {
     position: relative; /* Confine overlay within container which is necessary for iPhones */
-  }
+}
 
-  #flags-container-phone .overlay,
-  #flags-container-desktop .overlay {
+#flags-container-phone .overlay,
+#flags-container-desktop .overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -298,7 +279,7 @@ pre {
     position: absolute;
     width: 16px;
     height: 16px;
-    border: 2px solid var(--color-3);
+    border: 2px solid var(--color-text);
     border-radius: 50%;
 }
 
@@ -317,22 +298,33 @@ pre {
     position: relative;
 }
 
+.text-200-px {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+@media (min-width: 768px) { 
+    .users-online-container {
+        margin-left: 10px;
+    }
+}
+
 @media (max-width: 768px) {
     canvas, #flags-container {
         display: none;
     }
-    #tuner-desc {
+    .tuner-desc {
         margin-bottom: 20px !important;
+        text-align: center;
     }
     #ps-container {
         background-color: var(--color-1-transparent);
         height: 100px !important;
         margin: auto !important;
+        margin-top: 30px !important;
         width: 100%;
-    }
-    h1#tuner-name {
-        max-width: 90%;
-        margin: auto;
     }
     h2 {
         display: none;
@@ -360,7 +352,7 @@ pre {
         font-size: 42px;
     }
     #data-frequency {
-        font-size: 64px;
+        font-size: 58px;
     }
     #data-rt0, #data-rt1 {
         font-size: 10px;
@@ -394,14 +386,6 @@ pre {
     .filter-controls {
         order: 2;
     }
-    .button-play-mobile {
-        order: 2;
-        margin: 0 !important;
-        border-radius: 0;
-    }
-    .button-play-mobile .playbutton {
-        border-radius: 0;
-    }
     .button-eq {
         order: 1;
     }
@@ -420,9 +404,19 @@ pre {
     .modal-panel-footer {
         width: auto !important;
     }
+    #mobileTray {
+        width: 100%;
+        height: 68px;
+        position: fixed;
+        bottom: 0;
+        background-color: var(--color-1-transparent);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+    }
 }
 
-@media only screen and (min-width: 769px) and (max-height: 860px) {
+@media only screen and (min-width: 769px) and (max-height: 720px) {
     #rt-container {
         height: 90px !important;
     }
@@ -437,38 +431,33 @@ pre {
         font-size: 24px;
         text-align: left;
     }
-
+    
     .tuner-info #tuner-limit {
         float: left;
         text-align: left;
     }
 
-    .tuner-info #tuner-desc {
-        float: right;
-        text-align: right;
-    }
     h2 {
         margin-bottom: 10px;
         font-size: 18px;
     }
-
+    
     h2.signal-heading {
         margin-bottom: 0;
     }
-
+    
     .highest-signal-container {
         margin-bottom: -10px !important;
     }
-
+    
     h2.mb-0 {
         margin-bottom: 0;
         margin-top: 2px !important;
     }
-    #af-list ul {
-        height: 225px !important;
-    }
-    .chatbutton {
-        height: 88px !important;
+    
+    #af-list {
+        overflow-y: auto;
+        max-height: 330px;
     }
 }
 

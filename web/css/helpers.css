@@ -59,6 +59,10 @@
     border-radius: 5px;
 }
 
+.br-15 {
+    border-radius: 15px;
+}
+
 .br-30 {
     border-radius: 30px;
 }
@@ -67,8 +71,25 @@
     margin: 0 !important;
 }
 
+
+.m-10 {
+    margin: 10px;
+}
+
+.m-left-5 {
+    margin-left: 5px;
+}
+
+.m-left-15 {
+    margin-left: 15px !important;
+}
+
 .m-left-20 {
     margin-left: 20px;
+}
+
+.m-right-5 {
+    margin-right: 5px; 
 }
 
 .m-right-10 {
@@ -110,6 +131,10 @@
     align-items: center;
 }
 
+.flex-column {
+    flex-direction: column;
+}
+
 .hover-brighten {
     transition: 0.3s ease background-color;
 }
@@ -117,6 +142,10 @@
 .hover-brighten:hover {
     cursor: pointer;
     background-color: var(--color-2-transparent);
+}
+
+.text-center {
+    text-align: center;
 }
 
 .text-left {
@@ -182,12 +211,20 @@
     margin-top: 25px;
 }
 
+.bottom-10 {
+    margin-bottom: 10px;
+}
+
 .bottom-20 {
     margin-bottom: 20px;
 }
 
 .bottom-50 {
     margin-bottom: 50px;
+}
+
+.p-0 {
+    padding: 0;
 }
 
 .p-10 {
@@ -210,6 +247,10 @@
     background-color: var(--color-2) !important;
 }
 
+table .input-text {
+    background-color: var(--color-1) !important;
+}
+
 .pointer {
     cursor: pointer;
 }
@@ -224,6 +265,41 @@
 
 .clearfix {
     clear: both;
+}
+
+.blink {
+    animation: blinker 1.5s infinite;
+}
+
+.scrollable-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto; /* Enables horizontal scrolling */
+    white-space: nowrap;
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari */
+.scrollable-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* Chevron styling */
+.scroll-left,
+.scroll-right {
+    display: none; /* Hidden by default */
+    cursor: pointer;
+    width: 48px;
+}
+
+@keyframes blinker {
+    0% {
+        background-color: var(--color-3);
+    }
+    100% {
+        background-color: var(--color-1);
+    }
 }
 
 @media only screen and (max-width: 960px) {
@@ -250,10 +326,14 @@
     .flex-phone-column {
         flex-flow: column;
     }
+    .flex-phone-center {
+        align-items: center;
+        justify-content: center;
+    }
     .hide-phone {
         display: none;
     }
-    .m-0 {
+    .m-0, .center-phone {
         margin: auto !important;
     }
 }
@@ -265,7 +345,7 @@
 }
 
 /* Laptop compact view */
-@media only screen and (min-width: 960px) and (max-height: 860px) {
+@media only screen and (min-width: 960px) and (max-height: 720px) {
     .text-big {
         font-size: 40px;
     }
