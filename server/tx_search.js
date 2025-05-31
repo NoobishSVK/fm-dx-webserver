@@ -191,10 +191,16 @@ async function fetchTx(freq, piCode, rdsPs) {
         for (loc of filteredLocations) {
             loc.score = evaluateStation(loc);
         }
-        match = filteredLocations.reduce((max, obj) => obj.score > max.score ? obj : max, filteredLocations[0]);
-        multiMatches = filteredLocations.filter(obj => obj !== match);
+        // Sort by score in descending order
+        filteredLocations.sort((a, b) => b.score - a.score);
+        match = filteredLocations[0];
+        // Have a maximum of 10 extra matches and remove any with less than 1/10 of the winning score
+        multiMatches = filteredLocations
+            .slice(1, 11)
+            .filter(obj => obj.score >= (match.score/10));
     } else if (filteredLocations.length === 1) {
         match = filteredLocations[0];
+        match.score = 1;
     }
 
     if (match) {
@@ -218,6 +224,7 @@ async function fetchTx(freq, piCode, rdsPs) {
             pi: match.pi,
             foundStation: true,
             reg: match.detectedByPireg,
+            score: match.score,
             others: multiMatches,
         };
     } else {
