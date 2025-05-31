@@ -191,9 +191,13 @@ async function fetchTx(freq, piCode, rdsPs) {
         for (loc of filteredLocations) {
             loc.score = evaluateStation(loc);
         }
+        // Sort by score in descending order
         filteredLocations.sort((a, b) => b.score - a.score);
         match = filteredLocations[0];
-        multiMatches = filteredLocations.slice(1);
+        // Have a maximum of 10 extra matches and remove any with less than 1/10 of the winning score
+        multiMatches = filteredLocations
+            .slice(1, 11)
+            .filter(obj => obj.score >= (match.score/10));
     } else if (filteredLocations.length === 1) {
         match = filteredLocations[0];
         match.score = 1;
