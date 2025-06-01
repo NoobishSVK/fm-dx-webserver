@@ -41,7 +41,7 @@ function tuneDown() {
 
 function tuneTo(freq) {
     previousFreq = getCurrentFreq();
-    socket.send("T" + ((parseFloat(freq)) * 1000).toFixed(3));
+    socket.send("T" + ((parseFloat(freq)) * 1000).toFixed(0));
 }
 
 function resetRDS() {
