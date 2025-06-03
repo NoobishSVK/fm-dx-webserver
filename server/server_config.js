@@ -106,7 +106,17 @@ let serverConfig = {
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
-  bwSwitch: false
+  bwSwitch: false,
+  bwAutoStartup: "0",
+  bwAutoNoUsers: "0",
+  ceqStartup: "0",
+  ceqNoUsers: "0",
+  imsStartup: "0",
+  imsNoUsers: "0",
+  stereoStartup: "0",
+  stereoNoUsers: "0",
+  antennaStartup: "0",
+  antennaNoUnsers: "0"
 };
 
 // Function to add missing fields without overwriting existing values
