@@ -5,7 +5,7 @@ const consoleCmd = require('./console');
 let localDb = {};
 let lastFetchTime = 0;
 const fetchInterval = 1000;
-const esSwitchCache = {"lastCheck":0, "esSwitch":false};
+const esSwitchCache = {"lastCheck": null, "esSwitch": false};
 const esFetchInterval = 300000;
 var currentPiCode = '';
 var currentRdsPs = '';
@@ -135,7 +135,7 @@ function evaluateStation(station) {
     let esMode = checkEs();
     let weightDistance = station.distanceKm;
     if (esMode && station.distanceKm > 500) {
-        weightDistance = Math.abs(station.distanceKm - 1500);
+        weightDistance = Math.abs(station.distanceKm - 1500) + 200;
     }
     let erp = station.erp && station.erp > 0 ? station.erp : 1;
     let extraWeight = erp > 30 && station.distanceKm <= 500 ? 0.3 : 0;
@@ -161,25 +161,34 @@ async function fetchTx(freq, piCode, rdsPs) {
         || serverConfig.identification.lat.length < 2
         || freq < 87
         || Object.keys(localDb).length === 0
-        || (currentPiCode == piCode && currentRdsPs == rdsPs)) {
+        || (currentPiCode === piCode && currentRdsPs === rdsPs)) {
         return Promise.resolve();
     }
 
     lastFetchTime = now;
+    currentPiCode = piCode;
+    currentRdsPs = rdsPs;
     if (serverConfig.webserver.rdsMode === true) await loadUsStatesGeoJson();
 
-    const filteredLocations = Object.values(localDb.locations)
-    .map(locData => ({
-      ...locData,
-      stations: locData.stations.filter(station => 
-        station.freq === freq &&
-        (station.pi === piCode.toUpperCase() || station.pireg === piCode.toUpperCase() ) &&
-        validPsCompare(rdsPs, station.ps)
-      )
-    }))
-    .filter(locData => locData.stations.length > 0); // Ensure locations with at least one matching station remain
+    let filteredLocations = Object.values(localDb.locations || {})
+        .map(locData => ({
+            ...locData,
+            stations: locData.stations.filter(station => 
+            station.freq === freq &&
+            (station.pi === piCode.toUpperCase() || station.pireg === piCode.toUpperCase() )
+            )
+        }))
+        .filter(locData => locData.stations.length > 0); // Ensure locations with at least one matching station remain
+
+    // Only check PS if we have more than one match.
+    if (filteredLocations.length > 1) {
+        filteredLocations = filteredLocations.map(locData => ({
+            ...locData,
+            stations: locData.stations.filter(station => validPsCompare(rdsPs, station.ps))
+        })).filter(locData => locData.stations.length > 0);
+    }
   
-    for (loc of filteredLocations) {
+    for (let loc of filteredLocations) {
       loc = Object.assign(loc, loc.stations[0]);
       delete loc.stations;
       const dist = haversine(serverConfig.identification.lat, serverConfig.identification.lon, loc.lat, loc.lon);
@@ -188,7 +197,7 @@ async function fetchTx(freq, piCode, rdsPs) {
     }
   
     if (filteredLocations.length > 1) {
-        for (loc of filteredLocations) {
+        for (let loc of filteredLocations) {
             loc.score = evaluateStation(loc);
         }
         // Sort by score in descending order
@@ -210,7 +219,7 @@ async function fetchTx(freq, piCode, rdsPs) {
                 match.state = state;  // Add state to matchingCity
             }
         }
-        return {
+        const result = {
             station: match.detectedByPireg
             ? `${match.station.replace("R.", "Radio ")}${match.regname ? ' ' + match.regname : ''}`
             : match.station.replace("R.", "Radio "),
@@ -225,9 +234,14 @@ async function fetchTx(freq, piCode, rdsPs) {
             foundStation: true,
             reg: match.detectedByPireg,
             score: match.score,
-            others: multiMatches,
+            others: multiMatches.slice(),
         };
+        filteredLocations.length = 0;
+        multiMatches.length = 0;
+        return result;
     } else {
+        filteredLocations.length = 0;
+        multiMatches.length = 0;
         return Promise.resolve();
     }
 }
@@ -236,7 +250,7 @@ function checkEs() {
     const now = Date.now();
     const url = "https://fmdx.org/includes/tools/get_muf.php";
 
-    if (now - esSwitchCache.lastCheck < esFetchInterval) {
+    if (esSwitchCache.lastCheck && now - esSwitchCache.lastCheck < esFetchInterval) {
         return esSwitchCache.esSwitch;
     }
 
