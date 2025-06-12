@@ -58,6 +58,7 @@ let serverConfig = {
     lat: "",
     lon: "",
     broadcastTuner: false,
+    gpsMode: false,
     proxyIp: "",
     contact: null,
   },

@@ -421,7 +421,8 @@ function handleData(wss, receivedData, rdsWss) {
               id: currentTx.id,
               pi: currentTx.pi,
               reg: currentTx.reg,
-              otherMatches: currentTx.others
+              otherMatches: currentTx.others,
+              score: currentTx.score,
           };
       }
   })
