@@ -209,11 +209,11 @@ function validPsCompare(rdsPs, stationPs) {
 function evaluateStation(station) {
     let esMode = checkEs();
     let weightDistance = station.distanceKm;
-    if (esMode && station.distanceKm > 500) {
+    if (esMode && station.distanceKm > 700) {
         weightDistance = Math.abs(station.distanceKm - 1500) + 200;
     }
     let erp = station.erp && station.erp > 0 ? station.erp : 1;
-    let extraWeight = erp > 30 && station.distanceKm <= 500 ? 0.3 : 0;
+    let extraWeight = erp > weightedErp && station.distanceKm <= weightDistance ? 0.3 : 0;
     let score = 0;
     // If ERP is 1W, use a simpler formula to avoid zero-scoring.
     if (erp === 0.001) {
