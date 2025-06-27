@@ -206,8 +206,7 @@ function validPsCompare(rdsPs, stationPs) {
     return false;
 }
 
-function evaluateStation(station) {
-    let esMode = checkEs();
+function evaluateStation(station, esMode) {
     let weightDistance = station.distanceKm;
     if (esMode && station.distanceKm > 700) {
         weightDistance = Math.abs(station.distanceKm - 1500) + 200;
@@ -280,8 +279,16 @@ async function fetchTx(freq, piCode, rdsPs) {
     }
   
     if (filteredLocations.length > 1) {
+        // Check for any 10kW+ stations within 700km, and don't Es weight if any found.
+        const tropoPriority = filteredLocations.some(
+            loc => loc.distanceKm < 700 && loc.erp >= 10
+        );
+        let esMode = false;
+        if (!tropoPriority) {
+            esMode = checkEs();
+        }
         for (let loc of filteredLocations) {
-            loc.score = evaluateStation(loc);
+            loc.score = evaluateStation(loc, esMode);
         }
         // Sort by score in descending order
         filteredLocations.sort((a, b) => b.score - a.score);
