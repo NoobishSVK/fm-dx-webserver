@@ -4,7 +4,6 @@ const endpoints = require('./endpoints');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const http = require('http');
-const httpProxy = require('http-proxy');
 const readline = require('readline');
 const app = express();
 const httpServer = http.createServer(app);
@@ -18,6 +17,7 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const { SerialPort } = require('serialport');
+const audioServer = require('./stream/3las.server');
 const tunnel = require('./tunnel');
 
 // File imports
@@ -93,13 +93,6 @@ console.log('\x1b[90m' + '─'.repeat(terminalWidth - 1) + '\x1b[0m');
 // Start ffmpeg
 require('./stream/index');
 require('./plugins');
-
-// Create a WebSocket proxy instance
-const proxy = httpProxy.createProxyServer({
-  target: 'ws://localhost:' + (Number(serverConfig.webserver.webserverPort) + 10), // WebSocket httpServer's address
-  ws: true, // Enable WebSocket proxying
-  changeOrigin: true // Change the origin of the host header to the target URL
-});
 
 let currentUsers = 0;
 let serialport;
@@ -390,12 +383,12 @@ wss.on('connection', (ws, request) => {
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    if (clientIp && serverConfig.webserver.banlist?.includes(clientIp)) {
         ws.close(1008, 'Banned IP');
         return;
     }
 
-    if (clientIp.includes(',')) {
+    if (clientIp && clientIp.includes(',')) {
         clientIp = clientIp.split(',')[0].trim();
     }
 
@@ -714,15 +707,15 @@ httpServer.on('upgrade', (request, socket, head) => {
       });
     });
   } else if (request.url === '/audio') {
-    isPortOpen('localhost', (Number(serverConfig.webserver.webserverPort) + 10)).then((open) => {
-        if (open) {
-            proxy.ws(request, socket, head);
-        } else {
-            logWarn(`Audio stream port ${(Number(serverConfig.webserver.webserverPort) + 10)} not yet open — skipping proxy connection.`);
-            socket.end(); // close socket so client isn't left hanging
-        }
-    });
-} else if (request.url === '/chat') {
+    if (typeof audioServer?.handleAudioUpgrade === 'function') {
+      audioServer.handleAudioUpgrade(request, socket, head, (ws) => {
+        audioServer.Server?.Server?.emit?.('connection', ws, request);
+      });
+    } else {
+      logWarn('[Audio WebSocket] Audio server not ready — dropping client connection.');
+      socket.destroy();
+    }
+  } else if (request.url === '/chat') {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
@@ -733,21 +726,21 @@ httpServer.on('upgrade', (request, socket, head) => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
 
-            const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-            const userCommandHistory = {};
-            if (serverConfig.webserver.banlist?.includes(clientIp)) {
-              ws.close(1008, 'Banned IP');
-              return;
-            }
+        const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+        const userCommandHistory = {};
+        if (serverConfig.webserver.banlist?.includes(clientIp)) {
+          ws.close(1008, 'Banned IP');
+          return;
+        }
 
-            // Anti-spam tracking for each client
-            const userCommands = {};
-            let lastWarn = { time: 0 };
+        // Anti-spam tracking for each client
+        const userCommands = {};
+        let lastWarn = { time: 0 };
 
-            ws.on('message', function incoming(message) {
-              // Anti-spam
-              const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
-            });
+        ws.on('message', function incoming(message) {
+          // Anti-spam
+          const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
+        });
 
       });
     });
