@@ -244,7 +244,7 @@ async function fetchTx(freq, piCode, rdsPs) {
         now - lastFetchTime < fetchInterval ||
         Latitude.length < 2 ||
         freq < 87 ||
-        Object.keys(piFreqIndex).length === 0 ||
+        Object.keys(localDb).length === 0 ||
         (currentPiCode === piCode && currentRdsPs === rdsPs)
     ) return Promise.resolve();
 
