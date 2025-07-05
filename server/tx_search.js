@@ -3,11 +3,9 @@ const { serverConfig } = require('./server_config');
 const consoleCmd = require('./console');
 
 let localDb = {};
-let lastDownloadTime = 0; // Last DB download attempt time.
 let lastFetchTime = 0;
 let piFreqIndex = {}; // Indexing for speedier PI+Freq combinations
 const fetchInterval = 1000;
-const downloadInterval = 300000;
 const esSwitchCache = {"lastCheck": null, "esSwitch": false};
 const esFetchInterval = 300000;
 var currentPiCode = '';
@@ -38,12 +36,8 @@ if (typeof algorithms[algoSetting] !== 'undefined') {
     weightedDist = algorithms[algoSetting][1];
 }
 
-// IIFE to build the local TX DB cache from the endpoint.
-(async () => {
-    const now = Date.now();
-    lastDownloadTime = now;
-    await buildTxDatabase();
-})();
+// Build the TX database.
+setTimeout(buildTxDatabase, 3000);
 
 if (serverConfig.identification.gpsMode) {
     // 5-second delay before activation of GPS lat/lon websocket
@@ -76,15 +70,30 @@ if (serverConfig.identification.gpsMode) {
 
 // Function to build local TX database from FMDX Maps endpoint.
 async function buildTxDatabase() {
-    try {
-        consoleCmd.logInfo('Fetching transmitter database...');
-        const response = await fetch(`https://maps.fmdx.org/api?qth=${serverConfig.identification.lat},${serverConfig.identification.lon}`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        localDb = await response.json();
-        buildPiFreqIndex();
-        consoleCmd.logInfo('Transmitter database successfully loaded.');
-    } catch (error) {
-        consoleCmd.logError("Failed to fetch transmitter database:", error);
+    if (Latitude.length > 0 && Longitude.length > 0) {
+        let awaitingTxInfo = true;
+        while (awaitingTxInfo) {
+            try {
+                consoleCmd.logInfo('Fetching transmitter database...');
+                const response = await fetch(`https://maps.fmdx.org/api?qth=${serverConfig.identification.lat},${serverConfig.identification.lon}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                localDb = await response.json();
+                buildPiFreqIndex();
+                consoleCmd.logInfo('Transmitter database successfully loaded.');
+                awaitingTxInfo = false;
+            } catch (error) {
+                consoleCmd.logError("Failed to fetch transmitter database:", error);
+                await new Promise(res => setTimeout(res, 30000));
+                consoleCmd.logInfo('Retrying transmitter database download...');
+            }
+        }
+    } else {
+        consoleCmd.logInfo('Server latitude and longitude must be set before transmitter database can be built');
     }
 }
 
@@ -230,21 +239,12 @@ async function fetchTx(freq, piCode, rdsPs) {
     const now = Date.now();
     freq = parseFloat(freq);
 
-    // If we don't have a local database and the interval has passed, re-try download. 
-    if (
-        Object.keys(localDb).length === 0 &&
-        now - lastDownloadTime > downloadInterval
-    ) {
-        lastDownloadTime = now;
-        await buildTxDatabase();
-    }
-
     if (
         isNaN(freq) ||
         now - lastFetchTime < fetchInterval ||
         Latitude.length < 2 ||
         freq < 87 ||
-        Object.keys(localDb).length === 0 ||
+        Object.keys(piFreqIndex).length === 0 ||
         (currentPiCode === piCode && currentRdsPs === rdsPs)
     ) return Promise.resolve();
 
