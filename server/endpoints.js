@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
     const normalizedIp = requestIp?.replace(/^::ffff:/, '');
-    const ipList = normalizedIp.split(',').map(ip => ip.trim()); // in case there are multiple IPs (proxy), we need to check all of them
+    const ipList = (normalizedIp || '').split(',').map(ip => ip.trim()).filter(Boolean); // in case there are multiple IPs (proxy), we need to check all of them
     
     const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
     
@@ -140,12 +140,14 @@ router.get('/wizard', (req, res) => {
                   audioDevices: result.videoDevices,
                   serialPorts: serialPorts,
                   memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+                  memoryHeap: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) + ' MB',
                   processUptime: formattedProcessUptime,
                   consoleOutput: logs,
                   plugins: allPluginConfigs,
                   enabledPlugins: updatedConfig.plugins,
                   onlineUsers: dataHandler.dataToSend.users,
                   connectedUsers: storage.connectedUsers,
+                  device: serverConfig.device,
                   banlist: updatedConfig.webserver.banlist // Updated banlist from the latest config
               });
           });
@@ -369,6 +371,14 @@ const logHistory = {};
 function canLog(id) {
     const now = Date.now();
     const sixtyMinutes = 60 * 60 * 1000; // 60 minutes in milliseconds
+    
+    // Remove expired entries
+    for (const [entryId, timestamp] of Object.entries(logHistory)) {
+        if ((now - timestamp) >= sixtyMinutes) {
+            delete logHistory[entryId];
+        }
+    }
+    
     if (logHistory[id] && (now - logHistory[id]) < sixtyMinutes) {
         return false; // Deny logging if less than 60 minutes have passed
     }
