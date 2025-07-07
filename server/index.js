@@ -383,6 +383,24 @@ function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userC
  * WEBSOCKET BLOCK
  */
 const tunerLockTracker = new WeakMap();
+const ipConnectionCounts = new Map(); // Per-IP limit variables
+const ipLogTimestamps = new Map();
+const MAX_CONNECTIONS_PER_IP = 5;
+const IP_LOG_INTERVAL_MS = 60000;
+// Remove old per-IP limit addresses
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [ip, count] of ipConnectionCounts.entries()) {
+    const lastSeen = ipLogTimestamps.get(ip) || 0;
+    const inactive = now - lastSeen > 60 * 60 * 1000;
+
+    if (count === 0 && inactive) {
+      ipConnectionCounts.delete(ip);
+      ipLogTimestamps.delete(ip);
+    }
+  }
+}, 60 * 60 * 1000); // Run every hour
 
 wss.on('connection', (ws, request) => {
     const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
@@ -390,13 +408,42 @@ wss.on('connection', (ws, request) => {
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    if (clientIp && serverConfig.webserver.banlist?.includes(clientIp)) {
         ws.close(1008, 'Banned IP');
         return;
     }
 
-    if (clientIp.includes(',')) {
+    if (clientIp && clientIp.includes(',')) {
         clientIp = clientIp.split(',')[0].trim();
+    }
+
+    // Per-IP limit connection open
+    if (clientIp) {
+        const isLocalIp = (
+            clientIp === '127.0.0.1' ||
+            clientIp === '::1' ||
+            clientIp === '::ffff:127.0.0.1' ||
+            clientIp.startsWith('192.168.') ||
+            clientIp.startsWith('10.') || 
+            clientIp.startsWith('172.16.')
+        );
+        if (!isLocalIp) {
+            if (!ipConnectionCounts.has(clientIp)) {
+                ipConnectionCounts.set(clientIp, 0);
+            }
+            const currentCount = ipConnectionCounts.get(clientIp);
+            if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+                ws.close(1008, 'Too many open connections from this IP');
+                const lastLogTime = ipLogTimestamps.get(clientIp) || 0;
+                const now = Date.now();
+                if (now - lastLogTime > IP_LOG_INTERVAL_MS) {
+                    logWarn(`Web client \x1b[31mclosed: limit exceeded\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);
+                    ipLogTimestamps.set(clientIp, now);
+                }
+                return;
+            }
+            ipConnectionCounts.set(clientIp, currentCount + 1);
+        }
     }
 
     if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
@@ -472,6 +519,22 @@ wss.on('connection', (ws, request) => {
     });
 
     ws.on('close', (code, reason) => {
+      // Per-IP limit connection closed
+      if (clientIp) {
+        const isLocalIp = (
+          clientIp === '127.0.0.1' ||
+          clientIp === '::1' ||
+          clientIp === '::ffff:127.0.0.1' ||
+          clientIp.startsWith('192.168.') ||
+          clientIp.startsWith('10.') || 
+          clientIp.startsWith('172.16.')
+        );
+        if (!isLocalIp) {
+          const current = ipConnectionCounts.get(clientIp) || 1;
+          ipConnectionCounts.set(clientIp, Math.max(0, current - 1));
+        }
+      }
+
       if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
         currentUsers--;
       }

@@ -6,6 +6,7 @@ var parsedData, signalChart, previousFreq;
 var data = [];
 var signalData = [];
 let updateCounter = 0;
+let lastReconnectAttempt = 0;
 let messageCounter = 0; // Count for WebSocket data length returning 0
 let messageData = 800; // Initial value anything above 0
 let messageLength = 800; // Retain value of messageData until value is updated
@@ -375,10 +376,16 @@ function sendPingRequest() {
         messageCounter = 0;
     }
     
-    // Automatic reconnection on WebSocket close
-    if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+    // Automatic reconnection on WebSocket close with cooldown
+    const now = Date.now();
+    if (
+        (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) &&
+        (now - lastReconnectAttempt > TIMEOUT_DURATION)
+    ) {
+        lastReconnectAttempt = now;
+
         socket = new WebSocket(socketAddress);
-        
+
         socket.onopen = () => {
             sendToast('info', 'Connected', 'Reconnected successfully!', false, false);
         };
