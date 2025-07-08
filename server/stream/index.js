@@ -141,39 +141,93 @@ checkFFmpeg().then((ffmpegPath) => {
 
     if (process.platform === 'win32') {
         // Windows (FFmpeg DirectShow Capture)
-        const commandDef = buildCommand(ffmpegPath);
+        let ffmpeg;
+        let restartTimer = null;
+        let lastTimestamp = null;
+        let lastCheckTime = Date.now();
+        let audioErrorLogged = false;
+        let staleCount = 0;
 
-        let ffmpegArgs = commandDef.args;
+        function launchFFmpeg() {
+            const commandDef = buildCommand(ffmpegPath);
+            let ffmpegArgs = commandDef.args;
 
-        // Apply audio boost if enabled
-        if (serverConfig.audio.audioBoost) {
-            ffmpegArgs.splice(ffmpegArgs.indexOf('pipe:1'), 0, '-af', 'volume=3.5');
+            // Apply audio boost if enabled
+            if (serverConfig.audio.audioBoost) {
+                ffmpegArgs.splice(ffmpegArgs.indexOf('pipe:1'), 0, '-af', 'volume=3.5');
+            }
+
+            logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${ffmpegArgs.join(' ')}`);
+            ffmpeg = spawn(ffmpegPath, ffmpegArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+
+            audioServer.waitUntilReady.then(() => {
+                audioServer.Server.StdIn = ffmpeg.stdout;
+                audioServer.Server.Run();
+                connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) → FFmpeg (process) → Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+            });
+
+            ffmpeg.stderr.on('data', (data) => {
+                const msg = data.toString();
+                logFfmpeg(`[FFmpeg stderr]: ${msg}`);
+
+                if (msg.includes('I/O error') && !audioErrorLogged) {
+                    audioErrorLogged = true;
+                    logError(`${consoleLogTitle} Audio device "${serverConfig.audio.audioDevice}" failed to start.`);
+                    logError('Please start the server with: node . --ffmpegdebug for more info.');
+                }
+
+                // Detect frozen timestamp
+                const match = msg.match(/time=(\d\d):(\d\d):(\d\d\.\d+)/);
+                if (match) {
+                    const [_, hh, mm, ss] = match;
+                    const totalSec = parseInt(hh) * 3600 + parseInt(mm) * 60 + parseFloat(ss);
+
+                    if (lastTimestamp !== null && totalSec === lastTimestamp) {
+                        const now = Date.now();
+                        staleCount++;
+                        if (staleCount >= 10 && now - lastCheckTime > 10000 && !restartTimer) {
+                            restartTimer = setTimeout(() => {
+                                restartTimer = null;
+                                staleCount = 0;
+                                try {
+                                    ffmpeg.kill('SIGKILL');
+                                } catch (e) {
+                                    logWarn(`${consoleLogTitle} Failed to kill FFmpeg process: ${e.message}`);
+                                }
+                                launchFFmpeg(); // Restart FFmpeg
+                            }, 0);
+                            setTimeout(() => logWarn(`${consoleLogTitle} FFmpeg appears frozen. Restarting...`), 100);
+                        }
+                    } else {
+                        lastTimestamp = totalSec;
+                        lastCheckTime = Date.now();
+                        staleCount = 0;
+                    }
+                }
+            });
+
+            ffmpeg.on('exit', (code, signal) => {
+                if (signal) {
+                    logFfmpeg(`[FFmpeg exited] with signal ${signal}`);
+                    logWarn(`${consoleLogTitle} FFmpeg was killed with signal ${signal}`);
+                } else {
+                    logFfmpeg(`[FFmpeg exited] with code ${code}`);
+                    if (code !== 0) {
+                        logWarn(`${consoleLogTitle} FFmpeg exited unexpectedly with code ${code}`);
+                    }
+                }
+
+                // Retry on device fail
+                if (audioErrorLogged) {
+                    logWarn(`${consoleLogTitle} Retrying in 10 seconds...`);
+                    setTimeout(() => {
+                        audioErrorLogged = false;
+                        launchFFmpeg();
+                    }, 10000);
+                }
+            });
         }
-
-        logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${ffmpegArgs.join(' ')}`);
-        const ffmpeg = spawn(ffmpegPath, ffmpegArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-
-        audioServer.waitUntilReady.then(() => {
-            audioServer.Server.StdIn = ffmpeg.stdout;
-            audioServer.Server.Run();
-            connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) → FFmpeg (process) → Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
-        });
-
-        ffmpeg.stderr.on('data', (data) => {
-            logFfmpeg(`[FFmpeg stderr]: ${data}`);
-
-            if (data.includes('I/O error') && !audioErrorLogged) {
-                audioErrorLogged = true;
-                logError(`${consoleLogTitle} Audio device "${serverConfig.audio.audioDevice}" failed to start.`);
-            }
-        });
-
-        ffmpeg.on('exit', (code) => {
-            logFfmpeg(`[FFmpeg exited] with code ${code}`);
-            if (code !== 0) {
-                logWarn(`${consoleLogTitle} FFmpeg exited unexpectedly with code ${code}`);
-            }
-        });
+        launchFFmpeg(); // Initial launch
     } else if (process.platform === 'darwin') {
         // macOS (rec --> 3las.server.js --> FFmpeg)
         const commandDef = buildCommand(ffmpegPath);
