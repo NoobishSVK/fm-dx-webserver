@@ -197,6 +197,9 @@ function validPsCompare(rdsPs, stationPs) {
        
     // Iterate through all tokens and check if any token yields at least three valid (non "_" ) matches.
     for (let token of psTokens) {
+        // If total non "_" length of token is less than 3, allow match based on that length instead
+        const tokenLength = token.replace(/_/g, "").length;
+        const minMatchLen = tokenLength > 2 ? 3 : tokenLength;
         // If the token's length does not match the standardized rdsPs length, skip this token.
         if (token.length !== standardizedRdsPs.length) continue;
         
@@ -208,7 +211,7 @@ function validPsCompare(rdsPs, stationPs) {
                 matchCount++;
             }
         }
-        if (matchCount >= 3) {
+        if (matchCount >= minMatchLen) {
             return true;
         }
     }
