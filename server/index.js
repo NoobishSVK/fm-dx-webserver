@@ -418,6 +418,8 @@ wss.on('connection', (ws, request) => {
       currentUsers++;
     }
 
+    if (timeoutAntenna) clearTimeout(timeoutAntenna);
+
     helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
       if (result === "User banned") {
           ws.close(1008, 'Banned IP');
