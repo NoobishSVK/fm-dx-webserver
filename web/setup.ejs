@@ -39,6 +39,9 @@
                     <li role="tab" data-panel="users" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="users"><i class="fa-solid fa-fw fa-user"></i> User management</a>
                     </li>
+                    <li role="tab" data-panel="startup" tabindex="0">
+                        <a href="#" role="tab" tabindex="-1" aria-controls="startup"><i class="fa-solid fa-fw fa-cogs"></i> Startup</a>
+                    </li>
                     <li role="tab" data-panel="extras" tabindex="0">
                         <a href="#" role="tab" tabindex="-1" aria-controls="extras"><i class="fa-solid fa-fw fa-star"></i> Extras</a>
                     </li>
@@ -426,124 +429,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20" style="z-index: 10; padding-bottom: 120px;">
-                        <h3>On startup</h3>
-                        <h4>Settings take effect on server launch</h4>
-                        <div class="flex-container flex-center p-20">
-                            <% if (device === 'tef') { %>
-                                <%- include('_components', { component: 'dropdown', id: 'ceqStartup-dropdown', inputId: 'ceqStartup', label: 'cEQ', cssClass: '', placeholder: 'Disabled', 
-                                    options: [
-                                        { value: '0', label: 'Disabled' },
-                                        { value: '1', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-
-                                <%- include('_components', { component: 'dropdown', id: 'imsStartup-dropdown', inputId: 'imsStartup', label: 'iMS', cssClass: '', placeholder: 'Disabled', 
-                                    options: [
-                                        { value: '0', label: 'Disabled' },
-                                        { value: '1', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                            <% } else if (device === 'xdr') { %>
-                                <%- include('_components', { component: 'dropdown', id: 'rfStartup-dropdown', inputId: 'ceqStartup', label: 'RF+', cssClass: '', placeholder: 'Disabled', 
-                                    options: [
-                                        { value: '0', label: 'Disabled' },
-                                        { value: '1', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                                <%- include('_components', { component: 'dropdown', id: 'ifStartup-dropdown', inputId: 'imsStartup', label: 'IF+', cssClass: '', placeholder: 'Disabled', 
-                                    options: [
-                                        { value: '0', label: 'Disabled' },
-                                        { value: '1', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                            <% } %>
-                            <%- include('_components', { component: 'dropdown', id: 'stereoStartup-dropdown', inputId: 'stereoStartup', label: 'Stereo Mode', cssClass: '', placeholder: 'Stereo (Default)', 
-                                options: [
-                                    { value: '0', label: 'Stereo (Default)' },
-                                    { value: '1', label: 'Mono' },
-                                ]
-                            }) %><br>
-                            </div>
-                            <div class="panel-100-real p-bottom-20 no-bg">
-                            <%- include('_components', { component: 'dropdown', id: 'antennaStartup-dropdown', inputId: 'antennaStartup', label: 'Antenna', cssClass: '', placeholder: 'Antenna 0 (Default)', 
-                                options: [
-                                    { value: '0', label: 'Antenna 0 (Default)' },
-                                    { value: '1', label: 'Antenna 1' },
-                                    { value: '2', label: 'Antenna 2' },
-                                    { value: '3', label: 'Antenna 3' },
-                                ]
-                            }) %><br>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 180px;">
-                        <h3>On no active users</h3>
-                        <h4>Settings take effect immediately after saving</h4>
-                        <div class="flex-container flex-center p-20">
-                            <%- include('_components', { component: 'dropdown', id: 'bwAutoNoUsers-dropdown', inputId: 'bwAutoNoUsers', label: 'Auto BW', cssClass: '', placeholder: 'Unchanged', 
-                                options: [
-                                    { value: '0', label: 'Unchanged' },
-                                    { value: '1', label: 'Enabled' },
-                                ]
-                            }) %><br>
-                            <% if (device === 'tef') { %>
-                                <%- include('_components', { component: 'dropdown', id: 'ceqNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'cEQ', cssClass: '', placeholder: 'Unchanged', 
-                                    options: [
-                                        { value: '0', label: 'Unchanged' },
-                                        { value: '1', label: 'Disabled' },
-                                        { value: '2', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-
-                                <%- include('_components', { component: 'dropdown', id: 'imsNoUsers-dropdown', inputId: 'imsNoUsers', label: 'iMS', cssClass: '', placeholder: 'Unchanged', 
-                                    options: [
-                                        { value: '0', label: 'Unchanged' },
-                                        { value: '1', label: 'Disabled' },
-                                        { value: '2', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                            <% } else if (device === 'xdr') { %>
-                                <%- include('_components', { component: 'dropdown', id: 'rfNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'RF+', cssClass: '', placeholder: 'Unchanged', 
-                                    options: [
-                                        { value: '0', label: 'Unchanged' },
-                                        { value: '1', label: 'Disabled' },
-                                        { value: '2', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                                <%- include('_components', { component: 'dropdown', id: 'ifNoUsers-dropdown', inputId: 'imsNoUsers', label: 'IF+', cssClass: '', placeholder: 'Unchanged', 
-                                    options: [
-                                        { value: '0', label: 'Unchanged' },
-                                        { value: '1', label: 'Disabled' },
-                                        { value: '2', label: 'Enabled' },
-                                    ]
-                                }) %><br>
-                            <% } %>
-                            <%- include('_components', { component: 'dropdown', id: 'stereoNoUsers-dropdown', inputId: 'stereoNoUsers', label: 'Stereo Mode', cssClass: '', placeholder: 'Unchanged', 
-                                options: [
-                                    { value: '0', label: 'Unchanged' },
-                                    { value: '1', label: 'Stereo' },
-                                    { value: '2', label: 'Mono' },
-                                ]
-                            }) %><br>
-                            </div>
-                            <div class="panel-100-real p-bottom-20 no-bg">
-                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Delayed Antenna Change', id: 'antennaNoUsersDelay'}) %><br>
-                            <%- include('_components', { component: 'dropdown', id: 'antennaNoUsers-dropdown', inputId: 'antennaNoUsers', label: 'Antenna', cssClass: '', placeholder: 'Unchanged', 
-                                options: [
-                                    { value: '0', label: 'Unchanged' },
-                                    { value: '1', label: 'Antenna 0' },
-                                    { value: '2', label: 'Antenna 1' },
-                                    { value: '3', label: 'Antenna 2' },
-                                    { value: '4', label: 'Antenna 3' },
-                                ]
-                            }) %>
-                            <br>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="panel-full m-0 tab-content no-bg" id="plugins-tab" role="tabpanel">
@@ -668,6 +553,126 @@
                             <% } %>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="panel-full m-0 tab-content no-bg" id="startup" role="tabpanel">
+                <h2>Startup settings</h2>
+                <div class="flex-container">
+                    <div class="panel-100-real p-bottom-20" style="z-index: 10; padding-bottom: 120px;">
+                        <h3>On startup</h3>
+                        <h4>Settings take effect on server launch</h4>
+                        <div class="flex-container flex-center p-20">
+                            <% if (device === 'tef') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'ceqStartup-dropdown', inputId: 'ceqStartup', label: 'cEQ', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                                <%- include('_components', { component: 'dropdown', id: 'imsStartup-dropdown', inputId: 'imsStartup', label: 'iMS', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } else if (device === 'xdr') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'rfStartup-dropdown', inputId: 'ceqStartup', label: 'RF+', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                                <%- include('_components', { component: 'dropdown', id: 'ifStartup-dropdown', inputId: 'imsStartup', label: 'IF+', cssClass: '', placeholder: 'Disabled', 
+                                    options: [
+                                        { value: '0', label: 'Disabled' },
+                                        { value: '1', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } %>
+                            <%- include('_components', { component: 'dropdown', id: 'stereoStartup-dropdown', inputId: 'stereoStartup', label: 'Stereo Mode', cssClass: '', placeholder: 'Stereo (Default)', 
+                                options: [
+                                    { value: '0', label: 'Stereo (Default)' },
+                                    { value: '1', label: 'Mono' },
+                                ]
+                            }) %><br>
+                            </div>
+                            <div class="panel-100-real p-bottom-20 no-bg">
+                            <%- include('_components', { component: 'dropdown', id: 'antennaStartup-dropdown', inputId: 'antennaStartup', label: 'Antenna', cssClass: '', placeholder: 'Antenna 0 (Default)', 
+                                options: [
+                                    { value: '0', label: 'Antenna 0 (Default)' },
+                                    { value: '1', label: 'Antenna 1' },
+                                    { value: '2', label: 'Antenna 2' },
+                                    { value: '3', label: 'Antenna 3' },
+                                ]
+                            }) %><br>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 180px;">
+                        <h3>On no active users</h3>
+                        <h4>Settings take effect immediately after saving</h4>
+                        <div class="flex-container flex-center p-20">
+                            <%- include('_components', { component: 'dropdown', id: 'bwAutoNoUsers-dropdown', inputId: 'bwAutoNoUsers', label: 'Auto BW', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Enabled' },
+                                ]
+                            }) %><br>
+                            <% if (device === 'tef') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'ceqNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'cEQ', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                                <%- include('_components', { component: 'dropdown', id: 'imsNoUsers-dropdown', inputId: 'imsNoUsers', label: 'iMS', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } else if (device === 'xdr') { %>
+                                <%- include('_components', { component: 'dropdown', id: 'rfNoUsers-dropdown', inputId: 'ceqNoUsers', label: 'RF+', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                                <%- include('_components', { component: 'dropdown', id: 'ifNoUsers-dropdown', inputId: 'imsNoUsers', label: 'IF+', cssClass: '', placeholder: 'Unchanged', 
+                                    options: [
+                                        { value: '0', label: 'Unchanged' },
+                                        { value: '1', label: 'Disabled' },
+                                        { value: '2', label: 'Enabled' },
+                                    ]
+                                }) %><br>
+                            <% } %>
+                            <%- include('_components', { component: 'dropdown', id: 'stereoNoUsers-dropdown', inputId: 'stereoNoUsers', label: 'Stereo Mode', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Stereo' },
+                                    { value: '2', label: 'Mono' },
+                                ]
+                            }) %><br>
+                            </div>
+                            <div class="panel-100-real p-bottom-20 no-bg">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Delayed Antenna Change', id: 'antennaNoUsersDelay'}) %><br>
+                            <%- include('_components', { component: 'dropdown', id: 'antennaNoUsers-dropdown', inputId: 'antennaNoUsers', label: 'Antenna', cssClass: '', placeholder: 'Unchanged', 
+                                options: [
+                                    { value: '0', label: 'Unchanged' },
+                                    { value: '1', label: 'Antenna 0' },
+                                    { value: '2', label: 'Antenna 1' },
+                                    { value: '3', label: 'Antenna 2' },
+                                    { value: '4', label: 'Antenna 3' },
+                                ]
+                            }) %>
+                            <br>
+                        </div>
+                    </div>
                 </div>
             </div>
 
