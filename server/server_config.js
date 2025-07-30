@@ -115,7 +115,8 @@ let serverConfig = {
   stereoStartup: "0",
   stereoNoUsers: "0",
   antennaStartup: "0",
-  antennaNoUnsers: "0"
+  antennaNoUsers: "0",
+  antennaNoUsersDelay: false
 };
 
 // Function to add missing fields without overwriting existing values

@@ -227,7 +227,7 @@
                         <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
                     </div>
-                    <div class="panel-50 p-botom-20 bottom-20">
+                    <div class="panel-50 p-bottom-20 bottom-20">
                         <h3>Sample rate offset</h3>
                         <p>Using a negative value could eliminate audio buffering issues during long periods of listening. <br>
                             However, a value that’s too low might increase the buffer over time.</p>
@@ -479,7 +479,7 @@
                     </div>
                 </div>
                 <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 160px;">
+                    <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 180px;">
                         <h3>On no active users</h3>
                         <h4>Settings take effect immediately after saving</h4>
                         <div class="flex-container flex-center p-20">
@@ -530,7 +530,8 @@
                             }) %><br>
                             </div>
                             <div class="panel-100-real p-bottom-20 no-bg">
-                            <%- include('_components', { component: 'dropdown', id: 'antennaNoUnsers-dropdown', inputId: 'antennaNoUnsers', label: 'Antenna', cssClass: '', placeholder: 'Unchanged', 
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Delayed Antenna Change', id: 'antennaNoUsersDelay'}) %><br>
+                            <%- include('_components', { component: 'dropdown', id: 'antennaNoUsers-dropdown', inputId: 'antennaNoUsers', label: 'Antenna', cssClass: '', placeholder: 'Unchanged', 
                                 options: [
                                     { value: '0', label: 'Unchanged' },
                                     { value: '1', label: 'Antenna 0' },
@@ -538,7 +539,8 @@
                                     { value: '3', label: 'Antenna 2' },
                                     { value: '4', label: 'Antenna 3' },
                                 ]
-                            }) %><br>
+                            }) %>
+                            <br>
                         </div>
                     </div>
                 </div>

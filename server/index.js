@@ -103,6 +103,7 @@ const proxy = httpProxy.createProxyServer({
 
 let currentUsers = 0;
 let serialport;
+let timeoutAntenna;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -526,15 +527,18 @@ wss.on('connection', (ws, request) => {
             }
 
             // Handle Antenna selection
-            if (serverConfig.antennaNoUnsers === "1") {
-                output.write("Z0\n");
-            } else if (serverConfig.antennaNoUnsers === "2") {
-                output.write("Z1\n");
-            } else if (serverConfig.antennaNoUnsers === "3") {
-                output.write("Z2\n");
-            } else if (serverConfig.antennaNoUnsers === "4") {
-                output.write("Z3\n");
-            }
+            if (timeoutAntenna) clearTimeout(timeoutAntenna);
+            timeoutAntenna = setTimeout(() => {
+                if (serverConfig.antennaNoUsers === "1") {
+                    output.write("Z0\n");
+                } else if (serverConfig.antennaNoUsers === "2") {
+                    output.write("Z1\n");
+                } else if (serverConfig.antennaNoUsers === "3") {
+                    output.write("Z2\n");
+                } else if (serverConfig.antennaNoUsers === "4") {
+                    output.write("Z3\n");
+                }
+            }, serverConfig.antennaNoUsersDelay ? 15000 : 0);
         }
 
         if (tunerLockTracker.has(ws)) {
