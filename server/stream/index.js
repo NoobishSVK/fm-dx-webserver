@@ -163,7 +163,7 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) → FFmpeg (process) → Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) \u2192 FFmpeg (process) \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             ffmpeg.stderr.on('data', (data) => {
@@ -248,7 +248,7 @@ checkFFmpeg().then((ffmpegPath) => {
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = rec.stdout;
                     audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected rec → FFmpeg → Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
+                    connectMessage(`${consoleLogTitle} Connected rec \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
                 });
 
                 process.on('exit', () => {
@@ -283,7 +283,7 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout → Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             process.on('SIGINT', () => {
@@ -328,7 +328,7 @@ checkFFmpeg().then((ffmpegPath) => {
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = arecord.stdout;
                     audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected arecord → FFmpeg → Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
+                    connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
                 });
 
                 process.on('exit', () => {
@@ -363,7 +363,7 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout → Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             process.on('SIGINT', () => {
