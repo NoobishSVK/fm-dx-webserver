@@ -1,15 +1,27 @@
 "use strict";
-var fs = require('fs');
-const checkFFmpeg = require('./checkFFmpeg');
-const {serverConfig} = require('../server_config');
-
-let ffmpegStaticPath;
-
-function runStream() {
 /*
     Stdin streamer is part of 3LAS (Low Latency Live Audio Streaming)
     https://github.com/JoJoBond/3LAS
 */
+var fs = require('fs');
+const path = require('path');
+const checkFFmpeg = require('./checkFFmpeg');
+const { spawn } = require('child_process');
+const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
+const { serverConfig } = require('../server_config');
+
+let ffmpegStaticPath = 'ffmpeg'; // fallback value
+
+let ServerInstance;
+let handleAudioUpgradeFn;
+
+let readyResolve;
+const waitUntilReady = new Promise((resolve) => {
+  readyResolve = resolve;
+});
+
+checkFFmpeg().then((resolvedPath) => {
+  ffmpegStaticPath = resolvedPath;
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -42,7 +54,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const child_process_1 = require("child_process");
 const ws = __importStar(require("ws"));
-const Settings = JSON.parse((0, fs_1.readFileSync)('server/stream/settings.json', 'utf-8'));
+const Settings = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'settings.json'), 'utf-8'));
 const FFmpeg_command = ffmpegStaticPath;
 class StreamClient {
     constructor(server, socket) {
@@ -117,7 +129,7 @@ class StreamClient {
 }
 class StreamServer {
     constructor(port, channels, sampleRate) {
-        this.Port = port;
+        this.Port = port || null;
         this.Channels = channels;
         this.SampleRate = sampleRate;
         this.Clients = new Set();
@@ -139,12 +151,21 @@ class StreamServer {
     }
     Run() {
         this.Server = new ws.Server({
-            "host": ["127.0.0.1", "::1"],
-            "port": this.Port,
-            "clientTracking": true,
-            "perMessageDeflate": false
+            noServer: true,
+            clientTracking: true,
+            perMessageDeflate: false,
         });
+        // Allow manual upgrade handling from index.js
+        this.handleUpgrade = (req, socket, head) => {
+            this.Server.handleUpgrade(req, socket, head, (ws) => {
+                this.Server.emit('connection', ws, req);
+            });
+        };
         this.Server.on('connection', this.OnServerConnection.bind(this));
+        if (!this.StdIn) {
+          logError('[Stream] No audio input stream defined (this.StdIn is null)');
+          return;
+        }
         this.StdIn.on('data', this.OnStdInData.bind(this));
         this.StdIn.resume();
     }
@@ -195,6 +216,7 @@ class StreamServer {
             "wav": (this.FallbackClients["wav"] ? this.FallbackClients["wav"].size : 0),
             "mp3": (this.FallbackClients["mp3"] ? this.FallbackClients["mp3"].size : 0),
         };
+        let total = 0;
         for (let format in fallback) {
             total += fallback[format];
         }
@@ -204,10 +226,8 @@ class StreamServer {
         };
     }
     static Create(options) {
-        if (!options["-port"])
-            throw new Error("Port undefined. Please use -port to define the port.");
-        if (typeof options["-port"] !== "number" || options["-port"] !== Math.floor(options["-port"]) || options["-port"] < 1 || options["-port"] > 65535)
-            throw new Error("Invalid port. Must be natural number between 1 and 65535.");
+        // Allow Port to be omitted
+        const port = options["-port"] || null;
         if (!options["-channels"])
             throw new Error("Channels undefined. Please use -channels to define the number of channels.");
         if (typeof options["-channels"] !== "number" || options["-channels"] !== Math.floor(options["-channels"]) ||
@@ -217,7 +237,7 @@ class StreamServer {
             throw new Error("Sample rate undefined. Please use -samplerate to define the sample rate.");
         if (typeof options["-samplerate"] !== "number" || options["-samplerate"] !== Math.floor(options["-samplerate"]) || options["-samplerate"] < 1)
             throw new Error("Invalid sample rate. Must be natural number greater than 0.");
-        return new StreamServer(options["-port"], options["-channels"], options["-samplerate"]);
+        return new StreamServer(port, options["-channels"], options["-samplerate"]);
     }
 }
 class AFallbackProvider {
@@ -328,12 +348,31 @@ for (let i = 2; i < (process.argv.length - 1); i += 2) {
         throw new Error("Redefined argument: '" + process.argv[i] + "'. Please use '" + process.argv[i] + "' only ONCE");
     Options[process.argv[i]] = OptionParser[process.argv[i]](process.argv[i + 1]);
 }
-const Server = StreamServer.Create(Options);
-Server.Run();
-//# sourceMappingURL=3las.server.js.map
-}
+  const Server = new StreamServer(null, 2, 48000);
 
-checkFFmpeg().then((ffmpegResult) => {
-    ffmpegStaticPath = ffmpegResult;
-    runStream();
+  ServerInstance = Server;
+
+  handleAudioUpgradeFn = function (request, socket, head, cb) {
+    if (Server.Server && Server.Server.handleUpgrade) {
+      Server.Server.handleUpgrade(request, socket, head, cb);
+    } else {
+      socket.destroy();
+    }
+  };
+
+  readyResolve();
+
+}).catch((err) => {
+  logError('[Stream] Error:', err);
 });
+
+module.exports = {
+  get Server() {
+    return ServerInstance;
+  },
+  get handleAudioUpgrade() {
+    return handleAudioUpgradeFn;
+  },
+  waitUntilReady
+};
+//# sourceMappingURL=3las.server.js.map
