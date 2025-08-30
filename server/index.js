@@ -96,6 +96,7 @@ require('./plugins');
 
 let currentUsers = 0;
 let serialport;
+let timeoutAntenna;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -164,7 +165,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     setTimeout(() => {
       serialport.write('Q0\n');
       serialport.write('M0\n');
-      serialport.write('Z0\n');
+      serialport.write(`Z${serverConfig.antennaStartup}\n`); // Antenna on startup
 
       if (serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
@@ -181,7 +182,20 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
-      serialport.write('G00\n');
+      // cEQ and iMS combinations
+      if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "0") {
+        serialport.write("G00\n"); // Both Disabled
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "0") {
+        serialport.write(`G10\n`);
+      } else if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "1") {
+        serialport.write(`G01\n`);
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "1") {
+        serialport.write("G11\n"); // Both Enabled
+      }
+      // Handle stereo mode
+      if (serverConfig.stereoStartup === "1") {
+        serialport.write("B1\n"); // Mono
+      }
       serverConfig.audio.startupVolume 
         ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
         : serialport.write('Y100\n');
@@ -390,6 +404,8 @@ wss.on('connection', (ws, request) => {
       currentUsers++;
     }
 
+    if (timeoutAntenna) clearTimeout(timeoutAntenna);
+
     helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
       if (result === "User banned") {
           ws.close(1008, 'Banned IP');
@@ -487,8 +503,46 @@ wss.on('connection', (ws, request) => {
 
         if (currentUsers === 0) {
             storage.connectedUsers = [];
-            output.write('W0\n');
-            output.write('B0\n');
+
+            if (serverConfig.bwAutoNoUsers === "1") {
+                output.write("W0\n"); // Auto BW 'Enabled'
+            }
+
+            // cEQ and iMS combinations
+            if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "1") {
+                output.write("G00\n"); // Both Disabled
+            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "0") {
+                output.write(`G0${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "1") {
+                output.write(`G${dataHandler.dataToSend.eq}0\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "0") {
+                output.write(`G1${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
+                output.write(`G${dataHandler.dataToSend.eq}1\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
+                output.write("G11\n"); // Both Enabled
+            }
+
+            // Handle stereo mode
+            if (serverConfig.stereoNoUsers === "1") {
+                output.write("B0\n");
+            } else if (serverConfig.stereoNoUsers === "2") {
+                output.write("B1\n");
+            }
+
+            // Handle Antenna selection
+            if (timeoutAntenna) clearTimeout(timeoutAntenna);
+            timeoutAntenna = setTimeout(() => {
+                if (serverConfig.antennaNoUsers === "1") {
+                    output.write("Z0\n");
+                } else if (serverConfig.antennaNoUsers === "2") {
+                    output.write("Z1\n");
+                } else if (serverConfig.antennaNoUsers === "3") {
+                    output.write("Z2\n");
+                } else if (serverConfig.antennaNoUsers === "4") {
+                    output.write("Z3\n");
+                }
+            }, serverConfig.antennaNoUsersDelay ? 15000 : 0);
         }
 
         if (tunerLockTracker.has(ws)) {
