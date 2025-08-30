@@ -154,7 +154,7 @@ checkFFmpeg().then((ffmpegPath) => {
 
             // Apply audio boost if enabled
             if (serverConfig.audio.audioBoost) {
-                ffmpegArgs.splice(ffmpegArgs.indexOf('pipe:1'), 0, '-af', 'volume=3.5');
+                ffmpegArgs.splice(ffmpegArgs.indexOf('pipe:1'), 0, '-af', 'volume=2.5');
             }
 
             logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${ffmpegArgs.join(' ')}`);
@@ -234,7 +234,7 @@ checkFFmpeg().then((ffmpegPath) => {
 
         // Apply audio boost if enabled and FFmpeg is used
         if (serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg) {
-            commandDef.args.splice(commandDef.recArgs.indexOf('pipe:1'), 0, '-af', 'volume=3.5');
+            commandDef.args.splice(commandDef.recArgs.indexOf('pipe:1'), 0, '-af', 'volume=2.5');
         }
 
         function startRec() {
@@ -314,7 +314,7 @@ checkFFmpeg().then((ffmpegPath) => {
 
         // Apply audio boost if enabled and FFmpeg is used
         if (serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg) {
-            commandDef.args.splice(commandDef.args.indexOf('pipe:1'), 0, '-af', 'volume=3.5');
+            commandDef.args.splice(commandDef.args.indexOf('pipe:1'), 0, '-af', 'volume=2.5');
         }
 
         function startArecord() {
