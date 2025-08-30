@@ -568,7 +568,7 @@
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20" style="z-index: 10; padding-bottom: 120px;">
                         <h3>On startup</h3>
-                        <h4>Settings take effect on server launch</h4>
+                        <p>These settings will be applied after a server launch or restart.</p>
                         <div class="flex-container flex-center p-20">
                             <% if (device === 'tef') { %>
                                 <%- include('_components', { component: 'dropdown', id: 'ceqStartup-dropdown', inputId: 'ceqStartup', label: 'cEQ', cssClass: '', placeholder: 'Disabled', 
@@ -618,8 +618,8 @@
                 </div>
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20 bottom-20" style="z-index: 9; padding-bottom: 180px;">
-                        <h3>On no active users</h3>
-                        <h4>Settings take effect immediately after saving</h4>
+                        <h3>Empty server defaults</h3>
+                        <p>These settings will apply once the last user disconnects from the server, so the server can be ready for a new user with default settings.</p>
                         <div class="flex-container flex-center p-20">
                             <%- include('_components', { component: 'dropdown', id: 'bwAutoNoUsers-dropdown', inputId: 'bwAutoNoUsers', label: 'Auto BW', cssClass: '', placeholder: 'Unchanged', 
                                 options: [
