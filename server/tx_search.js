@@ -31,7 +31,7 @@ if (typeof algorithms[algoSetting] !== 'undefined') {
 // IIFE to build the local TX DB cache from the endpoint.
 (async () => {
     try {
-        consoleCmd.logInfo('Fetching transmitter database...');
+        setTimeout(() => consoleCmd.logInfo('Fetching transmitter database...'), 0);
         const response = await fetch(`https://maps.fmdx.org/api?qth=${serverConfig.identification.lat},${serverConfig.identification.lon}`);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         localDb = await response.json();

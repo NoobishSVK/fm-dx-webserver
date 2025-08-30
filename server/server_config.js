@@ -155,7 +155,7 @@ function configUpdate(newConfig) {
 function configSave() {
   try {
     fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
-    logInfo('Server config saved successfully.');
+    setTimeout(() => logInfo('Server config saved successfully.'), 0);
   } catch (err) {
     logError(err);
   }
