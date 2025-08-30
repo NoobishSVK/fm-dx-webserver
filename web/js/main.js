@@ -289,31 +289,44 @@ function getServerTime() {
         url: "./server_time",
         dataType: "json",
         success: function(data) {
-            const serverTimeUtc = data.serverTime;
-            
-            const options = {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            };
-            
-            const serverOptions = {
-                ...options,
-                timeZone: 'Etc/UTC'
-            };
-            
-            const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
-            
-            $("#server-time").text(formattedServerTime);        
+            try {
+                const serverTimeIso = data.serverTime;
+
+                if (typeof serverTimeIso === 'string' && serverTimeIso.includes('T')) {
+                    
+                    const serverDate = new Date(serverTimeIso);
+
+                    if (isNaN(serverDate.getTime())) {
+                        throw new Error("Server time string could not be parsed into a valid date.");
+                    }
+
+                    const dateOptions = {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                    };
+                    const formattedDate = serverDate.toLocaleDateString(navigator.language || 'en-US', dateOptions);
+
+                    const timeString = serverTimeIso.split('T')[1].substring(0, 5);
+
+                    const finalDisplayTime = `${formattedDate}, ${timeString}`;
+
+                    $("#server-time").text(finalDisplayTime);
+
+                } else {
+                    throw new Error("Received server time is not in a valid string format.");
+                }
+            } catch (error) {
+                console.error("Could not correctly parse or display server time:", error);
+                $("#server-time").text("--:--");
+            }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error("Error fetching server time:", errorThrown);
+            $("#server-time").text("--:--");
         }
     });
-}  
+}
 
 function sendPingRequest() {
     const timeoutDuration = 5000;

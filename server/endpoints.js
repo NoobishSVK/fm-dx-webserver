@@ -354,10 +354,26 @@ router.get('/static_data', (req, res) => {
 });
 
 router.get('/server_time', (req, res) => {
-    const serverTime = new Date(); // Get current server time
-    const serverTimeUTC = new Date(serverTime.getTime() - (serverTime.getTimezoneOffset() * 60000)); // Adjust server time to UTC
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const second = String(now.getSeconds()).padStart(2, '0');
+    const millisecond = String(now.getMilliseconds()).padStart(3, '0');
+    
+    const offsetMinutes = -now.getTimezoneOffset();
+    const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+    const offsetHours = String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2, '0');
+    const offsetMins = String(Math.abs(offsetMinutes) % 60).padStart(2, '0');
+    const offset = `${offsetSign}${offsetHours}:${offsetMins}`;
+
+    const localIsoLike = `${year}-${month}-${day}T${hour}:${minute}:${second}.${millisecond}${offset}`;
+
     res.json({
-        serverTime: serverTimeUTC,
+        serverTime: localIsoLike
     });
 });
 
