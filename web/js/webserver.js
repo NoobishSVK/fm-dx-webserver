@@ -1,5 +1,5 @@
 const versionDate = new Date('Aug 30, 2025 21:00:00');
-const currentVersion = `v10 [${versionDate.getDate()}/${versionDate.getMonth() + 1}/${versionDate.getFullYear()}]`;
+const currentVersion = `v1.3.10 [${versionDate.getDate()}/${versionDate.getMonth() + 1}/${versionDate.getFullYear()}]`;
 
 
 function loadScript(src) {
