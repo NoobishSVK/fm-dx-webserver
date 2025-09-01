@@ -519,6 +519,10 @@ wss.on('connection', (ws, request) => {
                 output.write(`G1${dataHandler.dataToSend.ims}\n`);
             } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
                 output.write(`G${dataHandler.dataToSend.eq}1\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "1") {
+                output.write("G10\n"); // Only cEQ enabled
+            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "2") {
+                output.write("G01\n"); // Only iMS enabled
             } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
                 output.write("G11\n"); // Both Enabled
             }
