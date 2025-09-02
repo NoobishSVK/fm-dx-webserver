@@ -1,0 +1,61 @@
+name: Fetch and Commit librdsparser
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: 'v1.1'
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Download all librdsparser release assets
+      run: |
+        set -e
+        cd server/libraries
+
+        VERSION="${{ github.event.inputs.version }}"
+        echo "Fetching librdsparser release: $VERSION"
+
+        platforms=(
+          "aarch64"
+          "arm"
+          "macos"
+          "mingw32"
+          "mingw64"
+          "x86"
+          "x86_64"
+        )
+
+        base_url="https://github.com/kkonradpl/librdsparser/releases/download/$VERSION"
+
+        for platform in "${platforms[@]}"; do
+          filename="librdsparser-${platform}.zip"
+          dir="${platform}"
+          mkdir -p "$dir"
+
+          echo "Downloading $filename..."
+          curl -sSL -o "$dir/$filename" "$base_url/$filename"
+
+          echo "Extracting from $filename..."
+          unzip -j "$dir/$filename" "*.dll" "*.so" "*.dylib" -d "$dir" || echo "No binaries in $filename"
+          rm "$dir/$filename"
+        done
+
+    - name: Commit and push binaries to the repo
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+        git add server/libraries
+        git diff --cached --quiet || git commit -m "Add librdsparser ${{ github.event.inputs.version }}"
+        git push
