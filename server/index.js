@@ -4,7 +4,6 @@ const endpoints = require('./endpoints');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const http = require('http');
-const httpProxy = require('http-proxy');
 const readline = require('readline');
 const app = express();
 const httpServer = http.createServer(app);
@@ -18,6 +17,7 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const { SerialPort } = require('serialport');
+const audioServer = require('./stream/3las.server');
 const tunnel = require('./tunnel');
 
 // File imports
@@ -94,15 +94,9 @@ console.log('\x1b[90m' + '─'.repeat(terminalWidth - 1) + '\x1b[0m');
 require('./stream/index');
 require('./plugins');
 
-// Create a WebSocket proxy instance
-const proxy = httpProxy.createProxyServer({
-  target: 'ws://localhost:' + (Number(serverConfig.webserver.webserverPort) + 10), // WebSocket httpServer's address
-  ws: true, // Enable WebSocket proxying
-  changeOrigin: true // Change the origin of the host header to the target URL
-});
-
 let currentUsers = 0;
 let serialport;
+let timeoutAntenna;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -171,7 +165,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     setTimeout(() => {
       serialport.write('Q0\n');
       serialport.write('M0\n');
-      serialport.write('Z0\n');
+      serialport.write(`Z${serverConfig.antennaStartup}\n`); // Antenna on startup
 
       if (serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true) {
         serialport.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
@@ -188,7 +182,20 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
-      serialport.write('G00\n');
+      // cEQ and iMS combinations
+      if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "0") {
+        serialport.write("G00\n"); // Both Disabled
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "0") {
+        serialport.write(`G10\n`);
+      } else if (serverConfig.ceqStartup === "0" && serverConfig.imsStartup === "1") {
+        serialport.write(`G01\n`);
+      } else if (serverConfig.ceqStartup === "1" && serverConfig.imsStartup === "1") {
+        serialport.write("G11\n"); // Both Enabled
+      }
+      // Handle stereo mode
+      if (serverConfig.stereoStartup === "1") {
+        serialport.write("B1\n"); // Mono
+      }
       serverConfig.audio.startupVolume 
         ? serialport.write('Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n') 
         : serialport.write('Y100\n');
@@ -326,63 +333,28 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../web'));
 app.use('/', endpoints);
 
-function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
-  const command = message.toString();
-  const now = Date.now();
-  if (endpointName === 'text') logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
-  // Initialize user command history if not present
-  if (!userCommandHistory[clientIp]) {
-      userCommandHistory[clientIp] = [];
-  }
-  
-  // Record the current timestamp for the user
-  userCommandHistory[clientIp].push(now);
-  
-  // Remove timestamps older than 20 ms from the history
-  userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
-  
-  // Check if there are 8 or more commands in the last 20 ms
-  if (userCommandHistory[clientIp].length >= 8) {
-      logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
-      
-      // Add to banlist if not already banned
-      if (!serverConfig.webserver.banlist.includes(clientIp)) {
-          serverConfig.webserver.banlist.push(clientIp);
-          logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
-          console.log(serverConfig.webserver.banlist);
-          configSave();
-      }
-      
-      ws.close(1008, 'Bot-like behavior detected');
-      return command; // Return command value before closing connection
-  }
-  // Update the last message time for general spam detection
-  lastMessageTime = now;
-  // Initialize command history for rate-limiting checks
-  if (!userCommands[command]) {
-      userCommands[command] = [];
-  }
-  // Record the current timestamp for this command
-  userCommands[command].push(now);
-  // Remove timestamps older than 1 second
-  userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-  // If command count exceeds limit, close connection
-  if (userCommands[command].length > lengthCommands) {
-      if (now - lastWarn.time > 1000) { // Check if 1 second has passed
-          logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}" in /${endpointName}. Connection will be terminated.`);
-          lastWarn.time = now; // Update the last warning time
-      }
-      ws.close(1008, 'Spamming detected');
-      return command; // Return command value before closing connection
-  }
-  return command; // Return command value for normal execution
-}
-
-
 /**
  * WEBSOCKET BLOCK
  */
 const tunerLockTracker = new WeakMap();
+const ipConnectionCounts = new Map(); // Per-IP limit variables
+const ipLogTimestamps = new Map();
+const MAX_CONNECTIONS_PER_IP = 5;
+const IP_LOG_INTERVAL_MS = 60000;
+// Remove old per-IP limit addresses
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [ip, count] of ipConnectionCounts.entries()) {
+    const lastSeen = ipLogTimestamps.get(ip) || 0;
+    const inactive = now - lastSeen > 60 * 60 * 1000;
+
+    if (count === 0 && inactive) {
+      ipConnectionCounts.delete(ip);
+      ipLogTimestamps.delete(ip);
+    }
+  }
+}, 60 * 60 * 1000); // Run every hour
 
 wss.on('connection', (ws, request) => {
     const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
@@ -390,18 +362,49 @@ wss.on('connection', (ws, request) => {
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    if (clientIp && serverConfig.webserver.banlist?.includes(clientIp)) {
         ws.close(1008, 'Banned IP');
         return;
     }
 
-    if (clientIp.includes(',')) {
+    if (clientIp && clientIp.includes(',')) {
         clientIp = clientIp.split(',')[0].trim();
+    }
+
+    // Per-IP limit connection open
+    if (clientIp) {
+        const isLocalIp = (
+            clientIp === '127.0.0.1' ||
+            clientIp === '::1' ||
+            clientIp === '::ffff:127.0.0.1' ||
+            clientIp.startsWith('192.168.') ||
+            clientIp.startsWith('10.') || 
+            clientIp.startsWith('172.16.')
+        );
+        if (!isLocalIp) {
+            if (!ipConnectionCounts.has(clientIp)) {
+                ipConnectionCounts.set(clientIp, 0);
+            }
+            const currentCount = ipConnectionCounts.get(clientIp);
+            if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+                ws.close(1008, 'Too many open connections from this IP');
+                const lastLogTime = ipLogTimestamps.get(clientIp) || 0;
+                const now = Date.now();
+                if (now - lastLogTime > IP_LOG_INTERVAL_MS) {
+                    logWarn(`Web client \x1b[31mclosed: limit exceeded\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);
+                    ipLogTimestamps.set(clientIp, now);
+                }
+                return;
+            }
+            ipConnectionCounts.set(clientIp, currentCount + 1);
+        }
     }
 
     if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
       currentUsers++;
     }
+
+    if (timeoutAntenna) clearTimeout(timeoutAntenna);
 
     helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
       if (result === "User banned") {
@@ -472,6 +475,22 @@ wss.on('connection', (ws, request) => {
     });
 
     ws.on('close', (code, reason) => {
+      // Per-IP limit connection closed
+      if (clientIp) {
+        const isLocalIp = (
+          clientIp === '127.0.0.1' ||
+          clientIp === '::1' ||
+          clientIp === '::ffff:127.0.0.1' ||
+          clientIp.startsWith('192.168.') ||
+          clientIp.startsWith('10.') || 
+          clientIp.startsWith('172.16.')
+        );
+        if (!isLocalIp) {
+          const current = ipConnectionCounts.get(clientIp) || 1;
+          ipConnectionCounts.set(clientIp, Math.max(0, current - 1));
+        }
+      }
+
       if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
         currentUsers--;
       }
@@ -484,8 +503,46 @@ wss.on('connection', (ws, request) => {
 
         if (currentUsers === 0) {
             storage.connectedUsers = [];
-            output.write('W0\n');
-            output.write('B0\n');
+
+            if (serverConfig.bwAutoNoUsers === "1") {
+                output.write("W0\n"); // Auto BW 'Enabled'
+            }
+
+            // cEQ and iMS combinations
+            if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "1") {
+                output.write("G00\n"); // Both Disabled
+            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "0") {
+                output.write(`G0${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "1") {
+                output.write(`G${dataHandler.dataToSend.eq}0\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "0") {
+                output.write(`G1${dataHandler.dataToSend.ims}\n`);
+            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
+                output.write(`G${dataHandler.dataToSend.eq}1\n`);
+            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
+                output.write("G11\n"); // Both Enabled
+            }
+
+            // Handle stereo mode
+            if (serverConfig.stereoNoUsers === "1") {
+                output.write("B0\n");
+            } else if (serverConfig.stereoNoUsers === "2") {
+                output.write("B1\n");
+            }
+
+            // Handle Antenna selection
+            if (timeoutAntenna) clearTimeout(timeoutAntenna);
+            timeoutAntenna = setTimeout(() => {
+                if (serverConfig.antennaNoUsers === "1") {
+                    output.write("Z0\n");
+                } else if (serverConfig.antennaNoUsers === "2") {
+                    output.write("Z1\n");
+                } else if (serverConfig.antennaNoUsers === "3") {
+                    output.write("Z2\n");
+                } else if (serverConfig.antennaNoUsers === "4") {
+                    output.write("Z3\n");
+                }
+            }, serverConfig.antennaNoUsersDelay ? 15000 : 0);
         }
 
         if (tunerLockTracker.has(ws)) {
@@ -641,50 +698,6 @@ pluginsWss.on('connection', (ws, request) => {
     });
 });
 
-// Additional web socket for using plugins
-pluginsWss.on('connection', (ws, request) => { 
-    const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-    const userCommandHistory = {};
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
-      ws.close(1008, 'Banned IP');
-      return;
-    }
-    // Anti-spam tracking for each client
-    const userCommands = {};
-    let lastWarn = { time: 0 };
-
-    ws.on('message', message => {
-        // Anti-spam
-        const command = antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '10', 'data_plugins');
-
-        let messageData;
-
-        try {
-            messageData = JSON.parse(message); // Attempt to parse the JSON
-        } catch (error) {
-            // console.error("Failed to parse message:", error); // Log the error
-            return; // Exit if parsing fails
-        }
-
-        const modifiedMessage = JSON.stringify(messageData);
-
-        // Broadcast the message to all other clients
-        pluginsWss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(modifiedMessage); // Send the message to all clients
-            }
-        });
-    });
-
-    ws.on('close', () => {
-        // logInfo('WebSocket Extra connection closed'); // Use custom logInfo function
-    });
-
-    ws.on('error', error => {
-        logError('WebSocket Extra error: ' + error); // Use custom logError function
-    });
-});
-
 function isPortOpen(host, port, timeout = 1000) {
     return new Promise((resolve) => {
         const socket = new net.Socket();
@@ -714,15 +727,15 @@ httpServer.on('upgrade', (request, socket, head) => {
       });
     });
   } else if (request.url === '/audio') {
-    isPortOpen('localhost', (Number(serverConfig.webserver.webserverPort) + 10)).then((open) => {
-        if (open) {
-            proxy.ws(request, socket, head);
-        } else {
-            logWarn(`Audio stream port ${(Number(serverConfig.webserver.webserverPort) + 10)} not yet open — skipping proxy connection.`);
-            socket.end(); // close socket so client isn't left hanging
-        }
-    });
-} else if (request.url === '/chat') {
+    if (typeof audioServer?.handleAudioUpgrade === 'function') {
+      audioServer.handleAudioUpgrade(request, socket, head, (ws) => {
+        audioServer.Server?.Server?.emit?.('connection', ws, request);
+      });
+    } else {
+      logWarn('[Audio WebSocket] Audio server not ready — dropping client connection.');
+      socket.destroy();
+    }
+  } else if (request.url === '/chat') {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
@@ -733,21 +746,21 @@ httpServer.on('upgrade', (request, socket, head) => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
 
-            const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-            const userCommandHistory = {};
-            if (serverConfig.webserver.banlist?.includes(clientIp)) {
-              ws.close(1008, 'Banned IP');
-              return;
-            }
+        const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+        const userCommandHistory = {};
+        if (serverConfig.webserver.banlist?.includes(clientIp)) {
+          ws.close(1008, 'Banned IP');
+          return;
+        }
 
-            // Anti-spam tracking for each client
-            const userCommands = {};
-            let lastWarn = { time: 0 };
+        // Anti-spam tracking for each client
+        const userCommands = {};
+        let lastWarn = { time: 0 };
 
-            ws.on('message', function incoming(message) {
-              // Anti-spam
-              const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
-            });
+        ws.on('message', function incoming(message) {
+          // Anti-spam
+          const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
+        });
 
       });
     });

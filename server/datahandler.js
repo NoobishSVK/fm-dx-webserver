@@ -272,7 +272,7 @@ function rdsReceived() {
     rdsTimeoutTimer = null;
   }
   if (serverConfig.webserver.rdsTimeout && serverConfig.webserver.rdsTimeout != 0) {
-    rdsTimeoutTimer = setInterval(rdsReset, serverConfig.webserver.rdsTimeout * 1000);
+    rdsTimeoutTimer = setTimeout(rdsReset, serverConfig.webserver.rdsTimeout * 1000);
   }
 }
 

@@ -107,7 +107,18 @@ let serverConfig = {
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
-  bwSwitch: false
+  bwSwitch: false,
+  bwAutoStartup: "0",
+  bwAutoNoUsers: "0",
+  ceqStartup: "0",
+  ceqNoUsers: "0",
+  imsStartup: "0",
+  imsNoUsers: "0",
+  stereoStartup: "0",
+  stereoNoUsers: "0",
+  antennaStartup: "0",
+  antennaNoUsers: "0",
+  antennaNoUsersDelay: false
 };
 
 // Function to add missing fields without overwriting existing values
@@ -156,7 +167,7 @@ function configUpdate(newConfig) {
 function configSave() {
   try {
     fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
-    logInfo('Server config saved successfully.');
+    setTimeout(() => logInfo('Server config saved successfully.'), 0);
   } catch (err) {
     logError(err);
   }
