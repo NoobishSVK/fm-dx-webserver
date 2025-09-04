@@ -334,12 +334,12 @@ class FallbackProviderWav extends AFallbackProvider {
         }
     }
 }
+/* Parsing parameters no longer required for Server variable but we'll keep the old code here as a reference
 const OptionParser = {
     "-port": function (txt) { return parseInt(txt, 10); },
     "-channels": function (txt) { return parseInt(txt, 10); },
     "-samplerate": function (txt) { return parseInt(txt, 10); }
 };
-/* Parsing parameters no longer required for Server variable but we'll keep the old code here as a reference
 const Options = {};
 // Parse parameters
 for (let i = 2; i < (process.argv.length - 1); i += 2) {
