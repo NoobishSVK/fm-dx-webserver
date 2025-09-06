@@ -237,6 +237,17 @@ checkFFmpeg().then((ffmpegPath) => {
             commandDef.args.splice(commandDef.recArgs.indexOf('pipe:1'), 0, '-af', 'volume=2.5');
         }
 
+        let currentRec = null;
+
+        process.on('exit', () => {
+            if (currentRec) currentRec.kill('SIGINT');
+        });
+
+        process.on('SIGINT', () => {
+            if (currentRec) currentRec.kill('SIGINT');
+            process.exit();
+        });
+
         function startRec() {
             if (!serverConfig.audio.ffmpeg) {
                 // Spawn rec
@@ -244,20 +255,12 @@ checkFFmpeg().then((ffmpegPath) => {
 
                 //const rec = spawn(commandDef.command, { shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
                 const rec = spawn('rec', commandDef.recArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+                currentRec = rec;
 
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = rec.stdout;
                     audioServer.Server.Run();
                     connectMessage(`${consoleLogTitle} Connected rec \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
-                });
-
-                process.on('exit', () => {
-                    rec.kill('SIGINT');
-                });
-
-                process.on('SIGINT', () => {
-                    rec.kill('SIGINT');
-                    process.exit();
                 });
 
                 rec.stderr.on('data', (data) => {
@@ -317,6 +320,17 @@ checkFFmpeg().then((ffmpegPath) => {
             commandDef.args.splice(commandDef.args.indexOf('pipe:1'), 0, '-af', 'volume=2.5');
         }
 
+        let currentArecord = null;
+
+        process.on('exit', () => {
+            if (currentArecord) currentArecord.kill('SIGINT');
+        });
+
+        process.on('SIGINT', () => {
+            if (currentArecord) currentArecord.kill('SIGINT');
+            process.exit();
+        });
+
         function startArecord() {
             if (!serverConfig.audio.ffmpeg) {
                 // Spawn the arecord loop
@@ -324,20 +338,12 @@ checkFFmpeg().then((ffmpegPath) => {
 
                 //const arecord = spawn(commandDef.command, { shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
                 const arecord = spawn('arecord', commandDef.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+                currentArecord = arecord;
 
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = arecord.stdout;
                     audioServer.Server.Run();
                     connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
-                });
-
-                process.on('exit', () => {
-                    arecord.kill('SIGINT');
-                });
-
-                process.on('SIGINT', () => {
-                    arecord.kill('SIGINT');
-                    process.exit();
                 });
 
                 arecord.stderr.on('data', (data) => {
