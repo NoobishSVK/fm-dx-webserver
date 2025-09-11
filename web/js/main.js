@@ -925,13 +925,11 @@ function throttle(fn, wait) {
 }
 
 function buildAltTxList(txList) {
-    const wrapper = '<div class="panel-100-real m-0" style="background:none;backdrop-filter:none;">';
     let outString = '';
-    outString += wrapper;
     for (let i = 0; i < txList.length; i++) {
         const tx = txList[i];
         outString += `<div class="panel-100-real m-0 hover-brighten no-bg-phone m-0 br-0 p-10" style="min-height: 72px;padding-left: 20px;">
-              <div id="data-station-container-${i}" style="display: block;" class="text-left">
+              <div id="data-station-container-${i}" style="display: block;" class="text-left" data-score="${tx.score}">
                 <h2 style="margin-top: 0;" class="mb-0">
                   <span id="data-station-name-${i}">${tx.station.replace("R.", "Radio ").replace(/%/g, '%25')}</span>
                 </h2>
@@ -942,11 +940,7 @@ function buildAltTxList(txList) {
                 </span>
               </div>
             </div>`;
-        if (i % 2 !== 0) {
-            outString += `</div>${wrapper}`;
-        }
     }
-    outString += '</div>';
     return outString;
 }
 
@@ -959,6 +953,12 @@ function updateTextIfChanged($element, newText) {
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
+    }
+}
+
+function updateDatasetValIfChanged($element, dataLabel, newVal) {
+    if ($element.attr(dataLabel) !== newVal) {
+        $element.attr(dataLabel, newVal);
     }
 }
 
@@ -1022,6 +1022,7 @@ const updateDataElements = throttle(function(parsedData) {
         updateTextIfChanged($('#data-station-pol'), parsedData.txInfo.pol);
         updateHtmlIfChanged($('#data-station-azimuth'), parsedData.txInfo.azi + '°');
         updateHtmlIfChanged($('#data-station-others'), parsedData.txInfo.otherMatches.length > 0 ? ('<span>+' + parsedData.txInfo.otherMatches.length +'</span>') : '');
+        updateDatasetValIfChanged($('#data-station-container'), "data-score", parsedData.txInfo.score);
         const txDistance = localStorage.getItem('imperialUnits') == "true" ? (Number(parsedData.txInfo.dist) * 0.621371192).toFixed(0) + " mi" : parsedData.txInfo.dist + " km";
         const altTxInfo = buildAltTxList(parsedData.txInfo.otherMatches);
         updateHtmlIfChanged($('#alternative-txes'), altTxInfo);
