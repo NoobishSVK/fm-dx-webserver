@@ -1,4 +1,4 @@
-const versionDate = new Date('Sep 10, 2025 14:00:00');
+const versionDate = new Date('Sep 11, 2025 14:00:00');
 const currentVersion = `v1.3.11 [${versionDate.getDate()}/${versionDate.getMonth() + 1}/${versionDate.getFullYear()}]`;
 
 
