@@ -334,6 +334,7 @@ class FallbackProviderWav extends AFallbackProvider {
         }
     }
 }
+/* Parsing parameters no longer required for Server variable but we'll keep the old code here as a reference
 const OptionParser = {
     "-port": function (txt) { return parseInt(txt, 10); },
     "-channels": function (txt) { return parseInt(txt, 10); },
@@ -348,7 +349,9 @@ for (let i = 2; i < (process.argv.length - 1); i += 2) {
         throw new Error("Redefined argument: '" + process.argv[i] + "'. Please use '" + process.argv[i] + "' only ONCE");
     Options[process.argv[i]] = OptionParser[process.argv[i]](process.argv[i + 1]);
 }
-  const Server = new StreamServer(null, 2, 48000);
+*/
+  const audioChannels = serverConfig.audio.audioChannels || 2;
+  const Server = new StreamServer(null, audioChannels, 48000);
 
   ServerInstance = Server;
 
