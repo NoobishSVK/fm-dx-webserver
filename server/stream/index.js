@@ -64,8 +64,6 @@ function buildCommand(ffmpegPath) {
         if (!serverConfig.audio.ffmpeg) {
             logInfo(`${consoleLogTitle} Platform: macOS (darwin) using "coreaudio" with the default audio device.`);
             return {
-                // command not used if recArgs are used
-                command: `rec -t coreaudio -b 32 -r 48000 -c ${audioChannels} -t raw -b 16 -r 48000 -c ${audioChannels}`,
                 args: [],
                 recArgs: [
                     '-t', 'coreaudio',
@@ -76,6 +74,7 @@ function buildCommand(ffmpegPath) {
                     '-b', '16',
                     '-r', '48000',
                     '-c', `${audioChannels}`
+                    , '-'
                 ]
             };
         } else {
