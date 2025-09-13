@@ -145,10 +145,11 @@ const callbacks = {
     dataToSend.rt_flag = flag;
   }, 'callback_rt*'),
 
-  ptyn: koffi.register((rds, flag) => (
-    value = decode_unicode(rdsparser.get_ptyn(rds))
-    /*console.log('PTYN: ' + value)*/
-  ), 'callback_ptyn*'),
+  ptyn: koffi.register(rds => {
+    const ptyn = rdsparser.get_ptyn(rds);
+    dataToSend.ptyn = decode_unicode(ptyn);
+    dataToSend.ptyn_errors = decode_errors(ptyn);
+  }, 'callback_ptyn*'),
 
   ct: koffi.register((rds, ct) => (
     year = rdsparser.ct_get_year(ct),
@@ -218,10 +219,12 @@ var dataToSend = {
   stForced: false,
   rds: false,
   ps: '',
+  ptyn: '',
   tp: 0,
   ta: 0,
   ms: -1,
   pty: 0,
+  di: 0,
   ecc: null,
   af: [],
   rt0: '',
@@ -245,6 +248,7 @@ var dataToSend = {
   country_name: '',
   country_iso: 'UN',
   users: 0,
+  ptyn_errors: '',
 };
 
 const filterMappings = {
@@ -388,8 +392,9 @@ function handleData(wss, receivedData, rdsWss) {
           modifiedData += errorsNew.toString(16).padStart(2, '0');
         }
 
+        const errors = parseInt(modifiedData.slice(-2), 16);
+
         rdsWss.clients.forEach((client) => {
-          const errors = parseInt(modifiedData.slice(-2), 16);
           let data = (((errors & 0xC0) == 0) ? modifiedData.slice(0, 4) : '----');
           data += (((errors & 0x30) == 0) ? modifiedData.slice(4, 8) : '----');
           data += (((errors & 0x0C) == 0) ? modifiedData.slice(8, 12) : '----');
@@ -399,6 +404,16 @@ function handleData(wss, receivedData, rdsWss) {
           const finalBuffer = Buffer.from(newDataString, 'utf-8');
           client.send(finalBuffer);
         });
+
+        // Decode RDS DI bits for group type 0A/0B
+        const blockB = parseInt(modifiedData.slice(4, 8), 16);
+        const groupType = (blockB >> 12) & 0xF;
+        if (groupType === 0 && (errors & 0x30) === 0) {
+          // Bits 0-1 select the DI flag index; bit 2 holds the flag value
+          const diIndex = blockB & 0x3;
+          const diVal = (blockB >> 2) & 0x1;
+          dataToSend.di = (dataToSend.di & ~(1 << diIndex)) | (diVal << diIndex);
+        }
 
         rdsparser.parse_string(rds, modifiedData);
         legacyRdsPiBuffer = null;
@@ -484,6 +499,7 @@ function processSignal(receivedData, st, stForced) {
   if (initialData.freq !== prevFreq) {
     prevFreq = initialData.freq;
     dataToSend.ps_errors = '';
+    dataToSend.ptyn_errors = '';
   }
 
   const modifiedData = receivedData.substring(2);
