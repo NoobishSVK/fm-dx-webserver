@@ -18,9 +18,9 @@ function connectMessage(message) {
 function checkAudioUtilities() {
     if (process.platform === 'darwin') {
         try {
-            execSync('which rec');
+            execSync('which sox');
         } catch (error) {
-            logError(`${consoleLogTitle} Error: SoX ("rec") not found. Please install SoX.`);
+            logError(`${consoleLogTitle} Error: SoX ("sox") not found, Please install sox.`);
             process.exit(1);
         }
     } else if (process.platform === 'linux') {
@@ -62,11 +62,11 @@ function buildCommand(ffmpegPath) {
     } else if (process.platform === 'darwin') {
         // macOS
         if (!serverConfig.audio.ffmpeg) {
-            logInfo(`${consoleLogTitle} Platform: macOS (darwin) using "coreaudio" with the default audio device.`);
+            logInfo(`${consoleLogTitle} Platform: macOS (darwin) using "coreaudio"`);
             return {
                 args: [],
-                recArgs: [
-                    '-t', 'coreaudio',
+                soxArgs: [
+                    '-t', 'coreaudio', `${inputDevice}`,
                     '-b', '32',
                     '-r', '48000',
                     '-c', `${audioChannels}`,
@@ -228,54 +228,53 @@ checkFFmpeg().then((ffmpegPath) => {
         }
         launchFFmpeg(); // Initial launch
     } else if (process.platform === 'darwin') {
-        // macOS (rec --> 3las.server.js --> FFmpeg)
+        // macOS (sox --> 3las.server.js --> FFmpeg)
         const commandDef = buildCommand(ffmpegPath);
 
         // Apply audio boost if enabled and FFmpeg is used
         if (serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg) {
-            commandDef.args.splice(commandDef.recArgs.indexOf('pipe:1'), 0, '-af', 'volume=1.7');
+            commandDef.args.splice(commandDef.soxArgs.indexOf('pipe:1'), 0, '-af', 'volume=1.7');
         }
 
-        let currentRec = null;
+        let currentSox = null;
 
         process.on('exit', () => {
-            if (currentRec) currentRec.kill('SIGINT');
+            if (currentSox) currentSox.kill('SIGINT');
         });
 
         process.on('SIGINT', () => {
-            if (currentRec) currentRec.kill('SIGINT');
+            if (currentSox) currentSox.kill('SIGINT');
             process.exit();
         });
 
-        function startRec() {
+        function startSox() {
             if (!serverConfig.audio.ffmpeg) {
-                // Spawn rec
-                logDebug(`${consoleLogTitle} Launching rec with args: ${commandDef.recArgs.join(' ')}`);
+                // Spawn sox
+                logDebug(`${consoleLogTitle} Launching sox with args: ${commandDef.soxArgs.join(' ')}`);
 
-                //const rec = spawn(commandDef.command, { shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
-                const rec = spawn('rec', commandDef.recArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-                currentRec = rec;
+                const sox = spawn('sox', commandDef.soxArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+                currentSox = sox;
 
                 audioServer.waitUntilReady.then(() => {
-                    audioServer.Server.StdIn = rec.stdout;
+                    audioServer.Server.StdIn = sox.stdout;
                     audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected rec \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
+                    connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
                 });
 
-                rec.stderr.on('data', (data) => {
-                    logFfmpeg(`[rec stderr]: ${data}`);
+                sox.stderr.on('data', (data) => {
+                    logFfmpeg(`[sox stderr]: ${data}`);
                 });
 
-                rec.on('exit', (code) => {
-                    logFfmpeg(`[rec exited] with code ${code}`);
+                sox.on('exit', (code) => {
+                    logFfmpeg(`[sox exited] with code ${code}`);
                     if (code !== 0) {
-                        setTimeout(startRec, 2000);
+                        setTimeout(startSox, 2000);
                     }
                 });
             }
         }
 
-        startRec();
+        startSox();
 
         if (serverConfig.audio.ffmpeg) {
             logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${commandDef.args.join(' ')}`);
