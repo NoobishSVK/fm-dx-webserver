@@ -12,13 +12,17 @@ let shared_Library;
 
 if (platform === 'win32') {
   unicode_type = 'int16_t';
-  shared_Library=path.join(__dirname, "libraries", "librdsparser.dll");
+  arch_type = (cpuArchitecture === 'x64' ? 'mingw64' : 'mingw32');
+  shared_Library=path.join(__dirname, "libraries", arch_type, "librdsparser.dll");
 } else if (platform === 'linux') {
   unicode_type = 'int32_t';
-  shared_Library=path.join(__dirname, "libraries", "librdsparser_" + cpuArchitecture + ".so"); 
+  arch_type = (cpuArchitecture === 'x64' ? 'x86_64' :
+               (cpuArchitecture === 'ia32' ? 'x86' :
+               (cpuArchitecture === 'arm64' ? 'aarch64' : cpuArchitecture)));
+  shared_Library=path.join(__dirname, "libraries", arch_type, "librdsparser.so");
 } else if (platform === 'darwin') {
   unicode_type = 'int32_t';
-  shared_Library=path.join(__dirname, "libraries", "librdsparser" + ".dylib");
+  shared_Library=path.join(__dirname, "libraries", "macos", "librdsparser.dylib");
 }
 
 const lib = koffi.load(shared_Library);
@@ -42,8 +46,8 @@ const rdsparser = {
   free: lib.func('void rdsparser_free(void *rds)'),
   clear: lib.func('void rdsparser_clear(void *rds)'),
   parse_string: lib.func('bool rdsparser_parse_string(void *rds, const char *input)'),
-  set_text_correction: lib.func('bool rdsparser_set_text_correction(void *rds, uint8_t text, uint8_t type, uint8_t error)'),
-  set_text_progressive: lib.func('bool rdsparser_set_text_progressive(void *rds, uint8_t string, bool state)'),
+  set_text_correction: lib.func('void rdsparser_set_text_correction(void *rds, uint8_t text, uint8_t type, uint8_t error)'),
+  set_text_progressive: lib.func('void rdsparser_set_text_progressive(void *rds, uint8_t string, uint8_t state)'),
   get_pi: lib.func('int32_t rdsparser_get_pi(void *rds)'),
   get_pty: lib.func('int8_t rdsparser_get_pty(void *rds)'),
   get_tp: lib.func('int8_t rdsparser_get_tp(void *rds)'),
@@ -169,8 +173,8 @@ rdsparser.set_text_correction(rds, 0, 0, 2);
 rdsparser.set_text_correction(rds, 0, 1, 2);
 rdsparser.set_text_correction(rds, 1, 0, 2);
 rdsparser.set_text_correction(rds, 1, 1, 2);
-rdsparser.set_text_progressive(rds, 0, true)
-rdsparser.set_text_progressive(rds, 1, true)
+rdsparser.set_text_progressive(rds, 0, 1)
+rdsparser.set_text_progressive(rds, 1, 1)
 rdsparser.register_pi(rds, callbacks.pi);
 rdsparser.register_pty(rds, callbacks.pty);
 rdsparser.register_tp(rds, callbacks.tp);
