@@ -48,6 +48,23 @@
     background: var(--color-3); 
 }
 
+.data-ptyn {
+  font-size: 0.7em;
+}
+
+.data-ptyn:empty::before,
+.data-ptyn:empty::after {
+  content: "";
+}
+
+.data-ptyn::before {
+  content: " (";
+}
+
+.data-ptyn::after {
+  content: ")";
+}  
+
 body {
     font-family: 'Titillium Web', sans-serif;
     color: var(--color-text);
