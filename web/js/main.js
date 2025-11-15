@@ -897,7 +897,7 @@ const $dataTa = $('.data-ta');
 const $dataMs = $('.data-ms');
 const $flagDesktopCointainer = $('#flags-container-desktop');
 const $dataPty = $('.data-pty');
-const $dataPtyn = $('#data-ptyn span');
+const $dataPtyn = $('.data-ptyn');
 const $dataDi = $('.data-di');
 
 // Throttling function to limit the frequency of updates
