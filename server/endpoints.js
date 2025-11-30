@@ -163,14 +163,6 @@ router.get('/rdsspy', (req, res) => {
     res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
 });
 
-router.get('/rds', (req, res) => {
-    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
-});
-
-router.get('/rdsspy', (req, res) => {
-    res.send('Please connect using a WebSocket compatible app to obtain RDS stream.');
-});
-
 router.get('/api', (req, res) => {
     const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, ...dataToSend } = dataHandler.dataToSend;
     res.json({
@@ -465,5 +457,25 @@ router.get('/log_fmlist', (req, res) => {
     request.write(postData);
     request.end();
 });
+
+router.get('/tunnelservers', async (req, res) => {
+    const servers = [
+      { value: "eu", host: "eu.fmtuner.org", label: "Europe" },
+      { value: "us", host: "us.fmtuner.org", label: "Americas" },
+      { value: "sg", host: "sg.fmtuner.org", label: "Asia & Oceania" },
+    ];
+  
+    const results = await Promise.all(
+      servers.map(async s => {
+        const latency = await helpers.checkLatency(s.host);
+        return {
+          value: s.value,
+          label: `${s.label} (${latency ? latency + ' ms' : 'offline'})` // From my tests, the latency via HTTP ping is roughly 2x higher than regular ping
+        };
+      })
+    );
+  
+    res.json(results);
+  });
 
 module.exports = router;

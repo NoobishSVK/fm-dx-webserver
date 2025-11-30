@@ -10,6 +10,9 @@ $(document).ready(function() {
   showPanelFromHash();
   initNav();
   initBanlist();
+
+  checkTunnelServers();
+  setInterval(checkTunnelServers, 10000);
 });
 
 /**
@@ -252,4 +255,33 @@ async function loadConsoleLogs() {
     resolve();
   });
   $("#console-output").length ? $("#console-output").scrollTop($("#console-output")[0].scrollHeight) : null;
+}
+
+function checkTunnelServers() {
+  $.ajax({
+    url: '/tunnelservers',
+    method: 'GET',
+    success: function(servers) {
+      const $options = $('#tunnel-server ul.options');
+      const $input = $('#tunnel-serverSelect');
+      const selectedValue = $input.val(); // currently selected value (label or value?)
+
+      servers.forEach(server => {
+        const $li = $options.find(`li[data-value="${server.value}"]`);
+        
+        if ($li.length) {
+          $li.text(server.label);
+
+          // If this li is the currently selected one, update input text too
+          // Note: input.val() holds the label, so match by label is safer
+          if ($li.text() === selectedValue || server.value === selectedValue) {
+            $input.val(server.label);
+          }
+        }
+      });
+    },
+    error: function() {
+      console.error('Failed to load server latency data');
+    }
+  });
 }

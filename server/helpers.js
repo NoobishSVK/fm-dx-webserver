@@ -240,6 +240,23 @@ function checkIPv6Support(callback) {
   });
 }
 
+function checkLatency(host) {
+  return new Promise(resolve => {
+    const start = Date.now();
+
+    const req = http.get({ host, timeout: 2000 }, res => {
+      res.resume(); // discard body
+      resolve(Date.now() - start);
+    });
+
+    req.on("error", () => resolve(null)); // server offline
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(null);
+    });
+  });
+}
+
 function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
   const command = message.toString();
   const now = Date.now();
@@ -313,5 +330,5 @@ const escapeHtml = (unsafe) => {
 
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, antispamProtection, escapeHtml
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml
 }
