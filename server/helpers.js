@@ -240,19 +240,27 @@ function checkIPv6Support(callback) {
   });
 }
 
-function checkLatency(host) {
+function checkLatency(host, port = 80, timeout = 2000) {
   return new Promise(resolve => {
     const start = Date.now();
 
-    const req = http.get({ host, timeout: 2000 }, res => {
-      res.resume(); // discard body
-      resolve(Date.now() - start);
+    const socket = net.connect({ host, port });
+
+    socket.setTimeout(timeout);
+
+    socket.on("connect", () => {
+      const latency = Date.now() - start;
+      socket.destroy();
+      resolve(latency);  // ms
     });
 
-    req.on("error", () => resolve(null)); // server offline
-    req.on("timeout", () => {
-      req.destroy();
-      resolve(null);
+    socket.on("timeout", () => {
+      socket.destroy();
+      resolve(null);     // timed out
+    });
+
+    socket.on("error", () => {
+      resolve(null);     // offline
     });
   });
 }
