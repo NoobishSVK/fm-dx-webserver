@@ -1,7 +1,3 @@
-const versionDate = new Date('Sep 11, 2025 14:00:00');
-const currentVersion = `v1.3.11 [${versionDate.getDate()}/${versionDate.getMonth() + 1}/${versionDate.getFullYear()}]`;
-
-
 function loadScript(src) {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -13,6 +9,7 @@ function loadScript(src) {
 }
 
 async function loadScriptsInOrder() {
+    await loadScript('./js/ver.js');
     await loadScript('./js/api.js');
     await loadScript('./js/main.js');
     await loadScript('./js/dropdown.js');

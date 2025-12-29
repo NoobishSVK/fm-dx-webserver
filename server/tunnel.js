@@ -41,6 +41,7 @@ async function connect() {
     }
     const cfg = ejs.render(frpcConfigTemplate, {
       cfg: serverConfig.tunnel,
+      host: serverConfig.tunnel.community.enabled ? serverConfig.tunnel.community.host : serverConfig.tunnel.region + ".fmtuner.org",
       server: {
         port: serverConfig.webserver.webserverPort
       }
@@ -84,7 +85,7 @@ async function connect() {
 }
 
 const frpcConfigTemplate = `
-serverAddr = "fmtuner.org"
+serverAddr = "<%= host %>"
 serverPort = 7000
 loginFailExit = false
 log.disablePrintColor = true

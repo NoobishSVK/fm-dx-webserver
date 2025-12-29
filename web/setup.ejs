@@ -129,7 +129,7 @@
                     <div class="panel-100-real p-bottom-20">
                         <h3>Quick settings</h3>
                         <div class="flex-container flex-center" style="margin: 30px;">
-                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Public Tuner', id: 'publicTuner'}) %>
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Unlocked Tuner', id: 'publicTuner'}) %>
                             <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Admin lock', id: 'lockToAdmin'}) %><br>
                         </div>
         
@@ -483,7 +483,7 @@
 
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Broadcast to map', id: 'identification-broadcastTuner'}) %><br>
                         <%- include('_components', {component: 'text', cssClass: 'br-15', placeholder: 'Your e-mail or Discord...', label: 'Owner contact', id: 'identification-contact'}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'br-15', label: 'Broadcast address (if using a proxy)', id: 'identification-proxyIp'}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'br-15', label: 'Proxy address', id: 'identification-proxyIp'}) %>
         
                         <p>Check your tuner at <strong><a href="https://servers.fmdx.org" target="_blank" class="color-4">servers.fmdx.org</a></strong>.</p>
                         <p class="text-small text-gray">By activating the <strong>Broadcast to map</strong> option,<br>you agree to the <a href="https://fmdx.org/projects/webserver.php#rules" target="_blank">Terms of Service</a>.</p>
@@ -700,20 +700,31 @@
                     <h3>Tunnel</h3>
                     <p>When you become an <a href="https://buymeacoffee.com/fmdx" target="_blank"><strong>FMDX.org supporter</strong></a>, you can host your webserver without the need of a public IP address & port forwarding.<br>
                     When you become a supporter, you can message the Founders on Discord for your login details.</p>
-
+                    <h4>Main tunnel settings</h4>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Enable tunnel', id: 'tunnel-enabled'}) %><br>
+                    <%- include('_components', { component: 'dropdown', id: 'tunnel-server', inputId: 'tunnel-serverSelect', label: 'Official server region', cssClass: '', placeholder: 'Europe', 
+                    options: [
+                        { value: 'eu', label: 'Europe' },
+                        { value: 'us', label: 'Americas' },
+                        { value: 'sg', label: 'Asia & Oceania' },
+                    ]
+                    }) %>
                     <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Username', id: 'tunnel-username'}) %>
                     <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', password: true, placeholder: '', label: 'Token', id: 'tunnel-token'}) %>
-                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %>.fmtuner.org
-
-                    <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
+                    <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Subdomain name', id: 'tunnel-subdomain'}) %><br>
                     <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Low latency mode', id: 'tunnel-lowLatencyMode'}) %><br>
+                    <p>Enabling low latency mode may provide better experience, however it will also use more bandwidth.</p>
+
+                    <h4 class="top-25">Community tunnel settings</h4>
+                    <p>You can also self-host or ask other people to provide you a token. In this case, the server owner is responsible for any potential security issues.</p>
+                    <%- include('_components', {component: 'checkbox', cssClass: 'm-right-10', label: 'Use a community tunnel', id: 'tunnel-community-enabled'}) %><br>
+                    <%- include('_components', {component: 'text', cssClass: 'w-250 br-15', placeholder: '', label: 'Community Tunnel host (IP or hostname)', id: 'tunnel-community-host'}) %>
                 </div>
             </div>
         </div>
     </div>
     </div>
-    <script src="js/init.js"></script>
+    <script src="js/ver.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dropdown.js"></script>
@@ -722,5 +733,15 @@
     <% enabledPlugins?.forEach(function(plugin) { %>
         <script src="js/plugins/<%= plugin %>"></script>
     <% }); %>
+
+    <script>
+    document.addEventListener('keydown', function(event) {
+        if (event.ctrlKey && event.key === 's') {
+          event.preventDefault();
+          if (event.repeat) return;
+          submitConfig();
+        }
+      });
+      </script>
 </body>
 </html>

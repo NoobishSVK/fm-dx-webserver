@@ -94,10 +94,15 @@ let serverConfig = {
     enabled: false,
     username: "",
     token: "",
+    region: "eu",
     lowLatencyMode: false,
     subdomain: "",
     httpName: "",
     httpPassword: "",
+    community: {
+      enabled: false,
+      host: ""
+    }
   },
   plugins: [],
   device: 'tef',
