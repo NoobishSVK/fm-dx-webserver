@@ -1,9 +1,10 @@
 // plugins_api.js
 // Shared API for server plugins:
 // - Provides privileged/admin command access
-// - Holds the output reference for internal use
-// - Exposes WebSocket and server context to plugins safely
+// - Exposes server-side hooks for inter-plugin communication
+// - Optionally broadcasts events to connected plugin WebSocket clients
 
+const { EventEmitter } = require('events');
 const { logInfo, logWarn, logError } = require('./console');
 
 let output = null;
@@ -11,6 +12,12 @@ let wss = null;
 let pluginsWss = null;
 let httpServer = null;
 let serverConfig = null;
+
+// ---- internal plugin event bus ----
+
+const pluginEvents = new EventEmitter();
+// prevent accidental memory leak warnings
+pluginEvents.setMaxListeners(50);
 
 // ---- registration server side ----
 
@@ -47,6 +54,8 @@ function getServerConfig() {
     return serverConfig;
 }
 
+// ---- privileged command path ----
+
 async function sendPrivilegedCommand(command, isPluginInternal = false) {
     const maxWait = 10000;
     const interval = 500;
@@ -58,7 +67,7 @@ async function sendPrivilegedCommand(command, isPluginInternal = false) {
     }
 
     if (!output) {
-        logError(`[Privileged Send] Timeout waiting for output connection (${command})`);
+        logError(`[Privileged Send] Timeout waiting for output (${command})`);
         return false;
     }
 
@@ -68,9 +77,39 @@ async function sendPrivilegedCommand(command, isPluginInternal = false) {
         return true;
     }
 
-    logWarn(`[Privileged Send] Rejected: Not internal (${command.slice(0, 64)})`);
+    logWarn(`[Privileged Send] Rejected (not internal): ${command.slice(0, 64)}`);
     return false;
 }
+
+// ---- plugin hook API ----
+
+function emitPluginEvent(event, payload) {
+    pluginEvents.emit(event, payload);
+
+    // Broadcast to connected plugin WebSocket clients if available
+    if (pluginsWss) {
+        const message = JSON.stringify({ type: event, value: payload });
+        pluginsWss.clients.forEach((client) => {
+            if (client.readyState === client.OPEN) {
+                try {
+                    client.send(message);
+                } catch (err) {
+                    logWarn(`[plugins_api] Failed to send ${event} to client: ${err.message}`);
+                }
+            }
+        });
+    }
+}
+
+function onPluginEvent(event, handler) {
+    pluginEvents.on(event, handler);
+}
+
+function offPluginEvent(event, handler) {
+    pluginEvents.off(event, handler);
+}
+
+// ---- exports ----
 
 module.exports = {
     // server registration
@@ -78,10 +117,17 @@ module.exports = {
     setOutput,
     clearOutput,
 
-    // plugin-facing API
+    // server context access
     getWss,
     getPluginsWss,
     getHttpServer,
     getServerConfig,
-    sendPrivilegedCommand
+
+    // privileged control
+    sendPrivilegedCommand,
+
+    // inter-plugin hooks
+    emitPluginEvent,
+    onPluginEvent,
+    offPluginEvent
 };
