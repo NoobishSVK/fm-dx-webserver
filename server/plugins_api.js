@@ -83,11 +83,12 @@ async function sendPrivilegedCommand(command, isPluginInternal = false) {
 
 // ---- plugin hook API ----
 
-function emitPluginEvent(event, payload) {
+function emitPluginEvent(event, payload, broadcastToClients = true) {
+    // Emit internally to other server plugins
     pluginEvents.emit(event, payload);
 
-    // Broadcast to connected plugin WebSocket clients if available
-    if (pluginsWss) {
+    // Optionally broadcast to connected plugin WebSocket clients
+    if (broadcastToClients && pluginsWss) {
         const message = JSON.stringify({ type: event, value: payload });
         pluginsWss.clients.forEach((client) => {
             if (client.readyState === client.OPEN) {
