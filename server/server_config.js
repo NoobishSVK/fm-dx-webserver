@@ -90,6 +90,9 @@ let serverConfig = {
     fmlistAdminOnly: false,
     fmlistOmid: "",
   },
+  si47xx: {
+    agcControl: false
+  },
   tunnel: {
     enabled: false,
     username: "",
@@ -106,6 +109,7 @@ let serverConfig = {
   },
   plugins: [],
   device: 'tef',
+  driver: 'fm-dx-tuner',
   defaultFreq: 87.5,
   publicTuner: true,
   lockToAdmin: false,

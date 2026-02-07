@@ -47,15 +47,22 @@
 
                 <h3 class="settings-heading">Tuner type</h3>
                 <p class="m-0">Settings a proper device type ensures that the correct interface and settings will load.</p>
-                <div class="panel-100 no-bg flex-center">
-                    <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
-                    options: [
-                        { value: 'tef', label: 'TEF668x / TEA685x' },
-                        { value: 'xdr', label: 'XDR (F1HD / S10HDiP)' },
-                        { value: 'sdr', label: 'SDR (RTL-SDR / AirSpy)' },
-                        { value: 'other', label: 'Other' }
-                    ]
-                }) %><br>
+                <div class="panel-100 no-bg flex-center" style="max-width: 520px; margin: 10px auto 0; gap: 20px; flex-wrap: wrap;">
+                    <div class="no-bg" style="width: 220px;">
+                        <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
+                        options: tunerProfiles.map(profile => ({
+                            value: profile.id,
+                            label: profile.label
+                        }))
+                    }) %><br>
+                    </div>
+                    <div class="no-bg" style="width: 220px;">
+                        <%- include('_components', { component: 'dropdown', id: 'driver-selector', inputId: 'driver', label: 'Driver', cssClass: '', placeholder: 'FM-DX-Tuner Driver',
+                        options: [
+                            { value: 'fm-dx-tuner', label: 'FM-DX-Tuner Driver' }
+                        ]
+                    }) %><br>
+                    </div>
                 </div>
                 <div class="clearfix"></div>
                 <h3 class="settings-heading">Tuner connection</h3>
@@ -70,16 +77,16 @@
                     </label>
                 </div>
                 <div id="tuner-usb" class="top-25">
-                    <p>It's time to choose your USB device.</p>
+                    <p>It's time to choose your Serial port.</p>
                     
                     <div class="panel-100 no-bg flex-center">
                         <%- include('_components', {
                             component: 'dropdown',
                             id: 'deviceList',
                             inputId: 'xdrd-comPort',
-                            label: 'USB Device',
+                            label: 'Serial Port',
                             cssClass: '',
-                            placeholder: 'Choose your USB device',
+                            placeholder: 'Choose your serial port',
                             options: serialPorts.map(serialPort => ({
                                 value: serialPort.path,
                                 label: `${serialPort.path} - ${serialPort.friendlyName}`
