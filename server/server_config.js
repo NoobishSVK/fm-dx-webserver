@@ -109,7 +109,6 @@ let serverConfig = {
   },
   plugins: [],
   device: 'tef',
-  driver: 'fm-dx-tuner',
   defaultFreq: 87.5,
   publicTuner: true,
   lockToAdmin: false,

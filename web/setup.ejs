@@ -354,22 +354,13 @@
                 <div class="flex-container contains-dropdown">
                 <div class="panel-33 p-bottom-20">
                     <h3>Device type</h3>
-                            <div class="flex-center" style="max-width: 520px; margin: 10px auto 0; gap: 20px; flex-wrap: wrap;">
-                            <div class="no-bg" style="width: 220px;">
+                            <div class="flex-center" style="max-width: 520px; margin: 10px auto 0;">
                             <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
                                 options: tunerProfiles.map(profile => ({
                                     value: profile.id,
                                     label: profile.label
                                 }))
                             }) %><br>
-                            </div>
-                            <div class="no-bg" style="width: 220px;">
-                            <%- include('_components', { component: 'dropdown', id: 'driver-selector', inputId: 'driver', label: 'Driver', cssClass: '', placeholder: 'FM-DX-Tuner Driver',
-                                options: [
-                                    { value: 'fm-dx-tuner', label: 'FM-DX-Tuner Driver' }
-                                ]
-                            }) %><br>
-                            </div>
                             </div>
                 </div>
 

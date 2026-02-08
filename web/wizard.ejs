@@ -47,22 +47,13 @@
 
                 <h3 class="settings-heading">Tuner type</h3>
                 <p class="m-0">Settings a proper device type ensures that the correct interface and settings will load.</p>
-                <div class="panel-100 no-bg flex-center" style="max-width: 520px; margin: 10px auto 0; gap: 20px; flex-wrap: wrap;">
-                    <div class="no-bg" style="width: 220px;">
-                        <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
-                        options: tunerProfiles.map(profile => ({
-                            value: profile.id,
-                            label: profile.label
-                        }))
-                    }) %><br>
-                    </div>
-                    <div class="no-bg" style="width: 220px;">
-                        <%- include('_components', { component: 'dropdown', id: 'driver-selector', inputId: 'driver', label: 'Driver', cssClass: '', placeholder: 'FM-DX-Tuner Driver',
-                        options: [
-                            { value: 'fm-dx-tuner', label: 'FM-DX-Tuner Driver' }
-                        ]
-                    }) %><br>
-                    </div>
+                <div class="panel-100 no-bg flex-center" style="max-width: 520px; margin: 10px auto 0;">
+                    <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
+                    options: tunerProfiles.map(profile => ({
+                        value: profile.id,
+                        label: profile.label
+                    }))
+                }) %><br>
                 </div>
                 <div class="clearfix"></div>
                 <h3 class="settings-heading">Tuner connection</h3>
