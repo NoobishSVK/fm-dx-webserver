@@ -78,11 +78,6 @@ const tunerProfiles = [
       { value: 110000, label: '110 kHz' }
     ],
     details: ''
-  },
-  {
-    id: 'other',
-    label: 'Other',
-    details: ''
   }
 ];
 
