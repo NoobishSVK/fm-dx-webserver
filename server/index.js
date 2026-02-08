@@ -9,7 +9,6 @@ const app = express();
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
-const chatWss = new WebSocket.Server({ noServer: true });
 const rdsWss = new WebSocket.Server({ noServer: true });
 const pluginsWss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
 const fs = require('fs');
@@ -19,6 +18,7 @@ const client = new net.Socket();
 const { SerialPort } = require('serialport');
 const audioServer = require('./stream/3las.server');
 const tunnel = require('./tunnel');
+const { createChatServer } = require('./chat');
 
 // File imports
 const helpers = require('./helpers');
@@ -90,6 +90,8 @@ console.log('\x1b[32m\x1b[2mby Noobish @ \x1b[4mFMDX.org\x1b[0m');
 console.log("v" + pjson.version)
 console.log('\x1b[90m' + '─'.repeat(terminalWidth - 1) + '\x1b[0m');
 
+
+const chatWss = createChatServer(storage);
 // Start ffmpeg
 require('./stream/index');
 require('./plugins');
@@ -580,84 +582,6 @@ wss.on('connection', (ws, request) => {
     ws.on('error', console.error);
 });
 
-// CHAT WEBSOCKET BLOCK
-chatWss.on('connection', (ws, request) => {
-  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  const userCommandHistory = {};
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
-    ws.close(1008, 'Banned IP');
-    return;
-  }
-
-  // Send chat history to the newly connected client
-  storage.chatHistory.forEach(function(message) {
-    message.history = true;
-    !request.session.isAdminAuthenticated ? delete message.ip : null;
-    ws.send(JSON.stringify(message));
-  });
-
-  const ipMessage = {
-    type: 'clientIp',
-    ip: clientIp,
-    admin: request.session.isAdminAuthenticated
-  };
-  ws.send(JSON.stringify(ipMessage));
-
-  // Anti-spam tracking for each client
-  const userCommands = {};
-  let lastWarn = { time: 0 };
-
-  ws.on('message', function incoming(message) {
-    // Anti-spam
-    const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'chat');
-
-    let messageData;
-
-    try {
-      messageData = JSON.parse(message);
-    } catch (error) {
-      ws.send(JSON.stringify({ error: "Invalid message format" }));
-      return;
-    }
-
-    // Escape nickname and other potentially unsafe fields
-    if (messageData.nickname) {
-      messageData.nickname = helpers.escapeHtml(messageData.nickname);
-    }
-
-    messageData.ip = clientIp;
-    const currentTime = new Date();
-    
-    const hours = String(currentTime.getHours()).padStart(2, '0');
-    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
-    messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
-
-    if (serverConfig.webserver.banlist?.includes(clientIp)) { return; }
-    if (request.session.isAdminAuthenticated === true) { messageData.admin = true; }
-    if (messageData.message.length > 255) { messageData.message = messageData.message.substring(0, 255); }
-
-    storage.chatHistory.push(messageData);
-    if (storage.chatHistory.length > 50) { storage.chatHistory.shift(); }
-    logChat(messageData);
-    
-    chatWss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        // Only include IP for admin clients
-        let responseMessage = { ...messageData };
-  
-        if (request.session.isAdminAuthenticated !== true) {
-          delete responseMessage.ip;
-        }
-  
-        const modifiedMessage = JSON.stringify(responseMessage);
-        client.send(modifiedMessage); 
-      }
-    });
-  });
-
-  ws.on('close', function close() {});
-});
-
 // Additional web socket for using plugins
 pluginsWss.on('connection', (ws, request) => { 
     const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
@@ -739,7 +663,7 @@ httpServer.on('upgrade', (request, socket, head) => {
       logWarn('[Audio WebSocket] Audio server not ready — dropping client connection.');
       socket.destroy();
     }
-  } else if (request.url === '/chat') {
+  } else if (request.url === '/chat' && serverConfig.webserver.chatEnabled === true) {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
