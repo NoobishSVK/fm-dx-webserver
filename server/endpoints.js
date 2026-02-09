@@ -10,6 +10,7 @@ const https = require('https');
 const { parseAudioDevice } = require('./stream/parser');
 const { configName, serverConfig, configUpdate, configSave, configExists, configPath } = require('./server_config');
 const helpers = require('./helpers');
+const tunerProfiles = require('./tuner_profiles');
 const storage = require('./storage');
 const { logInfo, logDebug, logWarn, logError, logFfmpeg, logs } = require('./console');
 const dataHandler = require('./datahandler');
@@ -48,32 +49,39 @@ router.get('/', (req, res) => {
                     isAdminAuthenticated: true,
                     videoDevices: result.audioDevices,
                     audioDevices: result.videoDevices,
-                    serialPorts: serialPorts
+                    serialPorts: serialPorts,
+                    tunerProfiles: tunerProfiles.map((profile) => ({
+                        id: profile.id,
+                        label: profile.label,
+                        detailsHtml: helpers.parseMarkdown(profile.details || '')
+                    }))
                 });
             });
         });
     } else {
-        res.render('index', {
-            isAdminAuthenticated: req.session.isAdminAuthenticated,
-            isTuneAuthenticated: req.session.isTuneAuthenticated,
-            tunerName: serverConfig.identification.tunerName,
-            tunerDesc: helpers.parseMarkdown(serverConfig.identification.tunerDesc),
-            tunerDescMeta: helpers.removeMarkdown(serverConfig.identification.tunerDesc),
-            tunerLock: serverConfig.lockToAdmin,
-            publicTuner: serverConfig.publicTuner,
-            ownerContact: serverConfig.identification.contact,
-            antennas: serverConfig.antennas,
-            tuningLimit: serverConfig.webserver.tuningLimit,
-            tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
-            tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
-            chatEnabled: serverConfig.webserver.chatEnabled,
-            device: serverConfig.device,
-            noPlugins,
-            plugins: serverConfig.plugins,
-            fmlist_integration: serverConfig.extras.fmlistIntegration,
-            fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
-            bwSwitch: serverConfig.bwSwitch
-        });
+            res.render('index', {
+                isAdminAuthenticated: req.session.isAdminAuthenticated,
+                isTuneAuthenticated: req.session.isTuneAuthenticated,
+                tunerName: serverConfig.identification.tunerName,
+                tunerDesc: helpers.parseMarkdown(serverConfig.identification.tunerDesc),
+                tunerDescMeta: helpers.removeMarkdown(serverConfig.identification.tunerDesc),
+                tunerLock: serverConfig.lockToAdmin,
+                publicTuner: serverConfig.publicTuner,
+                ownerContact: serverConfig.identification.contact,
+                antennas: serverConfig.antennas,
+                tuningLimit: serverConfig.webserver.tuningLimit,
+                tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
+                tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
+                chatEnabled: serverConfig.webserver.chatEnabled,
+                device: serverConfig.device,
+                tunerProfiles,
+                si47xxAgcControl: !!serverConfig.si47xx?.agcControl,
+                noPlugins,
+                plugins: serverConfig.plugins,
+                fmlist_integration: serverConfig.extras.fmlistIntegration,
+                fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
+                bwSwitch: serverConfig.bwSwitch
+            });
     }
 });
 
@@ -101,7 +109,12 @@ router.get('/wizard', (req, res) => {
                 isAdminAuthenticated: req.session.isAdminAuthenticated,
                 videoDevices: result.audioDevices,
                 audioDevices: result.videoDevices,
-                serialPorts: serialPorts
+                serialPorts: serialPorts,
+                tunerProfiles: tunerProfiles.map((profile) => ({
+                    id: profile.id,
+                    label: profile.label,
+                    detailsHtml: helpers.parseMarkdown(profile.details || '')
+                }))
             });
         });
     })
@@ -134,24 +147,29 @@ router.get('/wizard', (req, res) => {
               const formattedProcessUptime = helpers.formatUptime(processUptimeInSeconds);
               
               const updatedConfig = loadConfig();  // Reload the config every time
-              res.render('setup', {
-                  isAdminAuthenticated: req.session.isAdminAuthenticated,
-                  videoDevices: result.audioDevices,
-                  audioDevices: result.videoDevices,
-                  serialPorts: serialPorts,
-                  memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
-                  memoryHeap: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) + ' MB',
-                  processUptime: formattedProcessUptime,
-                  consoleOutput: logs,
-                  plugins: allPluginConfigs,
-                  enabledPlugins: updatedConfig.plugins,
-                  onlineUsers: dataHandler.dataToSend.users,
-                  connectedUsers: storage.connectedUsers,
-                  device: serverConfig.device,
-                  banlist: updatedConfig.webserver.banlist // Updated banlist from the latest config
-              });
+          res.render('setup', {
+              isAdminAuthenticated: req.session.isAdminAuthenticated,
+              videoDevices: result.audioDevices,
+              audioDevices: result.videoDevices,
+              serialPorts: serialPorts,
+              memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
+              memoryHeap: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) + ' MB',
+              processUptime: formattedProcessUptime,
+              consoleOutput: logs,
+              plugins: allPluginConfigs,
+              enabledPlugins: updatedConfig.plugins,
+              onlineUsers: dataHandler.dataToSend.users,
+              connectedUsers: storage.connectedUsers,
+              device: serverConfig.device,
+              banlist: updatedConfig.webserver.banlist, // Updated banlist from the latest config
+              tunerProfiles: tunerProfiles.map((profile) => ({
+                  id: profile.id,
+                  label: profile.label,
+                  detailsHtml: helpers.parseMarkdown(profile.details || '')
+              }))
           });
-      }) 
+      });
+  }) 
   });
   
 

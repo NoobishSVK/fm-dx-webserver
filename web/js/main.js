@@ -890,6 +890,7 @@ const $dataSt = $('.data-st');
 const $dataRt0 = $('#data-rt0 span');
 const $dataRt1 = $('#data-rt1 span');
 const $dataAntInput = $('.data-ant input');
+const $dataAgcInput = $('.data-agc input');
 const $dataBwInput = $('.data-bw input');
 const $dataStationContainer = $('#data-station-container');
 const $dataTp = $('.data-tp');
@@ -1007,6 +1008,9 @@ const updateDataElements = throttle(function(parsedData) {
     $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
     
     $dataAntInput.val($('.data-ant li[data-value="' + parsedData.ant + '"]').first().text());
+    if (typeof parsedData.agc !== 'undefined') {
+        $dataAgcInput.val($('.data-agc li[data-value="' + parsedData.agc + '"]').first().text());
+    }
     
     if (parsedData.bw < 500) {
         $dataBwInput.val($('.data-bw li[data-value2="' + parsedData.bw + '"]').first().text());
