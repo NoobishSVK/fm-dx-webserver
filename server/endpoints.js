@@ -182,12 +182,13 @@ router.get('/rdsspy', (req, res) => {
 });
 
 router.get('/api', (req, res) => {
-    const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, ...dataToSend } = dataHandler.dataToSend;
+    const { ps_errors, rt0_errors, rt1_errors, ims, eq, ant, st_forced, previousFreq, txInfo, rdsMode, ...dataToSend } = dataHandler.dataToSend;
     res.json({
         ...dataToSend,
         txInfo: txInfo,
         ps_errors: ps_errors,
-        ant: ant
+        ant: ant,
+        rbds: serverConfig.webserver.rdsMode
     });
 });
 
@@ -259,6 +260,8 @@ router.get('/kick', (req, res) => {
 });
 
 router.get('/addToBanlist', (req, res) => {
+    if (!req.session.isAdminAuthenticated) return;
+
     const ipAddress = req.query.ip;
     const location = 'Unknown';
     const date = Date.now();
@@ -270,17 +273,15 @@ router.get('/addToBanlist', (req, res) => {
         serverConfig.webserver.banlist = [];
     }
 
-    if (req.session.isAdminAuthenticated) {
-        serverConfig.webserver.banlist.push(userBanData);
-        configSave();
-        res.json({ success: true, message: 'IP address added to banlist.' });
-        helpers.kickClient(ipAddress);
-    } else {
-        res.status(403).json({ success: false, message: 'Unauthorized access.' });
-    }
+    serverConfig.webserver.banlist.push(userBanData);
+    configSave();
+    res.json({ success: true, message: 'IP address added to banlist.' });
+    helpers.kickClient(ipAddress);
 });
 
 router.get('/removeFromBanlist', (req, res) => {
+    if (!req.session.isAdminAuthenticated) return;
+
     const ipAddress = req.query.ip;
 
     if (typeof serverConfig.webserver.banlist !== 'object') {

@@ -215,8 +215,8 @@
 
                 <div class="flex-container">
                     <div class="panel-50 p-bottom-20">
-                        <h3>Volume</h3>
-                        <p>This option will boost the audio volume globally, recommended for the Headless TEF.</p>
+                        <h3>Audio boost</h3>
+                        <p>This option will boost the audio volume. Use if the output is too quiet.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Audio Boost', id: 'audio-audioBoost'}) %>
                     </div>
                     <div class="panel-50 p-bottom-20">
@@ -351,8 +351,7 @@
 
             <div class="panel-full m-0 tab-content no-bg" id="tuner" role="tabpanel">
                 <h2>Tuner settings</h2>
-                <div class="flex-container contains-dropdown">
-                <div class="panel-33 p-bottom-20">
+                <div class="panel-100 p-bottom-20 contains-dropdown" style="z-index: 991;">
                     <h3>Device type</h3>
                             <div class="flex-center" style="max-width: 520px; margin: 10px auto 0;">
                             <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
@@ -363,8 +362,8 @@
                             }) %><br>
                             </div>
                 </div>
-
-                <div class="panel-33 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
+                <div class="flex-container contains-dropdown">
+                <div class="panel-100 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
                     <h3>Connection type</h3>
                     <p class="text-gray">If you want to choose the Serial port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
                     <div class="auto top-10">
@@ -377,11 +376,7 @@
                             </span>											
                         </label>
                     </div>
-                </div>
-                <div class="panel-33 p-bottom-20">
-                    <h3>Device / Server</h3>
-                        
-                    <div id="tuner-usb">
+                                        <div id="tuner-usb">
                         <p class="text-gray">Choose your desired <strong>Serial port</strong><br>&nbsp;</p>
                         <%- include('_components', {
                             component: 'dropdown',

@@ -1,7 +1,7 @@
 const tunerProfiles = [
   {
     id: 'tef',
-    label: 'TEF668x / TEA685x',
+    label: 'TEF668x',
     fmBandwidths: [
       { value: 0, label: 'Auto' },
       { value: 56000, label: '56 kHz' },
@@ -69,7 +69,7 @@ const tunerProfiles = [
   },
   {
     id: 'si47xx',
-    label: 'SI47XX (SI4735 / SI4732 / SI47XX)',
+    label: 'Si47XX (Si4735 / Si4732)',
     fmBandwidths: [
       { value: 0, label: 'Auto' },
       { value: 40000, label: '40 kHz' },

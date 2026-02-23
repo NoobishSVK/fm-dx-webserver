@@ -658,6 +658,13 @@ function isPortOpen(host, port, timeout = 1000) {
 
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
+  
+  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    socket.destroy();
+    return;
+  }
+
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {
       wss.handleUpgrade(request, socket, head, (ws) => {
@@ -683,23 +690,6 @@ httpServer.on('upgrade', (request, socket, head) => {
     sessionMiddleware(request, {}, () => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
-
-        const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-        const userCommandHistory = {};
-        if (serverConfig.webserver.banlist?.includes(clientIp)) {
-          ws.close(1008, 'Banned IP');
-          return;
-        }
-
-        // Anti-spam tracking for each client
-        const userCommands = {};
-        let lastWarn = { time: 0 };
-
-        ws.on('message', function incoming(message) {
-          // Anti-spam
-          const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
-        });
-
       });
     });
   } else if (request.url === '/data_plugins') {
