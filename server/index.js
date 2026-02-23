@@ -27,6 +27,7 @@ const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
+const pluginsApi = require('./plugins_api');
 const pjson = require('../package.json');
 
 // Function to find server files based on the plugins listed in config
@@ -160,6 +161,8 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     
     logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
     dataHandler.state.isSerialportAlive = true;
+    pluginsApi.setOutput(serialport);
+
     setTimeout(() => {
         serialport.write('x\n');
     }, 3000);
@@ -214,6 +217,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 
   // Handle port closure
   serialport.on('close', () => {
+  pluginsApi.setOutput(null);
     logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
     setTimeout(() => {
         dataHandler.state.isSerialportRetrying = true;
@@ -233,7 +237,8 @@ function connectToXdrd() {
   if (xdrd.wirelessConnection && configExists()) {
     client.connect(xdrd.xdrdPort, xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
-      
+      pluginsApi.setOutput(client);
+
       authFlags = {
         authMsg: false,
         firstClient: false,
@@ -301,6 +306,7 @@ client.on('data', (data) => {
 });
 
 client.on('close', () => {
+  pluginsApi.setOutput(null);
   if(serverConfig.autoShutdown === false) {
     logWarn('Disconnected from xdrd. Attempting to reconnect.');
     setTimeout(function () {
@@ -733,3 +739,7 @@ helpers.checkIPv6Support((isIPv6Supported) => {
     startServer(ipv4Address, false); // Start only on IPv4
   }
 });
+
+// Register server context for plugins
+pluginsApi.registerServerContext({ wss, pluginsWss, httpServer, serverConfig });
+module.exports = { wss, pluginsWss, httpServer, serverConfig };
