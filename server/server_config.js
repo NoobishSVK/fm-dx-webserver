@@ -90,6 +90,9 @@ let serverConfig = {
     fmlistAdminOnly: false,
     fmlistOmid: "",
   },
+  si47xx: {
+    agcControl: false
+  },
   tunnel: {
     enabled: false,
     username: "",

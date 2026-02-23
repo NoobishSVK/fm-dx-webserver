@@ -159,7 +159,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       return;
     }
     
-    logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+    logInfo('Using serial port: ' + serverConfig.xdrd.comPort);
     dataHandler.state.isSerialportAlive = true;
     pluginsApi.setOutput(serialport);
 
@@ -183,7 +183,9 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       }
       dataHandler.state.isSerialportRetrying = false;
 
-      serialport.write('A0\n');
+      if (serverConfig.device === 'si47xx') {
+        serialport.write('A0\n');
+      }
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
@@ -296,7 +298,9 @@ client.on('data', (data) => {
         client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
         dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
         dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-        client.write('A0\n');
+        if (serverConfig.device === 'si47xx') {
+          client.write('A0\n');
+        }
         client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
         serverConfig.webserver.rdsMode ? client.write('D1\n') : client.write('D0\n');
         return;

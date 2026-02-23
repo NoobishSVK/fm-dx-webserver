@@ -354,20 +354,19 @@
                 <div class="flex-container contains-dropdown">
                 <div class="panel-33 p-bottom-20">
                     <h3>Device type</h3>
+                            <div class="flex-center" style="max-width: 520px; margin: 10px auto 0;">
                             <%- include('_components', { component: 'dropdown', id: 'device-selector', inputId: 'device', label: 'Device', cssClass: '', placeholder: 'TEF668x / TEA685x', 
-                                options: [
-                                    { value: 'tef', label: 'TEF668x / TEA685x' },
-                                    { value: 'xdr', label: 'XDR (F1HD / S10HDiP)' },
-                                    { value: 'sdr', label: 'SDR (RTL-SDR / AirSpy)' },
-                                    { value: 'other', label: 'Other' }
-                                ]
+                                options: tunerProfiles.map(profile => ({
+                                    value: profile.id,
+                                    label: profile.label
+                                }))
                             }) %><br>
-                    
+                            </div>
                 </div>
 
                 <div class="panel-33 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
                     <h3>Connection type</h3>
-                    <p class="text-gray">If you want to choose the COM port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
+                    <p class="text-gray">If you want to choose the Serial port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
                     <div class="auto top-10">
                         <label class="toggleSwitch nolabel" onclick="">
                             <input id="xdrd-wirelessConnection" type="checkbox" tabindex="0" aria-label="Connection type"/>
@@ -383,14 +382,14 @@
                     <h3>Device / Server</h3>
                         
                     <div id="tuner-usb">
-                        <p class="text-gray">Choose your desired <strong>COM port</strong><br>&nbsp;</p>
+                        <p class="text-gray">Choose your desired <strong>Serial port</strong><br>&nbsp;</p>
                         <%- include('_components', {
                             component: 'dropdown',
                             id: 'deviceList',
                             inputId: 'xdrd-comPort',
-                            label: 'USB Device',
+                            label: 'Serial Port',
                             cssClass: '',
-                            placeholder: 'Choose your USB device',
+                            placeholder: 'Choose your serial port',
                             options: serialPorts.map(serialPort => ({
                                 value: serialPort.path,
                                 label: `${serialPort.path} - ${serialPort.friendlyName}`
@@ -432,6 +431,13 @@
                                 <h4>Automatic shutdown</h4>
                                 <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Auto-shutdown', id: 'autoShutdown'}) %><br>
+                            </div>
+                        </div>
+                        <div class="flex-container">
+                            <div class="panel-50 no-bg">
+                                <h4>SI47XX AGC control</h4>
+                                <p>Allow users to change SI47XX AGC mode from the main UI.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Enable AGC control', id: 'si47xx-agcControl'}) %><br>
                             </div>
                         </div>
                     </div>
