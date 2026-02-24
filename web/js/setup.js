@@ -263,8 +263,8 @@ function checkTunnelServers() {
     url: '/tunnelservers',
     method: 'GET',
     success: function(servers) {
-      const $options = $('#tunnel-server ul.options');
-      const $input = $('#tunnel-serverSelect');
+      const $options = $('#tunnel-regionSelect ul.options');
+      const $input = $('#tunnel-region');
       const selectedValue = $input.val(); // currently selected value (label or value?)
 
       servers.forEach(server => {
