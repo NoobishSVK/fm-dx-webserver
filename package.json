@@ -1,6 +1,6 @@
 {
   "name": "fm-dx-webserver",
-  "version": "1.4.0",
+  "version": "1.4.0a",
   "description": "FM DX Webserver",
   "main": "index.js",
   "scripts": {
