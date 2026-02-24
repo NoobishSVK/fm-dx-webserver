@@ -3,6 +3,10 @@ const { serverConfig } = require('./server_config');
 const { logChat } = require('./console');
 const helpers = require('./helpers');
 
+function heartbeat() { // WebSocket heartbeat helper
+    this.isAlive = true;
+}
+
 function createChatServer(storage) {
     if (!serverConfig.webserver.chatEnabled) {
         return null;
@@ -11,7 +15,13 @@ function createChatServer(storage) {
     const chatWss = new WebSocket.Server({ noServer: true });
 
     chatWss.on('connection', (ws, request) => {
-        const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+        ws.isAlive = true;
+        ws.on('pong', heartbeat);
+
+        const clientIp =
+            request.headers['x-forwarded-for'] ||
+            request.connection.remoteAddress;
+
         const userCommandHistory = {};
 
         if (serverConfig.webserver.banlist?.includes(clientIp)) {
@@ -30,13 +40,11 @@ function createChatServer(storage) {
             ws.send(JSON.stringify(historyMessage));
         });
 
-        const ipMessage = {
+        ws.send(JSON.stringify({
             type: 'clientIp',
             ip: clientIp,
             admin: request.session?.isAdminAuthenticated
-        };
-
-        ws.send(JSON.stringify(ipMessage));
+        }));
 
         const userCommands = {};
         let lastWarn = { time: 0 };
@@ -75,8 +83,6 @@ function createChatServer(storage) {
                 return;
             }
 
-            console.log("Chat message:", messageData);
-
             messageData.ip = clientIp;
 
             const now = new Date();
@@ -100,6 +106,7 @@ function createChatServer(storage) {
             }
 
             storage.chatHistory.push(messageData);
+
             if (storage.chatHistory.length > 50) {
                 storage.chatHistory.shift();
             }
@@ -118,6 +125,28 @@ function createChatServer(storage) {
                 }
             });
         });
+
+        ws.on('close', () => {
+            ws.isAlive = false;
+        });
+    });
+
+    /**
+     * We will not always be receiving data, so some proxies may terminate the connection, this prevents it.
+     */
+    const interval = setInterval(() => {
+        chatWss.clients.forEach((ws) => {
+            if (ws.isAlive === false) {
+                return ws.terminate();
+            }
+
+            ws.isAlive = false;
+            ws.ping();
+        });
+    }, 30000);
+
+    chatWss.on('close', () => {
+        clearInterval(interval);
     });
 
     return chatWss;
