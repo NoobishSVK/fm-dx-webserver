@@ -435,7 +435,7 @@ wss.on('connection', (ws, request) => {
     let lastWarn = { time: 0 };
 
     ws.on('message', (message) => {
-        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
+        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text', 16 * 1024);
 
         if (!clientIp.includes("127.0.0.1")) {
             if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 

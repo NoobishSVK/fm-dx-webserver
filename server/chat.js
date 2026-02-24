@@ -42,7 +42,7 @@ function createChatServer(storage) {
         let lastWarn = { time: 0 };
 
         ws.on('message', (message) => {
-            helpers.antispamProtection(
+            message = helpers.antispamProtection(
                 message,
                 clientIp,
                 ws,
@@ -50,8 +50,11 @@ function createChatServer(storage) {
                 lastWarn,
                 userCommandHistory,
                 '5',
-                'chat'
+                'chat',
+                512
             );
+
+            if (!message) return;
 
             let messageData;
 
@@ -62,15 +65,17 @@ function createChatServer(storage) {
                 return;
             }
 
-            console.log("Chat message:", messageData);
-
             delete messageData.admin;
             delete messageData.ip;
             delete messageData.time;
 
             if (messageData.nickname != null) {
                 messageData.nickname = helpers.escapeHtml(String(messageData.nickname));
+            } else {
+                return;
             }
+
+            console.log("Chat message:", messageData);
 
             messageData.ip = clientIp;
 
@@ -115,7 +120,7 @@ function createChatServer(storage) {
         });
     });
 
-    return chatWss; // ← VERY IMPORTANT
+    return chatWss;
 }
 
 module.exports = { createChatServer };
