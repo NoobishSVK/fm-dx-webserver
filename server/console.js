@@ -2,8 +2,10 @@ const fs = require('fs').promises;
 
 const verboseMode = process.argv.includes('--debug');
 const verboseModeFfmpeg = process.argv.includes('--ffmpegdebug');
-
-const LOG_FILE = 'serverlog.txt';
+const LOG_FILE = process.argv.includes('--config') && process.argv[process.argv.indexOf('--config') + 1] 
+  ? `serverlog_${process.argv[process.argv.indexOf('--config') + 1]}.txt`
+  : 'serverlog.txt';
+  
 const ANSI_ESCAPE_CODE_PATTERN = /\x1b\[[0-9;]*m/g;
 const MAX_LOG_LINES = 5000;
 const FLUSH_INTERVAL = 60000;
