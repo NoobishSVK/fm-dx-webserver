@@ -190,7 +190,7 @@ function getStateForCoordinates(lat, lon) {
  */
 function validPsCompare(rdsPs, stationPs) {
     if (typeof stationPs !== 'string' || typeof rdsPs !== 'string') {
-        consoleCmd.logError(`Invalid TX values. stationPs: ${stationPs}, rdsPs: ${rdsPs}`);
+        consoleCmd.logDebug(`Invalid TX values. stationPs: ${stationPs}, rdsPs: ${rdsPs}`);
         return false;
     }
 
