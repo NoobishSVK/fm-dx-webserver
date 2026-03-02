@@ -23,8 +23,10 @@ jobs:
         run: |
           set -euo pipefail
           install -m 700 -d ~/.ssh
-          printf "%s" "${{ secrets.KAZPAR_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          # Normalize possible CRLF line endings from secret storage.
+          printf "%s" "${{ secrets.KAZPAR_DEPLOY_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 >/dev/null
           ssh-keyscan -p 1024 kazpar.pl >> ~/.ssh/known_hosts
 
       - name: Run remote deploy script
