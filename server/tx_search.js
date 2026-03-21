@@ -287,7 +287,11 @@ async function fetchTx(freq, piCode, rdsPs) {
     if (filteredLocations.length > 1) {
         const extraFilteredLocations = filteredLocations.map(locData => ({
             ...locData,
-            stations: locData.stations.filter(station => (station.ps?.toLowerCase().includes(rdsPs.replace(/ /g, '_').toLowerCase())))
+            stations: locData.stations.filter(station => 
+                station.ps?.toLowerCase().includes(
+                    rdsPs.replace(/ /g, '_').toLowerCase()
+                ) ?? false
+            )
         })).filter(locData => locData.stations.length > 0);
 
         if (extraFilteredLocations.length > 0) {
