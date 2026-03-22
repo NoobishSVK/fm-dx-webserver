@@ -110,7 +110,9 @@
                                                   <%= user.ip.replace('::ffff:', '') %>
                                                 </a>
                                             </td>                                              
-                                            <td><%= user.location %></td>
+                                            <td>
+                                                <%= user.location %><% if (user.isp) { %> (<%= user.isp %>)<% } %>
+                                            </td>
                                             <td><%= user.time %></td>
                                             <td><a href="./kick?ip=<%= user.ip %>">Kick</a></td>
                                         </tr>

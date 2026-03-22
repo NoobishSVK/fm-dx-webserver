@@ -7,6 +7,13 @@ const storage = require('./storage');
 const consoleCmd = require('./console');
 const { serverConfig, configExists, configSave } = require('./server_config');
 
+let geoip = null;
+try {
+  geoip = require('geoip-lite');
+} catch (e) {
+  geoip = null;
+}
+
 function parseMarkdown(parsed) {
   parsed = parsed.replace(/<\/?[^>]+(>|$)/g, '');
   
@@ -58,35 +65,101 @@ function authenticateWithXdrd(client, salt, password) {
 }
 
 const ipCache = new Map();
+const ipInfoInFlight = new Map();
+
+function fetchIpWhoisInfo(ip, timeoutMs = 1500) {
+  return new Promise((resolve) => {
+    if (!ip || !net.isIP(ip)) return resolve({});
+
+    const url = `https://ipwho.is/${encodeURIComponent(ip)}`;
+    const req = https.get(url, { timeout: timeoutMs }, (res) => {
+      if (res.statusCode !== 200) {
+        res.resume();
+        return resolve({});
+      }
+
+      let body = '';
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => {
+        try {
+          const data = JSON.parse(body);
+          if (!data || data.success === false) return resolve({});
+
+          const connection = data.connection || {};
+          const isp = connection.isp || connection.org;
+          const asnRaw = connection.asn;
+          const as =
+            typeof asnRaw === 'string'
+              ? asnRaw
+              : typeof asnRaw === 'number'
+                ? `AS${asnRaw}`
+                : undefined;
+
+          resolve({
+            isp: typeof isp === 'string' && isp.trim() ? isp.trim() : undefined,
+            as,
+          });
+        } catch (e) {
+          resolve({});
+        }
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({});
+    });
+
+    req.on('error', () => resolve({}));
+  });
+}
 
 function handleConnect(clientIp, currentUsers, ws, callback) {
-  if (ipCache.has(clientIp)) {
-    // Use cached location info
-    processConnection(clientIp, ipCache.get(clientIp), currentUsers, ws, callback);
+  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '').split('%')[0];
+
+  if (ipCache.has(normalizedClientIp)) {
+    processConnection(clientIp, ipCache.get(normalizedClientIp), currentUsers, ws, callback);
     return;
   }
 
-  http.get(`http://ip-api.com/json/${clientIp}`, (response) => {
-    let data = "";
+  if (ipInfoInFlight.has(normalizedClientIp)) {
+    ipInfoInFlight
+      .get(normalizedClientIp)
+      .then((info) => processConnection(clientIp, info, currentUsers, ws, callback))
+      .catch(() => processConnection(clientIp, { country: undefined }, currentUsers, ws, callback));
+    return;
+  }
 
-    response.on("data", (chunk) => {
-      data += chunk;
+  let locationInfo = { country: undefined };
+  if (geoip && normalizedClientIp && net.isIP(normalizedClientIp)) {
+    const geo = geoip.lookup(normalizedClientIp);
+    if (geo) {
+      locationInfo = {
+        country: geo.country,
+        countryCode: geo.country,
+        city: geo.city,
+        regionName: geo.region,
+      };
+    }
+  } else if (!geoip) {
+    consoleCmd.logWarn('geoip-lite is not installed; location will be Unknown.');
+  }
+
+  const inFlightPromise = fetchIpWhoisInfo(normalizedClientIp)
+    .then((whoisInfo) => {
+      const merged = { ...locationInfo, ...whoisInfo };
+      ipCache.set(normalizedClientIp, merged);
+      ipInfoInFlight.delete(normalizedClientIp);
+      return merged;
+    })
+    .catch(() => {
+      ipCache.set(normalizedClientIp, locationInfo);
+      ipInfoInFlight.delete(normalizedClientIp);
+      return locationInfo;
     });
 
-    response.on("end", () => {
-      try {
-        const locationInfo = JSON.parse(data);
-        ipCache.set(clientIp, locationInfo); // Store in cache
-        processConnection(clientIp, locationInfo, currentUsers, ws, callback);
-      } catch (error) {
-        console.error("Error parsing location data:", error);
-        callback("User allowed");
-      }
-    });
-  }).on("error", (err) => {
-    consoleCmd.logError("Error fetching location data:", err.code);
-    callback("User allowed");
-  });
+  ipInfoInFlight.set(normalizedClientIp, inFlightPromise);
+  inFlightPromise.then((info) => processConnection(clientIp, info, currentUsers, ws, callback));
 }
 
 let bannedASCache = { data: null, timestamp: 0 };
@@ -154,19 +227,31 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
     }
 
     const userLocation =
-      locationInfo.country === undefined
-        ? "Unknown"
-        : `${locationInfo.city}, ${locationInfo.regionName}, ${locationInfo.countryCode}`;
+      locationInfo && locationInfo.country !== undefined
+        ? [
+            locationInfo.city,
+            locationInfo.regionName && /\p{L}/u.test(String(locationInfo.regionName))
+              ? locationInfo.regionName
+              : undefined,
+            locationInfo.countryCode,
+          ]
+            .filter(Boolean)
+            .join(', ')
+        : 'Unknown';
+
+    const userLocationForLog = locationInfo?.isp ? `${userLocation} (${locationInfo.isp})` : userLocation;
 
     storage.connectedUsers.push({
       ip: clientIp,
       location: userLocation,
+      isp: locationInfo?.isp,
+      as: locationInfo?.as,
       time: connectionTime,
       instance: ws,
     });
 
     consoleCmd.logInfo(
-      `Web client \x1b[32mconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocation}`
+      `Web client \x1b[32mconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocationForLog}`
     );
 
     callback("User allowed");
