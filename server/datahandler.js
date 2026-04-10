@@ -233,6 +233,7 @@ var dataToSend = {
   rt_flag: '',
   ims: 0,
   eq: 0,
+  agc: 0,
   ant: 0,
   txInfo: {
     tx: '',
@@ -336,6 +337,10 @@ function handleData(wss, receivedData, rdsWss) {
         dataToSend.ant = receivedLine.substring(1);
         initialData.ant = receivedLine.substring(1);
         rdsReset();
+        break;
+      case receivedLine.startsWith('A'): // AGC
+        dataToSend.agc = receivedLine.substring(1);
+        initialData.agc = receivedLine.substring(1);
         break;
       case receivedLine.startsWith('G'): // EQ / iMS (RF+/IF+)
         const mapping = filterMappings[receivedLine];

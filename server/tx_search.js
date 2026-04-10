@@ -3,6 +3,10 @@ const { serverConfig } = require('./server_config');
 const consoleCmd = require('./console');
 
 let localDb = {};
+let nextLocalDbUpdate = 0;
+const localDbUpdateInterval = 7 * 24 * 60 * 60 * 1000; // 7-day database update interval
+let awaitingTxInfo = true;
+
 let lastFetchTime = 0;
 let piFreqIndex = {}; // Indexing for speedier PI+Freq combinations
 const fetchInterval = 1000;
@@ -71,7 +75,7 @@ if (serverConfig.identification.gpsMode) {
 // Function to build local TX database from FMDX Maps endpoint.
 async function buildTxDatabase() {
     if (Latitude.length > 0 && Longitude.length > 0) {
-        let awaitingTxInfo = true;
+        awaitingTxInfo = true;
         while (awaitingTxInfo) {
             try {
                 consoleCmd.logInfo('Fetching transmitter database...');
@@ -85,6 +89,7 @@ async function buildTxDatabase() {
                 localDb = await response.json();
                 buildPiFreqIndex();
                 consoleCmd.logInfo('Transmitter database successfully loaded.');
+                nextLocalDbUpdate = Date.now() + localDbUpdateInterval;
                 awaitingTxInfo = false;
             } catch (error) {
                 consoleCmd.logError("Failed to fetch transmitter database:", error);
@@ -185,7 +190,7 @@ function getStateForCoordinates(lat, lon) {
  */
 function validPsCompare(rdsPs, stationPs) {
     if (typeof stationPs !== 'string' || typeof rdsPs !== 'string') {
-        consoleCmd.logError(`Invalid TX values. stationPs: ${stationPs}, rdsPs: ${rdsPs}`);
+        consoleCmd.logDebug(`Invalid TX values. stationPs: ${stationPs}, rdsPs: ${rdsPs}`);
         return false;
     }
 
@@ -240,6 +245,11 @@ async function fetchTx(freq, piCode, rdsPs) {
     let match = null;
     let multiMatches = [];
     const now = Date.now();
+    // Fetch TX database if the next fetch time has passed, as long as we weren't still waiting.
+    if (now > nextLocalDbUpdate && !awaitingTxInfo) {
+        consoleCmd.logInfo('Time to update transmitter database.');
+        buildTxDatabase();
+    }
     freq = parseFloat(freq);
 
     if (
@@ -271,6 +281,18 @@ async function fetchTx(freq, piCode, rdsPs) {
             ...locData,
             stations: locData.stations.filter(station => validPsCompare(rdsPs, station.ps))
         })).filter(locData => locData.stations.length > 0);
+    }
+
+    // If there is still more than one match, do a final exact PS match.
+    if (filteredLocations.length > 1) {
+        const extraFilteredLocations = filteredLocations.map(locData => ({
+            ...locData,
+            stations: locData.stations.filter(station => (station.ps?.toLowerCase() === rdsPs.replace(/ /g, '_').toLowerCase()))
+        })).filter(locData => locData.stations.length > 0);
+
+        if (extraFilteredLocations.length > 0) {
+            filteredLocations = extraFilteredLocations;
+        }
     }
   
     for (let loc of filteredLocations) {

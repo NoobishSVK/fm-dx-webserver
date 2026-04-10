@@ -293,8 +293,8 @@ pre {
     top: 10px;
 }
 
-.flex-container.contains-dropdown {
-    z-index: 999;
+.contains-dropdown {
+    z-index: 990;
     position: relative;
 }
 

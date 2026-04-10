@@ -265,11 +265,18 @@ function checkLatency(host, port = 80, timeout = 2000) {
   });
 }
 
-function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName) {
-  const command = message.toString();
+function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName, maxPayloadSize = 1024 * 1024) {
+  const rawCommand = message.toString();
+  const command = rawCommand.replace(/[\r\n]+/g, '');
+
   const now = Date.now();
   const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
   if (endpointName === 'text') consoleCmd.logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
+
+  if (command.length > maxPayloadSize) {
+    consoleCmd.logWarn(`Command from \x1b[90m${normalizedClientIp}\x1b[0m on \x1b[90m/${endpointName}\x1b[0m exceeded maximum payload size (${parseInt(command.length / 1024)} KB / ${parseInt(maxPayloadSize / 1024)} KB).`);
+    return "";
+  }
 
   // Initialize user command history if not present
   if (!userCommandHistory[clientIp]) {

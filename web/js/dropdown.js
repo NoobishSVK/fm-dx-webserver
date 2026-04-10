@@ -42,6 +42,14 @@ $(document).ready(function() {
             socket.send("W" + $(event.currentTarget).attr('data-value'));
             $currentDropdown.find('input').val($(event.currentTarget).text());
             break;
+            case 'data-agc':
+            socket.send("A" + $(event.currentTarget).attr('data-value'));
+            $currentDropdown.find('input').val($(event.currentTarget).text());
+            break;
+            case 'data-agc-phone':
+            socket.send("A" + $(event.currentTarget).attr('data-value'));
+            $currentDropdown.find('input').val($(event.currentTarget).text());
+            break;
             default:
             $currentDropdown.find('input')
             .val($(event.currentTarget).text())

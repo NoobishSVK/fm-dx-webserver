@@ -24,7 +24,8 @@ function mapCreate() {
   if (!(typeof map == "object")) {
     map = L.map('map', {
       center: [40, 0],
-      zoom: 3
+      zoom: 3,
+      worldCopyJump: true
     });
   } else {
     map.setZoom(3).panTo([40, 0]);
@@ -55,9 +56,9 @@ function mapCreate() {
     $('#identification-lon').val(ev.latlng.lng.toFixed(6));
 
     if (typeof pin == "object") {
-      pin.setLatLng(ev.latlng);
+      pin.setLatLng(ev.latlng.wrap());
     } else {
-      pin = L.marker(ev.latlng, { riseOnHover: true, draggable: true }).addTo(map);
+      pin = L.marker(ev.latlng.wrap(), { riseOnHover: true, draggable: true }).addTo(map);
       pin.on('dragend', function(ev) {
         $('#identification-lat').val(ev.target.getLatLng().lat.toFixed(6));
         $('#identification-lon').val(ev.target.getLatLng().lng.toFixed(6));
@@ -262,8 +263,8 @@ function checkTunnelServers() {
     url: '/tunnelservers',
     method: 'GET',
     success: function(servers) {
-      const $options = $('#tunnel-server ul.options');
-      const $input = $('#tunnel-serverSelect');
+      const $options = $('#tunnel-regionSelect ul.options');
+      const $input = $('#tunnel-region');
       const selectedValue = $input.val(); // currently selected value (label or value?)
 
       servers.forEach(server => {

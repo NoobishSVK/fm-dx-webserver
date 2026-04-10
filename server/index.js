@@ -9,7 +9,6 @@ const app = express();
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
-const chatWss = new WebSocket.Server({ noServer: true });
 const rdsWss = new WebSocket.Server({ noServer: true });
 const pluginsWss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
 const fs = require('fs');
@@ -19,6 +18,7 @@ const client = new net.Socket();
 const { SerialPort } = require('serialport');
 const audioServer = require('./stream/3las.server');
 const tunnel = require('./tunnel');
+const { createChatServer } = require('./chat');
 
 // File imports
 const helpers = require('./helpers');
@@ -27,6 +27,7 @@ const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
+const pluginsApi = require('./plugins_api');
 const pjson = require('../package.json');
 
 // Function to find server files based on the plugins listed in config
@@ -90,6 +91,8 @@ console.log('\x1b[32m\x1b[2mby Noobish @ \x1b[4mFMDX.org\x1b[0m');
 console.log("v" + pjson.version)
 console.log('\x1b[90m' + '─'.repeat(terminalWidth - 1) + '\x1b[0m');
 
+
+const chatWss = createChatServer(storage);
 // Start ffmpeg
 require('./stream/index');
 require('./plugins');
@@ -156,8 +159,10 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       return;
     }
     
-    logInfo('Using COM device: ' + serverConfig.xdrd.comPort);
+    logInfo('Using serial port: ' + serverConfig.xdrd.comPort);
     dataHandler.state.isSerialportAlive = true;
+    pluginsApi.setOutput(serialport);
+
     setTimeout(() => {
         serialport.write('x\n');
     }, 3000);
@@ -178,7 +183,9 @@ if (serverConfig.xdrd.wirelessConnection === false) {
       }
       dataHandler.state.isSerialportRetrying = false;
 
-      serialport.write('A0\n');
+      if (serverConfig.device === 'si47xx') {
+        serialport.write('A0\n');
+      }
       serialport.write('F-1\n');
       serialport.write('W0\n');
       serverConfig.webserver.rdsMode ? serialport.write('D1\n') : serialport.write('D0\n');
@@ -212,6 +219,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 
   // Handle port closure
   serialport.on('close', () => {
+  pluginsApi.setOutput(null);
     logWarn('Disconnected from ' + serverConfig.xdrd.comPort + '. Attempting to reconnect.');
     setTimeout(() => {
         dataHandler.state.isSerialportRetrying = true;
@@ -231,7 +239,8 @@ function connectToXdrd() {
   if (xdrd.wirelessConnection && configExists()) {
     client.connect(xdrd.xdrdPort, xdrd.xdrdIp, () => {
       logInfo('Connection to xdrd established successfully.');
-      
+      pluginsApi.setOutput(client);
+
       authFlags = {
         authMsg: false,
         firstClient: false,
@@ -289,7 +298,9 @@ client.on('data', (data) => {
         client.write(serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? 'T' + Math.round(serverConfig.defaultFreq * 1000) + '\n' : 'T87500\n');
         dataHandler.initialData.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
         dataHandler.dataToSend.freq = serverConfig.defaultFreq && serverConfig.enableDefaultFreq === true ? Number(serverConfig.defaultFreq).toFixed(3) : (87.5).toFixed(3);
-        client.write('A0\n');
+        if (serverConfig.device === 'si47xx') {
+          client.write('A0\n');
+        }
         client.write(serverConfig.audio.startupVolume ? 'Y' + (serverConfig.audio.startupVolume * 100).toFixed(0) + '\n' : 'Y100\n');
         serverConfig.webserver.rdsMode ? client.write('D1\n') : client.write('D0\n');
         return;
@@ -299,6 +310,7 @@ client.on('data', (data) => {
 });
 
 client.on('close', () => {
+  pluginsApi.setOutput(null);
   if(serverConfig.autoShutdown === false) {
     logWarn('Disconnected from xdrd. Attempting to reconnect.');
     setTimeout(function () {
@@ -423,7 +435,7 @@ wss.on('connection', (ws, request) => {
     let lastWarn = { time: 0 };
 
     ws.on('message', (message) => {
-        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text');
+        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text', 16 * 1024);
 
         if (!clientIp.includes("127.0.0.1")) {
             if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
@@ -580,84 +592,6 @@ wss.on('connection', (ws, request) => {
     ws.on('error', console.error);
 });
 
-// CHAT WEBSOCKET BLOCK
-chatWss.on('connection', (ws, request) => {
-  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  const userCommandHistory = {};
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
-    ws.close(1008, 'Banned IP');
-    return;
-  }
-
-  // Send chat history to the newly connected client
-  storage.chatHistory.forEach(function(message) {
-    message.history = true;
-    !request.session.isAdminAuthenticated ? delete message.ip : null;
-    ws.send(JSON.stringify(message));
-  });
-
-  const ipMessage = {
-    type: 'clientIp',
-    ip: clientIp,
-    admin: request.session.isAdminAuthenticated
-  };
-  ws.send(JSON.stringify(ipMessage));
-
-  // Anti-spam tracking for each client
-  const userCommands = {};
-  let lastWarn = { time: 0 };
-
-  ws.on('message', function incoming(message) {
-    // Anti-spam
-    const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'chat');
-
-    let messageData;
-
-    try {
-      messageData = JSON.parse(message);
-    } catch (error) {
-      ws.send(JSON.stringify({ error: "Invalid message format" }));
-      return;
-    }
-
-    // Escape nickname and other potentially unsafe fields
-    if (messageData.nickname) {
-      messageData.nickname = helpers.escapeHtml(messageData.nickname);
-    }
-
-    messageData.ip = clientIp;
-    const currentTime = new Date();
-    
-    const hours = String(currentTime.getHours()).padStart(2, '0');
-    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
-    messageData.time = `${hours}:${minutes}`; // Adding current time to the message object in hours:minutes format
-
-    if (serverConfig.webserver.banlist?.includes(clientIp)) { return; }
-    if (request.session.isAdminAuthenticated === true) { messageData.admin = true; }
-    if (messageData.message.length > 255) { messageData.message = messageData.message.substring(0, 255); }
-
-    storage.chatHistory.push(messageData);
-    if (storage.chatHistory.length > 50) { storage.chatHistory.shift(); }
-    logChat(messageData);
-    
-    chatWss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        // Only include IP for admin clients
-        let responseMessage = { ...messageData };
-  
-        if (request.session.isAdminAuthenticated !== true) {
-          delete responseMessage.ip;
-        }
-  
-        const modifiedMessage = JSON.stringify(responseMessage);
-        client.send(modifiedMessage); 
-      }
-    });
-  });
-
-  ws.on('close', function close() {});
-});
-
 // Additional web socket for using plugins
 pluginsWss.on('connection', (ws, request) => { 
     const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
@@ -724,6 +658,13 @@ function isPortOpen(host, port, timeout = 1000) {
 
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
+  
+  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    socket.destroy();
+    return;
+  }
+
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {
       wss.handleUpgrade(request, socket, head, (ws) => {
@@ -739,7 +680,7 @@ httpServer.on('upgrade', (request, socket, head) => {
       logWarn('[Audio WebSocket] Audio server not ready — dropping client connection.');
       socket.destroy();
     }
-  } else if (request.url === '/chat') {
+  } else if (request.url === '/chat' && serverConfig.webserver.chatEnabled === true) {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
         chatWss.emit('connection', ws, request);
@@ -749,23 +690,6 @@ httpServer.on('upgrade', (request, socket, head) => {
     sessionMiddleware(request, {}, () => {
       rdsWss.handleUpgrade(request, socket, head, (ws) => {
         rdsWss.emit('connection', ws, request);
-
-        const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-        const userCommandHistory = {};
-        if (serverConfig.webserver.banlist?.includes(clientIp)) {
-          ws.close(1008, 'Banned IP');
-          return;
-        }
-
-        // Anti-spam tracking for each client
-        const userCommands = {};
-        let lastWarn = { time: 0 };
-
-        ws.on('message', function incoming(message) {
-          // Anti-spam
-          const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '5', 'rds');
-        });
-
       });
     });
   } else if (request.url === '/data_plugins') {
@@ -809,3 +733,7 @@ helpers.checkIPv6Support((isIPv6Supported) => {
     startServer(ipv4Address, false); // Start only on IPv4
   }
 });
+
+// Register server context for plugins
+pluginsApi.registerServerContext({ wss, pluginsWss, httpServer, serverConfig });
+module.exports = { wss, pluginsWss, httpServer, serverConfig };

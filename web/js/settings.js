@@ -75,6 +75,28 @@ function getQueryParameter(name) {
     return urlParams.get(name);
 }
 
+function updateFavicon(color) {
+    function rgbToHex(rgb) {
+        const result = rgb.match(/\d+/g);
+
+        return "#" + result.slice(0, 3).map(x =>(+x).toString(16).padStart(2, "0")).join("");
+    }
+
+    const hex = rgbToHex(color);
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+        <circle cx="64" cy="64" r="54" fill="none" stroke="${hex}" stroke-width="20"/>
+        <circle cx="64" cy="64" r="22" fill="none" stroke="white" stroke-width="18"/>
+    </svg>`;
+
+    const base64 = btoa(svg);
+
+    $('#favicon').attr(
+        'href',
+        `data:image/svg+xml;base64,${base64}`
+    );
+}
+
 function setTheme(themeName) {
     const themeColors = themes[themeName];
     if (themeColors) {
@@ -94,6 +116,7 @@ function setTheme(themeName) {
         $(':root').css('--color-text', themeColors[2]);
         $(':root').css('--color-text-2', textColor2);
         $('.wrapper-outer').css('background-color', backgroundColorWithOpacity);
+        updateFavicon(themeColors[1]);
     }
 }
 
