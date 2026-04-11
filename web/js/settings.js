@@ -123,7 +123,7 @@ function setTheme(themeName) {
 function setBg() {
     const disableBackgroundParameter = getQueryParameter('disableBackground');
     if(localStorage.getItem('bgImage').length > 5 && localStorage.getItem('theme') != 'theme9' && disableBackgroundParameter != 'true') {
-        $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') top center / cover fixed no-repeat var(--color-main)');
+        $('body').css('background', 'url(' + localStorage.getItem('bgImage') + ') center center / cover fixed no-repeat var(--color-main)');
     } else {
         $('body').css('background', 'var(--color-main)');
     }

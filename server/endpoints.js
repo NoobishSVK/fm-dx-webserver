@@ -86,7 +86,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/403', (req, res) => {
-    const reason = req.query.reason || null;
+    const reason = req.query.reason ? req.query.reason : null;
     res.render('403', { reason });
 })
 

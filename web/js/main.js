@@ -967,7 +967,10 @@ function updateDatasetValIfChanged($element, dataLabel, newVal) {
 const updateDataElements = throttle(function(parsedData) {
     updateTextIfChanged($dataFrequency, parsedData.freq);
     $commandInput.attr("aria-label", "Current frequency: " + parsedData.freq);
-    updateHtmlIfChanged($dataPi, parsedData.pi === '?' ? "<span class='opacity-half'>?</span>" : parsedData.pi);
+    const questionCount = (parsedData.pi.match(/\?/g) || []).length;
+    const opacity = 1 - (questionCount * 0.2);
+
+    updateHtmlIfChanged($dataPi,`<span style="opacity:${opacity}">${parsedData.pi}</span>`);
     
     if ($('#ps-underscores').is(':checked')) {
         parsedData.ps = parsedData.ps.replace(/\s/g, '_');

@@ -39,6 +39,7 @@ h2 {
     color: var(--color-4);
     margin-bottom: 0;
     margin-top: 8px;
+    font-weight: 500;
 }
 
 h3 {

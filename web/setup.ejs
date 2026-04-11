@@ -368,7 +368,7 @@
                 <div class="panel-100 p-bottom-20" style="padding-right: 20px; padding-left: 20px;">
                     <h3>Connection type</h3>
                     <p class="text-gray">If you want to choose the Serial port directly, choose "Direct".<br>If you use xdrd or your receiver is connected via Wi-Fi, choose TCP/IP.</p>
-                    <div class="auto top-10">
+                    <div class="auto top-10" style="max-width: 350px;">
                         <label class="toggleSwitch nolabel" onclick="">
                             <input id="xdrd-wirelessConnection" type="checkbox" tabindex="0" aria-label="Connection type"/>
                             <a></a>
@@ -402,36 +402,21 @@
                     </div>
                 </div>
                 </div>
-                <div class="flex-container">
-                    <div class="panel-50 p-bottom-20">
-                        <h3>Startup</h3>
-                        <h4>Startup volume</h4>
-                        <div class="panel-75 auto" style="height: 48px;">
-                            <input type="range" id="audio-startupVolume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
-                        </div>
-                        <h4 class="top-10 text-gray" id="volume-percentage-value"></h4>
-    
-                        <hr>
-                        <h4 class="bottom-20">Default frequency</h4>
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Default frequency for first client', id: 'enableDefaultFreq'}) %><br>
-                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Default frequency', id: 'defaultFreq'}) %>
-                    </div>
-                    <div class="panel-50 p-bottom-20">
+                <div class="flex-container p-bottom-20">
+                    <div class="panel-100 p-bottom-20">
                         <h3>Miscellaneous</h3>
                         <div class="flex-container">
-                            <div class="panel-50 no-bg">
+                            <div class="panel-33 no-bg">
                                 <h4>Bandwidth switch</h4>
                                 <p>Bandwidth switch allows the user to set the bandwidth manually.</p>
                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Bandwidth switch', id: 'bwSwitch'}) %><br>
                             </div>
-                            <div class="panel-50 no-bg">
+                            <div class="panel-33 no-bg">
                                 <h4>Automatic shutdown</h4>
                                 <p>Toggling this option will put the tuner to sleep when no clients are connected.</p>
                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Auto-shutdown', id: 'autoShutdown'}) %><br>
                             </div>
-                        </div>
-                        <div class="flex-container">
-                            <div class="panel-50 no-bg">
+                            <div class="panel-33 no-bg">
                                 <h4>SI47XX AGC control</h4>
                                 <p>Allow users to change SI47XX AGC mode from the main UI.</p>
                                 <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Enable AGC control', id: 'si47xx-agcControl'}) %><br>
@@ -569,23 +554,36 @@
             <div class="panel-full m-0 tab-content no-bg" id="startup" role="tabpanel">
                 <h2>Startup settings</h2>
                 <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20" style="z-index: 10; padding-bottom: 120px;">
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Volume</h3>
+                        <h4>Startup volume</h4>
+                        <div class="panel-75 auto" style="height: 48px;">
+                            <input type="range" id="audio-startupVolume" min="0" max="1" step="0.01" value="1" aria-label="Startup Volume slider">
+                        </div>
+                        <h4 class="top-10 text-gray" id="volume-percentage-value"></h4>
+    
+                        <hr>
+                        <h4 class="bottom-20">Default frequency</h4>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Default frequency for first client', id: 'enableDefaultFreq'}) %><br>
+                        <%- include('_components', {component: 'text', cssClass: 'w-100', placeholder: '87.5', label: 'Default frequency', id: 'defaultFreq'}) %>
+                    </div>
+                    <div class="panel-50 p-bottom-20" style="z-index: 10; padding-bottom: 120px;">
                         <h3>On startup</h3>
                         <p>These settings will be applied after a server launch or restart.</p>
-                        <div class="flex-container flex-center p-20">
+                        <div class="panel-100-real p-bottom-20 no-bg">
                             <% if (device === 'tef') { %>
                                 <%- include('_components', { component: 'dropdown', id: 'ceqStartup-dropdown', inputId: 'ceqStartup', label: 'cEQ', cssClass: '', placeholder: 'Disabled', 
                                     options: [
                                         { value: '0', label: 'Disabled' },
                                         { value: '1', label: 'Enabled' },
                                     ]
-                                }) %><br>
+                                }) %>
                                 <%- include('_components', { component: 'dropdown', id: 'imsStartup-dropdown', inputId: 'imsStartup', label: 'iMS', cssClass: '', placeholder: 'Disabled', 
                                     options: [
                                         { value: '0', label: 'Disabled' },
                                         { value: '1', label: 'Enabled' },
                                     ]
-                                }) %><br>
+                                }) %>
                             <% } else if (device === 'xdr') { %>
                                 <%- include('_components', { component: 'dropdown', id: 'rfStartup-dropdown', inputId: 'ceqStartup', label: 'RF+', cssClass: '', placeholder: 'Disabled', 
                                     options: [
@@ -600,12 +598,6 @@
                                     ]
                                 }) %><br>
                             <% } %>
-                            <%- include('_components', { component: 'dropdown', id: 'stereoStartup-dropdown', inputId: 'stereoStartup', label: 'Stereo Mode', cssClass: '', placeholder: 'Stereo (Default)', 
-                                options: [
-                                    { value: '0', label: 'Stereo (Default)' },
-                                    { value: '1', label: 'Mono' },
-                                ]
-                            }) %><br>
                             </div>
                             <div class="panel-100-real p-bottom-20 no-bg">
                             <%- include('_components', { component: 'dropdown', id: 'antennaStartup-dropdown', inputId: 'antennaStartup', label: 'Antenna', cssClass: '', placeholder: 'Antenna 0 (Default)', 
@@ -614,6 +606,12 @@
                                     { value: '1', label: 'Antenna 1' },
                                     { value: '2', label: 'Antenna 2' },
                                     { value: '3', label: 'Antenna 3' },
+                                ]
+                            }) %>
+                            <%- include('_components', { component: 'dropdown', id: 'stereoStartup-dropdown', inputId: 'stereoStartup', label: 'Stereo Mode', cssClass: '', placeholder: 'Stereo (Default)', 
+                                options: [
+                                    { value: '0', label: 'Stereo (Default)' },
+                                    { value: '1', label: 'Mono' },
                                 ]
                             }) %><br>
                         </div>
