@@ -595,11 +595,13 @@ wss.on('connection', (ws, request) => {
 // Additional web socket for using plugins
 pluginsWss.on('connection', (ws, request) => { 
     const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-    const userCommandHistory = {};
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
-      ws.close(1008, 'Banned IP');
-      return;
-    }
+	const normalizedIp = clientIp?.replace(/^::ffff:/, '');
+	const ipList = (normalizedIp || '').split(',').map(ip => ip.trim()).filter(Boolean);
+	if (ipList.some(ip => serverConfig.webserver.banlist.some(ban => ban[0] === ip))) {
+    ws.close(1008, 'Banned IP');
+    return;
+	}
+	const userCommandHistory = {};
     // Anti-spam tracking for each client
     const userCommands = {};
     let lastWarn = { time: 0 };
@@ -659,11 +661,13 @@ function isPortOpen(host, port, timeout = 1000) {
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   
-  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+	const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+	const normalizedIp = clientIp?.replace(/^::ffff:/, '');
+	const ipList = (normalizedIp || '').split(',').map(ip => ip.trim()).filter(Boolean);
+	if (ipList.some(ip => serverConfig.webserver.banlist.some(ban => ban[0] === ip))) {
     socket.destroy();
     return;
-  }
+}
 
   if (request.url === '/text') {
     sessionMiddleware(request, {}, () => {

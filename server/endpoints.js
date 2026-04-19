@@ -26,11 +26,22 @@ router.get('/', (req, res) => {
     
     const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
     
-    if (isBanned) {
-        res.render('403');
-        logInfo(`Web client (${normalizedIp}) is banned`);
-        return;
-    }
+	if (isBanned) {
+    res.render('403');
+
+    let location = 'Unknown';
+    try {
+        const geoip = require('geoip-lite');
+        const firstIp = ipList[0];
+        const geo = geoip.lookup(firstIp);
+        if (geo) {
+            location = [geo.city, geo.region !== '00' ? geo.region : null, geo.country].filter(Boolean).join(', ');
+        }
+    } catch (e) {}
+
+    logInfo(`Web client (\x1b[93m${normalizedIp}\x1b[0m) is \x1b[31mbanned\x1b[0m Location: ${location}`);
+    return;
+	}
 
     const noPlugins = req.query.noPlugins === 'true';
 
