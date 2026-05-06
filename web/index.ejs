@@ -23,19 +23,20 @@
   <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
   <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
 
-  <!-- 3LAS Scripts for Audio streaming -->
-  <script src="js/3las/util/3las.helpers.js"></script>
-  <script src="js/3las/util/3las.logging.js"></script>
-  <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
-  <script src="js/3las/fallback/3las.formatreader.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
-  <script src="js/3las/util/3las.websocketclient.js"></script>
-  <script src="js/3las/fallback/3las.fallback.js"></script>
-  <script src="js/3las/3las.js"></script>
-  <script src="js/3las/main.js"></script>
+  <!-- Audio streaming -->
   <script type="text/javascript">
-    window.addEventListener('load', Init, false);
+    window.audioCodecFormats = <%- JSON.stringify(audioCodecFormats || {}) %>;
+    window.audioBitrates = <%- JSON.stringify(audioBitrates || {}) %>;
+  </script>
+  <script src="js/audio/platform.js"></script>
+  <script src="js/audio/sse_player.js"></script>
+  <script src="js/audio/main.js"></script>
+  <script type="text/javascript">
+    window.addEventListener('load', function () {
+      if (typeof initAudioControls === 'function') {
+        initAudioControls();
+      }
+    }, false);
     document.ontouchmove = function(e) {
       e.preventDefault();
     }
@@ -259,6 +260,13 @@
                 <span class="panel-100-real m-0" style="height: 48px;">
                   <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" aria-label="Volume slider">
                 </span>
+                <div class="dropdown audio-codec-dropdown dropdown-up m-0 w-150 m-left-15" id="audio-codec">
+                  <input type="text" placeholder="MP3" readonly tabindex="0">
+                  <ul class="options open-top" tabindex="-1">
+                    <li class="option" tabindex="0" data-value="mp3">MP3</li>
+                    <li class="option" tabindex="0" data-value="opus">OPUS</li>
+                  </ul>
+                </div>
                 <% if (bwSwitch) { %>
                   <%- include('_bwSwitch', { device: device, tunerProfiles: tunerProfiles, id: 'data-bw', cssClass: 'panel-50 dropdown-up m-0 w-150 m-left-15', cssClassOptions: 'open-top' }) %>
                 <% } %>                
@@ -388,6 +396,16 @@
                 <% } %>
                 <% if (device == 'tef') { %><button class="data-ims tooltip p-10 m-left-5" style="height: 48px;" aria-label="iMS + Filter" data-tooltip="<strong>The iMS filter reduces multipath audio artifacts.</strong><br><br>It's recommended to leave it on most of the time."><span class="text-bold">iMS</span></button><% } %>
                 <% if (device == 'xdr') { %><button class="data-ims tooltip p-10 m-left-5" aria-label="IF+ Filter" data-tooltip="<strong>The IF+ filter increases gain by 6dB</strong>"><span class="text-bold">IF+</span></button><% } %>
+            </div>
+            <p class="flex-phone flex-center">Audio</p>
+            <div class="flex-container flex-phone flex-center">
+              <div class="dropdown audio-codec-dropdown panel-100-real" id="audio-codec-phone" style="max-height: 48px; width: 100%;">
+                <input type="text" placeholder="MP3" readonly tabindex="0">
+                <ul class="options open-top" tabindex="-1">
+                  <li class="option" tabindex="0" data-value="mp3">MP3</li>
+                  <li class="option" tabindex="0" data-value="opus">OPUS</li>
+                </ul>
+              </div>
             </div>
 
             <% if (fmlist_integration == true && (fmlist_adminOnly == false || isTuneAuthenticated)) { %>

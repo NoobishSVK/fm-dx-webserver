@@ -101,3 +101,9 @@
     transform: rotate(-225deg);
     top: 22px;
   }
+  /* Lift the row containing an open dropdown above sibling rows so its
+     options can overflow over later rows without being clipped by their
+     stacking contexts. */
+  .contains-dropdown:has(.dropdown.opened) {
+    z-index: 1500;
+  }

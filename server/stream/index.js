@@ -2,7 +2,7 @@ const { spawn, execSync } = require('child_process');
 const { configName, serverConfig, configUpdate, configSave, configExists } = require('../server_config');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const checkFFmpeg = require('./checkFFmpeg');
-const audioServer = require('./3las.server');
+const audioServer = require('./audio.server');
 
 const consoleLogTitle = '[Audio Stream]';
 
@@ -162,7 +162,7 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) \u2192 FFmpeg (process) \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg (capture) \u2192 FFmpeg (process) \u2192 SSE server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             ffmpeg.stderr.on('data', (data) => {
@@ -228,7 +228,7 @@ checkFFmpeg().then((ffmpegPath) => {
         }
         launchFFmpeg(); // Initial launch
     } else if (process.platform === 'darwin') {
-        // macOS (sox --> 3las.server.js --> FFmpeg)
+        // macOS (sox --> audio.server.js --> FFmpeg)
         const commandDef = buildCommand(ffmpegPath);
 
         // Apply audio boost if enabled and FFmpeg is used
@@ -258,7 +258,7 @@ checkFFmpeg().then((ffmpegPath) => {
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = sox.stdout;
                     audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 SSE server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
                 });
 
                 sox.stderr.on('data', (data) => {
@@ -280,11 +280,11 @@ checkFFmpeg().then((ffmpegPath) => {
             logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${commandDef.args.join(' ')}`);
             const ffmpeg = spawn(ffmpegPath, commandDef.args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
-            // Pipe FFmpeg output to 3las.server.js
+            // Pipe FFmpeg output to audio.server.js
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 SSE server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             process.on('SIGINT', () => {
@@ -310,7 +310,7 @@ checkFFmpeg().then((ffmpegPath) => {
             });
         }
     } else {
-        // Linux (arecord --> 3las.server.js --> FFmpeg)
+        // Linux (arecord --> audio.server.js --> FFmpeg)
         const commandDef = buildCommand(ffmpegPath);
 
         // Apply audio boost if enabled and FFmpeg is used
@@ -341,7 +341,7 @@ checkFFmpeg().then((ffmpegPath) => {
                 audioServer.waitUntilReady.then(() => {
                     audioServer.Server.StdIn = arecord.stdout;
                     audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 SSE server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
                 });
 
                 arecord.stderr.on('data', (data) => {
@@ -363,11 +363,11 @@ checkFFmpeg().then((ffmpegPath) => {
             logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${commandDef.args.join(' ')}`);
             const ffmpeg = spawn(ffmpegPath, commandDef.args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
-            // Pipe FFmpeg output to 3las.server.js
+            // Pipe FFmpeg output to audio.server.js
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = ffmpeg.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 SSE server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             process.on('SIGINT', () => {

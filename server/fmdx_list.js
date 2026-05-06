@@ -74,7 +74,11 @@ function sendUpdate() {
     name: serverConfig.identification.tunerName,
     desc: serverConfig.identification.tunerDesc,
     audioChannels: serverConfig.audio.audioChannels,
-    audioQuality: serverConfig.audio.audioBitrate,
+    audioQuality: serverConfig.audio.mp3Enabled
+      ? serverConfig.audio.mp3Bitrate
+      : serverConfig.audio.opusEnabled
+        ? serverConfig.audio.opusBitrate
+        : null,
     contact: serverConfig.identification.contact || '',
     tuner: serverConfig.device || '',
     bwLimit: bwLimit,

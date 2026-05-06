@@ -1,4 +1,10 @@
 // WebSocket connection located in ./websocket.js
+if (typeof isAndroid === 'undefined') {
+    var ua = navigator.userAgent.toLowerCase();
+    var isAndroid = ua.indexOf('android') !== -1;
+    var isIOS = (/iphone|ipod/.test(ua));
+    var isIPadOS = (ua.indexOf('ipad') !== -1) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
 
 
 

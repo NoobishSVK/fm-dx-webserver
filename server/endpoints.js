@@ -17,6 +17,13 @@ const dataHandler = require('./datahandler');
 const fmdxList = require('./fmdx_list');
 const { allPluginConfigs } = require('./plugins');
 
+function readAudioCodecFormats() {
+    return {
+        mp3: !!serverConfig.audio.mp3Enabled,
+        opus: !!serverConfig.audio.opusEnabled
+    };
+}
+
 // Endpoints
 router.get('/', (req, res) => {
     let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -59,30 +66,94 @@ router.get('/', (req, res) => {
             });
         });
     } else {
-            res.render('index', {
-                isAdminAuthenticated: req.session.isAdminAuthenticated,
-                isTuneAuthenticated: req.session.isTuneAuthenticated,
-                tunerName: serverConfig.identification.tunerName,
-                tunerDesc: helpers.parseMarkdown(serverConfig.identification.tunerDesc),
-                tunerDescMeta: helpers.removeMarkdown(serverConfig.identification.tunerDesc),
-                tunerLock: serverConfig.lockToAdmin,
-                publicTuner: serverConfig.publicTuner,
-                ownerContact: serverConfig.identification.contact,
-                antennas: serverConfig.antennas,
-                tuningLimit: serverConfig.webserver.tuningLimit,
-                tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
-                tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
-                chatEnabled: serverConfig.webserver.chatEnabled,
-                device: serverConfig.device,
-                tunerProfiles,
-                si47xxAgcControl: !!serverConfig.si47xx?.agcControl,
-                noPlugins,
-                plugins: serverConfig.plugins,
-                fmlist_integration: serverConfig.extras.fmlistIntegration,
-                fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
-                bwSwitch: serverConfig.bwSwitch
-            });
+        const audioCodecFormats = readAudioCodecFormats();
+
+        res.render('index', {
+            isAdminAuthenticated: req.session.isAdminAuthenticated,
+            isTuneAuthenticated: req.session.isTuneAuthenticated,
+            tunerName: serverConfig.identification.tunerName,
+            tunerDesc: helpers.parseMarkdown(serverConfig.identification.tunerDesc),
+            tunerDescMeta: helpers.removeMarkdown(serverConfig.identification.tunerDesc),
+            tunerLock: serverConfig.lockToAdmin,
+            publicTuner: serverConfig.publicTuner,
+            ownerContact: serverConfig.identification.contact,
+            antennas: serverConfig.antennas,
+            tuningLimit: serverConfig.webserver.tuningLimit,
+            tuningLowerLimit: serverConfig.webserver.tuningLowerLimit,
+            tuningUpperLimit: serverConfig.webserver.tuningUpperLimit,
+            chatEnabled: serverConfig.webserver.chatEnabled,
+            device: serverConfig.device,
+            tunerProfiles,
+            si47xxAgcControl: !!serverConfig.si47xx?.agcControl,
+            noPlugins,
+            plugins: serverConfig.plugins,
+            fmlist_integration: serverConfig.extras.fmlistIntegration,
+            fmlist_adminOnly: serverConfig.extras.fmlistAdminOnly,
+            bwSwitch: serverConfig.bwSwitch,
+            audioCodecFormats,
+            audioBitrates: {
+                mp3: serverConfig.audio.mp3Bitrate,
+                opus: serverConfig.audio.opusBitrate
+            }
+        });
     }
+});
+
+router.get('/audio/stream', (req, res) => {
+    let codec = (req.query.codec || req.query.format || 'opus').toString().toLowerCase();
+    const audioCodecFormats = readAudioCodecFormats();
+    if (!audioCodecFormats[codec]) {
+        if (codec === 'opus' && audioCodecFormats.mp3) {
+            codec = 'mp3';
+        } else {
+            res.status(400).send('codec disabled');
+            return;
+        }
+    }
+    const audioServer = require('./stream/audio.server');
+    res.status(200);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (res.flushHeaders) res.flushHeaders();
+
+    const keepAlive = setInterval(() => {
+        res.write(':keepalive\n\n');
+    }, 15000);
+
+    const sseClient = {
+        SendBinary(buffer) {
+            const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+            res.write(`data: ${payload.toString('base64')}\n\n`);
+        },
+        SendText(_) {
+        },
+        Destroy() {
+            clearInterval(keepAlive);
+            try {
+                res.end();
+            } catch (_a) {
+            }
+        }
+    };
+
+    audioServer.waitUntilReady.then(() => {
+        if (!audioServer.Server) {
+            res.write('event: error\ndata: server not ready\n\n');
+            return;
+        }
+        audioServer.Server.SetAudioCodec(sseClient, codec);
+    }).catch((err) => {
+        res.write(`event: error\ndata: ${err.message}\n\n`);
+    });
+
+    req.on('close', () => {
+        clearInterval(keepAlive);
+        if (audioServer?.Server) {
+            audioServer.Server.DestroyClient(sseClient);
+        }
+    });
 });
 
 router.get('/403', (req, res) => {

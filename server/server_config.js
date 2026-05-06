@@ -44,12 +44,15 @@ let serverConfig = {
   audio: {
     audioDevice: "Microphone (High Definition Audio Device)",
     audioChannels: 2,
-    audioBitrate: "128k",
+    mp3Bitrate: "128k",
+    opusBitrate: "128k",
     audioBoost: false,
     softwareMode: false,
     startupVolume: "0.95",
     ffmpeg: false,
-    samplerateOffset: "0"
+    samplerateOffset: "0",
+    mp3Enabled: true,
+    opusEnabled: true
   },
   identification: {
     token: null,

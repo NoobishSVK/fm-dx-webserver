@@ -160,7 +160,7 @@
                 <h2>Audio settings</h2>
                 
                 <div class="flex-container contains-dropdown">
-                        <div class="panel-33 p-bottom-20">
+                        <div class="panel-50 p-bottom-20">
                             <h3>Device</h3>
                             <p>Your audio device port.<br>
                                 <span class="text-gray">This is where your tuner is plugged in.</span>
@@ -183,26 +183,32 @@
                                         label: `${device.name}`
                                     }))
                                 ]
-                            }) %>   
+                            }) %>
                         </div>
-                        <div class="panel-33 p-bottom-20">
+                        <div class="panel-50 p-bottom-20">
                             <h3>Channels</h3>
                             <p>Audio channel count.<br>
                                 <span class="text-gray">Choose between Mono / Stereo.</span>
                             </p>
-                            <%- include('_components', { component: 'dropdown', id: 'audio-channels-dropdown', inputId: 'audio-audioChannels', label: 'Audio channels', cssClass: '', placeholder: 'Stereo', 
+                            <%- include('_components', { component: 'dropdown', id: 'audio-channels-dropdown', inputId: 'audio-audioChannels', label: 'Audio channels', cssClass: '', placeholder: 'Stereo',
                             options: [
                                 { value: '2', label: 'Stereo' },
                                 { value: '1', label: 'Mono' }
                             ]
                             }) %><br>
                         </div>
-                        <div class="panel-33 p-bottom-20">
-                            <h3>Bitrate</h3>
-                            <p>The bitrate of the mp3 audio.<br>
-                                <span class="text-gray">Minimum: 64 Kbps • Maximum: 320 Kbps</span>
-                            </p>
-                            <%- include('_components', { component: 'dropdown', id: 'audio-quality-dropdown', inputId: 'audio-audioBitrate', label: 'Audio quality', cssClass: '', placeholder: '128kbps (standard)', 
+                </div>
+
+                <p class="text-gray">Codec changes take effect after a server restart. Disabled codecs do not start an FFmpeg encoder.</p>
+                <div class="flex-container contains-dropdown">
+                    <div class="panel-50 p-bottom-20">
+                        <h3>MP3</h3>
+                        <p>Universally supported. Required for Safari and iOS browsers.</p>
+                        <div class="text-center" style="padding-top: 5px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Enable MP3', id: 'audio-mp3Enabled'}) %>
+                        </div>
+                        <div class="text-center" style="padding-top: 15px;">
+                            <%- include('_components', { component: 'dropdown', id: 'audio-mp3-quality-dropdown', inputId: 'audio-mp3Bitrate', label: 'MP3 bitrate', cssClass: '', placeholder: '128kbps (standard)',
                             options: [
                                 { value: '64k', label: '64kbps (lowest quality)' },
                                 { value: '96k', label: '96kbps (low quality)' },
@@ -211,8 +217,27 @@
                                 { value: '256k', label: '256kbps (very high quality)' },
                                 { value: '320k', label: '320kbps (ultra quality)' }
                             ]
-                            }) %><br>
+                            }) %>
                         </div>
+                    </div>
+                    <div class="panel-50 p-bottom-20">
+                        <h3>Opus</h3>
+                        <p>More efficient than MP3 — 64–96 Kbps already sounds good. Not supported on Safari/iOS.</p>
+                        <div class="text-center" style="padding-top: 5px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Enable Opus', id: 'audio-opusEnabled'}) %>
+                        </div>
+                        <div class="text-center" style="padding-top: 15px;">
+                            <%- include('_components', { component: 'dropdown', id: 'audio-opus-quality-dropdown', inputId: 'audio-opusBitrate', label: 'Opus bitrate', cssClass: '', placeholder: '96kbps (standard)',
+                            options: [
+                                { value: '64k', label: '64kbps (low quality)' },
+                                { value: '96k', label: '96kbps (standard)' },
+                                { value: '128k', label: '128kbps (high quality)' },
+                                { value: '192k', label: '192kbps (very high quality)' },
+                                { value: '256k', label: '256kbps (ultra quality)' }
+                            ]
+                            }) %>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex-container">

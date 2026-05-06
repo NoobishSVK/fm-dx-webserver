@@ -16,7 +16,6 @@ const path = require('path');
 const net = require('net');
 const client = new net.Socket();
 const { SerialPort } = require('serialport');
-const audioServer = require('./stream/3las.server');
 const tunnel = require('./tunnel');
 const { createChatServer } = require('./chat');
 
@@ -671,15 +670,6 @@ httpServer.on('upgrade', (request, socket, head) => {
         wss.emit('connection', ws, request);
       });
     });
-  } else if (request.url === '/audio') {
-    if (typeof audioServer?.handleAudioUpgrade === 'function') {
-      audioServer.handleAudioUpgrade(request, socket, head, (ws) => {
-        audioServer.Server?.Server?.emit?.('connection', ws, request);
-      });
-    } else {
-      logWarn('[Audio WebSocket] Audio server not ready — dropping client connection.');
-      socket.destroy();
-    }
   } else if (request.url === '/chat' && serverConfig.webserver.chatEnabled === true) {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
