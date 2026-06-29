@@ -418,17 +418,17 @@ wss.on('connection', (ws, request) => {
 
     if (timeoutAntenna) clearTimeout(timeoutAntenna);
 
-    helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
-      if (result === "User banned") {
-          ws.close(1008, 'Banned IP');
-          return;
-      }
-
     dataHandler.showOnlineUsers(currentUsers);
 
     if (currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
         serverConfig.xdrd.wirelessConnection ? connectToXdrd() : serialport.write('x\n');
     }
+
+    helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
+      if (result === "User banned") {
+          ws.close(1008, 'Banned IP');
+          return;
+      }
   });  
 
     const userCommands = {};
