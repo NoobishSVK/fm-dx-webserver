@@ -17,12 +17,15 @@ function sendToast(type, title, message, persistent, important) {
         <div class="toast ${type} flex-container flex-phone ${important ? 'important' : ''}" id="${toastId}">
           <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
           <div>
-            <div class="toast-title">${toastTitle}</div>
-            <div class="toast-message">${message}</div>
+            <div class="toast-title"></div>
+            <div class="toast-message"></div>
           </div>
           <button class="close-btn">&nbsp;</button>
         </div>
-      `);      
+      `);
+
+    $toast.find('.toast-title').text(toastTitle);
+    $toast.find('.toast-message').text(message);
 
     $('#toast-container').append($toast);
 

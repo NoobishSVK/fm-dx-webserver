@@ -24,7 +24,7 @@ function createChatServer(storage) {
 
         const userCommandHistory = {};
 
-        if (serverConfig.webserver.banlist?.includes(clientIp)) {
+        if (helpers.isIpBanned(clientIp)) {
             ws.close(1008, 'Banned IP');
             return;
         }
@@ -91,7 +91,7 @@ function createChatServer(storage) {
                 ":" +
                 String(now.getMinutes()).padStart(2, '0');
 
-            if (serverConfig.webserver.banlist?.includes(clientIp)) return;
+            if (helpers.isIpBanned(clientIp)) return;
 
             if (request.session?.isAdminAuthenticated === true) {
                 messageData.admin = true;
