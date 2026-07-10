@@ -1,10 +1,30 @@
-// Allow <br> tags
+// Allow <br>, <strong>, <b>
 function setToastText(el, text) {
     while (el.firstChild) el.removeChild(el.firstChild);
-    var parts = String(text).split(/<br\s*\/?>/gi);
-    parts.forEach(function (part, i) {
-        el.appendChild(document.createTextNode(part));
-        if (i < parts.length - 1) el.appendChild(document.createElement('br'));
+
+    var parts = String(text).split(/(<br\s*\/?>|<\/?strong>|<\/?b>)/gi);
+    var stack = [el];
+
+    parts.forEach(function (part) {
+        var tag = part.toLowerCase().replace(/\s+/g, '');
+
+        if (tag === '<br>' || tag === '<br/>') {
+            stack[stack.length - 1].appendChild(document.createElement('br'));
+        } else if (tag === '<strong>') {
+            var strongEl = document.createElement('strong');
+            stack[stack.length - 1].appendChild(strongEl);
+            stack.push(strongEl);
+        } else if (tag === '</strong>') {
+            if (stack.length > 1) stack.pop();
+        } else if (tag === '<b>') {
+            var bEl = document.createElement('b');
+            stack[stack.length - 1].appendChild(bEl);
+            stack.push(bEl);
+        } else if (tag === '</b>') {
+            if (stack.length > 1) stack.pop();
+        } else if (part) {
+            stack[stack.length - 1].appendChild(document.createTextNode(part));
+        }
     });
 }
 
