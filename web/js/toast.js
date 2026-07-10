@@ -1,3 +1,13 @@
+// Allow <br> tags
+function setToastText(el, text) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    var parts = String(text).split(/<br\s*\/?>/gi);
+    parts.forEach(function (part, i) {
+        el.appendChild(document.createTextNode(part));
+        if (i < parts.length - 1) el.appendChild(document.createElement('br'));
+    });
+}
+
 function sendToast(type, title, message, persistent, important) {
     var toastId = 'toast-' + new Date().getTime();
 
@@ -24,8 +34,8 @@ function sendToast(type, title, message, persistent, important) {
         </div>
       `);
 
-    $toast.find('.toast-title').text(toastTitle);
-    $toast.find('.toast-message').text(message);
+    setToastText($toast.find('.toast-title')[0], toastTitle);
+    setToastText($toast.find('.toast-message')[0], message);
 
     $('#toast-container').append($toast);
 
