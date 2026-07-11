@@ -27,8 +27,15 @@ function parseMarkdown(parsed) {
   parsed = parsed.replace(italicRegex, '<em>$1</em>');
   
   var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
-  parsed = parsed.replace(linkRegex, '<a href="$2" target="_blank">$1</a>');
-  
+  parsed = parsed.replace(linkRegex, function (match, text, url) {
+    var trimmed = url.trim();
+    if (!/^(https?:\/\/|mailto:|\/)/i.test(trimmed)) {
+      return text; // Reject unsafe schemes (javascript:, data:, etc.)
+    }
+    var safeUrl = trimmed.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return '<a href="' + safeUrl + '" target="_blank">' + text + '</a>';
+  });
+
   parsed = parsed.replace(/\n/g, '<br>');
   
   return parsed;
