@@ -27,8 +27,15 @@ function parseMarkdown(parsed) {
   parsed = parsed.replace(italicRegex, '<em>$1</em>');
   
   var linkRegex = /\[([^\]]+)]\(([^)]+)\)/g;
-  parsed = parsed.replace(linkRegex, '<a href="$2" target="_blank">$1</a>');
-  
+  parsed = parsed.replace(linkRegex, function (match, text, url) {
+    var trimmed = url.trim();
+    if (!/^(https?:\/\/|mailto:|\/)/i.test(trimmed)) {
+      return text; // Reject unsafe schemes (javascript:, data:, etc.)
+    }
+    var safeUrl = trimmed.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return '<a href="' + safeUrl + '" target="_blank">' + text + '</a>';
+  });
+
   parsed = parsed.replace(/\n/g, '<br>');
   
   return parsed;
@@ -428,7 +435,15 @@ const escapeHtml = (unsafe) => {
     .replace(/'/g, "&#039;");
 };
 
+// Banlist rows are [ip, ...], so match banEntry[0], not includes().
+function isIpBanned(clientIp) {
+  const banlist = serverConfig.webserver.banlist;
+  if (!clientIp || !Array.isArray(banlist)) return false;
+  const ipList = String(clientIp).replace(/^::ffff:/, '').split(',').map(ip => ip.trim()).filter(Boolean);
+  return ipList.some(ip => banlist.some(banEntry => banEntry[0] === ip));
+}
+
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml, isIpBanned
 }

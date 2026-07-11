@@ -1,3 +1,39 @@
+// Allow <br>, <strong>, <b>, <i>
+function setToastText(el, text) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+
+    var parts = String(text).split(/(<br\s*\/?>|<\/?strong>|<\/?b>|<\/?i>)/gi);
+    var stack = [el];
+
+    parts.forEach(function (part) {
+        var tag = part.toLowerCase().replace(/\s+/g, '');
+
+        if (tag === '<br>' || tag === '<br/>') {
+            stack[stack.length - 1].appendChild(document.createElement('br'));
+        } else if (tag === '<strong>') {
+            var strongEl = document.createElement('strong');
+            stack[stack.length - 1].appendChild(strongEl);
+            stack.push(strongEl);
+        } else if (tag === '</strong>') {
+            if (stack.length > 1) stack.pop();
+        } else if (tag === '<b>') {
+            var bEl = document.createElement('b');
+            stack[stack.length - 1].appendChild(bEl);
+            stack.push(bEl);
+        } else if (tag === '</b>') {
+            if (stack.length > 1) stack.pop();
+        } else if (tag === '<i>') {
+            var iEl = document.createElement('i');
+            stack[stack.length - 1].appendChild(iEl);
+            stack.push(iEl);
+        } else if (tag === '</i>') {
+            if (stack.length > 1) stack.pop();
+        } else if (part) {
+            stack[stack.length - 1].appendChild(document.createTextNode(part));
+        }
+    });
+}
+
 function sendToast(type, title, message, persistent, important) {
     var toastId = 'toast-' + new Date().getTime();
 
@@ -17,12 +53,15 @@ function sendToast(type, title, message, persistent, important) {
         <div class="toast ${type} flex-container flex-phone ${important ? 'important' : ''}" id="${toastId}">
           <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
           <div>
-            <div class="toast-title">${toastTitle}</div>
-            <div class="toast-message">${message}</div>
+            <div class="toast-title"></div>
+            <div class="toast-message"></div>
           </div>
           <button class="close-btn">&nbsp;</button>
         </div>
       `);      
+
+    setToastText($toast.find('.toast-title')[0], toastTitle);
+    setToastText($toast.find('.toast-message')[0], message);
 
     $('#toast-container').append($toast);
 

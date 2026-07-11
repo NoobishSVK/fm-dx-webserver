@@ -24,10 +24,15 @@ router.get('/', (req, res) => {
     const normalizedIp = requestIp?.replace(/^::ffff:/, '');
     const ipList = (normalizedIp || '').split(',').map(ip => ip.trim()).filter(Boolean); // in case there are multiple IPs (proxy), we need to check all of them
     
-    const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
-    
+    let banReason = null;
+    const isBanned = ipList.some(ip => {
+        const match = serverConfig.webserver.banlist.find(banEntry => banEntry[0] === ip);
+        if (match) { banReason = match[3] || null; return true; }
+        return false;
+    });
+
     if (isBanned) {
-        res.render('403');
+        res.render('403', { reason: banReason });
         logInfo(`Web client (${normalizedIp}) is banned`);
         return;
     }
