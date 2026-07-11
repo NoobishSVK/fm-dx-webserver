@@ -130,8 +130,11 @@ let serverConfig = {
 };
 
 // Function to add missing fields without overwriting existing values
+const FORBIDDEN_KEYS = ['__proto__', 'constructor', 'prototype'];
+
 function addMissingFields(target, source) {
   Object.keys(source).forEach(function(key) {
+    if (FORBIDDEN_KEYS.includes(key)) return;
     if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
       if (!target[key]) {
         target[key] = {}; // Create missing object
@@ -148,6 +151,7 @@ function addMissingFields(target, source) {
 // Function to merge new configuration, overwriting existing values
 function deepMerge(target, source) {
   Object.keys(source).forEach(function(key) {
+    if (FORBIDDEN_KEYS.includes(key)) return;
     if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
       if (!target[key] || typeof target[key] !== 'object') {
         target[key] = {}; // Ensure target[key] is an object before merging
