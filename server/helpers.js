@@ -428,7 +428,15 @@ const escapeHtml = (unsafe) => {
     .replace(/'/g, "&#039;");
 };
 
+// Banlist rows are [ip, ...], so match banEntry[0], not includes().
+function isIpBanned(clientIp) {
+  const banlist = serverConfig.webserver.banlist;
+  if (!clientIp || !Array.isArray(banlist)) return false;
+  const ipList = String(clientIp).replace(/^::ffff:/, '').split(',').map(ip => ip.trim()).filter(Boolean);
+  return ipList.some(ip => banlist.some(banEntry => banEntry[0] === ip));
+}
+
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml, isIpBanned
 }

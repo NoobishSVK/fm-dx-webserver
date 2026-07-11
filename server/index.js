@@ -374,7 +374,7 @@ wss.on('connection', (ws, request) => {
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
-    if (clientIp && serverConfig.webserver.banlist?.includes(clientIp)) {
+    if (clientIp && helpers.isIpBanned(clientIp)) {
         ws.close(1008, 'Banned IP');
         return;
     }
@@ -599,7 +599,7 @@ pluginsWss.on('connection', (ws, request) => {
     const peerIp = request.socket?.remoteAddress || request.connection?.remoteAddress || '';
     const isLocal = peerIp === '127.0.0.1' || peerIp === '::1' || peerIp === '::ffff:127.0.0.1';
     const userCommandHistory = {};
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
+    if (helpers.isIpBanned(clientIp)) {
       ws.close(1008, 'Banned IP');
       return;
     }
@@ -674,7 +674,7 @@ function isPortOpen(host, port, timeout = 1000) {
 httpServer.on('upgrade', (request, socket, head) => {
   
   const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
+  if (helpers.isIpBanned(clientIp)) {
     socket.destroy();
     return;
   }
