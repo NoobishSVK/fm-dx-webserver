@@ -593,8 +593,11 @@ wss.on('connection', (ws, request) => {
 });
 
 // Additional web socket for using plugins
-pluginsWss.on('connection', (ws, request) => { 
+pluginsWss.on('connection', (ws, request) => {
     const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    // Trust decisions use the real socket peer, never the spoofable X-Forwarded-For.
+    const peerIp = request.socket?.remoteAddress || request.connection?.remoteAddress || '';
+    const isLocal = peerIp === '127.0.0.1' || peerIp === '::1' || peerIp === '::ffff:127.0.0.1';
     const userCommandHistory = {};
     if (serverConfig.webserver.banlist?.includes(clientIp)) {
       ws.close(1008, 'Banned IP');
@@ -616,6 +619,17 @@ pluginsWss.on('connection', (ws, request) => {
             // console.error("Failed to parse message:", error); // Log the error
             return; // Exit if parsing fails
         }
+
+        // Only localhost (server-side plugins) may originate broadcast messages.
+        if (!isLocal && messageData?.value?.status === 'broadcast') {
+            return;
+        }
+
+        // Stamp the sender's verified session so privileged plugins can trust it.
+        messageData._auth = {
+            admin: request.session?.isAdminAuthenticated === true,
+            tune: request.session?.isTuneAuthenticated === true
+        };
 
         const modifiedMessage = JSON.stringify(messageData);
 
