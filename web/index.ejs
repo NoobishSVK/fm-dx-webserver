@@ -511,7 +511,7 @@
               <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
                 <i class="fa-solid fa-key"></i>
               </div>
-              <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
+              <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="var a=document.createElement('a');a.href='./setup';a.target='_blank';a.rel='noopener';a.click();">
                 <i class="fa-solid fa-user"></i>
               </div>
               <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">

@@ -841,7 +841,11 @@ function findOnMaps() {
     frequency > 74 ? frequency = frequency.toFixed(1) : null;
     
     var url = `https://maps.fmdx.org/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
-    window.open(url, "_blank");
+    var link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.click();
 }
 
 
