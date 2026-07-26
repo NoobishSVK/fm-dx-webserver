@@ -1,0 +1,6 @@
+.git
+.github
+node_modules
+npm-debug.log
+serverlog*.txt
+work

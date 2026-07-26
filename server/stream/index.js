@@ -5,6 +5,7 @@ const checkFFmpeg = require('./checkFFmpeg');
 const audioServer = require('./3las.server');
 
 const consoleLogTitle = '[Audio Stream]';
+const useRtlTcp = serverConfig.device === 'sdr' && serverConfig.rtlTcp?.enabled === true;
 
 let startupSuccess;
 
@@ -126,6 +127,14 @@ function buildCommand(ffmpegPath) {
     }
 }
 
+if (useRtlTcp) {
+    const rtlBackend = require('../rtl_tcp');
+    audioServer.waitUntilReady.then(() => {
+        audioServer.Server.StdIn = rtlBackend.audioStream;
+        audioServer.Server.Run();
+        connectMessage(`${consoleLogTitle} Connected native rtl_tcp FM audio \u2192 Server.StdIn`);
+    });
+} else {
 checkFFmpeg().then((ffmpegPath) => {
     if (!serverConfig.audio.ffmpeg) checkAudioUtilities();
     let audioErrorLogged = false;
@@ -396,3 +405,4 @@ checkFFmpeg().then((ffmpegPath) => {
 }).catch((err) => {
     logError(`${consoleLogTitle} Error: ${err.message}`);
 });
+}

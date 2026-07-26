@@ -29,6 +29,8 @@ const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
 const pluginsApi = require('./plugins_api');
 const pjson = require('../package.json');
+const useNativeRtlTcp = serverConfig.device === 'sdr' && serverConfig.rtlTcp?.enabled === true;
+const rtlBackend = useNativeRtlTcp ? require('./rtl_tcp') : null;
 
 // Function to find server files based on the plugins listed in config
 function findServerFiles(plugins) {
@@ -110,15 +112,32 @@ const sessionMiddleware = session({
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 
-connectToXdrd();
-connectToSerial();
+if (useNativeRtlTcp) {
+  rtlBackend.on('status', (message) => logInfo(`[RTL-TCP] ${message}`));
+  rtlBackend.on('warning', (message) => logWarn(`[RTL-TCP] ${message}`));
+  rtlBackend.on('disconnected', () => logWarn('[RTL-TCP] Disconnected; retrying.'));
+  rtlBackend.on('ready', ({ tunerType, gainCount }) => {
+    logInfo(`[RTL-TCP] Receiver ready (tuner type ${tunerType}, ${gainCount} gain steps).`);
+    dataHandler.handleData(wss, `W200000\n`, rdsWss);
+  });
+  rtlBackend.on('frequency', (frequencyKhz) => {
+    dataHandler.handleData(wss, `T${Math.round(frequencyKhz)}\n`, rdsWss);
+  });
+  rtlBackend.on('signal', (signalData) => dataHandler.updateRtlSignal(wss, signalData));
+  rtlBackend.on('rds', (decodedGroup) => dataHandler.applyRtlRds(wss, decodedGroup));
+  pluginsApi.setOutput(rtlBackend);
+  if (!serverConfig.autoShutdown) rtlBackend.start();
+} else {
+  connectToXdrd();
+  connectToSerial();
+}
 tunnel.connect();
 
 // Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
 dataHandler.state.isSerialportRetrying = false;
 
 setInterval(() => {
-  if (!dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
+  if (!useNativeRtlTcp && !dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
     dataHandler.state.isSerialportAlive = true;
     dataHandler.state.isSerialportRetrying = true;
     if (serialport && serialport.isOpen) {
@@ -138,6 +157,7 @@ setInterval(() => {
 
 // Serial Connection
 function connectToSerial() {
+if (useNativeRtlTcp) return;
 if (serverConfig.xdrd.wirelessConnection === false) {
     
   // Configure the SerialPort with DTR and RTS options
@@ -234,6 +254,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 let authFlags = {};
 
 function connectToXdrd() {
+  if (useNativeRtlTcp) return;
   const { xdrd } = serverConfig;
 
   if (xdrd.wirelessConnection && configExists()) {
@@ -369,7 +390,9 @@ setInterval(() => {
 }, 60 * 60 * 1000); // Run every hour
 
 wss.on('connection', (ws, request) => {
-    const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
+    const output = useNativeRtlTcp
+      ? rtlBackend
+      : (serverConfig.xdrd.wirelessConnection ? client : serialport);
     let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
@@ -426,8 +449,12 @@ wss.on('connection', (ws, request) => {
 
     dataHandler.showOnlineUsers(currentUsers);
 
-    if (currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
-        serverConfig.xdrd.wirelessConnection ? connectToXdrd() : serialport.write('x\n');
+    if (currentUsers === 1 && serverConfig.autoShutdown === true) {
+        if (useNativeRtlTcp) {
+          rtlBackend.start();
+        } else {
+          serverConfig.xdrd.wirelessConnection ? connectToXdrd() : serialport.write('x\n');
+        }
     }
   });  
 
@@ -580,8 +607,8 @@ wss.on('connection', (ws, request) => {
             }, 10000);
         }
 
-        if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
-            client.write('X\n');
+        if (currentUsers === 0 && serverConfig.autoShutdown === true) {
+            useNativeRtlTcp ? rtlBackend.stop() : client.write('X\n');
         }
 
         if (code !== 1008) {

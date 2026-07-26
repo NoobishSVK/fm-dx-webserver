@@ -1,0 +1,37 @@
+{
+  "webserver": {
+    "webserverIp": "0.0.0.0",
+    "webserverPort": 8080,
+    "chatEnabled": true,
+    "tuningLimit": false,
+    "tuningLowerLimit": "87.5",
+    "tuningUpperLimit": "108"
+  },
+  "rtlTcp": {
+    "enabled": true,
+    "host": "rtl_tcp",
+    "port": 1234,
+    "sampleRate": 240000,
+    "gain": "auto",
+    "ppm": 0,
+    "biasTee": false,
+    "deemphasisUs": 50,
+    "signalFloorDbfs": -55,
+    "redseaPath": "redsea",
+    "reconnectDelayMs": 2000
+  },
+  "audio": {
+    "audioChannels": 2,
+    "audioBitrate": "128k",
+    "startupVolume": "0.95"
+  },
+  "identification": {
+    "tunerName": "RTL-SDR Docker",
+    "tunerDesc": "Native rtl_tcp receiver"
+  },
+  "device": "sdr",
+  "defaultFreq": "87.5",
+  "enableDefaultFreq": true,
+  "publicTuner": true,
+  "autoShutdown": false
+}

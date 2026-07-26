@@ -1,0 +1,36 @@
+services:
+  rtl_tcp:
+    image: fm-dx-rtl-tcp:local
+    build:
+      context: .
+      target: rtl-tcp
+    restart: unless-stopped
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+
+  fm-dx-webserver:
+    image: fm-dx-webserver:local
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    depends_on:
+      - rtl_tcp
+    ports:
+      - "${FMDX_PORT:-8080}:8080"
+    environment:
+      FMDX_DEVICE: sdr
+      FMDX_WEB_PORT: 8080
+      RTL_TCP_ENABLED: "true"
+      RTL_TCP_HOST: rtl_tcp
+      RTL_TCP_PORT: 1234
+      RTL_TCP_SAMPLE_RATE: 240000
+      RTL_TCP_GAIN: "${RTL_TCP_GAIN:-auto}"
+      RTL_TCP_PPM: "${RTL_TCP_PPM:-0}"
+      RTL_TCP_BIAS_TEE: "${RTL_TCP_BIAS_TEE:-false}"
+      RTL_TCP_DEEMPHASIS_US: "${RTL_TCP_DEEMPHASIS_US:-50}"
+    volumes:
+      - fmdx_config:/data
+
+volumes:
+  fmdx_config:
