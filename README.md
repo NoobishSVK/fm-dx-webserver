@@ -33,9 +33,7 @@ This project utilizes these libraries:
 
 - [3LAS](https://github.com/jojobond/3LAS) library by JoJoBond for Low Latency Audio Streaming.
 - [flat-flags](https://github.com/luishdez/flat-flags) library by luishdez for RDS country flags.
-- [librdsparser](https://github.com/kkonradpl/librdsparser) library by Konrad Kosmatka for RDS parsing.
-
-All of these libraries are already bundled with the webserver.
+- [librdsparser](https://github.com/kkonradpl/librdsparser) by Konrad Kosmatka, ported to JavaScript as the npm package [@barteqcz/rdsparser](https://www.npmjs.com/package/@barteqcz/rdsparser) (LGPL-2.1-or-later).
 
 ## Features to be added
 
