@@ -8,7 +8,12 @@ const { Worker } = require('worker_threads');
 
 const RTL_TCP_HEADER_SIZE = 12;
 const RTL_TCP_MAGIC = 'RTL0';
-const MINIMUM_WFM_SAMPLE_RATE = 192000;
+// The RTL2832U only resamples within these two ranges (librtlsdr rejects
+// everything else). 240 kHz is the cheapest multiple of 48 kHz in them.
+const RTL_SAMPLE_RATE_RANGES = Object.freeze([
+  [225001, 300000],
+  [900001, 3200000]
+]);
 const OUTPUT_SAMPLE_RATE = 48000;
 const DEFAULT_BANDWIDTH_HZ = 200000;
 const DEFAULT_RTL_TCP_BLOCK_BYTES = 256 * 1024;
@@ -78,6 +83,7 @@ class RtlTcpClient extends EventEmitter {
       ),
       signalSampleStride: Number(options.signalSampleStride ?? 64),
       stereoMinimumSnrDb: Number(options.stereoMinimumSnrDb ?? 3),
+      stereoBlendSnrDb: Number(options.stereoBlendSnrDb ?? 40),
       rdsEnabled: options.rdsEnabled !== false,
       reconnectDelayMs: Number(options.reconnectDelayMs ?? 2000),
       dspRestartDelayMs: Number(options.dspRestartDelayMs ?? 500),
@@ -96,10 +102,12 @@ class RtlTcpClient extends EventEmitter {
     };
 
     if (!Number.isFinite(this.options.sampleRate) ||
-        this.options.sampleRate < MINIMUM_WFM_SAMPLE_RATE ||
-        this.options.sampleRate % OUTPUT_SAMPLE_RATE !== 0) {
+        this.options.sampleRate % OUTPUT_SAMPLE_RATE !== 0 ||
+        !RTL_SAMPLE_RATE_RANGES.some(([minimum, maximum]) =>
+          this.options.sampleRate >= minimum &&
+          this.options.sampleRate <= maximum)) {
       throw new Error(
-        `RTL-TCP sample rate must be a finite integer multiple of ${OUTPUT_SAMPLE_RATE} Hz and at least ${MINIMUM_WFM_SAMPLE_RATE} Hz`
+        `RTL-TCP sample rate must be a finite integer multiple of ${OUTPUT_SAMPLE_RATE} Hz supported by the RTL2832U (240000, 288000, or 960000-3168000 Hz)`
       );
     }
 
@@ -150,6 +158,12 @@ class RtlTcpClient extends EventEmitter {
         this.options.stereoMinimumSnrDb < 0 ||
         this.options.stereoMinimumSnrDb > 70) {
       throw new Error('RTL-TCP stereo SNR threshold must be between 0 and 70 dB');
+    }
+
+    if (!Number.isFinite(this.options.stereoBlendSnrDb) ||
+        this.options.stereoBlendSnrDb < 0 ||
+        this.options.stereoBlendSnrDb > 90) {
+      throw new Error('RTL-TCP stereo blend target must be between 0 and 90 dB');
     }
 
     if (!Number.isInteger(this.options.signalSampleStride) ||
@@ -592,6 +606,7 @@ class RtlTcpClient extends EventEmitter {
         bandwidthHz: this.options.bandwidthHz,
         signalSampleStride: this.options.signalSampleStride,
         stereoMinimumSnrDb: this.options.stereoMinimumSnrDb,
+        stereoBlendSnrDb: this.options.stereoBlendSnrDb,
         forceMono: this.forceMono,
         rdsEnabled: this.options.rdsEnabled
       });

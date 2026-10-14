@@ -5,6 +5,28 @@ function clamp(value, minimum, maximum) {
 }
 
 /**
+ * atan2 with a maximum error of about 1e-5 rad (Abramowitz & Stegun 4.4.49).
+ *
+ * Math.atan2 is several times slower and dominated the 60 kHz pilot loop;
+ * this accuracy is far below what the phase detector can resolve.
+ */
+function fastAtan2(y, x) {
+  const absX = Math.abs(x);
+  const absY = Math.abs(y);
+  if (absX === 0 && absY === 0) return 0;
+
+  const swap = absY > absX;
+  const ratio = swap ? absX / absY : absY / absX;
+  const ratioSquared = ratio * ratio;
+  let angle = ratio * (0.9998660 + ratioSquared * (-0.3302995 +
+    ratioSquared * (0.1801410 + ratioSquared * (-0.0851330 +
+    ratioSquared * 0.0208351))));
+  if (swap) angle = Math.PI / 2 - angle;
+  if (x < 0) angle = Math.PI - angle;
+  return y < 0 ? -angle : angle;
+}
+
+/**
  * Design an odd-length, unity-gain low-pass FIR with a Hamming window.
  *
  * Frequencies are expressed in Hz. The returned taps are ordered so tap zero
@@ -102,6 +124,7 @@ function designBiquadBandPass(sampleRate, centerHz, q = 4) {
 
 module.exports = {
   clamp,
+  fastAtan2,
   designLowPass,
   designBiquadLowPass,
   designBiquadBandPass

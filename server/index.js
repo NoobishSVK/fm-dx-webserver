@@ -243,6 +243,20 @@ if (useRtlTcp) {
     pluginsApi.setOutput(rtlBackend);
   });
   rtlBackend.on('unready', () => pluginsApi.clearOutput());
+
+  // Report how much of one core the DSP worker needs, measured over the last
+  // minute, so the cost of the JavaScript demodulator is visible on real hardware.
+  let lastDspStats = rtlBackend.getDspStats();
+  setInterval(() => {
+    const stats = rtlBackend.getDspStats();
+    const inputBytes = stats.inputBytes - lastDspStats.inputBytes;
+    const processingMs = stats.processingMs - lastDspStats.processingMs;
+    lastDspStats = stats;
+    if (inputBytes <= 0 || processingMs <= 0) return;
+    const radioMs = inputBytes * 500 / rtlBackend.options.sampleRate;
+    logInfo(`[RTL-TCP] DSP load: ${(100 * processingMs / radioMs).toFixed(1)}% of one core (${(radioMs / processingMs).toFixed(1)}x real time).`);
+  }, 60 * 1000).unref();
+
   if (!serverConfig.autoShutdown) rtlBackend.start();
 } else {
   connectToXdrd();

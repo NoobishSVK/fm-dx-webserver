@@ -31,6 +31,7 @@ function adminConfiguration() {
       deviationHz: 68000,
       bandwidthHz: 180000,
       stereoMinimumSnrDb: 5,
+      stereoBlendSnrDb: 35,
       rdsEnabled: false,
       reconnectDelayMs: 3500,
     },
@@ -57,6 +58,7 @@ test('empty Docker variables preserve every administrator setting', () => {
     RTL_TCP_DEVIATION_HZ: '',
     RTL_TCP_BANDWIDTH_HZ: '',
     RTL_TCP_STEREO_MINIMUM_SNR_DB: '',
+    RTL_TCP_STEREO_BLEND_SNR_DB: '',
     RTL_TCP_RDS_ENABLED: '',
     RTL_TCP_RECONNECT_DELAY_MS: '',
   };
@@ -85,6 +87,7 @@ test('non-empty Docker variables remain explicit deployment overrides', () => {
     RTL_TCP_DEVIATION_HZ: '75000',
     RTL_TCP_BANDWIDTH_HZ: '200000',
     RTL_TCP_STEREO_MINIMUM_SNR_DB: '3',
+    RTL_TCP_STEREO_BLEND_SNR_DB: '40',
     RTL_TCP_RDS_ENABLED: 'yes',
     RTL_TCP_RECONNECT_DELAY_MS: '2000',
   });
@@ -113,6 +116,7 @@ test('non-empty Docker variables remain explicit deployment overrides', () => {
       deviationHz: 75000,
       bandwidthHz: 200000,
       stereoMinimumSnrDb: 3,
+      stereoBlendSnrDb: 40,
       rdsEnabled: true,
       reconnectDelayMs: 2000,
     },

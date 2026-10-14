@@ -57,12 +57,13 @@ FMDX_ADMIN_PASSWORD=replace-with-a-strong-password
 # RTL_TCP_DEVIATION_HZ=75000
 # RTL_TCP_BANDWIDTH_HZ=200000
 # RTL_TCP_STEREO_MINIMUM_SNR_DB=3
+# RTL_TCP_STEREO_BLEND_SNR_DB=40
 # RTL_TCP_RDS_ENABLED=true
 ```
 
 Set `FMDX_ADMIN_PASSWORD` before the first start. If it is omitted, the container generates a random administrator password and prints it once in `docker compose logs`. Empty administrator and tuning passwords are never accepted.
 
-`RTL_TCP_GAIN` is either `auto` or a tuner gain in dB. The Docker RTL-SDR stack defaults to 320 kb/s MP3 audio; `FMDX_AUDIO_BITRATE` accepts `64k`, `96k`, `128k`, `192k`, `256k`, or `320k`. Only enable the bias tee when the connected RF hardware requires DC power. Use `50` microseconds de-emphasis in most of the world, including Europe and Australia; use `75` in the Americas and South Korea. The default 240 kHz IQ rate is intentional; broadcast FM requires at least 192 kHz in this backend.
+`RTL_TCP_GAIN` is either `auto` or a tuner gain in dB. The Docker RTL-SDR stack defaults to 320 kb/s MP3 audio; `FMDX_AUDIO_BITRATE` accepts `64k`, `96k`, `128k`, `192k`, `256k`, or `320k`. Only enable the bias tee when the connected RF hardware requires DC power. Use `50` microseconds de-emphasis in most of the world, including Europe and Australia; use `75` in the Americas and South Korea. The default 240 kHz IQ rate is intentional: it is the lowest multiple of the 48 kHz audio rate that the RTL2832U supports, so it needs the least CPU. 288 kHz and 960 kHz-3.168 MHz also work but cost proportionally more.
 
 Empty or omitted Docker variables preserve the values saved through the
 administrator panel. Set an optional variable only when it should be an
@@ -73,6 +74,10 @@ the published host port.
 On Linux, a kernel DVB driver or another `rtl_tcp`/SDR application can claim the USB device first. Stop the conflicting process and unload or blacklist `dvb_usb_rtl28xxu` if the `rtl_tcp` service reports that it cannot open the receiver.
 
 The JavaScript backend provides stereo audio with automatic mono fallback, tuning, a signal estimate, and optional raw-group RDS through the webserver's existing RDS parser. It does not build or launch separate native DSP helpers. Existing SDRSharp/XDR-GTK support remains available.
+
+Stereo uses a signal-to-noise blend rather than a hard switch. Stereo has about 20 dB more noise than mono, so as reception weakens the left/right separation is narrowed gradually to hold the audio near `RTL_TCP_STEREO_BLEND_SNR_DB` (default 40 dB) instead of switching into hiss. Strong stations get full separation. Set it to `0` for full stereo whenever the pilot is detected. `RTL_TCP_STEREO_MINIMUM_SNR_DB` still controls when the stereo indicator lights.
+
+The DSP runs in a worker thread. At the default 240 kHz it uses well under 1 % of one modern desktop core for stereo plus RDS; the server logs the measured load every minute (`[RTL-TCP] DSP load: ...`).
 
 ## Utilized projects
 

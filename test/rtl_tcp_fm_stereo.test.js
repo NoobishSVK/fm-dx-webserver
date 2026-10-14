@@ -467,6 +467,82 @@ test('forced mono preserves pilot status and B0 restores stereo without a reset'
   assert.ok(stereoDifferenceRms(automatic.pcm, 0.15) > 0.15);
 });
 
+// Halve the carrier and add Gaussian IQ noise (deterministic) for a CNR of
+// 10 * log10(63.5^2 / (2 * sigma^2)) dB.
+function weakenIq(iq, sigma) {
+  let seed = 0x2468ace1;
+  const uniform = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return (seed + 0.5) / 4294967296;
+  };
+  const weak = new Uint8Array(iq.length);
+  for (let index = 0; index < iq.length; index++) {
+    const noise =
+      Math.sqrt(-2 * Math.log(uniform())) * Math.cos(TWO_PI * uniform());
+    weak[index] = clampByte(127.5 + (iq[index] - 127.5) * 0.5 + sigma * noise);
+  }
+  return weak;
+}
+
+test('weak stereo narrows separation to limit noise; strong stereo stays full', () => {
+  const state = makeGeneratorState();
+  // Left-only program: the right channel carries only crosstalk and noise.
+  const clean = generateFmIq(state, 1.2, { right: () => 0 });
+  const weak = weakenIq(clean, 8.5);
+
+  const strong = new FmStereoDecoder();
+  strong.process(clean);
+  assert.equal(strong.stereo, true);
+  assert.ok(strong.stereoBlend > 0.99, `stereoBlend=${strong.stereoBlend}`);
+
+  const blended = new FmStereoDecoder();
+  const blendedResult = blended.process(weak);
+  const unblended = new FmStereoDecoder({ stereoBlendSnrDb: 0 });
+  const unblendedResult = unblended.process(weak);
+
+  // The pilot is still detected, so the stereo indicator stays lit.
+  assert.equal(blended.stereo, true);
+  assert.equal(unblended.stereo, true);
+  assert.ok(unblended.stereoBlend > 0.99, `stereoBlend=${unblended.stereoBlend}`);
+  assert.ok(
+    blended.stereoBlend > 0.2 && blended.stereoBlend < 0.8,
+    `stereoBlend=${blended.stereoBlend}`
+  );
+
+  // Blending trades separation (more 1 kHz crosstalk into the right
+  // channel) for noise (less of everything else).
+  const blendedNoise = toneResidualRms(blendedResult.pcm, 1, 1000, 0.6);
+  const unblendedNoise = toneResidualRms(unblendedResult.pcm, 1, 1000, 0.6);
+  assert.ok(
+    unblendedNoise > blendedNoise * 1.5,
+    `blendedNoise=${blendedNoise} unblendedNoise=${unblendedNoise}`
+  );
+  assert.ok(
+    toneAmplitude(blendedResult.pcm, 1, 1000, 0.6) >
+      toneAmplitude(unblendedResult.pcm, 1, 1000, 0.6) * 2
+  );
+});
+
+test('loud L-R treble on a strong station is not mistaken for noise', () => {
+  // L-R at 15 kHz puts sidebands at 23 and 53 kHz, near the 80 kHz noise
+  // detector; it must not narrow the stereo blend of a clean signal.
+  for (const frequencyHz of [12000, 15000]) {
+    const decoder = new FmStereoDecoder();
+    const state = makeGeneratorState();
+    const treble = (time) => 0.45 * Math.sin(TWO_PI * frequencyHz * time);
+    decoder.process(generateFmIq(state, 1, {
+      left: treble,
+      right: (time) => -treble(time)
+    }));
+
+    assert.equal(decoder.stereo, true);
+    assert.ok(
+      decoder.stereoBlend > 0.99,
+      `frequencyHz=${frequencyHz} stereoBlend=${decoder.stereoBlend} snr=${decoder.signalSnr}`
+    );
+  }
+});
+
 test('recursive pilot oscillator remains normalized and follows carrier error', () => {
   const decoder = new FmStereoDecoder({ signalSampleStride: 64 });
   const state = makeGeneratorState();

@@ -119,6 +119,11 @@ function applyEnvironmentOverrides(config, environment = process.env) {
     'RTL_TCP_STEREO_MINIMUM_SNR_DB',
     config.rtlTcp.stereoMinimumSnrDb
   );
+  config.rtlTcp.stereoBlendSnrDb = environmentNumber(
+    environment,
+    'RTL_TCP_STEREO_BLEND_SNR_DB',
+    config.rtlTcp.stereoBlendSnrDb
+  );
   config.rtlTcp.rdsEnabled = environmentBoolean(
     environment,
     'RTL_TCP_RDS_ENABLED',

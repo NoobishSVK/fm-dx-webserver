@@ -56,6 +56,7 @@ let serverConfig = {
     deviationHz: 75000,
     bandwidthHz: 200000,
     stereoMinimumSnrDb: 3,
+    stereoBlendSnrDb: 40,
     rdsEnabled: true,
     reconnectDelayMs: 2000
   },

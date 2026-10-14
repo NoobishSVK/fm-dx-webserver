@@ -624,14 +624,16 @@ test('synchronous connection failures are reported without escaping start()', ()
 });
 
 test('invalid DSP rate, deviation, timing, and queue options fail early', () => {
-  for (const sampleRate of [0, 191999, 200000, Infinity, Number.NaN]) {
+  // 192 kHz and 336 kHz are 48 kHz multiples the RTL2832U cannot produce.
+  for (const sampleRate of [0, 191999, 192000, 200000, 336000, 3216000, Infinity, Number.NaN]) {
     assert.throws(
       () => new RtlTcpClient({ sampleRate }),
       /integer multiple of 48000 Hz/
     );
   }
-  assert.doesNotThrow(() => new RtlTcpClient({ sampleRate: 192000 }));
-  assert.doesNotThrow(() => new RtlTcpClient({ sampleRate: 240000 }));
+  for (const sampleRate of [240000, 288000, 960000, 2400000]) {
+    assert.doesNotThrow(() => new RtlTcpClient({ sampleRate }));
+  }
 
   for (const deviationHz of [-1, 0, 120000, Infinity, Number.NaN]) {
     assert.throws(
@@ -667,6 +669,12 @@ test('invalid DSP rate, deviation, timing, and queue options fail early', () => 
     assert.throws(
       () => new RtlTcpClient({ stereoMinimumSnrDb }),
       /stereo SNR/
+    );
+  }
+  for (const stereoBlendSnrDb of [-1, 91, Infinity, Number.NaN]) {
+    assert.throws(
+      () => new RtlTcpClient({ stereoBlendSnrDb }),
+      /stereo blend/
     );
   }
   for (const port of [-1, 0, 65536, 1.5, Infinity, Number.NaN]) {
