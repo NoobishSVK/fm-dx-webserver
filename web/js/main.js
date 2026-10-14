@@ -954,8 +954,10 @@ function updateTextIfChanged($element, newText) {
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
-        initTooltips($element);
+        return true;
     }
+
+    return false;
 }
 
 function updateDatasetValIfChanged($element, dataLabel, newVal) {
@@ -1008,11 +1010,16 @@ const updateDataElements = throttle(function(parsedData) {
         $flagDesktopCointainer.css('background-color', 'var(--color-1-transparent)');
     }
     
-    updateHtmlIfChanged(
-        $('.data-flag'),
-        parsedData.country_iso !== 'UN' 
-        ? `<img src="../images/flags/${parsedData.country_iso}.svg" data-tooltip="${parsedData.country_name} - ECC ${(parsedData.ecc).toString(16).toUpperCase()}" class="tooltip">` 
-        : '');
+    const $flag = $('.data-flag');
+
+    if (updateHtmlIfChanged(
+        $flag,
+        parsedData.country_iso !== 'UN'
+            ? `<img src="../images/flags/${parsedData.country_iso}.svg" data-tooltip="${parsedData.country_name} - ECC ${(parsedData.ecc).toString(16).toUpperCase()}" class="tooltip">`
+            : ''
+    )) {
+        initTooltips($flag.find('.tooltip'));
+    }
 
     $dataAntInput.val($('.data-ant li[data-value="' + parsedData.ant + '"]').first().text());
     if (typeof parsedData.agc !== 'undefined') {
