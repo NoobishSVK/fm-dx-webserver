@@ -954,6 +954,7 @@ function updateTextIfChanged($element, newText) {
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
+        initTooltips($element);
     }
 }
 
