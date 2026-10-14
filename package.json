@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@barteqcz/rdsparser": "0.1.1",
+    "@barteqcz/rdsparser": "0.1.2",
     "@mapbox/node-pre-gyp": "2.0.3",
     "body-parser": "2.3.0",
     "ejs": "7.0.1",
