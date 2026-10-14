@@ -43,6 +43,8 @@ docker compose logs -f
 
 Open `http://<docker-host>:8080`. The configuration is persisted in the `fmdx_config` Docker volume.
 
+`rtl_tcp` is also published on `127.0.0.1:1234` so local SDR tools can share the dongle when the webserver is stopped. It has no authentication, so only set `RTL_TCP_PUBLISHED_ADDRESS=0.0.0.0` on a trusted network.
+
 The most useful optional settings can be placed in a `.env` file:
 
 ```dotenv

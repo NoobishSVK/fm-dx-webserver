@@ -260,9 +260,15 @@ class StreamServer {
     }
     OnServerConnection(socket, _request) {
         this.Clients.add(new StreamClient(this, socket));
-        notifyClientCount(this.Clients.size);
+    }
+    // Clients that requested an audio format, i.e. are actually listening.
+    ListenerCount() {
+        return this.FallbackClients["mp3"].size + this.FallbackClients["wav"].size;
     }
     SetFallback(client, format) {
+        // ws still delivers messages while a destroyed socket is closing; a
+        // late request must not re-register the client or start an encoder.
+        if (!this.Clients.has(client)) return;
         const provider = this.FallbackProvider[format];
         if ((format != "mp3" && format != "wav") || !provider) {
             this.DestroyClient(client);
@@ -283,9 +289,11 @@ class StreamServer {
         this.FallbackClients[format].add(client);
         provider.Start();
         provider.PrimeClient(client);
+        if (!previousFormat) notifyClientCount(this.ListenerCount());
     }
     DestroyClient(client) {
         if (!this.Clients.delete(client)) return;
+        const wasListening = Boolean(client.Format);
         this.FallbackClients["mp3"].delete(client);
         this.FallbackClients["wav"].delete(client);
         client.Format = null;
@@ -295,7 +303,7 @@ class StreamServer {
             }
         }
         client.Destroy();
-        notifyClientCount(this.Clients.size);
+        if (wasListening) notifyClientCount(this.ListenerCount());
     }
     GetStats() {
         let fallback = {

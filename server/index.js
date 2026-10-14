@@ -129,14 +129,14 @@ function cancelNoListenerTimers() {
 
 function startReceiverForListeners() {
   cancelNoListenerTimers();
-  if (serverConfig.autoShutdown !== true) return;
 
   if (useRtlTcp) {
+    // Idempotent; also recovers when autoShutdown was switched off while the
+    // receiver was stopped.
     rtlBackend.start();
-  } else if (serverConfig.xdrd.wirelessConnection) {
+  } else if (serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
+    // As before, autoShutdown only applies to xdrd, not to serial tuners.
     connectToXdrd();
-  } else {
-    serialport?.write('x\n');
   }
 }
 
@@ -209,11 +209,19 @@ function handleNoActiveListeners() {
   }
 
   if (serverConfig.autoShutdown === true) {
-    useRtlTcp ? rtlBackend.stop() : output?.write?.('X\n');
+    if (useRtlTcp) {
+      rtlBackend.stop();
+    } else if (serverConfig.xdrd.wirelessConnection === true) {
+      output?.write?.('X\n');
+    }
   }
 }
 
+// Audio-only listeners (players and relays that never open /text) keep the
+// rtl_tcp receiver running. Other backends keep their previous behaviour of
+// counting only web clients.
 audioServer.onClientCountChange((count) => {
+  if (!useRtlTcp) return;
   const hadListeners = activeListenerCount() > 0;
   audioUsers = count;
   if (audioUsers > 0) {
@@ -581,7 +589,11 @@ wss.on('connection', (ws, request) => {
 
     dataHandler.showOnlineUsers(currentUsers);
 
-    if (!hadListeners) startReceiverForListeners();
+    // The lookup above is asynchronous: the client may already have left and
+    // the no-listener shutdown run, so only start for a live listener.
+    if (!hadListeners && ws.readyState === ws.OPEN && activeListenerCount() > 0) {
+      startReceiverForListeners();
+    }
   });  
 
     const userCommands = {};

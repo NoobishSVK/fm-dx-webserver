@@ -6,3 +6,9 @@ node_modules
 npm-debug.log
 serverlog*.txt
 work
+# Local configuration can contain admin and xdrd passwords.
+/*.json
+!/package.json
+!/package-lock.json
+plugins_configs
+web/js/plugins

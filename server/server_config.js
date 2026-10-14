@@ -164,6 +164,38 @@ function addMissingFields(target, source) {
   });
 }
 
+// Environment overrides active in memory, as { path, value, persisted }:
+// `value` comes from the environment and `persisted` is what the config file
+// holds (and keeps holding) for that setting.
+let environmentOverrides = [];
+
+function getPath(object, keys) {
+  return keys.reduce((value, key) => (value == null ? undefined : value[key]), object);
+}
+
+function setPath(object, keys, value) {
+  let target = object;
+  for (const key of keys.slice(0, -1)) {
+    if (typeof target[key] !== 'object' || target[key] === null) target[key] = {};
+    target = target[key];
+  }
+  target[keys[keys.length - 1]] = value;
+}
+
+function changedLeafPaths(before, after, prefix = []) {
+  const paths = [];
+  for (const key of Object.keys(after)) {
+    const value = after[key];
+    const path = [...prefix, key];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      paths.push(...changedLeafPaths(before?.[key], value, path));
+    } else if (before?.[key] !== value) {
+      paths.push(path);
+    }
+  }
+  return paths;
+}
+
 // Function to merge new configuration, overwriting existing values
 function deepMerge(target, source) {
   Object.keys(source).forEach(function(key) {
@@ -186,14 +218,27 @@ function configUpdate(newConfig) {
     delete newConfig.webserver.banlist;
   }
   
+  // A panel save updates the stored value of an overridden setting, but the
+  // environment value stays in effect.
+  for (const override of environmentOverrides) {
+    const submitted = getPath(newConfig, override.path);
+    if (submitted !== undefined) override.persisted = submitted;
+  }
   deepMerge(serverConfig, newConfig); // Overwrite with newConfig values
+  for (const override of environmentOverrides) {
+    setPath(serverConfig, override.path, override.value);
+  }
   configSave();
 }
 
 // Function to save the configuration to the file system
 function configSave() {
   try {
-    fs.writeFileSync(configPath, JSON.stringify(serverConfig, null, 2));
+    const persistedConfig = structuredClone(serverConfig);
+    for (const override of environmentOverrides) {
+      setPath(persistedConfig, override.path, override.persisted);
+    }
+    fs.writeFileSync(configPath, JSON.stringify(persistedConfig, null, 2));
     setTimeout(() => logInfo('Server config saved successfully.'), 0);
   } catch (err) {
     logError(err);
@@ -219,9 +264,15 @@ if (configExists()) {
 }
 
 // Empty Docker variables preserve values saved by the administrator. A
-// non-empty environment value is an explicit deployment override and is
-// applied in memory without modifying the persisted configuration.
+// non-empty environment value is an explicit deployment override: it is
+// applied in memory, never written to the config file, and survives saves.
+const configBeforeOverrides = structuredClone(serverConfig);
 applyEnvironmentOverrides(serverConfig);
+environmentOverrides = changedLeafPaths(configBeforeOverrides, serverConfig).map((path) => ({
+  path,
+  value: getPath(serverConfig, path),
+  persisted: getPath(configBeforeOverrides, path)
+}));
 
 module.exports = {
     configName, serverConfig, configUpdate, configSave, configExists, configPath

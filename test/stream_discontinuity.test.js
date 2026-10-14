@@ -4,27 +4,59 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const audioServer = require('../server/stream/3las.server');
 
-test('audio client count changes on connect and disconnect', async (t) => {
+function useFakeEncoders(t, server) {
+  const originalClients = server.Clients;
+  const originalFallbackClients = server.FallbackClients;
+  const originalProviders = server.FallbackProvider;
+  const starts = [];
+  server.Clients = new Set();
+  server.FallbackClients = { mp3: new Set(), wav: new Set() };
+  server.FallbackProvider = {
+    mp3: { Start() { starts.push('mp3'); }, Stop() {}, PrimeClient() {} }
+  };
+  t.after(() => {
+    server.Clients = originalClients;
+    server.FallbackClients = originalFallbackClients;
+    server.FallbackProvider = originalProviders;
+  });
+  return starts;
+}
+
+function fakeSocket() {
+  return { on() {}, close() {}, terminate() {} };
+}
+
+test('audio listener count follows clients that pick a format', async (t) => {
   await audioServer.waitUntilReady;
   const server = audioServer.Server;
-  const originalClients = server.Clients;
+  useFakeEncoders(t, server);
   const counts = [];
-  const socket = {
-    on() {},
-    close() {}
-  };
-  server.Clients = new Set();
   const unsubscribe = audioServer.onClientCountChange((count) => counts.push(count));
-  t.after(() => {
-    unsubscribe();
-    server.Clients = originalClients;
-  });
+  t.after(unsubscribe);
 
-  server.OnServerConnection(socket);
+  server.OnServerConnection(fakeSocket());
   const [client] = server.Clients;
+  assert.deepEqual(counts, [], 'a socket that has not chosen a format is not a listener');
+
+  server.SetFallback(client, 'mp3');
   server.DestroyClient(client);
 
   assert.deepEqual(counts, [1, 0]);
+});
+
+test('a destroyed audio client cannot re-register or start an encoder', async (t) => {
+  await audioServer.waitUntilReady;
+  const server = audioServer.Server;
+  const starts = useFakeEncoders(t, server);
+
+  server.OnServerConnection(fakeSocket());
+  const [client] = server.Clients;
+  server.DestroyClient(client);
+  // A fallback request still queued on the closing socket.
+  server.SetFallback(client, 'mp3');
+
+  assert.equal(server.FallbackClients.mp3.size, 0);
+  assert.deepEqual(starts, []);
 });
 
 test('stream discontinuity drops queued PCM before resetting active encoders', async (t) => {

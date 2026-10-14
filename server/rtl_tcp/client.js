@@ -550,7 +550,9 @@ class RtlTcpClient extends EventEmitter {
       this._startDspWorker();
     }
 
-    if (iq.length === 0) return;
+    // Without a worker (start failed and a restart is pending) there is no
+    // consumer; deferring here would keep the socket paused for good.
+    if (iq.length === 0 || !this.dspWorker) return;
     if (this.audioBackpressured) {
       const deferred = Buffer.from(iq);
       this.deferredIq.push(deferred);
@@ -778,6 +780,9 @@ class RtlTcpClient extends EventEmitter {
     this.dspWorker = null;
     if (worker) {
       worker.removeAllListeners?.();
+      // An error the worker raised just before termination is still
+      // delivered; without a listener it would crash the process.
+      worker.on?.('error', () => {});
       const termination = worker.terminate?.();
       termination?.catch?.(() => {});
     }

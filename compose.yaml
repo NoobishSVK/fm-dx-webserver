@@ -8,7 +8,9 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     ports:
-      - "${RTL_TCP_PUBLISHED_PORT:-1234}:1234"
+      # rtl_tcp has no authentication: anyone who can reach it can retune the
+      # dongle or switch the bias tee. Published on localhost only by default.
+      - "${RTL_TCP_PUBLISHED_ADDRESS:-127.0.0.1}:${RTL_TCP_PUBLISHED_PORT:-1234}:1234"
 
   fm-dx-webserver:
     image: fm-dx-webserver:local

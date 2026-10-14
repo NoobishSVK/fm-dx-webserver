@@ -21,7 +21,10 @@ RUN npm ci --omit=dev \
     && npm cache clean --force
 
 COPY . .
-RUN chown node:node /app \
+# Make the source readable by the unprivileged runtime user even when the
+# build context was checked out with a restrictive umask.
+RUN find /app -path /app/node_modules -prune -o -exec chmod a+rX {} + \
+    && chown node:node /app \
     && install -d -o node -g node /app/web/js/plugins /data \
     && install -m 0755 docker/entrypoint.sh /usr/local/bin/fmdx-entrypoint
 
