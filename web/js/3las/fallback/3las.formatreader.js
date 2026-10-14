@@ -46,8 +46,9 @@ var AudioFormatReader = /** @class */ (function () {
     };
     // Deletes all encoded and decoded data from the reader (does not effect headers, etc.)
     AudioFormatReader.prototype.PurgeData = function () {
-        this.Id = 0;
-        this.LastPushedId = -1;
+        // Keep IDs monotonic so decode callbacks that complete after a reset
+        // cannot be mistaken for samples from the new stream segment.
+        this.LastPushedId = this.Id - 1;
         this.Samples = new Array();
         this.BufferStore = {};
         this.DataBuffer = new Uint8Array(0);
@@ -79,6 +80,8 @@ var AudioFormatReader = /** @class */ (function () {
     };
     // Stores the converted bnuches of samples in right order
     AudioFormatReader.prototype.OnDataReady = function (id, audioBuffer) {
+        if (id <= this.LastPushedId)
+            return;
         if (this.LastPushedId + 1 == id) {
             // Push samples into array
             this.Samples.push(audioBuffer);

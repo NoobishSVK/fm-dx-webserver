@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { logDebug, logError, logInfo, logWarn } = require('./console');
+const { applyEnvironmentOverrides } = require('./config-environment');
 
 let configName = 'config';
 
@@ -52,8 +53,10 @@ let serverConfig = {
     ppm: 0,
     biasTee: false,
     deemphasisUs: 50,
-    signalFloorDbfs: -55,
-    redseaPath: "redsea",
+    deviationHz: 75000,
+    bandwidthHz: 200000,
+    stereoMinimumSnrDb: 3,
+    rdsEnabled: true,
     reconnectDelayMs: 2000
   },
   audio: {
@@ -214,33 +217,10 @@ if (configExists()) {
   }
 }
 
-function envNumber(name, fallback) {
-  if (process.env[name] === undefined) return fallback;
-  const parsed = Number(process.env[name]);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function envBoolean(name, fallback) {
-  if (process.env[name] === undefined) return fallback;
-  return /^(1|true|yes|on)$/i.test(process.env[name]);
-}
-
-// Environment variables intentionally override the file only in memory. This
-// keeps container-specific settings out of the persisted configuration.
-serverConfig.device = process.env.FMDX_DEVICE || serverConfig.device;
-serverConfig.webserver.webserverIp = process.env.FMDX_WEB_IP || serverConfig.webserver.webserverIp;
-serverConfig.webserver.webserverPort = envNumber('FMDX_WEB_PORT', serverConfig.webserver.webserverPort);
-serverConfig.rtlTcp.enabled = envBoolean('RTL_TCP_ENABLED', serverConfig.rtlTcp.enabled);
-serverConfig.rtlTcp.host = process.env.RTL_TCP_HOST || serverConfig.rtlTcp.host;
-serverConfig.rtlTcp.port = envNumber('RTL_TCP_PORT', serverConfig.rtlTcp.port);
-serverConfig.rtlTcp.sampleRate = envNumber('RTL_TCP_SAMPLE_RATE', serverConfig.rtlTcp.sampleRate);
-serverConfig.rtlTcp.gain = process.env.RTL_TCP_GAIN ?? serverConfig.rtlTcp.gain;
-serverConfig.rtlTcp.ppm = envNumber('RTL_TCP_PPM', serverConfig.rtlTcp.ppm);
-serverConfig.rtlTcp.biasTee = envBoolean('RTL_TCP_BIAS_TEE', serverConfig.rtlTcp.biasTee);
-serverConfig.rtlTcp.deemphasisUs = envNumber('RTL_TCP_DEEMPHASIS_US', serverConfig.rtlTcp.deemphasisUs);
-serverConfig.rtlTcp.signalFloorDbfs = envNumber('RTL_TCP_SIGNAL_FLOOR_DBFS', serverConfig.rtlTcp.signalFloorDbfs);
-serverConfig.rtlTcp.redseaPath = process.env.REDSEA_PATH || serverConfig.rtlTcp.redseaPath;
-serverConfig.rtlTcp.reconnectDelayMs = envNumber('RTL_TCP_RECONNECT_DELAY_MS', serverConfig.rtlTcp.reconnectDelayMs);
+// Empty Docker variables preserve values saved by the administrator. A
+// non-empty environment value is an explicit deployment override and is
+// applied in memory without modifying the persisted configuration.
+applyEnvironmentOverrides(serverConfig);
 
 module.exports = {
     configName, serverConfig, configUpdate, configSave, configExists, configPath

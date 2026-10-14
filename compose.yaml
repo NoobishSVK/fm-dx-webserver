@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     devices:
       - /dev/bus/usb:/dev/bus/usb
+    ports:
+      - "${RTL_TCP_PUBLISHED_PORT:-1234}:1234"
 
   fm-dx-webserver:
     image: fm-dx-webserver:local
@@ -19,16 +21,22 @@ services:
     ports:
       - "${FMDX_PORT:-8080}:8080"
     environment:
-      FMDX_DEVICE: sdr
+      FMDX_DEVICE: "${FMDX_DEVICE:-}"
       FMDX_WEB_PORT: 8080
-      RTL_TCP_ENABLED: "true"
-      RTL_TCP_HOST: rtl_tcp
-      RTL_TCP_PORT: 1234
-      RTL_TCP_SAMPLE_RATE: 240000
-      RTL_TCP_GAIN: "${RTL_TCP_GAIN:-auto}"
-      RTL_TCP_PPM: "${RTL_TCP_PPM:-0}"
-      RTL_TCP_BIAS_TEE: "${RTL_TCP_BIAS_TEE:-false}"
-      RTL_TCP_DEEMPHASIS_US: "${RTL_TCP_DEEMPHASIS_US:-50}"
+      FMDX_ADMIN_PASSWORD: "${FMDX_ADMIN_PASSWORD:-}"
+      FMDX_AUDIO_BITRATE: "${FMDX_AUDIO_BITRATE:-}"
+      RTL_TCP_ENABLED: "${RTL_TCP_ENABLED:-}"
+      RTL_TCP_HOST: "${RTL_TCP_HOST:-}"
+      RTL_TCP_PORT: "${RTL_TCP_PORT:-}"
+      RTL_TCP_SAMPLE_RATE: "${RTL_TCP_SAMPLE_RATE:-}"
+      RTL_TCP_GAIN: "${RTL_TCP_GAIN:-}"
+      RTL_TCP_PPM: "${RTL_TCP_PPM:-}"
+      RTL_TCP_BIAS_TEE: "${RTL_TCP_BIAS_TEE:-}"
+      RTL_TCP_DEEMPHASIS_US: "${RTL_TCP_DEEMPHASIS_US:-}"
+      RTL_TCP_DEVIATION_HZ: "${RTL_TCP_DEVIATION_HZ:-}"
+      RTL_TCP_BANDWIDTH_HZ: "${RTL_TCP_BANDWIDTH_HZ:-}"
+      RTL_TCP_STEREO_MINIMUM_SNR_DB: "${RTL_TCP_STEREO_MINIMUM_SNR_DB:-}"
+      RTL_TCP_RDS_ENABLED: "${RTL_TCP_RDS_ENABLED:-}"
     volumes:
       - fmdx_config:/data
 

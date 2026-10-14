@@ -86,10 +86,10 @@ const rdsparser = {
 }
 
 const callbacks = {
-  pi: koffi.register(rds => (
-    value = rdsparser.get_pi(rds)
-    //console.log('PI: ' + value.toString(16).toUpperCase())
-  ), 'callback_pi*'),
+  pi: koffi.register(rds => {
+    const pi = rdsparser.get_pi(rds);
+    dataToSend.pi = (pi & 0xffff).toString(16).toUpperCase().padStart(4, '0');
+  }, 'callback_pi*'),
 
   pty: koffi.register(rds => (
     value = rdsparser.get_pty(rds),
@@ -519,58 +519,9 @@ function processSignal(receivedData, st, stForced) {
 
 }
 
-function broadcastRtlData(wss) {
-  const currentTime = Date.now();
-  if (currentTime - lastUpdateTime < updateInterval) return;
-
-  const payload = JSON.stringify(dataToSend);
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) client.send(payload);
-  });
-  lastUpdateTime = currentTime;
-  serialportUpdateTime = process.hrtime();
-}
-
-function updateRtlSignal(wss, signalData) {
-  const snr = Number(signalData?.snr);
-  if (!Number.isFinite(snr)) return;
-  processSignal(`Sm${snr}`, Boolean(signalData.stereo), false);
-  dataToSend.sigRaw = `RTL ${Number(signalData.dbfs).toFixed(1)} dBFS`;
-  initialData.sigRaw = dataToSend.sigRaw;
-  broadcastRtlData(wss);
-}
-
-function applyRtlRds(wss, decodedGroup) {
-  if (!decodedGroup || typeof decodedGroup !== 'object') return;
-
-  rdsReceived();
-  dataToSend.rds = true;
-
-  if (typeof decodedGroup.pi === 'string') {
-    dataToSend.pi = decodedGroup.pi.replace(/^0x/i, '').toUpperCase();
-  }
-  if (typeof decodedGroup.ps === 'string') {
-    dataToSend.ps = decodedGroup.ps;
-    dataToSend.ps_errors = '';
-  }
-  if (typeof decodedGroup.radiotext === 'string') {
-    dataToSend.rt0 = decodedGroup.radiotext;
-    dataToSend.rt0_errors = '';
-    dataToSend.rt_flag = 0;
-  }
-  if (typeof decodedGroup.tp === 'boolean') dataToSend.tp = Number(decodedGroup.tp);
-  if (typeof decodedGroup.ta === 'boolean') dataToSend.ta = Number(decodedGroup.ta);
-  if (typeof decodedGroup.is_music === 'boolean') dataToSend.ms = Number(decodedGroup.is_music);
-  if (Number.isInteger(decodedGroup.pty)) dataToSend.pty = decodedGroup.pty;
-
-  broadcastRtlData(wss);
-}
-
 module.exports = {
   handleData,
   showOnlineUsers,
-  updateRtlSignal,
-  applyRtlRds,
   dataToSend,
   initialData,
   resetToDefault,

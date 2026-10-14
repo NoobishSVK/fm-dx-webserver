@@ -6,7 +6,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 
 - **TEF668x:** Supported with PE5PVB's and Konrad's FM-DX Tuner firmware, Arduino versions with other firmwares should work too.
 - **XDR F1HD:** Officially supported, works best with Konrad's FM-DX Tuner firmware.
-- **SDR (AirSpy / RTL-SDR):** Supported via SDRSharp and the XDR-GTK plugin. An experimental native `rtl_tcp` backend is also available.
+- **SDR (AirSpy / RTL-SDR):** Supported via SDRSharp and the XDR-GTK plugin. An experimental direct `rtl_tcp` backend is also available.
 
 ## Features
 
@@ -32,7 +32,7 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 The included Compose stack runs on both `linux/amd64` and `linux/arm64`. It has two services:
 
 - `rtl_tcp` owns the USB receiver.
-- `fm-dx-webserver` tunes it over the Docker network, demodulates WFM audio, and decodes RDS with [redsea](https://github.com/windytan/redsea).
+- `fm-dx-webserver` tunes it over the Docker network and performs the FM, stereo, and optional RDS DSP directly in JavaScript.
 
 Make sure no host process is already using the dongle, then run:
 
@@ -47,17 +47,32 @@ The most useful optional settings can be placed in a `.env` file:
 
 ```dotenv
 FMDX_PORT=8080
-RTL_TCP_GAIN=auto
-RTL_TCP_PPM=0
-RTL_TCP_BIAS_TEE=false
-RTL_TCP_DEEMPHASIS_US=50
+FMDX_ADMIN_PASSWORD=replace-with-a-strong-password
+# Optional deployment overrides:
+# FMDX_AUDIO_BITRATE=320k
+# RTL_TCP_GAIN=auto
+# RTL_TCP_PPM=0
+# RTL_TCP_BIAS_TEE=false
+# RTL_TCP_DEEMPHASIS_US=50
+# RTL_TCP_DEVIATION_HZ=75000
+# RTL_TCP_BANDWIDTH_HZ=200000
+# RTL_TCP_STEREO_MINIMUM_SNR_DB=3
+# RTL_TCP_RDS_ENABLED=true
 ```
 
-`RTL_TCP_GAIN` is either `auto` or a tuner gain in dB. Only enable the bias tee when the connected RF hardware requires DC power. Use `50` microseconds de-emphasis in most of the world, including Europe and Australia; use `75` in the Americas and South Korea.
+Set `FMDX_ADMIN_PASSWORD` before the first start. If it is omitted, the container generates a random administrator password and prints it once in `docker compose logs`. Empty administrator and tuning passwords are never accepted.
+
+`RTL_TCP_GAIN` is either `auto` or a tuner gain in dB. The Docker RTL-SDR stack defaults to 320 kb/s MP3 audio; `FMDX_AUDIO_BITRATE` accepts `64k`, `96k`, `128k`, `192k`, `256k`, or `320k`. Only enable the bias tee when the connected RF hardware requires DC power. Use `50` microseconds de-emphasis in most of the world, including Europe and Australia; use `75` in the Americas and South Korea. The default 240 kHz IQ rate is intentional; broadcast FM requires at least 192 kHz in this backend.
+
+Empty or omitted Docker variables preserve the values saved through the
+administrator panel. Set an optional variable only when it should be an
+explicit deployment override. The administrator password and the container's
+internal web port are normally deployment-managed; `FMDX_PORT` changes only
+the published host port.
 
 On Linux, a kernel DVB driver or another `rtl_tcp`/SDR application can claim the USB device first. Stop the conflicting process and unload or blacklist `dvb_usb_rtl28xxu` if the `rtl_tcp` service reports that it cannot open the receiver.
 
-The native backend currently provides mono FM audio (duplicated to both output channels), tuning, approximate SNR, PI, PS, and RadioText. Existing SDRSharp/XDR-GTK support remains available.
+The JavaScript backend provides stereo audio with automatic mono fallback, tuning, a signal estimate, and optional raw-group RDS through the webserver's existing RDS parser. It does not build or launch separate native DSP helpers. Existing SDRSharp/XDR-GTK support remains available.
 
 ## Utilized projects
 
@@ -66,7 +81,6 @@ This project utilizes these libraries:
 - [3LAS](https://github.com/jojobond/3LAS) library by JoJoBond for Low Latency Audio Streaming.
 - [flat-flags](https://github.com/luishdez/flat-flags) library by luishdez for RDS country flags.
 - [librdsparser](https://github.com/kkonradpl/librdsparser) library by Konrad Kosmatka for RDS parsing.
-- [redsea](https://github.com/windytan/redsea) by Oona Räisänen for native RTL-SDR RDS decoding.
 
 All of these libraries are already bundled with the webserver.
 

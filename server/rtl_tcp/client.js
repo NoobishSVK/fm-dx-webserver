@@ -1,12 +1,21 @@
 "use strict";
 
+const path = require('path');
 const net = require('net');
 const { EventEmitter } = require('events');
 const { PassThrough } = require('stream');
-const { spawn } = require('child_process');
+const { Worker } = require('worker_threads');
 
 const RTL_TCP_HEADER_SIZE = 12;
 const RTL_TCP_MAGIC = 'RTL0';
+const MINIMUM_WFM_SAMPLE_RATE = 192000;
+const OUTPUT_SAMPLE_RATE = 48000;
+const DEFAULT_BANDWIDTH_HZ = 200000;
+const DEFAULT_RTL_TCP_BLOCK_BYTES = 256 * 1024;
+const DEFAULT_TUNE_GUARD_MS = 50;
+const DEFAULT_WORKER_QUEUE_BYTES = 64 * 1024;
+const AUDIO_STREAM_BUFFER_BYTES = 64 * 1024;
+
 const RTL_TCP_COMMAND = Object.freeze({
   FREQUENCY: 0x01,
   SAMPLE_RATE: 0x02,
@@ -21,80 +30,193 @@ function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function designLowPass(sampleRate, cutoffHz, length) {
-  const taps = new Float64Array(length);
-  const middle = (length - 1) / 2;
-  const normalizedCutoff = cutoffHz / sampleRate;
-  let sum = 0;
+function defaultTuneSettleMs(sampleRate) {
+  const blockDurationMs = DEFAULT_RTL_TCP_BLOCK_BYTES * 500 / sampleRate;
+  return Math.ceil(blockDurationMs + DEFAULT_TUNE_GUARD_MS);
+}
 
-  for (let index = 0; index < length; index++) {
-    const offset = index - middle;
-    const sinc = offset === 0
-      ? 2 * normalizedCutoff
-      : Math.sin(2 * Math.PI * normalizedCutoff * offset) / (Math.PI * offset);
-    const window = 0.54 - 0.46 * Math.cos((2 * Math.PI * index) / (length - 1));
-    taps[index] = sinc * window;
-    sum += taps[index];
+function rdsGroupToTunerRecord(group) {
+  if (!group || !Array.isArray(group.blocks) || group.blocks.length !== 4) {
+    return null;
   }
 
-  for (let index = 0; index < length; index++) {
-    taps[index] /= sum;
-  }
+  let errorByte = 0;
+  const blocks = group.blocks.map((block, index) => {
+    const present = Number.isInteger(block) && block >= 0 && block <= 0xffff;
+    const requestedError = Number(group.errors?.[index]);
+    const error = present && Number.isFinite(requestedError)
+      ? clamp(Math.round(requestedError), 0, 3)
+      : (present ? 0 : 3);
+    errorByte |= error << ((3 - index) * 2);
+    return (present ? block : 0).toString(16).padStart(4, '0').toUpperCase();
+  });
 
-  return taps;
+  return `R${blocks.join('')}${errorByte.toString(16).padStart(2, '0').toUpperCase()}\n`;
 }
 
 class RtlTcpClient extends EventEmitter {
   constructor(options = {}) {
     super();
 
+    const sampleRate = Number(options.sampleRate ?? 240000);
+    const port = Number(options.port ?? 1234);
+    const frequencyHz = Number(options.frequencyHz ?? 87500000);
+
     this.options = {
       host: options.host || '127.0.0.1',
-      port: Number(options.port) || 1234,
-      sampleRate: Number(options.sampleRate) || 240000,
-      frequencyHz: Number(options.frequencyHz) || 87500000,
+      port,
+      sampleRate,
+      outputRate: OUTPUT_SAMPLE_RATE,
+      frequencyHz,
       gain: options.gain ?? 'auto',
-      ppm: Number(options.ppm) || 0,
+      ppm: Number(options.ppm ?? 0),
       biasTee: Boolean(options.biasTee),
-      deemphasisUs: Number(options.deemphasisUs) || 50,
-      signalFloorDbfs: Number(options.signalFloorDbfs ?? -55),
-      redseaPath: options.redseaPath || 'redsea',
-      redseaEnabled: options.redseaEnabled !== false,
+      deemphasisUs: Number(options.deemphasisUs ?? 50),
+      deviationHz: Number(options.deviationHz ?? 75000),
+      bandwidthHz: Number(
+        options.bandwidthHz ?? Math.min(DEFAULT_BANDWIDTH_HZ, sampleRate)
+      ),
+      signalSampleStride: Number(options.signalSampleStride ?? 64),
+      stereoMinimumSnrDb: Number(options.stereoMinimumSnrDb ?? 3),
+      rdsEnabled: options.rdsEnabled !== false,
       reconnectDelayMs: Number(options.reconnectDelayMs ?? 2000),
+      dspRestartDelayMs: Number(options.dspRestartDelayMs ?? 500),
+      tuneSettleMs: Number(
+        options.tuneSettleMs ?? defaultTuneSettleMs(sampleRate)
+      ),
+      workerQueueBytes: Number(
+        options.workerQueueBytes ?? DEFAULT_WORKER_QUEUE_BYTES
+      ),
       reconnect: options.reconnect !== false,
-      audioChannels: Number(options.audioChannels) === 1 ? 1 : 2
+      createConnection: options.createConnection || net.createConnection,
+      createWorker: options.createWorker || ((workerData) => new Worker(
+        path.join(__dirname, 'dsp-worker.js'),
+        { workerData }
+      ))
     };
 
-    if (this.options.sampleRate % 48000 !== 0) {
-      throw new Error('RTL-TCP sample rate must be an integer multiple of 48000');
+    if (!Number.isFinite(this.options.sampleRate) ||
+        this.options.sampleRate < MINIMUM_WFM_SAMPLE_RATE ||
+        this.options.sampleRate % OUTPUT_SAMPLE_RATE !== 0) {
+      throw new Error(
+        `RTL-TCP sample rate must be a finite integer multiple of ${OUTPUT_SAMPLE_RATE} Hz and at least ${MINIMUM_WFM_SAMPLE_RATE} Hz`
+      );
     }
 
-    this.audioStream = new PassThrough({ highWaterMark: 1024 * 1024 });
+    if (!Number.isInteger(this.options.port) ||
+        this.options.port < 1 ||
+        this.options.port > 65535) {
+      throw new Error('RTL-TCP port must be an integer between 1 and 65535');
+    }
+
+    if (!Number.isInteger(this.options.frequencyHz) ||
+        this.options.frequencyHz < 1000000 ||
+        this.options.frequencyHz > 0xffffffff) {
+      throw new Error('RTL-TCP frequency must be an integer between 1 MHz and 4294.967295 MHz');
+    }
+
+    if (!Number.isFinite(this.options.ppm)) {
+      throw new Error('RTL-TCP PPM correction must be a finite number');
+    }
+
+    if (!Number.isFinite(this.options.deviationHz) ||
+        this.options.deviationHz <= 0 ||
+        this.options.deviationHz >= this.options.sampleRate / 2) {
+      throw new Error('RTL-TCP FM deviation must be finite, positive, and below Nyquist');
+    }
+
+    if (!Number.isFinite(this.options.deemphasisUs) || this.options.deemphasisUs <= 0) {
+      throw new Error('RTL-TCP de-emphasis must be a finite positive number');
+    }
+
+    if (!Number.isFinite(this.options.tuneSettleMs) || this.options.tuneSettleMs < 0) {
+      throw new Error('RTL-TCP tune settle time must be a finite non-negative number');
+    }
+
+    if (!Number.isFinite(this.options.workerQueueBytes) ||
+        this.options.workerQueueBytes < 1) {
+      throw new Error('RTL-TCP worker queue size must be a finite positive number');
+    }
+
+    if (!Number.isFinite(this.options.bandwidthHz) ||
+        this.options.bandwidthHz < 4000 ||
+        this.options.bandwidthHz > this.options.sampleRate) {
+      throw new Error(
+        'RTL-TCP bandwidth must be between 4000 Hz and the sample rate'
+      );
+    }
+
+    if (!Number.isFinite(this.options.stereoMinimumSnrDb) ||
+        this.options.stereoMinimumSnrDb < 0 ||
+        this.options.stereoMinimumSnrDb > 70) {
+      throw new Error('RTL-TCP stereo SNR threshold must be between 0 and 70 dB');
+    }
+
+    if (!Number.isInteger(this.options.signalSampleStride) ||
+        this.options.signalSampleStride < 1) {
+      throw new Error('RTL-TCP signal sample stride must be a positive integer');
+    }
+
+    if (!Number.isFinite(this.options.reconnectDelayMs) ||
+        this.options.reconnectDelayMs < 0 ||
+        !Number.isFinite(this.options.dspRestartDelayMs) ||
+        this.options.dspRestartDelayMs < 0) {
+      throw new Error('RTL-TCP restart delays must be finite non-negative numbers');
+    }
+
+    this.audioStream = new PassThrough({
+      readableHighWaterMark: AUDIO_STREAM_BUFFER_BYTES,
+      writableHighWaterMark: AUDIO_STREAM_BUFFER_BYTES
+    });
     this.socket = null;
+    this.socketDataHandler = null;
+    this.socketPaused = false;
     this.reconnectTimer = null;
+    this.dspRestartTimer = null;
     this.commandBuffer = '';
     this.headerBuffer = Buffer.alloc(0);
     this.headerReceived = false;
-    this.pendingIqByte = null;
+    this.iqBytePhase = 0;
+    this.iqDiscardBytes = 0;
     this.stopped = true;
-    this.volume = 1;
-    this.redsea = null;
-    this.redseaBuffer = '';
-    this.redseaBackpressured = false;
-    this.decimation = this.options.sampleRate / 48000;
-    this.audioTaps = designLowPass(this.options.sampleRate, 15000, 63);
-    this.audioHistory = new Float64Array(this.audioTaps.length);
-    this.audioHistoryIndex = 0;
-    this.decimationCounter = 0;
-    this.previousI = 0;
-    this.previousQ = 0;
-    this.hasPreviousIq = false;
-    this.previousDemodInput = 0;
-    this.previousDemodOutput = 0;
-    this.deemphasisState = 0;
-    this.powerSum = 0;
-    this.powerSamples = 0;
-    this.signalWindowSamples = Math.max(1, Math.round(this.options.sampleRate / 4));
+    this.dspWorker = null;
+    this.dspGeneration = 0;
+    this.workerMessageId = 0;
+    this.workerPendingBytes = 0;
+    this.workerInputBackpressured = false;
+    this.audioBackpressured = false;
+    this.deferredIq = [];
+    this.deferredIqBytes = 0;
+    this.pendingPcm = [];
+    this.pendingPcmBytes = 0;
+    this.audioDiscontinuityInProgress = false;
+    this.stereo = false;
+    this.forceMono = options.forceMono === true || String(options.forceMono) === '1';
+    this.unsupportedCommands = new Set();
+    this.dspProcessingMs = 0;
+    this.dspInputBytes = 0;
+
+    this.audioStream.on('drain', () => {
+      this.audioBackpressured = false;
+      this._flushPendingPcm();
+      if (!this.audioBackpressured) this._flushDeferredIq();
+      this._resumeSocketIfPossible();
+    });
+  }
+
+  get ready() {
+    return this.headerReceived && !this.stopped;
+  }
+
+  getDspStats() {
+    const radioMs = this.dspInputBytes * 500 / this.options.sampleRate;
+    return {
+      inputBytes: this.dspInputBytes,
+      processingMs: this.dspProcessingMs,
+      realtimeRatio: this.dspProcessingMs > 0
+        ? radioMs / this.dspProcessingMs
+        : 0
+    };
   }
 
   start() {
@@ -104,17 +226,31 @@ class RtlTcpClient extends EventEmitter {
   }
 
   stop() {
+    const wasReady = this.headerReceived;
     this.stopped = true;
+    this.headerReceived = false;
+    this.iqBytePhase = 0;
+    this.iqDiscardBytes = 0;
     clearTimeout(this.reconnectTimer);
+    clearTimeout(this.dspRestartTimer);
     this.reconnectTimer = null;
-    this._stopRedsea();
+    this.dspRestartTimer = null;
+    this._stopDspWorker({ resumeSocket: false });
+
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.destroy();
       this.socket = null;
     }
+    this.socketDataHandler = null;
+    this.socketPaused = false;
+
+    if (wasReady) this.emit('unready');
   }
 
+  /**
+   * Match the writable receiver contract used by SerialPort and the XDR socket.
+   */
   write(data) {
     this.commandBuffer += Buffer.isBuffer(data) ? data.toString('utf8') : String(data);
     const commands = this.commandBuffer.split(/\r?\n/);
@@ -128,13 +264,46 @@ class RtlTcpClient extends EventEmitter {
 
   tune(frequencyHz) {
     const parsedFrequency = Math.round(Number(frequencyHz));
-    if (!Number.isFinite(parsedFrequency) || parsedFrequency < 1000000) return false;
+    if (!Number.isFinite(parsedFrequency) ||
+        parsedFrequency < 1000000 ||
+        parsedFrequency > 0xffffffff) return false;
 
+    const resetActiveAudio = this.headerReceived && !this.stopped;
+    if (resetActiveAudio) {
+      this._pauseSocket();
+      this._drainSocketInput();
+    }
     this.options.frequencyHz = parsedFrequency;
     this._sendCommand(RTL_TCP_COMMAND.FREQUENCY, parsedFrequency);
-    this._resetDsp();
-    this._restartRedsea();
-    this.emit('frequency', parsedFrequency / 1000);
+    this.stereo = false;
+
+    if (resetActiveAudio) {
+      clearTimeout(this.dspRestartTimer);
+      this.dspRestartTimer = null;
+      this._stopDspWorker({ resumeSocket: false });
+    }
+
+    if (resetActiveAudio) {
+      this.audioDiscontinuityInProgress = true;
+      try {
+        this.emit('audio-discontinuity', {
+          reason: 'tune',
+          frequencyHz: parsedFrequency
+        });
+      } catch (error) {
+        try {
+          this.emit(
+            'warning',
+            `Unable to reset the audio stream during tuning: ${error.message}`
+          );
+        } catch (_) {
+        }
+      } finally {
+        this.audioDiscontinuityInProgress = false;
+        this._beginTuneSettling();
+      }
+    }
+    this._emitTunerRecord(`T${Math.round(parsedFrequency / 1000)}\n`);
     return true;
   }
 
@@ -143,14 +312,26 @@ class RtlTcpClient extends EventEmitter {
 
     this.headerBuffer = Buffer.alloc(0);
     this.headerReceived = false;
-    const socket = net.createConnection({
-      host: this.options.host,
-      port: this.options.port
-    });
+    this.iqBytePhase = 0;
+    this.iqDiscardBytes = 0;
+    let socket;
+    try {
+      socket = this.options.createConnection({
+        host: this.options.host,
+        port: this.options.port
+      });
+    } catch (error) {
+      this.emit('warning', `Unable to open rtl_tcp connection: ${error.message}`);
+      this._scheduleReconnect();
+      return;
+    }
     this.socket = socket;
-    socket.setNoDelay(true);
+    this.socketPaused = false;
+    socket.setNoDelay?.(true);
 
-    socket.on('data', (data) => this._handleSocketData(data));
+    const socketDataHandler = (data) => this._handleSocketData(data);
+    this.socketDataHandler = socketDataHandler;
+    socket.on('data', socketDataHandler);
     socket.on('connect', () => {
       this.emit('status', `Connected to rtl_tcp at ${this.options.host}:${this.options.port}`);
     });
@@ -158,9 +339,20 @@ class RtlTcpClient extends EventEmitter {
       this.emit('warning', `rtl_tcp connection error: ${error.message}`);
     });
     socket.on('close', () => {
-      if (this.socket === socket) this.socket = null;
+      if (this.socket === socket) {
+        this.socket = null;
+        this.socketDataHandler = null;
+      }
+      const wasReady = this.headerReceived;
       this.headerReceived = false;
-      this._stopRedsea();
+      this.iqBytePhase = 0;
+      this.iqDiscardBytes = 0;
+      this.socketPaused = false;
+      this.stereo = false;
+      clearTimeout(this.dspRestartTimer);
+      this.dspRestartTimer = null;
+      this._stopDspWorker({ resumeSocket: false });
+      if (wasReady) this.emit('unready');
       this.emit('disconnected');
       this._scheduleReconnect();
     });
@@ -189,10 +381,15 @@ class RtlTcpClient extends EventEmitter {
       }
 
       this.headerReceived = true;
-      samples = this.headerBuffer.subarray(RTL_TCP_HEADER_SIZE);
+      this.iqDiscardBytes = 0;
+      const preConfigurationIq = this.headerBuffer.subarray(RTL_TCP_HEADER_SIZE);
+      this.iqBytePhase = preConfigurationIq.length & 1;
+      samples = Buffer.alloc(0);
       this.headerBuffer = Buffer.alloc(0);
       this._configureReceiver();
-      this._startRedsea();
+      this._beginTuneSettling();
+      this._emitTunerRecord(`T${Math.round(this.options.frequencyHz / 1000)}\n`);
+      this._emitTunerRecord(`W${this.options.bandwidthHz}\n`);
       this.emit('ready', {
         tunerType: header.readUInt32BE(4),
         gainCount: header.readUInt32BE(8)
@@ -200,6 +397,19 @@ class RtlTcpClient extends EventEmitter {
     }
 
     if (samples.length > 0) this._processIq(samples);
+  }
+
+  _beginTuneSettling() {
+    this.stereo = false;
+    const settleSamples = Math.round(
+      this.options.sampleRate * this.options.tuneSettleMs / 1000
+    );
+    this.iqDiscardBytes = settleSamples * 2 + this.iqBytePhase;
+    if (this.iqDiscardBytes === 0) {
+      this._startDspWorker();
+    } else {
+      this._resumeSocketIfPossible();
+    }
   }
 
   _configureReceiver() {
@@ -238,199 +448,373 @@ class RtlTcpClient extends EventEmitter {
       return;
     }
 
-    if (command.startsWith('Y')) {
-      const requestedVolume = Number(command.slice(1));
-      if (Number.isFinite(requestedVolume)) this.volume = clamp(requestedVolume / 100, 0, 2);
+    if (command.startsWith('W')) {
+      const requestedBandwidth = Math.round(
+        Number(command.slice(1).split(',')[0])
+      );
+      const bandwidthHz = requestedBandwidth === 0
+        ? DEFAULT_BANDWIDTH_HZ
+        : requestedBandwidth;
+      if (!this._setBandwidthHz(bandwidthHz)) return;
+      this._emitTunerRecord(`W${this.options.bandwidthHz}\n`);
       return;
     }
 
-    if (command.startsWith('W') || command.startsWith('F')) {
-      this.emit('bandwidth', command.slice(1));
+    const monoCommand = /^B([01])$/.exec(command);
+    if (monoCommand) {
+      this._setForceMono(monoCommand[1] === '1');
+      return;
     }
+
+    // F is the legacy XDR bandwidth command. The UI also sends W, which is the
+    // canonical command and the one acknowledged above.
+    if (command.startsWith('F')) return;
+
+    this._warnUnsupported(command);
+  }
+
+  _warnUnsupported(command) {
+    const commandType = command[0];
+    if (!commandType || this.unsupportedCommands.has(commandType)) return;
+    this.unsupportedCommands.add(commandType);
+    this.emit('warning', `Command ${commandType} is not supported by the JavaScript rtl_tcp receiver`);
+  }
+
+  _setForceMono(forceMono) {
+    if (this.forceMono === forceMono) return;
+
+    this.forceMono = forceMono;
+    const worker = this.dspWorker;
+    if (worker) {
+      try {
+        worker.postMessage({ type: 'mono', forceMono });
+      } catch (error) {
+        this.emit('warning', `Unable to switch stereo mode: ${error.message}`);
+        this._scheduleDspRestart();
+        return;
+      }
+    }
+
+    this.emit('status', `Audio mode switched to ${forceMono ? 'forced mono' : 'automatic stereo'}`);
+  }
+
+  _setBandwidthHz(bandwidthHz) {
+    if (!Number.isInteger(bandwidthHz) ||
+        bandwidthHz < 4000 ||
+        bandwidthHz > this.options.sampleRate) {
+      this.emit(
+        'warning',
+        `Bandwidth must be between 4000 and ${this.options.sampleRate} Hz`
+      );
+      return false;
+    }
+
+    this.options.bandwidthHz = bandwidthHz;
+    const worker = this.dspWorker;
+    if (worker) {
+      try {
+        worker.postMessage({ type: 'bandwidth', bandwidthHz });
+      } catch (error) {
+        this.emit('warning', `Unable to switch bandwidth: ${error.message}`);
+        this._scheduleDspRestart();
+        return false;
+      }
+    }
+    return true;
   }
 
   _processIq(data) {
     let iq = data;
-    if (this.pendingIqByte !== null) {
-      iq = Buffer.concat([Buffer.from([this.pendingIqByte]), data]);
-      this.pendingIqByte = null;
-    }
-    if (iq.length % 2 !== 0) {
-      this.pendingIqByte = iq[iq.length - 1];
-      iq = iq.subarray(0, iq.length - 1);
+    this.iqBytePhase = (this.iqBytePhase + data.length) & 1;
+
+    if (this.iqDiscardBytes > 0) {
+      const discardBytes = Math.min(this.iqDiscardBytes, iq.length);
+      this.iqDiscardBytes -= discardBytes;
+      iq = iq.subarray(discardBytes);
+
+      if (this.iqDiscardBytes > 0) return;
+      this._startDspWorker();
     }
 
-    const sampleCount = iq.length / 2;
-    const mpx = this.redsea && !this.redseaBackpressured
-      ? Buffer.allocUnsafe(sampleCount * 2)
-      : null;
-    const estimatedAudioSamples = Math.ceil(sampleCount / this.decimation);
-    const pcm = Buffer.allocUnsafe(
-      estimatedAudioSamples * this.options.audioChannels * Int16Array.BYTES_PER_ELEMENT
+    if (iq.length === 0) return;
+    if (this.audioBackpressured) {
+      const deferred = Buffer.from(iq);
+      this.deferredIq.push(deferred);
+      this.deferredIqBytes += deferred.length;
+      this._pauseSocket();
+      return;
+    }
+    this._postIq(iq);
+  }
+
+  _postIq(iq) {
+    const worker = this.dspWorker;
+    if (!worker) return;
+
+    const transferredIq = new Uint8Array(iq.length);
+    transferredIq.set(iq);
+    const messageId = ++this.workerMessageId;
+    this.workerPendingBytes += transferredIq.byteLength;
+
+    try {
+      worker.postMessage(
+        {
+          type: 'iq',
+          id: messageId,
+          buffer: transferredIq.buffer
+        },
+        [transferredIq.buffer]
+      );
+    } catch (error) {
+      this.workerPendingBytes -= iq.length;
+      this.emit('warning', `Unable to send IQ to JavaScript DSP: ${error.message}`);
+      this._scheduleDspRestart();
+      return;
+    }
+
+    if (this.workerPendingBytes >= this.options.workerQueueBytes) {
+      this.workerInputBackpressured = true;
+      this._pauseSocket();
+    }
+  }
+
+  _startDspWorker() {
+    if (this.stopped || !this.headerReceived || this.dspWorker) return;
+
+    const generation = ++this.dspGeneration;
+    let worker;
+    try {
+      worker = this.options.createWorker({
+        sampleRate: this.options.sampleRate,
+        outputRate: this.options.outputRate,
+        deviationHz: this.options.deviationHz,
+        deemphasisUs: this.options.deemphasisUs,
+        bandwidthHz: this.options.bandwidthHz,
+        signalSampleStride: this.options.signalSampleStride,
+        stereoMinimumSnrDb: this.options.stereoMinimumSnrDb,
+        forceMono: this.forceMono,
+        rdsEnabled: this.options.rdsEnabled
+      });
+    } catch (error) {
+      this.emit('warning', `Unable to start JavaScript DSP: ${error.message}`);
+      this._scheduleDspRestart();
+      return;
+    }
+
+    this.dspWorker = worker;
+    this.workerPendingBytes = 0;
+    this.workerInputBackpressured = false;
+
+    worker.on('message', (message) => {
+      if (worker !== this.dspWorker || generation !== this.dspGeneration) return;
+      this._handleWorkerMessage(message);
+    });
+    worker.on('messageerror', (error) => {
+      if (worker !== this.dspWorker || generation !== this.dspGeneration) return;
+      this.emit('warning', `JavaScript DSP message error: ${error.message}`);
+      this._scheduleDspRestart();
+    });
+    worker.on('error', (error) => {
+      if (worker !== this.dspWorker || generation !== this.dspGeneration) return;
+      this.emit('warning', `JavaScript DSP worker error: ${error.message}`);
+      this._scheduleDspRestart();
+    });
+    worker.on('exit', (code) => {
+      if (worker !== this.dspWorker ||
+          generation !== this.dspGeneration ||
+          this.stopped ||
+          !this.headerReceived) return;
+      this.emit('warning', `JavaScript DSP worker exited with code ${code}`);
+      this._scheduleDspRestart();
+    });
+
+    this._resumeSocketIfPossible();
+  }
+
+  _handleWorkerMessage(message) {
+    if (message.type === 'ready') {
+      this.emit(
+        'status',
+        `JavaScript DSP ready (${this.options.sampleRate} Hz IQ → ${this.options.outputRate} Hz stereo${this.options.rdsEnabled ? ' + RDS' : ''})`
+      );
+      return;
+    }
+
+    if (message.type !== 'result') return;
+
+    const acknowledgedBytes = Math.max(0, Number(message.inputBytes) || 0);
+    this.workerPendingBytes = Math.max(
+      0,
+      this.workerPendingBytes - acknowledgedBytes
     );
-    let mpxOffset = 0;
-    let pcmOffset = 0;
+    this.dspInputBytes += acknowledgedBytes;
+    this.dspProcessingMs += Math.max(0, Number(message.processingMs) || 0);
+    this.stereo = Boolean(message.stereo);
 
-    for (let offset = 0; offset < iq.length; offset += 2) {
-      const currentI = (iq[offset] - 127.5) / 127.5;
-      const currentQ = (iq[offset + 1] - 127.5) / 127.5;
-      const power = (currentI * currentI + currentQ * currentQ) / 2;
-      this.powerSum += power;
-      this.powerSamples++;
+    if (message.pcm instanceof ArrayBuffer && message.pcm.byteLength > 0) {
+      this._writeOrQueuePcm(Buffer.from(message.pcm));
+    }
 
-      let demodulated = 0;
-      if (this.hasPreviousIq) {
-        const cross = this.previousI * currentQ - this.previousQ * currentI;
-        const dot = this.previousI * currentI + this.previousQ * currentQ;
-        const phaseDifference = Math.atan2(cross, dot);
-        const maximumPhase = (2 * Math.PI * 75000) / this.options.sampleRate;
-        demodulated = clamp(phaseDifference / maximumPhase, -1.5, 1.5);
+    for (const signal of message.signals || []) {
+      this._emitSignalLevel(signal.snr, signal.stereo);
+    }
+
+    for (const group of message.groups || []) {
+      const record = rdsGroupToTunerRecord(group);
+      if (record) this._emitTunerRecord(record);
+    }
+
+    if (this.workerInputBackpressured &&
+        this.workerPendingBytes < this.options.workerQueueBytes / 2) {
+      this.workerInputBackpressured = false;
+    }
+    if (!this.audioBackpressured) this._flushDeferredIq();
+    this._resumeSocketIfPossible();
+  }
+
+  _writeOrQueuePcm(pcm) {
+    if (this.audioBackpressured) {
+      this.pendingPcm.push(pcm);
+      this.pendingPcmBytes += pcm.length;
+      return;
+    }
+
+    if (!this.audioStream.write(pcm)) {
+      this.audioBackpressured = true;
+      this._pauseSocket();
+    }
+  }
+
+  _flushPendingPcm() {
+    while (!this.audioBackpressured && this.pendingPcm.length > 0) {
+      const pcm = this.pendingPcm.shift();
+      this.pendingPcmBytes -= pcm.length;
+      if (!this.audioStream.write(pcm)) {
+        this.audioBackpressured = true;
+        this._pauseSocket();
+      }
+    }
+  }
+
+  _flushDeferredIq() {
+    while (!this.audioBackpressured &&
+           !this.workerInputBackpressured &&
+           this.dspWorker &&
+           this.deferredIq.length > 0) {
+      const iq = this.deferredIq.shift();
+      this.deferredIqBytes -= iq.length;
+      this._postIq(iq);
+    }
+  }
+
+  _emitSignalLevel(signal, stereo) {
+    this.stereo = Boolean(stereo);
+    const prefix = this.forceMono
+      ? (this.stereo ? 'SS' : 'SM')
+      : (this.stereo ? 'Ss' : 'Sm');
+    this._emitTunerRecord(`${prefix}${clamp(Number(signal) || 0, 0, 70).toFixed(1)}\n`);
+  }
+
+  _emitTunerRecord(record) {
+    this.emit('data', Buffer.from(record, 'utf8'));
+  }
+
+  _scheduleDspRestart() {
+    if (this.stopped || !this.headerReceived || this.dspRestartTimer) return;
+    this._pauseSocket();
+    this._drainSocketInput();
+    this._stopDspWorker({ resumeSocket: false });
+    this.audioDiscontinuityInProgress = true;
+    try {
+      this.emit('audio-discontinuity', {
+        reason: 'dsp-restart',
+        frequencyHz: this.options.frequencyHz
+      });
+    } catch (error) {
+      this.emit(
+        'warning',
+        `Unable to reset audio after a DSP failure: ${error.message}`
+      );
+    } finally {
+      this.audioDiscontinuityInProgress = false;
+    }
+    this.dspRestartTimer = setTimeout(() => {
+      this.dspRestartTimer = null;
+      this._drainSocketInput();
+      this.iqDiscardBytes = this.iqBytePhase;
+      if (this.iqDiscardBytes > 0) {
+        this._resumeSocketIfPossible();
       } else {
-        this.hasPreviousIq = true;
+        this._startDspWorker();
       }
-      this.previousI = currentI;
-      this.previousQ = currentQ;
+    }, this.options.dspRestartDelayMs);
+  }
 
-      const dcBlocked = demodulated - this.previousDemodInput + 0.995 * this.previousDemodOutput;
-      this.previousDemodInput = demodulated;
-      this.previousDemodOutput = dcBlocked;
+  _stopDspWorker({ resumeSocket = true } = {}) {
+    this.dspGeneration++;
+    this.workerPendingBytes = 0;
+    this.workerInputBackpressured = false;
+    this.deferredIq = [];
+    this.deferredIqBytes = 0;
+    this.pendingPcm = [];
+    this.pendingPcmBytes = 0;
 
-      if (mpx) {
-        mpx.writeInt16LE(Math.round(clamp(dcBlocked, -1, 1) * 32767), mpxOffset);
-        mpxOffset += 2;
-      }
-
-      this.audioHistory[this.audioHistoryIndex] = dcBlocked;
-      this.audioHistoryIndex = (this.audioHistoryIndex + 1) % this.audioHistory.length;
-      this.decimationCounter++;
-
-      if (this.decimationCounter === this.decimation) {
-        this.decimationCounter = 0;
-        let filtered = 0;
-        let historyIndex = this.audioHistoryIndex;
-        for (let tapIndex = 0; tapIndex < this.audioTaps.length; tapIndex++) {
-          historyIndex = (historyIndex - 1 + this.audioHistory.length) % this.audioHistory.length;
-          filtered += this.audioHistory[historyIndex] * this.audioTaps[tapIndex];
-        }
-
-        const samplePeriod = 1 / 48000;
-        const timeConstant = this.options.deemphasisUs / 1000000;
-        const alpha = samplePeriod / (timeConstant + samplePeriod);
-        this.deemphasisState += alpha * (filtered - this.deemphasisState);
-        const audioSample = Math.round(clamp(this.deemphasisState * this.volume, -1, 1) * 32767);
-
-        for (let channel = 0; channel < this.options.audioChannels; channel++) {
-          pcm.writeInt16LE(audioSample, pcmOffset);
-          pcmOffset += 2;
-        }
-      }
-
-      if (this.powerSamples >= this.signalWindowSamples) this._emitSignalLevel();
+    const worker = this.dspWorker;
+    this.dspWorker = null;
+    if (worker) {
+      worker.removeAllListeners?.();
+      const termination = worker.terminate?.();
+      termination?.catch?.(() => {});
     }
 
-    if (mpx && mpxOffset > 0 && this.redsea?.stdin?.writable) {
-      this.redseaBackpressured = !this.redsea.stdin.write(mpx.subarray(0, mpxOffset));
-    }
-    if (pcmOffset > 0) this.audioStream.write(pcm.subarray(0, pcmOffset));
+    if (resumeSocket) this._resumeSocketIfPossible();
   }
 
-  _emitSignalLevel() {
-    const meanPower = this.powerSum / Math.max(1, this.powerSamples);
-    const dbfs = 10 * Math.log10(Math.max(meanPower, 1e-12));
-    const snr = clamp(dbfs - this.options.signalFloorDbfs, 0, 70);
-    this.emit('signal', {
-      snr: Number(snr.toFixed(1)),
-      dbfs: Number(dbfs.toFixed(1)),
-      stereo: false
-    });
-    this.powerSum = 0;
-    this.powerSamples = 0;
+  _pauseSocket() {
+    if (!this.socket || this.socketPaused) return;
+    this.socket.pause?.();
+    this.socketPaused = true;
   }
 
-  _startRedsea() {
-    if (!this.options.redseaEnabled || this.redsea || this.stopped) return;
+  _drainSocketInput() {
+    const socket = this.socket;
+    if (!socket || typeof socket.read !== 'function') return 0;
 
-    const child = spawn(
-      this.options.redseaPath,
-      ['--input', 'mpx', '-r', String(this.options.sampleRate)],
-      { stdio: ['pipe', 'pipe', 'pipe'] }
-    );
-    this.redsea = child;
-    this.redseaBuffer = '';
-    this.redseaBackpressured = false;
+    const dataHandler = this.socketDataHandler;
+    if (dataHandler) socket.removeListener?.('data', dataHandler);
 
-    child.stdin.on('drain', () => {
-      if (this.redsea === child) this.redseaBackpressured = false;
-    });
-    child.stdin.on('error', (error) => {
-      if (error.code !== 'EPIPE') this.emit('warning', `redsea stdin error: ${error.message}`);
-    });
-    child.stdout.on('data', (data) => this._handleRedseaData(data));
-    child.stderr.on('data', (data) => {
-      const message = data.toString('utf8').trim();
-      if (message) this.emit('warning', `redsea: ${message}`);
-    });
-    child.on('error', (error) => {
-      this.emit('warning', `Unable to start redsea: ${error.message}`);
-    });
-    child.on('close', (code, signal) => {
-      if (this.redsea !== child) return;
-      this.redsea = null;
-      this.redseaBackpressured = false;
-      if (!this.stopped && code && signal !== 'SIGTERM') {
-        this.emit('warning', `redsea exited with code ${code}`);
+    let discardedBytes = 0;
+    try {
+      let chunk;
+      while ((chunk = socket.read()) !== null) {
+        discardedBytes += chunk.length;
       }
-    });
-  }
-
-  _stopRedsea() {
-    const child = this.redsea;
-    this.redsea = null;
-    this.redseaBackpressured = false;
-    this.redseaBuffer = '';
-    if (!child) return;
-    child.stdin?.end();
-    child.kill('SIGTERM');
-  }
-
-  _restartRedsea() {
-    this._stopRedsea();
-    if (this.headerReceived) this._startRedsea();
-  }
-
-  _handleRedseaData(data) {
-    this.redseaBuffer += data.toString('utf8');
-    const lines = this.redseaBuffer.split(/\r?\n/);
-    this.redseaBuffer = lines.pop();
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        this.emit('rds', JSON.parse(line));
-      } catch (error) {
-        this.emit('warning', `Unable to parse redsea JSON: ${error.message}`);
+    } finally {
+      if (dataHandler && this.socket === socket && !socket.destroyed) {
+        socket.on?.('data', dataHandler);
       }
     }
+
+    this.iqBytePhase = (this.iqBytePhase + discardedBytes) & 1;
+    return discardedBytes;
   }
 
-  _resetDsp() {
-    this.pendingIqByte = null;
-    this.audioHistory.fill(0);
-    this.audioHistoryIndex = 0;
-    this.decimationCounter = 0;
-    this.previousI = 0;
-    this.previousQ = 0;
-    this.hasPreviousIq = false;
-    this.previousDemodInput = 0;
-    this.previousDemodOutput = 0;
-    this.deemphasisState = 0;
-    this.powerSum = 0;
-    this.powerSamples = 0;
+  _resumeSocketIfPossible() {
+    if (!this.socket ||
+        !this.socketPaused ||
+        this.stopped ||
+        this.audioDiscontinuityInProgress ||
+        this.dspRestartTimer ||
+        this.workerInputBackpressured ||
+        this.deferredIq.length > 0 ||
+        (this.audioBackpressured && this.iqDiscardBytes === 0)) return;
+    this.socket.resume?.();
+    this.socketPaused = false;
   }
 }
 
 module.exports = {
   RtlTcpClient,
   RTL_TCP_COMMAND,
-  designLowPass
+  rdsGroupToTunerRecord
 };

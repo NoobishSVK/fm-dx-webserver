@@ -8,7 +8,7 @@ const https = require('https');
 
 // File Imports
 const { parseAudioDevice } = require('./stream/parser');
-const { configName, serverConfig, configUpdate, configSave, configExists, configPath } = require('./server_config');
+const { serverConfig, configUpdate, configSave, configExists, configPath } = require('./server_config');
 const helpers = require('./helpers');
 const tunerProfiles = require('./tuner_profiles');
 const storage = require('./storage');
@@ -218,13 +218,16 @@ const authenticate = (req, res, next) => {
 
     loginAttempts[ip].lastAttempt = now;
 
-    if (password === serverConfig.password.adminPass) {
+    const adminPass = serverConfig.password.adminPass;
+    const tunePass = serverConfig.password.tunePass;
+
+    if (typeof adminPass === 'string' && adminPass.length > 0 && password === adminPass) {
         req.session.isAdminAuthenticated = true;
         req.session.isTuneAuthenticated = true;
         logInfo(`User from ${ip} logged in as an administrator.`);
         loginAttempts[ip].count = 0;
         next();
-    } else if (password === serverConfig.password.tunePass) {
+    } else if (typeof tunePass === 'string' && tunePass.length > 0 && password === tunePass) {
         req.session.isAdminAuthenticated = false;
         req.session.isTuneAuthenticated = true;
         logInfo(`User from ${ip} logged in with tune permissions.`);
@@ -323,24 +326,18 @@ router.post('/saveData', (req, res) => {
 
 router.get('/getData', (req, res) => {  
     if (configExists() === false) {
-        res.json(serverConfig);
+        return res.json(serverConfig);
     }
-    
-    if(req.session.isAdminAuthenticated) {
-        // Check if the file exists
-        fs.access(configPath, fs.constants.F_OK, (err) => {
-            if (err) {
-                console.log(err);
-            } else {
-                // File exists, send it as the response
-                res.sendFile(path.join(__dirname, '../' + configName + '.json'));
-            }
-        });
+
+    if (!req.session.isAdminAuthenticated) {
+        return res.status(403).json({ error: 'Unauthorized' });
     }
+
+    res.sendFile(configPath);
 });
 
 router.get('/getDevices', (req, res) => {
-    if (req.session.isAdminAuthenticated || !fs.existsSync(configName + '.json')) {
+    if (req.session.isAdminAuthenticated || !configExists()) {
         parseAudioDevice((result) => {
             res.json(result);
         });

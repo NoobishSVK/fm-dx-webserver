@@ -1,5 +1,7 @@
 .git
 .github
+**/.DS_Store
+**/._*
 node_modules
 npm-debug.log
 serverlog*.txt

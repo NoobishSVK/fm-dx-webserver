@@ -188,6 +188,8 @@ var AudioFormatReader_WAV = /** @class */ (function (_super) {
     };
     // Is called if the decoding of the samples succeeded
     AudioFormatReader_WAV.prototype.OnDecodeSuccess = function (decodedData, id) {
+        if (id <= this.LastPushedId)
+            return;
         // Calculate the length of the parts
         var pickSize = this.BatchDuration * decodedData.sampleRate;
         this.SampleBudget += (pickSize - Math.ceil(pickSize));

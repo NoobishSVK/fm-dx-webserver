@@ -78,7 +78,8 @@ async function flushLogBuffer() {
     }
 }
 
-setInterval(flushLogBuffer, FLUSH_INTERVAL);
+const flushTimer = setInterval(flushLogBuffer, FLUSH_INTERVAL);
+flushTimer.unref?.();
 
 const gracefulExit = async () => {
     await flushLogBuffer();

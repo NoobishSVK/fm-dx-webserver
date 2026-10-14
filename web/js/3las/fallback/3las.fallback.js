@@ -127,6 +127,21 @@ var Fallback = /** @class */ (function () {
     Fallback.prototype.OnSocketDisconnect = function () {
     };
     Fallback.prototype.OnSocketDataReady = function (data) {
+        if (typeof data === "string") {
+            var message = void 0;
+            try {
+                message = JSON.parse(data);
+            }
+            catch (_a) {
+                return;
+            }
+            if (message && message.type === "discontinuity") {
+                this.PacketModCounter = 0;
+                this.FormatReader.Reset();
+                this.Player.Reset();
+            }
+            return;
+        }
         this.PacketModCounter++;
         if (this.PacketModCounter > 100) {
             if (this.ActivityCallback)

@@ -16,18 +16,20 @@
     "ppm": 0,
     "biasTee": false,
     "deemphasisUs": 50,
-    "signalFloorDbfs": -55,
-    "redseaPath": "redsea",
+    "deviationHz": 75000,
+    "bandwidthHz": 200000,
+    "stereoMinimumSnrDb": 3,
+    "rdsEnabled": true,
     "reconnectDelayMs": 2000
   },
   "audio": {
     "audioChannels": 2,
-    "audioBitrate": "128k",
+    "audioBitrate": "320k",
     "startupVolume": "0.95"
   },
   "identification": {
     "tunerName": "RTL-SDR Docker",
-    "tunerDesc": "Native rtl_tcp receiver"
+    "tunerDesc": "JavaScript rtl_tcp receiver"
   },
   "device": "sdr",
   "defaultFreq": "87.5",

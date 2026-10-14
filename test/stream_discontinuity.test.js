@@ -1,0 +1,151 @@
+"use strict";
+
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const audioServer = require('../server/stream/3las.server');
+
+test('audio client count changes on connect and disconnect', async (t) => {
+  await audioServer.waitUntilReady;
+  const server = audioServer.Server;
+  const originalClients = server.Clients;
+  const counts = [];
+  const socket = {
+    on() {},
+    close() {}
+  };
+  server.Clients = new Set();
+  const unsubscribe = audioServer.onClientCountChange((count) => counts.push(count));
+  t.after(() => {
+    unsubscribe();
+    server.Clients = originalClients;
+  });
+
+  server.OnServerConnection(socket);
+  const [client] = server.Clients;
+  server.DestroyClient(client);
+
+  assert.deepEqual(counts, [1, 0]);
+});
+
+test('stream discontinuity drops queued PCM before resetting active encoders', async (t) => {
+  await audioServer.waitUntilReady;
+  const server = audioServer.Server;
+  const originalStdIn = server.StdIn;
+  const originalClients = server.Clients;
+  const originalProviders = server.FallbackProvider;
+  t.after(() => {
+    server.StdIn = originalStdIn;
+    server.Clients = originalClients;
+    server.FallbackProvider = originalProviders;
+  });
+
+  const calls = [];
+  const queued = [Buffer.from('old pcm'), null];
+  server.StdIn = {
+    pause() {
+      calls.push('pause');
+    },
+    read() {
+      calls.push('read');
+      const chunk = queued.shift();
+      if (chunk) server.OnStdInData(chunk);
+      return chunk;
+    },
+    resume() {
+      calls.push('resume');
+    }
+  };
+  server.Clients = new Set([{
+    Format: 'mp3',
+    SendText(message) {
+      calls.push(`client:${message}`);
+    }
+  }]);
+  server.FallbackProvider = {
+    mp3: {
+      Backpressured: false,
+      Resetting: false,
+      Reset() {
+        calls.push('reset');
+      },
+      InsertData() {
+        calls.push('insert');
+        return true;
+      }
+    }
+  };
+
+  server.Discontinuity();
+
+  assert.deepEqual(calls, [
+    'pause',
+    'read',
+    'read',
+    'client:{"type":"discontinuity"}',
+    'reset',
+    'resume'
+  ]);
+});
+
+test('provider reset suppresses stale output and respawns only after close', async (t) => {
+  await audioServer.waitUntilReady;
+  const server = audioServer.Server;
+  const provider = server.FallbackProvider.mp3;
+  const originalClients = server.FallbackClients.mp3;
+  const originalStart = provider.Start;
+  const originalOnData = provider.OnData;
+  const originalProcess = provider.Process;
+  const originalBackpressured = provider.Backpressured;
+  const originalResetting = provider.Resetting;
+  const originalStopping = provider.Stopping;
+  const originalRestartTimer = provider.RestartTimer;
+  t.after(() => {
+    server.FallbackClients.mp3 = originalClients;
+    provider.Start = originalStart;
+    provider.OnData = originalOnData;
+    provider.Process = originalProcess;
+    provider.Backpressured = originalBackpressured;
+    provider.Resetting = originalResetting;
+    provider.Stopping = originalStopping;
+    clearTimeout(provider.RestartTimer);
+    provider.RestartTimer = originalRestartTimer;
+  });
+
+  const calls = [];
+  const child = {
+    stdin: {
+      end() {
+        calls.push('end');
+      }
+    },
+    kill(signal) {
+      calls.push(`kill:${signal}`);
+    }
+  };
+  server.FallbackClients.mp3 = new Set([{}]);
+  provider.Process = child;
+  provider.Backpressured = false;
+  provider.Resetting = false;
+  provider.Stopping = false;
+  provider.RestartTimer = null;
+  provider.Start = () => {
+    calls.push('start');
+  };
+  provider.OnData = () => {
+    calls.push('data');
+  };
+
+  provider.Reset();
+  provider.OnProcessData(child, Buffer.from('stale encoded audio'));
+
+  assert.deepEqual(calls, ['end', 'kill:SIGTERM']);
+  assert.equal(provider.Resetting, true);
+  assert.equal(provider.Backpressured, true);
+  assert.equal(provider.InsertData(Buffer.alloc(4)), false);
+
+  provider.OnProcessClose(child);
+
+  assert.deepEqual(calls, ['end', 'kill:SIGTERM', 'start']);
+  assert.equal(provider.Resetting, false);
+  assert.equal(provider.Backpressured, false);
+});

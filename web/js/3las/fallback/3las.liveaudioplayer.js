@@ -18,6 +18,7 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.PlaybackSpeed = 1.0;
         // Reset variable for scheduling times
         this.NextScheduleTime = 0.0;
+        this.ScheduledSources = new Set();
         // Create gain node for volume control
         this.Amplification = this.Audio.createGain();
         // Set volume to max
@@ -75,9 +76,10 @@ var LiveAudioPlayer = /** @class */ (function () {
                 // Create new audio source for the buffer
                 var sourceNode_1 = this.Audio.createBufferSource();
                 // Make sure the node deletes itself after playback
-                sourceNode_1.onended = function (_ev) {
+                sourceNode_1.onended = (function (_ev) {
+                    this.ScheduledSources.delete(sourceNode_1);
                     sourceNode_1.disconnect();
-                };
+                }).bind(this);
                 // Prevent looping (the standard says that it should be off by default)
                 sourceNode_1.loop = false;
                 // Pass audio data to source
@@ -117,6 +119,7 @@ var LiveAudioPlayer = /** @class */ (function () {
                     sourceNode_1.playbackRate.value = this.PlaybackSpeed;
                 }
                 // Schedule playback
+                this.ScheduledSources.add(sourceNode_1);
                 sourceNode_1.start(this.NextScheduleTime + skipDurationTime, skipDurationTime);
             }
             else {
@@ -130,6 +133,21 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.NextScheduleTime += duration;
     };
     LiveAudioPlayer.prototype.Reset = function () {
+        this.ScheduledSources.forEach(function (sourceNode) {
+            sourceNode.onended = null;
+            try {
+                sourceNode.stop();
+            }
+            catch (_a) {
+            }
+            try {
+                sourceNode.disconnect();
+            }
+            catch (_b) {
+            }
+        });
+        this.ScheduledSources.clear();
+        this.PlaybackSpeed = 1.0;
         this.NextScheduleTime = 0.0;
     };
     LiveAudioPlayer.prototype.CheckBeforeDecode = function (playbackLength) {
