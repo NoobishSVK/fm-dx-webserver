@@ -1,7 +1,7 @@
 /* Libraries / Imports */
 const { serverConfig } = require('./server_config');
 const { fetchTx } = require('./tx_search');
-const { createRDSReceiver } = require('./rds/receiver');
+const { createRDSReceiver } = require('./receiver');
 
 const updateInterval = 75;
 
