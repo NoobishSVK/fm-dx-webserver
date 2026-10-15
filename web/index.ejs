@@ -155,20 +155,18 @@
               <h2 class="show-phone">
                 <div class="data-pty color-4"></div>
               </h2>
-              <h3 style="margin-top:0;margin-bottom:0;" class="text-color-default flex-center">
+              <h3 style="margin-top:0;margin-bottom:0;gap: 18px;" class="text-color-default flex-center">
                 <span class="data-tp">TP</span>
-                <span style="margin-left: 15px;" class="data-ta">TA</span>
-                <div style="display:inline-block">
-                  <span style="margin-left: 20px;display: block;margin-top: 2px;" class="data-flag"></span>
-                </div>
-                <span class="pointer stereo-container" style="position: relative; margin-left: 20px;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
+                <span class="data-ta">TA</span>
+                <div style="display:inline-block; width: 25px;" class="data-flag text-center"></div>
+                <span class="pointer stereo-container" style="position: relative;" role="button" aria-label="Stereo / Mono toggle" tabindex="0">
                   <div class="circle-container">
                     <div class="circle data-st circle1"></div>
                     <div class="circle data-st circle2"></div>
                   </div>
                   <span class="overlay tooltip" data-tooltip="Stereo / Mono toggle. <br><strong>Click to toggle."></span>
                 </span>
-                <span style="margin-left: 15px;" class="data-ms">MS</span>
+                <span class="data-ms">MS</span>
               </h3>
             </div>
           </div>
@@ -503,9 +501,11 @@
               <div class="icon tooltip <% if (!publicTuner) { %>active<% } %>" id="dashboard-lock-tune" onClick="toggleLock('#dashboard-lock-tune', 'wT1', 'wT0', 'Unlock Tuner (Password tune)', 'Lock Tuner (Password tune)');" role="button" aria-label="Toggle password lock until restart" tabindex="0" data-tooltip="Toggle password lock<br>Lasts until restart">
                 <i class="fa-solid fa-key"></i>
               </div>
-              <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel" onClick="window.open('./setup', '_blank').focus();">
-                <i class="fa-solid fa-user"></i>
-              </div>
+              <a href="./setup" target="_blank" class="hover-no-border">
+                <div class="icon tooltip" role="button" aria-label="Go to admin panel" tabindex="0" data-tooltip="Go to admin panel">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+              </a>
               <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
                 <i class="fa-solid fa-sign-out"></i>
               </div>

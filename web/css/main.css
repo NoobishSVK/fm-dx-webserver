@@ -58,6 +58,8 @@ body {
     transition: 0.3s ease background-color;
     margin: 0 auto;
     min-height: 100%;
+    scrollbar-color: var(--color-3) transparent;
+    scrollbar-width: thin;
 }
 
 .wrapper-outer {
