@@ -1,6 +1,7 @@
 // WebSocket connection located in ./websocket.js
 
-
+const isMobileDevice = /android|iphone|ipod|ipad/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 var parsedData, signalChart, previousFreq;
 var data = [];
@@ -481,7 +482,7 @@ function initCanvas() {
                         frameRate: 30, // default is 30
                         onRefresh: (chart) => {
                             if (!chart?.data?.datasets || parsedData?.sig === undefined) return;
-                            if ((isAndroid || isIOS || isIPadOS) && (document.hidden || !document.hasFocus())) return;
+                            if ((isMobileDevice) && (document.hidden || !document.hasFocus())) return;
 
                             const sig = parsedData.sig;
                             signalBuffer.push(sig);
@@ -602,11 +603,11 @@ function setRefreshRate(rate) {
 }
 
 window.addEventListener("focus", () => {
-    if (isAndroid || isIOS || isIPadOS) setRefreshRate(75);
+    if (isMobileDevice) setRefreshRate(75);
 });
 
 window.addEventListener("blur", () => {
-    if (isAndroid || isIOS || isIPadOS) setRefreshRate(3000);
+    if (isMobileDevice) setRefreshRate(3000);
 });
 
 let reconnectTimer = null;
