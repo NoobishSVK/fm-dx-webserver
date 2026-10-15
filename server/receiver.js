@@ -31,9 +31,6 @@ function createRDSReceiver(dataToSend) {
     dataToSend.ps = snapshot.text;
     dataToSend.ps_errors = serialiseErrors(snapshot);
   });
-  parser.on('lps', value => {
-    dataToSend.lps = value;
-  });
   parser.on('rt', (snapshot, flag) => {
     dataToSend[`rt${flag}`] = snapshot.text;
     dataToSend[`rt${flag}_errors`] = serialiseErrors(snapshot);

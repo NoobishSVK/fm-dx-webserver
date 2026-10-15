@@ -209,6 +209,7 @@ function handleData(wss, receivedData, rdsWss) {
         });
 
         rds.parseString(modifiedData);
+        dataToSend.lps = rds.getLPS();
         legacyRdsPiBuffer = null;
         break;
     }
