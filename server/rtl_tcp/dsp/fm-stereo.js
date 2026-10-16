@@ -70,12 +70,47 @@ function createIqPhaseLookup() {
 // Signed entries keep the discriminator in V8's int32 fast path.
 const IQ_PHASE_LOOKUP = createIqPhaseLookup();
 
+const WASM_PAGE_BYTES = 65536;
+const WASM_MAXIMUM_TAPS = 1024;
+
+// The audio FIR is about 40 % of the DSP time. A 128-bit SIMD build of the
+// same loop (fir.wat) is bit-identical and several times faster, so it is
+// used whenever the runtime supports WebAssembly SIMD (Node 16.4+ on x64 and
+// arm64). FMDX_DSP_WASM=0 forces the JavaScript loop.
+function createWasmFir() {
+  if (process.env.FMDX_DSP_WASM === '0' || typeof WebAssembly !== 'object') {
+    return null;
+  }
+  try {
+    const bytes = require('./fir-wasm');
+    if (!WebAssembly.validate(bytes)) return null;
+    const memory = new WebAssembly.Memory({ initial: 1 });
+    const instance = new WebAssembly.Instance(
+      new WebAssembly.Module(bytes),
+      { env: { memory } }
+    );
+    return { memory, fir: instance.exports.fir };
+  } catch (_) {
+    return null;
+  }
+}
+
+const wasmFir = createWasmFir();
+const FIR_BACKEND = wasmFir ? 'wasm-simd' : 'js';
+
 // Per-call work buffers are shared by all decoders. process() is synchronous,
 // so the buffers never hold state between calls; keeping them off the
-// instance means decoder state does not depend on how IQ was chunked.
+// instance means decoder state does not depend on how IQ was chunked. With
+// the WebAssembly FIR they are views of its memory, laid out as
+// [taps | filter output | L+R work | L-R work], so nothing is copied.
 let scratchIq = new Uint8Array(0);
 let scratchSum = new Float64Array(0);
 let scratchDiff = new Float64Array(0);
+let scratchFiltered = new Float64Array(0);
+let scratchTaps = null;
+let filteredOffset = 0;
+let sumOffset = 0;
+let diffOffset = 0;
 
 function scratchIqBuffer(length) {
   if (scratchIq.length < length) scratchIq = new Uint8Array(length * 2);
@@ -83,10 +118,33 @@ function scratchIqBuffer(length) {
 }
 
 function ensureWorkBuffers(length) {
-  if (scratchSum.length < length) {
-    scratchSum = new Float64Array(length * 2);
-    scratchDiff = new Float64Array(length * 2);
+  if (scratchSum.length >= length) return;
+  const capacity = length * 2;
+
+  if (!wasmFir) {
+    scratchSum = new Float64Array(capacity);
+    scratchDiff = new Float64Array(capacity);
+    // Two values (L+R, L-R) per output; there is at most one output per sample.
+    scratchFiltered = new Float64Array(capacity * 2);
+    return;
   }
+
+  filteredOffset = WASM_MAXIMUM_TAPS * 8;
+  sumOffset = filteredOffset + capacity * 16;
+  diffOffset = sumOffset + capacity * 8;
+  const requiredBytes = diffOffset + capacity * 8;
+  const memory = wasmFir.memory;
+  const missingPages =
+    Math.ceil(requiredBytes / WASM_PAGE_BYTES) -
+    memory.buffer.byteLength / WASM_PAGE_BYTES;
+  if (missingPages > 0) memory.grow(missingPages);
+
+  // Growing detaches the previous views, so always rebuild all of them.
+  const buffer = memory.buffer;
+  scratchTaps = new Float64Array(buffer, 0, WASM_MAXIMUM_TAPS);
+  scratchFiltered = new Float64Array(buffer, filteredOffset, capacity * 2);
+  scratchSum = new Float64Array(buffer, sumOffset, capacity);
+  scratchDiff = new Float64Array(buffer, diffOffset, capacity);
 }
 
 // Integral of f^2 / (1 + (2 pi f tau)^2) from 0 to bandHz: the FM
@@ -837,9 +895,34 @@ class FmStereoDecoder {
    */
   _decimate(pcm, sumWork, diffWork, firstSample, sampleCount, lastActiveDiff) {
     const taps = this.audioTaps;
-    const span = taps.length - 1;
-    const middle = span >> 1;
-    const decimation = this.decimation;
+    const middle = (taps.length - 1) >> 1;
+    let outputs;
+
+    if (wasmFir !== null && taps.length <= WASM_MAXIMUM_TAPS) {
+      scratchTaps.set(taps);
+      outputs = wasmFir.fir(
+        sumOffset,
+        diffOffset,
+        0,
+        filteredOffset,
+        firstSample,
+        sampleCount,
+        this.decimation,
+        lastActiveDiff,
+        middle
+      );
+    } else {
+      outputs = this._filterJs(
+        scratchFiltered,
+        sumWork,
+        diffWork,
+        firstSample,
+        sampleCount,
+        lastActiveDiff
+      );
+    }
+
+    const filtered = scratchFiltered;
     const dcBlockPole = this.dcBlockPole;
     const deemphasisPole = this.deemphasisPole;
     const deemphasisB0 = this.deemphasisB0;
@@ -855,48 +938,9 @@ class FmStereoDecoder {
     let deemphasisRight = this.deemphasisRight;
     let outputOffset = 0;
 
-    // The output for input sample s uses work[s .. s + span]. Tap pairs are
-    // folded and split across two accumulators per channel so consecutive
-    // multiply-adds do not wait on each other.
-    const pairedTaps = middle & ~1;
-    for (let start = firstSample; start < sampleCount; start += decimation) {
-      const centre = start + middle;
-      let sumEven = sumWork[centre] * taps[middle];
-      let sumOdd = 0;
-      let diffEven = 0;
-      let diffOdd = 0;
-      let tap = 0;
-
-      if (lastActiveDiff >= start) {
-        diffEven = diffWork[centre] * taps[middle];
-        for (; tap < pairedTaps; tap += 2) {
-          const oldest = start + tap;
-          const newest = start + span - tap;
-          const evenCoefficient = taps[tap];
-          const oddCoefficient = taps[tap + 1];
-          sumEven += (sumWork[oldest] + sumWork[newest]) * evenCoefficient;
-          sumOdd += (sumWork[oldest + 1] + sumWork[newest - 1]) * oddCoefficient;
-          diffEven += (diffWork[oldest] + diffWork[newest]) * evenCoefficient;
-          diffOdd += (diffWork[oldest + 1] + diffWork[newest - 1]) * oddCoefficient;
-        }
-        for (; tap < middle; tap++) {
-          sumEven += (sumWork[start + tap] + sumWork[start + span - tap]) * taps[tap];
-          diffEven += (diffWork[start + tap] + diffWork[start + span - tap]) * taps[tap];
-        }
-      } else {
-        for (; tap < pairedTaps; tap += 2) {
-          const oldest = start + tap;
-          const newest = start + span - tap;
-          sumEven += (sumWork[oldest] + sumWork[newest]) * taps[tap];
-          sumOdd += (sumWork[oldest + 1] + sumWork[newest - 1]) * taps[tap + 1];
-        }
-        for (; tap < middle; tap++) {
-          sumEven += (sumWork[start + tap] + sumWork[start + span - tap]) * taps[tap];
-        }
-      }
-
-      const sum = sumEven + sumOdd;
-      const diff = diffEven + diffOdd;
+    for (let output = 0; output < outputs; output++) {
+      const sum = filtered[output * 2];
+      const diff = filtered[output * 2 + 1];
       const left = sum + diff;
       const right = sum - diff;
 
@@ -941,11 +985,71 @@ class FmStereoDecoder {
     this.deemphasisRight = deemphasisRight;
   }
 
+  /**
+   * JavaScript version of fir.wat: writes [L+R, L-R] for each output into
+   * `filtered` and returns the number of outputs.
+   */
+  _filterJs(filtered, sumWork, diffWork, firstSample, sampleCount, lastActiveDiff) {
+    const taps = this.audioTaps;
+    const span = taps.length - 1;
+    const middle = span >> 1;
+    const decimation = this.decimation;
+    let outputs = 0;
+
+    // The output for input sample s uses work[s .. s + span]. Tap pairs are
+    // folded and split across two accumulators per channel so consecutive
+    // multiply-adds do not wait on each other.
+    const pairedTaps = middle & ~1;
+    for (let start = firstSample; start < sampleCount; start += decimation) {
+      const centre = start + middle;
+      let sumEven = sumWork[centre] * taps[middle];
+      let sumOdd = 0;
+      let diffEven = 0;
+      let diffOdd = 0;
+      let tap = 0;
+
+      if (lastActiveDiff >= start) {
+        diffEven = diffWork[centre] * taps[middle];
+        for (; tap < pairedTaps; tap += 2) {
+          const oldest = start + tap;
+          const newest = start + span - tap;
+          const evenCoefficient = taps[tap];
+          const oddCoefficient = taps[tap + 1];
+          sumEven += (sumWork[oldest] + sumWork[newest]) * evenCoefficient;
+          sumOdd += (sumWork[oldest + 1] + sumWork[newest - 1]) * oddCoefficient;
+          diffEven += (diffWork[oldest] + diffWork[newest]) * evenCoefficient;
+          diffOdd += (diffWork[oldest + 1] + diffWork[newest - 1]) * oddCoefficient;
+        }
+        for (; tap < middle; tap++) {
+          sumEven += (sumWork[start + tap] + sumWork[start + span - tap]) * taps[tap];
+          diffEven += (diffWork[start + tap] + diffWork[start + span - tap]) * taps[tap];
+        }
+      } else {
+        for (; tap < pairedTaps; tap += 2) {
+          const oldest = start + tap;
+          const newest = start + span - tap;
+          sumEven += (sumWork[oldest] + sumWork[newest]) * taps[tap];
+          sumOdd += (sumWork[oldest + 1] + sumWork[newest - 1]) * taps[tap + 1];
+        }
+        for (; tap < middle; tap++) {
+          sumEven += (sumWork[start + tap] + sumWork[start + span - tap]) * taps[tap];
+        }
+      }
+
+      filtered[outputs * 2] = sumEven + sumOdd;
+      filtered[outputs * 2 + 1] = diffEven + diffOdd;
+      outputs++;
+    }
+
+    return outputs;
+  }
+
   _makeResult(pcm, signals, mpx) {
     return mpx ? { pcm, signals, mpx } : { pcm, signals };
   }
 }
 
 module.exports = {
+  FIR_BACKEND,
   FmStereoDecoder
 };

@@ -647,3 +647,58 @@ test('constructor rejects unsupported rates and process validates input', () => 
   const decoder = new FmStereoDecoder();
   assert.throws(() => decoder.process([1, 2]), /Uint8Array/);
 });
+
+test('WebAssembly SIMD audio filter is bit-identical to the JavaScript filter', (t) => {
+  const modulePath = require.resolve('../server/rtl_tcp/dsp/fm-stereo');
+  const wasmModule = require(modulePath);
+  if (wasmModule.FIR_BACKEND !== 'wasm-simd') {
+    t.skip('WebAssembly SIMD is not available in this runtime');
+    return;
+  }
+
+  // Load a second copy of the decoder with the JavaScript filter forced.
+  const previousSetting = process.env.FMDX_DSP_WASM;
+  const cachedModule = require.cache[modulePath];
+  process.env.FMDX_DSP_WASM = '0';
+  delete require.cache[modulePath];
+  let jsModule;
+  try {
+    jsModule = require(modulePath);
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.FMDX_DSP_WASM;
+    } else {
+      process.env.FMDX_DSP_WASM = previousSetting;
+    }
+    require.cache[modulePath] = cachedModule;
+  }
+  assert.equal(jsModule.FIR_BACKEND, 'js');
+
+  // The pilot drops out and returns, so both the stereo and the silent-L-R
+  // (sum-only) filter paths run, across odd and uneven chunk boundaries.
+  const iq = generateFmIq(makeGeneratorState(), 1.2, {
+    pilotAmplitude: (time) => (time > 0.4 && time < 0.8 ? 0 : 0.1)
+  });
+  const chunks = [1, 4097, 65536, 333, 12000, 77777];
+
+  function decode(Decoder) {
+    const decoder = new Decoder({ includeMpx: false });
+    const pcm = [];
+    const signals = [];
+    for (let offset = 0, index = 0; offset < iq.length; index++) {
+      const length = chunks[index % chunks.length];
+      const result = decoder.process(iq.subarray(offset, offset + length));
+      pcm.push(Buffer.from(result.pcm.buffer));
+      signals.push(...result.signals);
+      offset += length;
+    }
+    return { pcm: Buffer.concat(pcm), signals };
+  }
+
+  const fromWasm = decode(wasmModule.FmStereoDecoder);
+  const fromJs = decode(jsModule.FmStereoDecoder);
+  assert.ok(fromWasm.signals.some((signal) => signal.stereo));
+  assert.ok(fromWasm.signals.some((signal) => !signal.stereo));
+  assert.deepEqual(fromWasm.signals, fromJs.signals);
+  assert.ok(fromWasm.pcm.equals(fromJs.pcm), 'PCM differs between filter backends');
+});
