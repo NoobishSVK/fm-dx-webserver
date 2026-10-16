@@ -27,8 +27,11 @@ const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
+const { isRtlTcpBackend } = require('./backend-config');
 const pluginsApi = require('./plugins_api');
 const pjson = require('../package.json');
+const useRtlTcp = isRtlTcpBackend(serverConfig);
+const rtlBackend = useRtlTcp ? require('./rtl_tcp') : null;
 
 // Function to find server files based on the plugins listed in config
 function findServerFiles(plugins) {
@@ -98,8 +101,136 @@ require('./stream/index');
 require('./plugins');
 
 let currentUsers = 0;
+let audioUsers = 0;
 let serialport;
 let timeoutAntenna;
+let timeoutDefaultFrequency;
+
+function getReceiverOutput() {
+  return useRtlTcp
+    ? rtlBackend
+    : (serverConfig.xdrd.wirelessConnection ? client : serialport);
+}
+
+function activeListenerCount() {
+  return currentUsers + audioUsers;
+}
+
+function cancelNoListenerTimers() {
+  if (timeoutAntenna) {
+    clearTimeout(timeoutAntenna);
+    timeoutAntenna = null;
+  }
+  if (timeoutDefaultFrequency) {
+    clearTimeout(timeoutDefaultFrequency);
+    timeoutDefaultFrequency = null;
+  }
+}
+
+function startReceiverForListeners() {
+  cancelNoListenerTimers();
+
+  if (useRtlTcp) {
+    // Idempotent; also recovers when autoShutdown was switched off while the
+    // receiver was stopped.
+    rtlBackend.start();
+  } else if (serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
+    // As before, autoShutdown only applies to xdrd, not to serial tuners.
+    connectToXdrd();
+  }
+}
+
+function handleNoActiveListeners() {
+  if (activeListenerCount() !== 0) return;
+
+  const output = getReceiverOutput();
+  storage.connectedUsers = [];
+
+  if (output?.write && serverConfig.bwAutoNoUsers === "1") {
+    output.write("W0\n"); // Auto BW 'Enabled'
+  }
+
+  if (output?.write && !useRtlTcp) {
+    // cEQ and iMS combinations are receiver-specific and are not exposed by rtl_tcp.
+    if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "1") {
+      output.write("G00\n"); // Both Disabled
+    } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "0") {
+      output.write(`G0${dataHandler.dataToSend.ims}\n`);
+    } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "1") {
+      output.write(`G${dataHandler.dataToSend.eq}0\n`);
+    } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "0") {
+      output.write(`G1${dataHandler.dataToSend.ims}\n`);
+    } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
+      output.write(`G${dataHandler.dataToSend.eq}1\n`);
+    } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "1") {
+      output.write("G10\n"); // Only cEQ enabled
+    } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "2") {
+      output.write("G01\n"); // Only iMS enabled
+    } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
+      output.write("G11\n"); // Both Enabled
+    }
+  }
+
+  if (output?.write) {
+    if (serverConfig.stereoNoUsers === "1") {
+      output.write("B0\n");
+    } else if (serverConfig.stereoNoUsers === "2") {
+      output.write("B1\n");
+    }
+  }
+
+  if (!useRtlTcp) {
+    timeoutAntenna = setTimeout(() => {
+      timeoutAntenna = null;
+      if (activeListenerCount() !== 0 || !output?.write) return;
+      if (serverConfig.antennaNoUsers === "1") {
+        output.write("Z0\n");
+      } else if (serverConfig.antennaNoUsers === "2") {
+        output.write("Z1\n");
+      } else if (serverConfig.antennaNoUsers === "3") {
+        output.write("Z2\n");
+      } else if (serverConfig.antennaNoUsers === "4") {
+        output.write("Z3\n");
+      }
+    }, serverConfig.antennaNoUsersDelay ? 15000 : 0);
+  }
+
+  if (serverConfig.enableDefaultFreq === true &&
+      serverConfig.autoShutdown !== true &&
+      (useRtlTcp || serverConfig.xdrd.wirelessConnection === true)) {
+    timeoutDefaultFrequency = setTimeout(() => {
+      timeoutDefaultFrequency = null;
+      if (activeListenerCount() !== 0 || !output?.write) return;
+      output.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
+      dataHandler.resetToDefault(dataHandler.dataToSend);
+      dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
+      dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
+    }, 10000);
+  }
+
+  if (serverConfig.autoShutdown === true) {
+    if (useRtlTcp) {
+      rtlBackend.stop();
+    } else if (serverConfig.xdrd.wirelessConnection === true) {
+      output?.write?.('X\n');
+    }
+  }
+}
+
+// Audio-only listeners (players and relays that never open /text) keep the
+// rtl_tcp receiver running. Other backends keep their previous behaviour of
+// counting only web clients.
+audioServer.onClientCountChange((count) => {
+  if (!useRtlTcp) return;
+  const hadListeners = activeListenerCount() > 0;
+  audioUsers = count;
+  if (audioUsers > 0) {
+    cancelNoListenerTimers();
+    if (!hadListeners && activeListenerCount() > 0) startReceiverForListeners();
+  } else {
+    handleNoActiveListeners();
+  }
+});
 
 app.use(bodyParser.urlencoded({ extended: true }));
 const sessionMiddleware = session({
@@ -110,15 +241,42 @@ const sessionMiddleware = session({
 app.use(sessionMiddleware);
 app.use(bodyParser.json());
 
-connectToXdrd();
-connectToSerial();
+if (useRtlTcp) {
+  rtlBackend.on('data', (data) => helpers.resolveDataBuffer(data, wss, rdsWss));
+  rtlBackend.on('status', (message) => logInfo(`[RTL-TCP] ${message}`));
+  rtlBackend.on('warning', (message) => logWarn(`[RTL-TCP] ${message}`));
+  rtlBackend.on('disconnected', () => logWarn('[RTL-TCP] Disconnected; retrying.'));
+  rtlBackend.on('ready', ({ tunerType, gainCount }) => {
+    logInfo(`[RTL-TCP] Receiver ready (tuner type ${tunerType}, ${gainCount} gain steps).`);
+    pluginsApi.setOutput(rtlBackend);
+  });
+  rtlBackend.on('unready', () => pluginsApi.clearOutput());
+
+  // Report how much of one core the DSP worker needs, measured over the last
+  // minute, so the cost of the JavaScript demodulator is visible on real hardware.
+  let lastDspStats = rtlBackend.getDspStats();
+  setInterval(() => {
+    const stats = rtlBackend.getDspStats();
+    const inputBytes = stats.inputBytes - lastDspStats.inputBytes;
+    const processingMs = stats.processingMs - lastDspStats.processingMs;
+    lastDspStats = stats;
+    if (inputBytes <= 0 || processingMs <= 0) return;
+    const radioMs = inputBytes * 500 / rtlBackend.options.sampleRate;
+    logInfo(`[RTL-TCP] DSP load: ${(100 * processingMs / radioMs).toFixed(1)}% of one core (${(radioMs / processingMs).toFixed(1)}x real time).`);
+  }, 60 * 1000).unref();
+
+  if (!serverConfig.autoShutdown) rtlBackend.start();
+} else {
+  connectToXdrd();
+  connectToSerial();
+}
 tunnel.connect();
 
 // Serialport retry code when port is open but communication is lost (additional code in datahandler.js)
 dataHandler.state.isSerialportRetrying = false;
 
 setInterval(() => {
-  if (!dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
+  if (!useRtlTcp && !dataHandler.state.isSerialportAlive && serverConfig.xdrd.wirelessConnection === false) {
     dataHandler.state.isSerialportAlive = true;
     dataHandler.state.isSerialportRetrying = true;
     if (serialport && serialport.isOpen) {
@@ -138,6 +296,7 @@ setInterval(() => {
 
 // Serial Connection
 function connectToSerial() {
+if (useRtlTcp) return;
 if (serverConfig.xdrd.wirelessConnection === false) {
     
   // Configure the SerialPort with DTR and RTS options
@@ -234,6 +393,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
 let authFlags = {};
 
 function connectToXdrd() {
+  if (useRtlTcp) return;
   const { xdrd } = serverConfig;
 
   if (xdrd.wirelessConnection && configExists()) {
@@ -369,7 +529,9 @@ setInterval(() => {
 }, 60 * 60 * 1000); // Run every hour
 
 wss.on('connection', (ws, request) => {
-    const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
+    const output = useRtlTcp
+      ? rtlBackend
+      : (serverConfig.xdrd.wirelessConnection ? client : serialport);
     let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
     const userCommandHistory = {};
     const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
@@ -412,11 +574,12 @@ wss.on('connection', (ws, request) => {
         }
     }
 
+    const hadListeners = activeListenerCount() > 0;
     if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
       currentUsers++;
     }
 
-    if (timeoutAntenna) clearTimeout(timeoutAntenna);
+    cancelNoListenerTimers();
 
     helpers.handleConnect(clientIp, currentUsers, ws, (result) => {
       if (result === "User banned") {
@@ -426,8 +589,10 @@ wss.on('connection', (ws, request) => {
 
     dataHandler.showOnlineUsers(currentUsers);
 
-    if (currentUsers === 1 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection) {
-        serverConfig.xdrd.wirelessConnection ? connectToXdrd() : serialport.write('x\n');
+    // The lookup above is asynchronous: the client may already have left and
+    // the no-listener shutdown run, so only start for a live listener.
+    if (!hadListeners && ws.readyState === ws.OPEN && activeListenerCount() > 0) {
+      startReceiverForListeners();
     }
   });  
 
@@ -513,54 +678,6 @@ wss.on('connection', (ws, request) => {
             storage.connectedUsers.splice(index, 1);
         }
 
-        if (currentUsers === 0) {
-            storage.connectedUsers = [];
-
-            if (serverConfig.bwAutoNoUsers === "1") {
-                output.write("W0\n"); // Auto BW 'Enabled'
-            }
-
-            // cEQ and iMS combinations
-            if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "1") {
-                output.write("G00\n"); // Both Disabled
-            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "0") {
-                output.write(`G0${dataHandler.dataToSend.ims}\n`);
-            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "1") {
-                output.write(`G${dataHandler.dataToSend.eq}0\n`);
-            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "0") {
-                output.write(`G1${dataHandler.dataToSend.ims}\n`);
-            } else if (serverConfig.ceqNoUsers === "0" && serverConfig.imsNoUsers === "2") {
-                output.write(`G${dataHandler.dataToSend.eq}1\n`);
-            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "1") {
-                output.write("G10\n"); // Only cEQ enabled
-            } else if (serverConfig.ceqNoUsers === "1" && serverConfig.imsNoUsers === "2") {
-                output.write("G01\n"); // Only iMS enabled
-            } else if (serverConfig.ceqNoUsers === "2" && serverConfig.imsNoUsers === "2") {
-                output.write("G11\n"); // Both Enabled
-            }
-
-            // Handle stereo mode
-            if (serverConfig.stereoNoUsers === "1") {
-                output.write("B0\n");
-            } else if (serverConfig.stereoNoUsers === "2") {
-                output.write("B1\n");
-            }
-
-            // Handle Antenna selection
-            if (timeoutAntenna) clearTimeout(timeoutAntenna);
-            timeoutAntenna = setTimeout(() => {
-                if (serverConfig.antennaNoUsers === "1") {
-                    output.write("Z0\n");
-                } else if (serverConfig.antennaNoUsers === "2") {
-                    output.write("Z1\n");
-                } else if (serverConfig.antennaNoUsers === "3") {
-                    output.write("Z2\n");
-                } else if (serverConfig.antennaNoUsers === "4") {
-                    output.write("Z3\n");
-                }
-            }, serverConfig.antennaNoUsersDelay ? 15000 : 0);
-        }
-
         if (tunerLockTracker.has(ws)) {
             logInfo(`User who locked the tuner left. Unlocking the tuner.`);
             output.write('wT0\n')
@@ -568,21 +685,7 @@ wss.on('connection', (ws, request) => {
             serverConfig.publicTuner = true;
         }
 
-        if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && 
-            serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
-            setTimeout(function() {
-                if (currentUsers === 0) {
-                    output.write('T' + Math.round(serverConfig.defaultFreq * 1000) + '\n');
-                    dataHandler.resetToDefault(dataHandler.dataToSend);
-                    dataHandler.dataToSend.freq = Number(serverConfig.defaultFreq).toFixed(3);
-                    dataHandler.initialData.freq = Number(serverConfig.defaultFreq).toFixed(3);
-                }
-            }, 10000);
-        }
-
-        if (currentUsers === 0 && serverConfig.autoShutdown === true && serverConfig.xdrd.wirelessConnection === true) {
-            client.write('X\n');
-        }
+        handleNoActiveListeners();
 
         if (code !== 1008) {
           logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);

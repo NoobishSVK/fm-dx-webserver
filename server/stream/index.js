@@ -1,10 +1,12 @@
 const { spawn, execSync } = require('child_process');
 const { configName, serverConfig, configUpdate, configSave, configExists } = require('../server_config');
+const { isRtlTcpBackend } = require('../backend-config');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const checkFFmpeg = require('./checkFFmpeg');
 const audioServer = require('./3las.server');
 
 const consoleLogTitle = '[Audio Stream]';
+const useRtlTcp = isRtlTcpBackend(serverConfig);
 
 let startupSuccess;
 
@@ -126,6 +128,17 @@ function buildCommand(ffmpegPath) {
     }
 }
 
+if (useRtlTcp) {
+    const rtlBackend = require('../rtl_tcp');
+    audioServer.waitUntilReady.then(() => {
+        audioServer.Server.StdIn = rtlBackend.audioStream;
+        rtlBackend.on('audio-discontinuity', () => {
+            audioServer.Server.Discontinuity();
+        });
+        audioServer.Server.Run();
+        connectMessage(`${consoleLogTitle} Connected JavaScript rtl_tcp stereo audio \u2192 Server.StdIn`);
+    });
+} else {
 checkFFmpeg().then((ffmpegPath) => {
     if (!serverConfig.audio.ffmpeg) checkAudioUtilities();
     let audioErrorLogged = false;
@@ -396,3 +409,4 @@ checkFFmpeg().then((ffmpegPath) => {
 }).catch((err) => {
     logError(`${consoleLogTitle} Error: ${err.message}`);
 });
+}

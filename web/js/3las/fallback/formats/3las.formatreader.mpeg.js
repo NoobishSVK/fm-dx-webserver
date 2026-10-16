@@ -195,6 +195,8 @@ var AudioFormatReader_MPEG = /** @class */ (function (_super) {
     };
     // Is called if the decoding of the window succeeded
     AudioFormatReader_MPEG.prototype.OnDecodeSuccess = function (decodedData, id, expectedTotalPlayTime, firstGranulePlayTime, lastGranulePlayTime) {
+        if (id <= this.LastPushedId)
+            return;
         window.startTimeConnectionWatchdog = performance.now();
         var extractSampleCount;
         var extractSampleOffset;

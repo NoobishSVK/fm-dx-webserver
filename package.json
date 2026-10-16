@@ -7,6 +7,7 @@
     "debug": "node index.js --debug",
     "debug_ffmpeg": "node index.js --ffmpegdebug",
     "debug_full": "node index.js --debug --ffmpegdebug",
+    "test": "node --test",
     "webserver": "node index.js"
   },
   "author": "",

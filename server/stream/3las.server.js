@@ -9,11 +9,35 @@ const checkFFmpeg = require('./checkFFmpeg');
 const { spawn } = require('child_process');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const { serverConfig } = require('../server_config');
+const { isRtlTcpBackend } = require('../backend-config');
+const { getMp3FfmpegArguments } = require('./ffmpeg-arguments');
+const MAX_SOCKET_BUFFER_BYTES = 1024 * 1024;
+const AUDIO_DISCONTINUITY_MESSAGE = JSON.stringify({ type: "discontinuity" });
+const RESET_KILL_DELAY_MS = 250;
 
 let ffmpegStaticPath = 'ffmpeg'; // fallback value
 
 let ServerInstance;
 let handleAudioUpgradeFn;
+const clientCountListeners = new Set();
+
+function notifyClientCount(count) {
+  for (const listener of clientCountListeners) {
+    try {
+      listener(count);
+    } catch (error) {
+      logWarn(`[Stream] Audio client-count listener failed: ${error.message}`);
+    }
+  }
+}
+
+function onClientCountChange(listener) {
+  if (typeof listener !== 'function') {
+    throw new TypeError('Audio client-count listener must be a function.');
+  }
+  clientCountListeners.add(listener);
+  return () => clientCountListeners.delete(listener);
+}
 
 let readyResolve;
 const waitUntilReady = new Promise((resolve) => {
@@ -64,7 +88,9 @@ class StreamClient {
             compress: false,
             binary: true
         };
+        this.Format = null;
         this.Socket.on('error', this.OnError.bind(this));
+        this.Socket.on('close', this.OnError.bind(this));
         this.Socket.on('message', this.OnMessage.bind(this));
     }
     OnMessage(message, isBinary) {
@@ -109,14 +135,28 @@ class StreamClient {
             this.OnError(null);
             return;
         }
-        this.Socket.send(buffer, this.BinaryOptions);
+        if (this.Socket.bufferedAmount > MAX_SOCKET_BUFFER_BYTES) {
+            logWarn('[Stream] Disconnecting a slow audio client to keep buffering bounded.');
+            this.OnError(null);
+            return;
+        }
+        this.Socket.send(buffer, this.BinaryOptions, (error) => {
+            if (error) this.OnError(error);
+        });
     }
     SendText(text) {
         if (this.Socket.readyState != ws.OPEN) {
             this.OnError(null);
             return;
         }
-        this.Socket.send(text);
+        try {
+            this.Socket.send(text, (error) => {
+                if (error) this.OnError(error);
+            });
+        }
+        catch (error) {
+            this.OnError(error);
+        }
     }
     OnIceCandidate(e) {
         if (e.candidate) {
@@ -144,10 +184,8 @@ class StreamServer {
         if (Settings.FallbackUseWav) {
             this.FallbackProvider["wav"] = AFallbackProvider.Create(this, "wav");
         }
-        this.StdIn = process.stdin;
-        this.SamplesCount = this.SampleRate / 100;
-        this.Samples = new Int16Array(this.Channels * this.SamplesCount);
-        this.SamplesPosition = 0;
+        this.StdIn = null;
+        this.DroppingInput = false;
     }
     Run() {
         this.Server = new ws.Server({
@@ -175,41 +213,97 @@ class StreamServer {
         }).bind(this));
     }
     OnStdInData(buffer) {
-        for (let i = 0; i < buffer.length; i += 2) {
-            this.Samples[this.SamplesPosition] = buffer.readInt16LE(i);
-            this.SamplesPosition++;
-            if (this.SamplesPosition >= this.Samples.length) {
-                let data = {
-                    "samples": this.Samples,
-                    "sampleRate": this.SampleRate,
-                    "bitsPerSample": 16,
-                    "channelCount": this.Channels,
-                    "numberOfFrames": this.SamplesCount,
-                };
-                this.Samples = new Int16Array(this.Channels * this.SamplesCount);
-                this.SamplesPosition = 0;
-            }
-        }
+        if (this.DroppingInput) return;
+        let accepted = true;
         for (let format in this.FallbackProvider) {
-            this.FallbackProvider[format].InsertData(buffer);
+            if (!this.FallbackProvider[format].InsertData(buffer)) accepted = false;
+        }
+        if (!accepted) this.StdIn.pause();
+    }
+    Discontinuity() {
+        this.StdIn?.pause?.();
+        this.DroppingInput = true;
+        try {
+            if (typeof this.StdIn?.read === "function") {
+                while (this.StdIn.read() !== null) {
+                    // Drop PCM queued before the discontinuity.
+                }
+            }
+            this.Clients.forEach((client) => {
+                if (!client.Format) return;
+                try {
+                    client.SendText(AUDIO_DISCONTINUITY_MESSAGE);
+                }
+                catch (error) {
+                    logWarn(`[Stream] Unable to notify an audio client about a discontinuity: ${error.message}`);
+                }
+            });
+            for (const provider of Object.values(this.FallbackProvider)) {
+                try {
+                    provider.Reset();
+                }
+                catch (error) {
+                    logWarn(`[Stream] Unable to reset the ${provider.Format || "audio"} encoder: ${error.message}`);
+                }
+            }
+        } finally {
+            this.DroppingInput = false;
+            this.ResumeInputWhenReady();
+        }
+    }
+    ResumeInputWhenReady() {
+        if (this.DroppingInput) return;
+        const providers = Object.values(this.FallbackProvider);
+        if (providers.every((provider) => !provider.Backpressured && !provider.Resetting)) {
+            this.StdIn?.resume?.();
         }
     }
     OnServerConnection(socket, _request) {
         this.Clients.add(new StreamClient(this, socket));
     }
+    // Clients that requested an audio format, i.e. are actually listening.
+    ListenerCount() {
+        return this.FallbackClients["mp3"].size + this.FallbackClients["wav"].size;
+    }
     SetFallback(client, format) {
-        if (format != "mp3" && format != "wav") {
+        // ws still delivers messages while a destroyed socket is closing; a
+        // late request must not re-register the client or start an encoder.
+        if (!this.Clients.has(client)) return;
+        const provider = this.FallbackProvider[format];
+        if ((format != "mp3" && format != "wav") || !provider) {
             this.DestroyClient(client);
             return;
         }
+
+        if (client.Format === format) return;
+
+        const previousFormat = client.Format;
+        if (previousFormat) {
+            this.FallbackClients[previousFormat].delete(client);
+            if (this.FallbackClients[previousFormat].size === 0) {
+                this.FallbackProvider[previousFormat]?.Stop();
+            }
+        }
+
+        client.Format = format;
         this.FallbackClients[format].add(client);
-        this.FallbackProvider[format].PrimeClient(client);
+        provider.Start();
+        provider.PrimeClient(client);
+        if (!previousFormat) notifyClientCount(this.ListenerCount());
     }
     DestroyClient(client) {
+        if (!this.Clients.delete(client)) return;
+        const wasListening = Boolean(client.Format);
         this.FallbackClients["mp3"].delete(client);
         this.FallbackClients["wav"].delete(client);
-        this.Clients.delete(client);
+        client.Format = null;
+        for (const format of ["mp3", "wav"]) {
+            if (this.FallbackClients[format].size === 0) {
+                this.FallbackProvider[format]?.Stop();
+            }
+        }
         client.Destroy();
+        if (wasListening) notifyClientCount(this.ListenerCount());
     }
     GetStats() {
         let fallback = {
@@ -243,19 +337,134 @@ class StreamServer {
 class AFallbackProvider {
     constructor(server) {
         this.Server = server;
-        this.Process = (0, child_process_1.spawn)(FFmpeg_command, this.GetFFmpegArguments(), { shell: false, detached: false, stdio: ['pipe', 'pipe', 'ignore'] });
-        this.Process.stdout.addListener('data', this.OnData.bind(this));
+        this.Process = null;
+        this.Backpressured = false;
+        this.RestartTimer = null;
+        this.Stopping = false;
+        this.Resetting = false;
+        this.ResetKillTimer = null;
+    }
+    Start() {
+        if (this.Process || this.RestartTimer) return;
+        this.Stopping = false;
+        this.OnStart();
+        const child = (0, child_process_1.spawn)(
+            FFmpeg_command,
+            this.GetFFmpegArguments(),
+            { shell: false, detached: false, stdio: ['pipe', 'pipe', 'ignore'] }
+        );
+        this.Process = child;
+        child.stdout.addListener('data', (data) => {
+            this.OnProcessData(child, data);
+        });
+        child.stdin.on('error', (error) => {
+            if (error.code !== 'EPIPE') {
+                logWarn(`[Stream] FFmpeg input error: ${error.message}`);
+            }
+        });
+        child.on('error', (error) => {
+            if (this.Process === child) {
+                logWarn(`[Stream] Unable to start FFmpeg: ${error.message}`);
+            }
+        });
+        child.on('close', () => this.OnProcessClose(child));
+    }
+    Stop() {
+        this.Stopping = true;
+        clearTimeout(this.RestartTimer);
+        clearTimeout(this.ResetKillTimer);
+        this.RestartTimer = null;
+        this.ResetKillTimer = null;
+        this.Backpressured = false;
+        this.Resetting = false;
+        const child = this.Process;
+        this.Process = null;
+        if (child) {
+            child.stdin.end();
+            child.kill('SIGTERM');
+        }
+        this.Server.ResumeInputWhenReady();
+    }
+    Reset() {
+        this.Stopping = false;
+        clearTimeout(this.RestartTimer);
+        this.RestartTimer = null;
+
+        const child = this.Process;
+        if (!child) {
+            this.Resetting = false;
+            this.Backpressured = false;
+            if (this.Server.FallbackClients[this.Format]?.size > 0) this.Start();
+            this.Server.ResumeInputWhenReady();
+            return;
+        }
+        if (this.Resetting) return;
+
+        this.Resetting = true;
+        this.Backpressured = true;
+        child.stdin.end();
+        child.kill('SIGTERM');
+        this.ResetKillTimer = setTimeout(() => {
+            this.ResetKillTimer = null;
+            if (this.Process === child && this.Resetting) {
+                child.kill('SIGKILL');
+            }
+        }, RESET_KILL_DELAY_MS);
+        this.ResetKillTimer.unref?.();
+    }
+    OnStart() {
+    }
+    OnProcessData(child, data) {
+        if (this.Process === child && !this.Resetting) this.OnData(data);
+    }
+    OnProcessClose(child) {
+        if (this.Process !== child) return;
+        clearTimeout(this.ResetKillTimer);
+        this.ResetKillTimer = null;
+        this.Process = null;
+        const restartImmediately = this.Resetting;
+        this.Resetting = false;
+        this.Backpressured = false;
+        if (restartImmediately &&
+            !this.Stopping &&
+            this.Server.FallbackClients[this.Format]?.size > 0) {
+            this.Start();
+            this.Server.ResumeInputWhenReady();
+            return;
+        }
+        this.Server.ResumeInputWhenReady();
+        if (!this.Stopping && this.Server.FallbackClients[this.Format]?.size > 0) {
+            this.RestartTimer = setTimeout(() => {
+                this.RestartTimer = null;
+                this.Start();
+            }, 500);
+        }
     }
     InsertData(buffer) {
-        this.Process.stdin.write(buffer);
+        if (this.Resetting) return false;
+        const child = this.Process;
+        if (!child?.stdin?.writable) return true;
+        const accepted = child.stdin.write(buffer);
+        if (!accepted && !this.Backpressured) {
+            this.Backpressured = true;
+            child.stdin.once('drain', () => {
+                if (this.Process !== child || this.Resetting) return;
+                this.Backpressured = false;
+                this.Server.ResumeInputWhenReady();
+            });
+        }
+        return accepted;
     }
     static Create(server, format) {
+        let provider;
         if (format == "mp3") {
-            return new FallbackProviderMp3(server);
+            provider = new FallbackProviderMp3(server);
         }
         else if (format == "wav") {
-            return new FallbackProviderWav(server, 384);
+            provider = new FallbackProviderWav(server, 384);
         }
+        if (provider) provider.Format = format;
+        return provider;
     }
 }
 class FallbackProviderMp3 extends AFallbackProvider {
@@ -263,20 +472,12 @@ class FallbackProviderMp3 extends AFallbackProvider {
         super(server);
     }
     GetFFmpegArguments() {
-        return [
-            "-fflags", "+nobuffer+flush_packets", "-flags", "low_delay", "-rtbufsize", "32", "-probesize", "32",
-            "-f", "s16le",
-            "-ar", Number(this.Server.SampleRate.toString()) + Number(serverConfig.audio.samplerateOffset),
-            "-ac", this.Server.Channels.toString(),
-            "-i", "pipe:0",
-            "-c:a", "libmp3lame",
-            "-b:a", serverConfig.audio.audioBitrate,
-            "-ac", this.Server.Channels.toString(),
-            "-reservoir", "0",
-            "-f", "mp3", "-write_xing", "0", "-id3v2_version", "0",
-            "-fflags", "+nobuffer", "-flush_packets", "1",
-            "pipe:1"
-        ];
+        return getMp3FfmpegArguments({
+            sampleRate: this.Server.SampleRate,
+            sampleRateOffset: serverConfig.audio.samplerateOffset,
+            channels: this.Server.Channels,
+            audioBitrate: serverConfig.audio.audioBitrate
+        });
     }
     OnData(chunk) {
         this.Server.BroadcastBinary("mp3", chunk);
@@ -307,6 +508,10 @@ class FallbackProviderWav extends AFallbackProvider {
             "-flush_packets", "1", "-fflags", "+nobuffer", "-chunk_size", "384", "-packetsize", "384",
             "pipe:1"
         ];
+    }
+    OnStart() {
+        this.ChunkBuffer = Buffer.alloc(0);
+        this.HeaderBuffer = new Array();
     }
     OnData(chunk) {
         // Check if riff for wav
@@ -350,7 +555,8 @@ for (let i = 2; i < (process.argv.length - 1); i += 2) {
     Options[process.argv[i]] = OptionParser[process.argv[i]](process.argv[i + 1]);
 }
 */
-  const audioChannels = serverConfig.audio.audioChannels || 2;
+  const useRtlTcp = isRtlTcpBackend(serverConfig);
+  const audioChannels = useRtlTcp ? 2 : (serverConfig.audio.audioChannels || 2);
   const Server = new StreamServer(null, audioChannels, 48000);
 
   ServerInstance = Server;
@@ -376,6 +582,7 @@ module.exports = {
   get handleAudioUpgrade() {
     return handleAudioUpgradeFn;
   },
+  onClientCountChange,
   waitUntilReady
 };
 //# sourceMappingURL=3las.server.js.map

@@ -86,10 +86,10 @@ const rdsparser = {
 }
 
 const callbacks = {
-  pi: koffi.register(rds => (
-    value = rdsparser.get_pi(rds)
-    //console.log('PI: ' + value.toString(16).toUpperCase())
-  ), 'callback_pi*'),
+  pi: koffi.register(rds => {
+    const pi = rdsparser.get_pi(rds);
+    dataToSend.pi = (pi & 0xffff).toString(16).toUpperCase().padStart(4, '0');
+  }, 'callback_pi*'),
 
   pty: koffi.register(rds => (
     value = rdsparser.get_pty(rds),
@@ -520,5 +520,10 @@ function processSignal(receivedData, st, stForced) {
 }
 
 module.exports = {
-  handleData, showOnlineUsers, dataToSend, initialData, resetToDefault, state
+  handleData,
+  showOnlineUsers,
+  dataToSend,
+  initialData,
+  resetToDefault,
+  state
 };

@@ -5,16 +5,22 @@ function checkFFmpeg() {
     const checkFFmpegProcess = spawn('ffmpeg', ['-version'], {
       stdio: ['ignore', 'ignore', 'ignore'],
     });
+    let settled = false;
+    const resolveOnce = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
 
     checkFFmpegProcess.on('error', () => {
-      resolve(require('ffmpeg-static'));
+      resolveOnce(require('ffmpeg-static'));
     });
 
-    checkFFmpegProcess.on('exit', (code) => {
+    checkFFmpegProcess.on('close', (code) => {
       if (code === 0) {
-        resolve('ffmpeg');
+        resolveOnce('ffmpeg');
       } else {
-        resolve(require('ffmpeg-static'));
+        resolveOnce(require('ffmpeg-static'));
       }
     });
   });

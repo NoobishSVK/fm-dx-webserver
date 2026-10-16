@@ -1,0 +1,47 @@
+services:
+  rtl_tcp:
+    image: fm-dx-rtl-tcp:local
+    build:
+      context: .
+      target: rtl-tcp
+    restart: unless-stopped
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    ports:
+      # rtl_tcp has no authentication: anyone who can reach it can retune the
+      # dongle or switch the bias tee. Published on localhost only by default.
+      - "${RTL_TCP_PUBLISHED_ADDRESS:-127.0.0.1}:${RTL_TCP_PUBLISHED_PORT:-1234}:1234"
+
+  fm-dx-webserver:
+    image: fm-dx-webserver:local
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    depends_on:
+      - rtl_tcp
+    ports:
+      - "${FMDX_PORT:-8080}:8080"
+    environment:
+      FMDX_DEVICE: "${FMDX_DEVICE:-}"
+      FMDX_WEB_PORT: 8080
+      FMDX_ADMIN_PASSWORD: "${FMDX_ADMIN_PASSWORD:-}"
+      FMDX_AUDIO_BITRATE: "${FMDX_AUDIO_BITRATE:-}"
+      RTL_TCP_ENABLED: "${RTL_TCP_ENABLED:-}"
+      RTL_TCP_HOST: "${RTL_TCP_HOST:-}"
+      RTL_TCP_PORT: "${RTL_TCP_PORT:-}"
+      RTL_TCP_SAMPLE_RATE: "${RTL_TCP_SAMPLE_RATE:-}"
+      RTL_TCP_GAIN: "${RTL_TCP_GAIN:-}"
+      RTL_TCP_PPM: "${RTL_TCP_PPM:-}"
+      RTL_TCP_BIAS_TEE: "${RTL_TCP_BIAS_TEE:-}"
+      RTL_TCP_DEEMPHASIS_US: "${RTL_TCP_DEEMPHASIS_US:-}"
+      RTL_TCP_DEVIATION_HZ: "${RTL_TCP_DEVIATION_HZ:-}"
+      RTL_TCP_BANDWIDTH_HZ: "${RTL_TCP_BANDWIDTH_HZ:-}"
+      RTL_TCP_STEREO_MINIMUM_SNR_DB: "${RTL_TCP_STEREO_MINIMUM_SNR_DB:-}"
+      RTL_TCP_STEREO_BLEND_SNR_DB: "${RTL_TCP_STEREO_BLEND_SNR_DB:-}"
+      RTL_TCP_RDS_ENABLED: "${RTL_TCP_RDS_ENABLED:-}"
+    volumes:
+      - fmdx_config:/data
+
+volumes:
+  fmdx_config:
