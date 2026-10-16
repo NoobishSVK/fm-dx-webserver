@@ -33,6 +33,8 @@ const DEFAULT_MINIMUM_COHERENT_RATIO = 0.002;
 const SYNDROME_TABLE_BITS = BLOCK_BITS / 2;
 const SYNDROME_TABLE_SIZE = 1 << SYNDROME_TABLE_BITS;
 const SYNDROME_TABLE_MASK = SYNDROME_TABLE_SIZE - 1;
+// Rebase absolute sample positions well before they leave the int32 range.
+const POSITION_REBASE_THRESHOLD = 0x40000000;
 
 const OFFSET = Object.freeze({
   A: 'A',
@@ -655,6 +657,7 @@ class RdsDecoder {
       const end = Math.min(offset + this.processSliceSamples, mpx.length);
       this._appendMpx(mpx, offset, end);
       groups.push(...this._processAvailableSamples());
+      this._rebaseSamplePositions();
     }
     return groups;
   }
@@ -675,30 +678,40 @@ class RdsDecoder {
   }
 
   _appendMpx(mpx, start = 0, end = mpx.length) {
+    const prefixI = this.prefixI;
+    const prefixQ = this.prefixQ;
+    const prefixPower = this.prefixPower;
+    const storageCapacity = this.storageCapacity;
+    const oscillatorCosStep = this.oscillatorCosStep;
+    const oscillatorSinStep = this.oscillatorSinStep;
     let cos = this.oscillatorCos;
     let sin = this.oscillatorSin;
     let cumulativeI = this.cumulativeI;
     let cumulativeQ = this.cumulativeQ;
     let cumulativePower = this.cumulativePower;
-    let totalSamples = this.totalSamples;
+    let oscillatorSamples = this.oscillatorSamples;
+    // Ring slot of sample boundary totalSamples + 1, advanced without a
+    // per-sample division.
+    let storageIndex = (this.totalSamples + 1) % storageCapacity;
 
     for (let index = start; index < end; index++) {
-      const sample = Number.isFinite(mpx[index]) ? mpx[index] : 0;
+      const value = mpx[index];
+      const sample = Number.isFinite(value) ? value : 0;
       cumulativeI += sample * cos;
       cumulativeQ -= sample * sin;
       cumulativePower += sample * sample;
-      totalSamples++;
-      const storageIndex = totalSamples % this.storageCapacity;
-      this.prefixI[storageIndex] = cumulativeI;
-      this.prefixQ[storageIndex] = cumulativeQ;
-      this.prefixPower[storageIndex] = cumulativePower;
+      prefixI[storageIndex] = cumulativeI;
+      prefixQ[storageIndex] = cumulativeQ;
+      prefixPower[storageIndex] = cumulativePower;
+      storageIndex++;
+      if (storageIndex === storageCapacity) storageIndex = 0;
 
-      const nextCos = cos * this.oscillatorCosStep - sin * this.oscillatorSinStep;
-      sin = sin * this.oscillatorCosStep + cos * this.oscillatorSinStep;
+      const nextCos = cos * oscillatorCosStep - sin * oscillatorSinStep;
+      sin = sin * oscillatorCosStep + cos * oscillatorSinStep;
       cos = nextCos;
 
-      this.oscillatorSamples++;
-      if ((this.oscillatorSamples & 0x0fff) === 0) {
+      oscillatorSamples = (oscillatorSamples + 1) & 0x0fff;
+      if (oscillatorSamples === 0) {
         const magnitude = Math.hypot(cos, sin) || 1;
         cos /= magnitude;
         sin /= magnitude;
@@ -710,11 +723,30 @@ class RdsDecoder {
     this.cumulativeI = cumulativeI;
     this.cumulativeQ = cumulativeQ;
     this.cumulativePower = cumulativePower;
-    this.totalSamples = totalSamples;
+    this.oscillatorSamples = oscillatorSamples;
+    this.totalSamples += end - start;
     this.bufferStart = Math.max(
       this.bufferStart,
       this.totalSamples - (this.storageCapacity - 1)
     );
+  }
+
+  /**
+   * Sample positions are absolute, so at 240 kS/s they pass 2^31 after about
+   * 2.5 hours. V8 then stops treating them as int32 and every ring index
+   * becomes a floating-point modulo, which made RDS several times slower on
+   * long-running servers. Moving all positions back by whole ring lengths
+   * keeps them small without changing which slot any sample occupies.
+   */
+  _rebaseSamplePositions() {
+    if (this.totalSamples < POSITION_REBASE_THRESHOLD) return;
+    const shift =
+      Math.floor(this.bufferStart / this.storageCapacity) * this.storageCapacity;
+    if (shift <= 0) return;
+    this.totalSamples -= shift;
+    this.bufferStart -= shift;
+    this.nextBitStart -= shift;
+    this.lastAcquisitionAttemptSample -= shift;
   }
 
   _storedPrefix(prefix, sampleBoundary) {

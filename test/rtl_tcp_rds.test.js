@@ -240,6 +240,33 @@ test('pure-JS RDS decoder survives carrier inversion, fractional timing, and chu
   }
 });
 
+test('RDS sample positions are rebased before leaving the int32 range', () => {
+  const expected = makeGroups(12);
+  const fixture = makeMpxFixture(expected, { timingOffset: 61.5, carrierPhase: 1.1 });
+  const chunks = [4093, 16384, 777];
+
+  const fresh = new RdsDecoder({ sampleRate: 240000 });
+  const freshGroups = processInChunks(fresh, fixture, chunks);
+
+  // State equivalent to a stream that has been running for about 2.5 hours:
+  // whole ring lengths keep every sample in the same storage slot.
+  const aged = new RdsDecoder({ sampleRate: 240000 });
+  const shift =
+    Math.ceil((2 ** 31 - 1000) / aged.storageCapacity) * aged.storageCapacity;
+  aged.totalSamples += shift;
+  aged.bufferStart += shift;
+  const agedGroups = processInChunks(aged, fixture, chunks);
+
+  assert.deepEqual(agedGroups, freshGroups);
+  assert.equal(aged.synced, true);
+  assert.ok(aged.totalSamples < 2 ** 31);
+  assert.ok(aged.bufferStart >= 0 && aged.bufferStart <= aged.totalSamples);
+  assert.equal(
+    aged.totalSamples % aged.storageCapacity,
+    fresh.totalSamples % fresh.storageCapacity
+  );
+});
+
 test('pure-JS RDS timing loop follows a small sample-clock mismatch', () => {
   const expected = makeGroups(24);
   const transmitterBitRate = 1187.5 * (1 + 45e-6);
