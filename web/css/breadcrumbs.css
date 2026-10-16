@@ -236,7 +236,8 @@ h3.settings-heading {
     background-color: var(--color-2);
     margin: 0 auto;
     margin-bottom: 15px;
-    padding: 5px;
+    padding: 10px;
+    gap: 10px;
     border-radius: 15px;
     display: flex;
     align-items: center;
@@ -246,7 +247,6 @@ h3.settings-heading {
 .admin-quick-dashboard .icon {
     width: 52px;
     height: 52px;
-    margin: auto;
     color: var(--color-1);
     background-color: var(--color-3);
     display: flex;

@@ -841,7 +841,7 @@ function findOnMaps() {
     frequency > 74 ? frequency = frequency.toFixed(1) : null;
     
     var url = `https://maps.fmdx.org/#qth=${longitude},${latitude}&freq=${frequency}&findPi=${pi}`;
-    window.open(url, "_blank");
+    $('<a>', {href: url, target: '_blank', rel: 'noopener'})[0].click();
 }
 
 
@@ -954,7 +954,10 @@ function updateTextIfChanged($element, newText) {
 function updateHtmlIfChanged($element, newHtml) {
     if ($element.html() !== newHtml) {
         $element.html(newHtml);
+        return true;
     }
+
+    return false;
 }
 
 function updateDatasetValIfChanged($element, dataLabel, newVal) {
@@ -1007,9 +1010,17 @@ const updateDataElements = throttle(function(parsedData) {
         $flagDesktopCointainer.css('background-color', 'var(--color-1-transparent)');
     }
     
-    $('.data-flag').html(`<i title="${parsedData.country_name}" class="flag-sm flag-sm-${parsedData.country_iso}"></i>`);
-    $('.data-flag-big').html(`<i title="${parsedData.country_name}" class="flag-md flag-md-${parsedData.country_iso}"></i>`);
-    
+    const $flag = $('.data-flag');
+
+    if (updateHtmlIfChanged(
+        $flag,
+        parsedData.country_iso !== 'UN'
+            ? `<img src="../images/flags/${parsedData.country_iso}.svg" data-tooltip="${parsedData.country_name} - ECC ${(parsedData.ecc).toString(16).toUpperCase()}" class="tooltip">`
+            : ''
+    )) {
+        initTooltips($flag.find('.tooltip'));
+    }
+
     $dataAntInput.val($('.data-ant li[data-value="' + parsedData.ant + '"]').first().text());
     if (typeof parsedData.agc !== 'undefined') {
         $dataAgcInput.val($('.data-agc li[data-value="' + parsedData.agc + '"]').first().text());

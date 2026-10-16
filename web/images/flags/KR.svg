@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="21px" height="15px" viewBox="0 0 21 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: sketchtool 46 (44423) - http://www.bohemiancoding.com/sketch -->
+    <title>KR</title>
+    <desc>Created with sketchtool.</desc>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#FFFFFF" offset="0%"></stop>
+            <stop stop-color="#F0F0F0" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#E01B41" offset="0%"></stop>
+            <stop stop-color="#C51335" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-3" cx="3.5" cy="3.5" r="3.5"></circle>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-5">
+            <stop stop-color="#0E4B9C" offset="0%"></stop>
+            <stop stop-color="#053677" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-6">
+            <stop stop-color="#262626" offset="0%"></stop>
+            <stop stop-color="#0D0D0D" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="KR">
+            <rect id="FlagBackground" fill="url(#linearGradient-1)" x="0" y="0" width="21" height="15"></rect>
+            <g id="Group-2" transform="translate(7.000000, 4.000000)">
+                <mask id="mask-4" fill="white">
+                    <use xlink:href="#path-3"></use>
+                </mask>
+                <use id="Mask" fill="url(#linearGradient-2)" xlink:href="#path-3"></use>
+                <path d="M-4.4797499e-14,4 C0.999999977,4.93749998 2.5,5.5 3.5,4 C4.5,2.5 6.5,2.49999995 7,4 C7.5,5.50000005 7,7 7,7 L-4.4797499e-14,7 C-4.4797499e-14,7 -0.999999977,3.06250002 -4.4797499e-14,4 Z" id="Rectangle-277" fill="url(#linearGradient-5)" mask="url(#mask-4)"></path>
+            </g>
+            <g id="Trigrams" fill="url(#linearGradient-6)" opacity="0.75">
+                <rect id="Rectangle" x="2.036" y="4.397" width="3.46" height="1" rx="0.2" transform="rotate(-60 2.036 4.397)"></rect>
+                <rect id="Rectangle" x="3.162" y="5.047" width="3.46" height="1" rx="0.2" transform="rotate(-60 3.162 5.047)"></rect>
+                <rect id="Rectangle" x="4.287" y="5.697" width="3.46" height="1" rx="0.2" transform="rotate(-60 4.287 5.697)"></rect>
+                <rect id="Rectangle" x="15.847" y="6.197" width="1.6" height="1" rx="0.2" transform="rotate(-120 15.847 6.197)"></rect>
+                <rect id="Rectangle" x="14.917" y="4.586" width="1.6" height="1" rx="0.2" transform="rotate(-120 14.917 4.586)"></rect>
+                <rect id="Rectangle" x="17.168" y="3.287" width="1.6" height="1" rx="0.2" transform="rotate(-120 17.168 3.287)"></rect>
+                <rect id="Rectangle" x="16.972" y="5.547" width="3.46" height="1" rx="0.2" transform="rotate(-120 16.972 5.547)"></rect>
+                <rect id="Rectangle" x="18.098" y="4.897" width="1.6" height="1" rx="0.2" transform="rotate(-120 18.098 4.897)"></rect>
+                <rect id="Rectangle" x="14.117" y="11.799" width="1.6" height="1" rx="0.2" transform="rotate(-60 14.117 11.8)"></rect>
+                <rect id="Rectangle" x="15.242" y="12.449" width="1.6" height="1" rx="0.2" transform="rotate(-60 15.242 12.45)"></rect>
+                <rect id="Rectangle" x="15.047" y="10.188" width="1.6" height="1" rx="0.2" transform="rotate(-60 15.047 10.188)"></rect>
+                <rect id="Rectangle" x="16.172" y="10.838" width="1.6" height="1" rx="0.2" transform="rotate(-60 16.172 10.838)"></rect>
+                <rect id="Rectangle" x="17.298" y="11.488" width="1.6" height="1" rx="0.2" transform="rotate(-60 17.298 11.488)"></rect>
+                <rect id="Rectangle" x="16.368" y="13.099" width="1.6" height="1" rx="0.2" transform="rotate(-60 16.368 13.1)"></rect>
+                <rect id="Rectangle" x="3.962" y="11.338" width="1.6" height="1" rx="0.2" transform="rotate(-120 3.962 11.338)"></rect>
+                <rect id="Rectangle" x="3.766" y="13.599" width="3.46" height="1" rx="0.2" transform="rotate(-120 3.766 13.6)"></rect>
+                <rect id="Rectangle" x="6.017" y="12.299" width="3.46" height="1" rx="0.2" transform="rotate(-120 6.017 12.3)"></rect>
+                <rect id="Rectangle" x="4.892" y="12.949" width="1.6" height="1" rx="0.2" transform="rotate(-120 4.892 12.95)"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -144,6 +144,10 @@
     background-color: var(--color-2-transparent);
 }
 
+.hover-no-border:hover {
+    border: 0;
+}
+
 .text-center {
     text-align: center;
 }
