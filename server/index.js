@@ -210,6 +210,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     
     serialport.on('data', (data) => {
       helpers.resolveDataBuffer(data, wss, rdsWss);
+      pluginsApi.emitRawSerialData(data);
     });
 
     serialport.on('error', (error) => {
@@ -256,6 +257,7 @@ client.on('data', (data) => {
   const { xdrd } = serverConfig;
   
   helpers.resolveDataBuffer(data, wss, rdsWss);
+  pluginsApi.emitRawSerialData(data);
   if (authFlags.authMsg == true && authFlags.messageCount > 1) {
     return;
   }
