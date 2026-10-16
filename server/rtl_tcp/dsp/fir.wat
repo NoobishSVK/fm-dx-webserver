@@ -23,6 +23,7 @@
     (local $oldest i32) (local $newest i32) (local $coefficient i32)
     (local $diffOffset i32) (local $middleBytes i32) (local $spanBytes i32)
     (local $sumAccumulator v128) (local $diffAccumulator v128) (local $taps2 v128)
+    (local $mirrored v128)
     (local $centreTap f64) (local $sumEven f64) (local $diffEven f64)
     (local $sumValue f64) (local $diffValue f64)
 
@@ -74,8 +75,8 @@
                       (f64x2.add
                         (v128.load (local.get $oldest))
                         (i8x16.shuffle 8 9 10 11 12 13 14 15 0 1 2 3 4 5 6 7
-                          (v128.load (local.get $newest))
-                          (v128.load (local.get $newest))))
+                          (local.tee $mirrored (v128.load (local.get $newest)))
+                          (local.get $mirrored)))
                       (local.get $taps2))))
                 (local.set $diffAccumulator
                   (f64x2.add (local.get $diffAccumulator)
@@ -83,8 +84,9 @@
                       (f64x2.add
                         (v128.load (i32.add (local.get $oldest) (local.get $diffOffset)))
                         (i8x16.shuffle 8 9 10 11 12 13 14 15 0 1 2 3 4 5 6 7
-                          (v128.load (i32.add (local.get $newest) (local.get $diffOffset)))
-                          (v128.load (i32.add (local.get $newest) (local.get $diffOffset)))))
+                          (local.tee $mirrored
+                            (v128.load (i32.add (local.get $newest) (local.get $diffOffset))))
+                          (local.get $mirrored)))
                       (local.get $taps2))))
                 (local.set $oldest (i32.add (local.get $oldest) (i32.const 16)))
                 (local.set $newest (i32.sub (local.get $newest) (i32.const 16)))
@@ -136,8 +138,8 @@
                       (f64x2.add
                         (v128.load (local.get $oldest))
                         (i8x16.shuffle 8 9 10 11 12 13 14 15 0 1 2 3 4 5 6 7
-                          (v128.load (local.get $newest))
-                          (v128.load (local.get $newest))))
+                          (local.tee $mirrored (v128.load (local.get $newest)))
+                          (local.get $mirrored)))
                       (v128.load (local.get $coefficient)))))
                 (local.set $oldest (i32.add (local.get $oldest) (i32.const 16)))
                 (local.set $newest (i32.sub (local.get $newest) (i32.const 16)))
