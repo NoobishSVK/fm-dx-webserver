@@ -23,12 +23,13 @@
                 <br>
                 <i class="text-big fa-solid fa-exclamation-triangle color-4"></i>
                 <p>
-                    There's a possibility you were kicked by the system.<br>
+                    There's a possibility you <br>
+					were kicked by the system.<br>
                     Please try again later.</p>
 
-                <% if (reason) { %>
-                    <p><strong>Reason:</strong> <%= reason %></p>
-                <% } %>
+                <% if (typeof reason !== 'undefined' && reason) { %>
+				<p><strong>Reason:</strong> <%= reason %></p>
+				<% } %>
             </div>
         </div>
     </div>
