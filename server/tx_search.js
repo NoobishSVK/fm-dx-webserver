@@ -420,5 +420,6 @@ function deg2rad(deg) {
 }
 
 module.exports = {
+    getLocalDb: () => localDb,
     fetchTx
 };
