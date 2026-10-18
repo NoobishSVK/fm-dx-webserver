@@ -109,7 +109,7 @@
                                     <% connectedUsers.forEach(user => { %>
                                         <tr>
                                             <td>
-                                                <a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip %>" target="_blank">
+                                                <a href="https://iplocation.io/ip/<%= user.ip %>" target="_blank">
                                                   <%= user.ip %>
                                                 </a>
                                             </td>                                              
@@ -522,13 +522,13 @@
                                     <tr>
                                         <% if (Array.isArray(bannedUser)) { %>
                                             <!-- If it's an array, use its values -->
-                                            <td style="text-align: center !important;"><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser[0] %>" target="_blank"><%= bannedUser[0] %></a></td>
+                                            <td style="text-align: center !important;"><a href="https://iplocation.io/ip/<%= bannedUser[0] %>" target="_blank"><%= bannedUser[0] %></a></td>
                                             <td><%= bannedUser[1] %></td>
                                             <td class="text-bold"><%= new Date(parseInt(bannedUser[2])).toLocaleString() %></td> <!-- Assuming the ban date is a timestamp in seconds -->
                                             <td><%= bannedUser[3] %></td>
                                         <% } else { %>
                                             <!-- If it's just an IP address without additional data, show it as is -->
-                                            <td style="text-align: center !important;"><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser %>" target="_blank"><%= bannedUser %></a></td>
+                                            <td style="text-align: center !important;"><a href="https://iplocation.io/ip/<%= bannedUser %>" target="_blank"><%= bannedUser %></a></td>
                                             <td>Unknown</td>
                                             <td class="text-bold">Unknown</td>
                                             <td>Unknown</td>
