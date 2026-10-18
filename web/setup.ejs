@@ -53,6 +53,9 @@
                         <div class="icon tooltip" id="submit-config" role="button" aria-label="Save settings" tabindex="0" data-tooltip="Save settings" onclick="submitConfig()">
                             <i class="fa-solid fa-save"></i>
                         </div>
+                        <div class="icon tooltip" id="restart-server" role="button" aria-label="Restart server" tabindex="0" data-tooltip="Restart server">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </div>
                         <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
                             <i class="fa-solid fa-sign-out"></i>
                         </div>
@@ -143,15 +146,7 @@
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20 bottom-20">
                         <h3>Console</h3>
-                        <% if (consoleOutput && consoleOutput.length > 0) { %>
-                            <div class="panel-100 auto br-5 p-10 text-small text-left top-10" id="console-output">
-                                <% consoleOutput.forEach(function(log) { %>
-                                    <pre class="m-0" style="white-space:pre-wrap;"><%= log %></pre>
-                                <% }); %>
-                            </div>
-                        <% } else { %>
-                            <p>No console output available.</p>
-                        <% } %>
+                        <div class="panel-100 auto br-5 p-10 text-small text-left top-10" id="console-output"></div>
                     </div>
                 </div>
             </div>
@@ -728,6 +723,7 @@
     <script src="js/ver.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/settings.js"></script>
+    <script src="js/tooltip.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
     <script src="js/confighandler.js"></script>

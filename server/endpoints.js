@@ -150,7 +150,6 @@ router.get('/wizard', (req, res) => {
               memoryUsage: (process.memoryUsage.rss() / 1024 / 1024).toFixed(1) + ' MB',
               memoryHeap: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) + ' MB',
               processUptime: formattedProcessUptime,
-              consoleOutput: logs,
               plugins: allPluginConfigs,
               enabledPlugins: updatedConfig.plugins,
               onlineUsers: dataHandler.dataToSend.users,
@@ -252,6 +251,20 @@ router.get('/kick', (req, res) => {
     setTimeout(() => {
         res.redirect('/setup');
     }, 500);
+});
+
+router.get('/console', (req, res) => {
+    if (!req.session.isAdminAuthenticated) return res.status(403).end();
+    res.json(logs);
+});
+
+router.post('/restart', (req, res) => {
+    if (!req.session.isAdminAuthenticated) return res.status(403).end();
+
+    logInfo('Server restart requested from the admin panel.');
+    res.json({ success: true });
+    // 75 = restart code, index.js starts the server again
+    setTimeout(() => process.exit(75), 500);
 });
 
 router.get('/addToBanlist', (req, res) => {
