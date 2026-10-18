@@ -106,8 +106,8 @@
                                     <% connectedUsers.forEach(user => { %>
                                         <tr>
                                             <td>
-                                                <a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip.replace('::ffff:', '') %>" target="_blank">
-                                                  <%= user.ip.replace('::ffff:', '') %>
+                                                <a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip %>" target="_blank">
+                                                  <%= user.ip %>
                                                 </a>
                                             </td>                                              
                                             <td>

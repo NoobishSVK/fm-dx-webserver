@@ -19,16 +19,10 @@ const { allPluginConfigs } = require('./plugins');
 
 // Endpoints
 router.get('/', (req, res) => {
-    let requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-    const normalizedIp = requestIp?.replace(/^::ffff:/, '');
-    const ipList = (normalizedIp || '').split(',').map(ip => ip.trim()).filter(Boolean); // in case there are multiple IPs (proxy), we need to check all of them
-    
-    const isBanned = ipList.some(ip => serverConfig.webserver.banlist.some(banEntry => banEntry[0] === ip));
-    
-    if (isBanned) {
-        res.render('403');
-        logInfo(`Web client (${normalizedIp}) is banned`);
+    const ban = helpers.isBanned(req);
+    if (ban) {
+        res.status(403).render('403', { reason: Array.isArray(ban) ? ban[3] : null });
+        logInfo(`Web client (${helpers.getClientIp(req)}) is banned`);
         return;
     }
 
@@ -263,7 +257,8 @@ router.get('/kick', (req, res) => {
 router.get('/addToBanlist', (req, res) => {
     if (!req.session.isAdminAuthenticated) return;
 
-    const ipAddress = req.query.ip;
+    const ipAddress = String(req.query.ip || '').replace(/\s+/g, '');
+    if (!ipAddress) return res.status(400).json({ success: false, message: 'No IP address given.' });
     const location = 'Unknown';
     const date = Date.now();
     const reason = req.query.reason;
@@ -409,7 +404,7 @@ router.get('/log_fmlist', (req, res) => {
         return;
     }
 
-    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const clientIp = helpers.getClientIp(req);
     const txId = dataHandler.dataToSend.txInfo.id; // Extract the ID
 
     if (!canLog(txId)) {

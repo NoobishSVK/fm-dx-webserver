@@ -18,16 +18,7 @@ function createChatServer(storage) {
         ws.isAlive = true;
         ws.on('pong', heartbeat);
 
-        const clientIp =
-            request.headers['x-forwarded-for'] ||
-            request.connection.remoteAddress;
-
-        const userCommandHistory = {};
-
-        if (serverConfig.webserver.banlist?.includes(clientIp)) {
-            ws.close(1008, 'Banned IP');
-            return;
-        }
+        const clientIp = helpers.getClientIp(request);
 
         // Send chat history safely
         storage.chatHistory.forEach((message) => {
@@ -46,21 +37,10 @@ function createChatServer(storage) {
             admin: request.session?.isAdminAuthenticated
         }));
 
-        const userCommands = {};
-        let lastWarn = { time: 0 };
+        const antispam = helpers.createAntispam(ws, clientIp, 5, 'chat', 512);
 
         ws.on('message', (message) => {
-            message = helpers.antispamProtection(
-                message,
-                clientIp,
-                ws,
-                userCommands,
-                lastWarn,
-                userCommandHistory,
-                '5',
-                'chat',
-                512
-            );
+            message = antispam(message);
 
             if (!message) return;
 
@@ -91,7 +71,7 @@ function createChatServer(storage) {
                 ":" +
                 String(now.getMinutes()).padStart(2, '0');
 
-            if (serverConfig.webserver.banlist?.includes(clientIp)) return;
+            if (helpers.isBanned(request)) return;
 
             if (request.session?.isAdminAuthenticated === true) {
                 messageData.admin = true;
