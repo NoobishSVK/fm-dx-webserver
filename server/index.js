@@ -2,7 +2,6 @@
 const express = require('express');
 const endpoints = require('./endpoints');
 const session = require('express-session');
-const bodyParser = require('body-parser');
 const http = require('http');
 const readline = require('readline');
 const app = express();
@@ -101,14 +100,14 @@ let currentUsers = 0;
 let serialport;
 let timeoutAntenna;
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 const sessionMiddleware = session({
   secret: 'GTce3tN6U8odMwoI',
   resave: false,
   saveUninitialized: true,
 });
 app.use(sessionMiddleware);
-app.use(bodyParser.json());
+app.use(express.json());
 
 connectToXdrd();
 connectToSerial();

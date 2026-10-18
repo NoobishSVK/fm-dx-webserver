@@ -231,8 +231,7 @@ h3.settings-heading {
 }
 
 .admin-quick-dashboard {
-    width: 255px;
-    height: 72px;
+    width: max-content;
     background-color: var(--color-2);
     margin: 0 auto;
     margin-bottom: 15px;
