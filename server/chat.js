@@ -13,6 +13,16 @@ function createChatServer(storage) {
     }
 
     const chatWss = new WebSocket.Server({ noServer: true });
+    let nextMessageId = 0;
+
+    function broadcast(data) {
+        const payload = JSON.stringify(data);
+        chatWss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload);
+            }
+        });
+    }
 
     chatWss.on('connection', (ws, request) => {
         ws.isAlive = true;
@@ -20,22 +30,15 @@ function createChatServer(storage) {
 
         const clientIp = helpers.getClientIp(request);
 
-        // Send chat history safely
-        storage.chatHistory.forEach((message) => {
-            const historyMessage = { ...message, history: true };
-
-            if (!request.session?.isAdminAuthenticated) {
-                delete historyMessage.ip;
-            }
-
-            ws.send(JSON.stringify(historyMessage));
-        });
-
         ws.send(JSON.stringify({
             type: 'clientIp',
             ip: clientIp,
             admin: request.session?.isAdminAuthenticated
         }));
+
+        storage.chatHistory.forEach((message) => {
+            ws.send(JSON.stringify({ ...message, history: true }));
+        });
 
         const antispam = helpers.createAntispam(ws, clientIp, 5, 'chat', 512);
 
@@ -53,6 +56,22 @@ function createChatServer(storage) {
                 return;
             }
 
+            if (messageData.type === 'clear' || messageData.type === 'delete') {
+                if (request.session?.isAdminAuthenticated !== true) return;
+
+                if (messageData.type === 'clear') {
+                    storage.chatHistory.length = 0; // in place: storage exports this array
+                } else {
+                    const index = storage.chatHistory.findIndex((m) => m.id === messageData.id);
+                    if (index === -1) return;
+                    storage.chatHistory.splice(index, 1);
+                }
+
+                broadcast({ type: messageData.type, id: messageData.id });
+                return;
+            }
+
+            delete messageData.type;
             delete messageData.admin;
             delete messageData.ip;
             delete messageData.time;
@@ -64,9 +83,13 @@ function createChatServer(storage) {
             }
 
             messageData.ip = clientIp;
+            messageData.id = nextMessageId++;
 
             const now = new Date();
             messageData.time =
+                now.getFullYear() + "-" +
+                String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                String(now.getDate()).padStart(2, '0') + " " +
                 String(now.getHours()).padStart(2, '0') +
                 ":" +
                 String(now.getMinutes()).padStart(2, '0');
@@ -93,17 +116,7 @@ function createChatServer(storage) {
 
             logChat(messageData);
 
-            chatWss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    const responseMessage = { ...messageData };
-
-                    if (!request.session?.isAdminAuthenticated) {
-                        delete responseMessage.ip;
-                    }
-
-                    client.send(JSON.stringify(responseMessage));
-                }
-            });
+            broadcast(messageData);
         });
 
         ws.on('close', () => {

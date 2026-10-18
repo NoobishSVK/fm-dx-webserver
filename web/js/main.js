@@ -1202,14 +1202,27 @@ function showTunerDescription() {
     }
 }
 
+const tooltipDescriptions = new Map(); // tooltip text -> id of its hidden description element
+
 function initTooltips(target = null) {
-    // Define scope: all tooltips or specific one if target is provided
     const tooltips = target ? $(target) : $('.tooltip');
-    
+
+    // Screen readers: point aria-describedby at a hidden copy of the tooltip text (one element per unique text)
+    tooltips.each(function () {
+        const text = $(this).attr('data-tooltip');
+        if (!text || text === $(this).attr('aria-label')) return;
+        if (!tooltipDescriptions.has(text)) {
+            const id = `tooltip-desc-${tooltipDescriptions.size}`;
+            $('<span hidden>').attr('id', id).html(text).appendTo('body');
+            tooltipDescriptions.set(text, id);
+        }
+        $(this).attr('aria-describedby', tooltipDescriptions.get(text));
+    });
+
     // Unbind existing event handlers before rebinding to avoid duplication
-    tooltips.off('mouseenter mouseleave');
-    
-    tooltips.hover(function () {
+    tooltips.off('mouseenter mouseleave focusin focusout');
+
+    tooltips.on('mouseenter focusin', function () {
         if ($(this).closest('.popup-content').length) {
             return;
         }
@@ -1222,7 +1235,7 @@ function initTooltips(target = null) {
             $('.tooltip-wrapper').remove();
             
             var tooltip = $(`
-                <div class="tooltip-wrapper">
+                <div class="tooltip-wrapper" aria-hidden="true">
                     <div class="tooltiptext">${tooltipText}</div>
                 </div>
             `);
@@ -1267,7 +1280,7 @@ function initTooltips(target = null) {
                 }
                 
             }, 300));
-        }, function () {
+        }).on('mouseleave focusout', function () {
             clearTimeout($(this).data('timeout'));
             
             setTimeout(() => {
