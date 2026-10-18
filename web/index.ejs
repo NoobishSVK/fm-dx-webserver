@@ -82,7 +82,7 @@
       <div class="tuner-desc">
         <%- tunerDesc %>
         <% if(tuningLimit && tuningLimit == true){ %>
-        <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit %> MHz - <%= tuningUpperLimit %> MHz</span></span><br>
+        <br><span class="text-small">Limit: <span class="color-4"><%= tuningLowerLimit || '0' %> MHz - <%= tuningUpperLimit !== undefined && tuningUpperLimit !== null && tuningUpperLimit !== '' ? tuningUpperLimit + ' MHz' : 'no limit' %></span></span><br>
         <% } %>
       </div>
 
