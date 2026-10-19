@@ -275,11 +275,14 @@ class AudioWsMp3Player {
         if (!this._audioCtx || !this._gainNode) return;
         this._lastDecodeTime = performance.now();
 
+        // WebKit-based Apple platforms (iOS, iPadOS, macOS Safari) need the middle section.
+        // Other macOS browsers (Firefox, Chrome) behave like non-Apple platforms.
         const ua = navigator.userAgent.toLowerCase();
-        const isApple = /iphone|ipod/.test(ua) ||
-            /ipad/.test(ua) ||
-            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-            /mac os x/.test(ua);
+        const isIOS = /iphone|ipod/.test(ua);
+        const isIPadOS = /ipad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isMacOSX = !isIOS && !isIPadOS && /mac os x/.test(ua);
+        const isSafari = !/chromium|chrome|crios/.test(ua) && /safari/.test(ua);
+        const isApple = isIOS || isIPadOS || (isMacOSX && isSafari);
 
         const delta = 0.001;
         let sampleCount, sampleOffset = 0;
