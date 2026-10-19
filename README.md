@@ -1,4 +1,4 @@
-# FM-DX Webserver 📻🌐
+# FM-DX Webserver
 
 FM-DX Webserver is a cross-platform web server designed for FM DXers who want to control their radio receiver through a web interface.
 
@@ -6,7 +6,8 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 
 - **TEF668x:** Supported with PE5PVB's and Konrad's FM-DX Tuner firmware, Arduino versions with other firmwares should work too.
 - **XDR F1HD:** Officially supported, works best with Konrad's FM-DX Tuner firmware.
-- **SDR (AirSpy / RTL-SDR):** Supported **unofficially** via SDRSharp and the XDR-GTK plugin.
+- **Si47xx:** Officially supported with the FM-DX Tuner firmware
+- **SDR (AirSpy / RTL-SDR):** Supported **unofficially** via SDRSharp and the XDR-GTK plugin or FM-SDR-Tuner.
 
 ## Features
 
@@ -32,14 +33,10 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 This project utilizes these libraries:
 
 - [3LAS](https://github.com/jojobond/3LAS) library by JoJoBond for Low Latency Audio Streaming.
-- [flat-flags](https://github.com/luishdez/flat-flags) library by luishdez for RDS country flags.
+- [FlagKit](https://github.com/madebybowtie/FlagKit) library by madebybowtie for RDS country flags.
 - [librdsparser](https://github.com/kkonradpl/librdsparser) library by Konrad Kosmatka for RDS parsing.
 
 All of these libraries are already bundled with the webserver.
-
-## Features to be added
-
-Check [here](https://trello.com/b/OAKo7n0Q/fm-dx-webserver) for an up to date task list.
 
 ## Community
 
@@ -55,4 +52,4 @@ Feel free to contribute to the project by opening issues or submitting pull requ
 This project is licensed under the [GNU-GPL v3 License](LICENSE.md).
 Always check with your country's laws before hosting a webserver.
 
-Happy DXing! 🎶📡
+Happy DXing!

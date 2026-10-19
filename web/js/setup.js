@@ -11,6 +11,14 @@ $(document).ready(function() {
   initNav();
   initBanlist();
 
+  $('#restart-server').on('click', function() {
+    if (!confirm('Restart the server? All listeners will be disconnected.')) return;
+    $.post('/restart').done(function() {
+      sendToast('info', 'Restarting', 'Server is restarting, the page will reload shortly.');
+      setTimeout(() => location.reload(), 8000);
+    });
+  });
+
   checkTunnelServers();
   setInterval(checkTunnelServers, 10000);
 });
@@ -226,36 +234,48 @@ function stripAnsi(str) {
   return str.replace(/\u001b\[\d+m/g, '');
 }
 
-async function loadConsoleLogs() {
-  await new Promise((resolve) => {
-    $("pre").html(function (_, html) {
-      html = stripAnsi(html);
+const logColors = {
+  INFO: "lime",
+  DEBUG: "cyan",
+  CHAT: "cyan",
+  WARN: "yellow",
+  ERROR: "red"
+};
 
-      const logColors = {
-        INFO: "lime",
-        DEBUG: "cyan",
-        CHAT: "cyan",
-        WARN: "yellow",
-        ERROR: "red"
-      };
+function colorizeLog(line) {
+  let firstBracketProcessed = false;
+  const html = $('<div>').text(stripAnsi(line)).html(); // escape HTML
 
-      let firstBracketProcessed = false;
+  return html.replace(/\[([^\]]+)\]/g, function (match, content) {
+    if (!firstBracketProcessed) {
+      firstBracketProcessed = true;
+      return `<span style='color: gray;'>${match}</span>`;
+    }
 
-      const processedHtml = html.replace(/\[([^\]]+)\]/g, function (match, content) {
-        if (!firstBracketProcessed) {
-          firstBracketProcessed = true;
-          return `<span style='color: gray;'>${match}</span>`;
-        }
-
-        const color = logColors[content] || "white";
-        return `<span style='color: ${color};'>${match}</span>`;
-      });
-
-      return processedHtml;
-    });
-    resolve();
+    const color = logColors[content] || "white";
+    return `<span style='color: ${color};'>${match}</span>`;
   });
-  $("#console-output").length ? $("#console-output").scrollTop($("#console-output")[0].scrollHeight) : null;
+}
+
+function loadConsoleLogs() {
+  const $out = $("#console-output");
+  if (!$out.length) return;
+
+  const refresh = () => {
+    if (document.hidden) return;
+    $.getJSON('/console', function (logs) {
+      const el = $out[0];
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30; // don't yank the user if they scrolled up
+
+      $out.html(logs.length
+        ? logs.map(l => `<pre class="m-0" style="white-space:pre-wrap;">${colorizeLog(l)}</pre>`).join('')
+        : '<p class="m-0">No console output available.</p>');
+      if (atBottom) el.scrollTop = el.scrollHeight;
+    });
+  };
+
+  refresh();
+  setInterval(refresh, 3000);
 }
 
 function checkTunnelServers() {

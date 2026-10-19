@@ -399,14 +399,14 @@
       <div class="flex-container flex-column flex-phone flex-phone-column" style="height: calc(100%);">
         <div class="popup-header hover-brighten flex-center">
           <p class="color-4" style="margin: 0; padding-left: 10px;">Chat • <span style="color: #bada55;" id="chat-admin"></span> <strong id="chat-identity-nickname"></strong></p>
+          <button id="chat-clear" class="tooltip" data-tooltip="Clear chat history" data-tooltip-placement="bottom" aria-label="Clear chat history" style="display: none; background: none; border: none; color: var(--color-3); font-size: 16px; cursor: pointer; max-width: 24px; margin-left: auto;"><i class="fa-solid fa-trash"></i></button>
           <button class="popup-close">✖</button>
         </div>
         <div class="popup-content text-left flex-container flex-phone flex-column" style="flex: 1;">
           <div style="text-align: center;white-space-collapse: collapse;">
             <div class="flex-phone flex-container flex-center top-10 bottom-10">
               <input type="text" id="chat-nickname" name="chat-nickname" placeholder="Nickname" style="width: 150px;border-radius: 15px 0 0 15px;padding-top:0;padding-bottom:0;border: 2px solid var(--color-4)">
-              <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>
-            </div>
+              <button class="br-0 w-100" style="height: 48px; border-radius: 0 15px 15px 0;margin-left:-3px;" id="chat-nickname-save">Save</button>            </div>
           </div>
 
           <div id="chat-chatbox" class="bg-color-1" style="padding: 10px; overflow-y: auto; flex-grow: 1; min-height: 0; flex-basis: 0; min-height: 180px;"></div>
@@ -562,7 +562,7 @@
       </div>
     </div>
   </div>
-  <div id="toast-container" aria-live="polite"></div>
+  <div id="toast-container"></div>
   <script src="js/websocket.js"></script>
   <script src="js/webserver.js"></script>
   <% if (!noPlugins) { %>

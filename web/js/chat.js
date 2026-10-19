@@ -30,18 +30,29 @@ $(document).ready(function() {
     chatNicknameInput.val(savedNickname);
     chatIdentityNickname.text(savedNickname);
     
+    let amAdmin = false;
+
     chatSocket.onmessage = function(event) {
         const messageData = JSON.parse(event.data);
         const isAdmin = messageData.admin ? '<span style="color: #bada55">[ADMIN]</span>' : '';
-        
+
         if (messageData.type === 'clientIp') {
+            amAdmin = messageData.admin === true;
+            $('#chat-clear').toggle(amAdmin).next('.popup-close').css('margin-left', amAdmin ? 0 : '');
             chatIdentityNickname.html(isAdmin).append(document.createTextNode(" " + savedNickname));
             chatIdentityNickname.attr('title', messageData.ip);
+        } else if (messageData.type === 'clear') {
+            chatMessages.empty();
+        } else if (messageData.type === 'delete') {
+            chatMessages.children(`[data-id="${Number(messageData.id)}"]`).remove();
         } else {
+            const deleteButton = amAdmin ? `<button class="chat-delete" aria-label="Delete message" style="background: none; width: auto; height: auto; padding: 0 5px; color: var(--color-text-2);"><i class="fa-solid fa-trash"></i></button>` : '';
             const chatMessage = `
-                <span class="color-2">[${messageData.time}]</span>
-                ${isAdmin} <strong class="color-5" title="${typeof messageData.ip !== "undefined" ? 'IP Address: ' + messageData.ip : ''}">${messageData.nickname}</strong>: 
-                <span style="color: var(--color-text-2);">${$('<div/>').text(messageData.message).html()}</span><br>
+                <div data-id="${Number(messageData.id)}">
+                ${deleteButton}<span class="color-2">[${messageData.time}]</span>
+                ${isAdmin} <strong class="color-5" title="${typeof messageData.ip !== "undefined" ? 'IP Address: ' + messageData.ip : ''}">${messageData.nickname}</strong>:
+                <span style="color: var(--color-text-2);">${$('<div/>').text(messageData.message).html()}</span>
+                </div>
             `;
             chatMessages.append(chatMessage);
             
@@ -61,6 +72,16 @@ $(document).ready(function() {
     };
     
     $('.chat-send-message-btn').click(sendMessage);
+
+    $('#chat-clear').click(function() {
+        if (confirm('Clear the whole chat history for everyone?')) {
+            chatSocket.send(JSON.stringify({ type: 'clear' }));
+        }
+    });
+
+    chatMessages.on('click', '.chat-delete', function() {
+        chatSocket.send(JSON.stringify({ type: 'delete', id: Number($(this).parent().data('id')) }));
+    });
     chatNicknameSave.click(function() {
         const currentNickname = chatNicknameInput.val().trim() || `Anonymous User ${generateRandomString(5)}`;
         localStorage.setItem('nickname', currentNickname);

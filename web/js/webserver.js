@@ -12,6 +12,7 @@ async function loadScriptsInOrder() {
     await loadScript('./js/ver.js');
     await loadScript('./js/api.js');
     await loadScript('./js/main.js');
+    await loadScript('./js/tooltip.js');
     await loadScript('./js/dropdown.js');
     await loadScript('./js/modal.js');
     await loadScript('./js/settings.js');

@@ -53,6 +53,9 @@
                         <div class="icon tooltip" id="submit-config" role="button" aria-label="Save settings" tabindex="0" data-tooltip="Save settings" onclick="submitConfig()">
                             <i class="fa-solid fa-save"></i>
                         </div>
+                        <div class="icon tooltip" id="restart-server" role="button" aria-label="Restart server" tabindex="0" data-tooltip="Restart server">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </div>
                         <div class="icon tooltip logout-link" role="button" aria-label="Sign out" tabindex="0" data-tooltip="Sign out">
                             <i class="fa-solid fa-sign-out"></i>
                         </div>
@@ -106,8 +109,8 @@
                                     <% connectedUsers.forEach(user => { %>
                                         <tr>
                                             <td>
-                                                <a href="https://dnschecker.org/ip-location.php?ip=<%= user.ip.replace('::ffff:', '') %>" target="_blank">
-                                                  <%= user.ip.replace('::ffff:', '') %>
+                                                <a href="https://iplocation.io/ip/<%= user.ip %>" target="_blank">
+                                                  <%= user.ip %>
                                                 </a>
                                             </td>                                              
                                             <td>
@@ -143,15 +146,7 @@
                 <div class="flex-container">
                     <div class="panel-100-real p-bottom-20 bottom-20">
                         <h3>Console</h3>
-                        <% if (consoleOutput && consoleOutput.length > 0) { %>
-                            <div class="panel-100 auto br-5 p-10 text-small text-left top-10" id="console-output">
-                                <% consoleOutput.forEach(function(log) { %>
-                                    <pre class="m-0" style="white-space:pre-wrap;"><%= log %></pre>
-                                <% }); %>
-                            </div>
-                        <% } else { %>
-                            <p>No console output available.</p>
-                        <% } %>
+                        <div class="panel-100 auto br-5 p-10 text-small text-left top-10" id="console-output"></div>
                     </div>
                 </div>
             </div>
@@ -527,13 +522,13 @@
                                     <tr>
                                         <% if (Array.isArray(bannedUser)) { %>
                                             <!-- If it's an array, use its values -->
-                                            <td style="text-align: center !important;"><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser[0] %>" target="_blank"><%= bannedUser[0] %></a></td>
+                                            <td style="text-align: center !important;"><a href="https://iplocation.io/ip/<%= bannedUser[0] %>" target="_blank"><%= bannedUser[0] %></a></td>
                                             <td><%= bannedUser[1] %></td>
                                             <td class="text-bold"><%= new Date(parseInt(bannedUser[2])).toLocaleString() %></td> <!-- Assuming the ban date is a timestamp in seconds -->
                                             <td><%= bannedUser[3] %></td>
                                         <% } else { %>
                                             <!-- If it's just an IP address without additional data, show it as is -->
-                                            <td style="text-align: center !important;"><a href="https://dnschecker.org/ip-location.php?ip=<%= bannedUser %>" target="_blank"><%= bannedUser %></a></td>
+                                            <td style="text-align: center !important;"><a href="https://iplocation.io/ip/<%= bannedUser %>" target="_blank"><%= bannedUser %></a></td>
                                             <td>Unknown</td>
                                             <td class="text-bold">Unknown</td>
                                             <td>Unknown</td>
@@ -728,6 +723,7 @@
     <script src="js/ver.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/settings.js"></script>
+    <script src="js/tooltip.js"></script>
     <script src="js/dropdown.js"></script>
     <script src="js/setup.js"></script>
     <script src="js/confighandler.js"></script>

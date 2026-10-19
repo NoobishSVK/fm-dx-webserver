@@ -7,13 +7,6 @@ const storage = require('./storage');
 const consoleCmd = require('./console');
 const { serverConfig, configExists, configSave } = require('./server_config');
 
-let geoip = null;
-try {
-  geoip = require('geoip-lite');
-} catch (e) {
-  geoip = null;
-}
-
 function parseMarkdown(parsed) {
   parsed = parsed.replace(/<\/?[^>]+(>|$)/g, '');
   
@@ -64,102 +57,68 @@ function authenticateWithXdrd(client, salt, password) {
   client.write('x\n');
 }
 
-const ipCache = new Map();
-const ipInfoInFlight = new Map();
+const cleanIp = (ip) => String(ip || '').replace(/\s+/g, '').replace(/^::ffff:/, '').split('%')[0];
 
-function fetchIpWhoisInfo(ip, timeoutMs = 1500) {
+// All IPs from x-forwarded-for (or the socket), normalized
+function getClientIps(req) {
+  const raw = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+  return raw.split(',').map(cleanIp).filter(Boolean);
+}
+
+const getClientIp = (req) => getClientIps(req)[0];
+
+// Who is connecting, from the request
+function getClient(req) {
+  const ip = getClientIp(req);
+  return {
+    ip,
+    // LAN/loopback, exempt from the per-IP connection limit
+    isLocal: !ip || ip === '127.0.0.1' || ip === '::1' || /^(10\.|192\.168\.|172\.16\.)/.test(ip),
+    // Server-side localhost socket (no browser Origin), not counted as a user
+    isInternal: ip === '127.0.0.1' && !req.headers.origin?.trim(),
+  };
+}
+
+// Returns the matching ban entry. Any IP in the proxy chain matches, and an entry may hold several comma-separated IPs
+function isBanned(req) {
+  const ips = getClientIps(req);
+  return (serverConfig.webserver.banlist || []).find(entry =>
+    String(Array.isArray(entry) ? entry[0] : entry).split(',').some(ip => ips.includes(cleanIp(ip))));
+}
+
+function fetchIpInfo(ip, timeoutMs = 1500) {
   return new Promise((resolve) => {
     if (!ip || !net.isIP(ip)) return resolve({});
 
-    const url = `https://ipwho.is/${encodeURIComponent(ip)}`;
-    const req = https.get(url, { timeout: timeoutMs }, (res) => {
-      if (res.statusCode !== 200) {
-        res.resume();
-        return resolve({});
-      }
-
+    // ip-api.com free tier is HTTP only, 45 req/min
+    const req = http.get(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,isp,as`, { timeout: timeoutMs }, (res) => {
       let body = '';
       res.on('data', (chunk) => (body += chunk));
       res.on('end', () => {
         try {
           const data = JSON.parse(body);
-          if (!data || data.success === false) return resolve({});
-
-          const connection = data.connection || {};
-          const isp = connection.isp || connection.org;
-          const asnRaw = connection.asn;
-          const as =
-            typeof asnRaw === 'string'
-              ? asnRaw
-              : typeof asnRaw === 'number'
-                ? `AS${asnRaw}`
-                : undefined;
-
-          resolve({
-            isp: typeof isp === 'string' && isp.trim() ? isp.trim() : undefined,
-            as,
-          });
+          resolve(data.status === 'success' ? data : {});
         } catch (e) {
           resolve({});
         }
       });
     });
 
-    req.on('timeout', () => {
-      req.destroy();
-      resolve({});
-    });
-
+    req.on('timeout', () => req.destroy());
     req.on('error', () => resolve({}));
   });
 }
 
+const ipInfoCache = new Map(); // ip -> Promise of info, shared by parallel connects
+
 function handleConnect(clientIp, currentUsers, ws, callback) {
-  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '').split('%')[0];
-
-  if (ipCache.has(normalizedClientIp)) {
-    processConnection(clientIp, ipCache.get(normalizedClientIp), currentUsers, ws, callback);
-    return;
+  if (!ipInfoCache.has(clientIp)) {
+    ipInfoCache.set(clientIp, fetchIpInfo(clientIp).then((info) => {
+      if (!info.country) ipInfoCache.delete(clientIp); // retry failed lookups next time
+      return info;
+    }));
   }
-
-  if (ipInfoInFlight.has(normalizedClientIp)) {
-    ipInfoInFlight
-      .get(normalizedClientIp)
-      .then((info) => processConnection(clientIp, info, currentUsers, ws, callback))
-      .catch(() => processConnection(clientIp, { country: undefined }, currentUsers, ws, callback));
-    return;
-  }
-
-  let locationInfo = { country: undefined };
-  if (geoip && normalizedClientIp && net.isIP(normalizedClientIp)) {
-    const geo = geoip.lookup(normalizedClientIp);
-    if (geo) {
-      locationInfo = {
-        country: geo.country,
-        countryCode: geo.country,
-        city: geo.city,
-        regionName: geo.region,
-      };
-    }
-  } else if (!geoip) {
-    consoleCmd.logWarn('geoip-lite is not installed; location will be Unknown.');
-  }
-
-  const inFlightPromise = fetchIpWhoisInfo(normalizedClientIp)
-    .then((whoisInfo) => {
-      const merged = { ...locationInfo, ...whoisInfo };
-      ipCache.set(normalizedClientIp, merged);
-      ipInfoInFlight.delete(normalizedClientIp);
-      return merged;
-    })
-    .catch(() => {
-      ipCache.set(normalizedClientIp, locationInfo);
-      ipInfoInFlight.delete(normalizedClientIp);
-      return locationInfo;
-    });
-
-  ipInfoInFlight.set(normalizedClientIp, inFlightPromise);
-  inFlightPromise.then((info) => processConnection(clientIp, info, currentUsers, ws, callback));
+  ipInfoCache.get(clientIp).then((info) => processConnection(clientIp, info, currentUsers, ws, callback));
 }
 
 let bannedASCache = { data: null, timestamp: 0 };
@@ -207,7 +166,6 @@ const recentBannedIps = new Map(); // Store clientIp -> timestamp
 function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
   const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
   const connectionTime = new Date().toLocaleString([], options);
-  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
 
   fetchBannedAS((error, bannedAS) => {
     if (error) {
@@ -216,11 +174,11 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
 
     if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
       const now = Date.now();
-      const lastSeen = recentBannedIps.get(normalizedClientIp) || 0;
+      const lastSeen = recentBannedIps.get(clientIp) || 0;
 
       if (now - lastSeen > 300 * 1000) {
-        consoleCmd.logWarn(`Banned AS list client kicked (${normalizedClientIp})`);
-        recentBannedIps.set(normalizedClientIp, now);
+        consoleCmd.logWarn(`Banned AS list client kicked (${clientIp})`);
+        recentBannedIps.set(clientIp, now);
       }
 
       return callback("User banned");
@@ -251,7 +209,7 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
     });
 
     consoleCmd.logInfo(
-      `Web client \x1b[32mconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocationForLog}`
+      `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocationForLog}`
     );
 
     callback("User allowed");
@@ -350,73 +308,51 @@ function checkLatency(host, port = 80, timeout = 2000) {
   });
 }
 
-function antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, lengthCommands, endpointName, maxPayloadSize = 1024 * 1024) {
-  const rawCommand = message.toString();
-  const command = rawCommand.replace(/[\r\n]+/g, '');
+// Returns a per-connection filter: (message) => command
+function createAntispam(ws, clientIp, lengthCommands, endpointName, maxPayloadSize = 1024 * 1024) {
+  const userCommands = {};
+  let recentCommands = [];
+  let lastWarn = 0;
 
-  const now = Date.now();
-  const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
-  if (endpointName === 'text') consoleCmd.logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
+  return (message) => {
+    const command = message.toString().replace(/[\r\n]+/g, '');
+    const now = Date.now();
+    if (endpointName === 'text') consoleCmd.logDebug(`Command received from \x1b[90m${clientIp}\x1b[0m: ${command}`);
 
-  if (command.length > maxPayloadSize) {
-    consoleCmd.logWarn(`Command from \x1b[90m${normalizedClientIp}\x1b[0m on \x1b[90m/${endpointName}\x1b[0m exceeded maximum payload size (${parseInt(command.length / 1024)} KB / ${parseInt(maxPayloadSize / 1024)} KB).`);
-    return "";
-  }
-
-  // Initialize user command history if not present
-  if (!userCommandHistory[clientIp]) {
-      userCommandHistory[clientIp] = [];
-  }
-  
-  // Record the current timestamp for the user
-  userCommandHistory[clientIp].push(now);
-  
-  // Remove timestamps older than 20 ms from the history
-  userCommandHistory[clientIp] = userCommandHistory[clientIp].filter(timestamp => now - timestamp <= 20);
-  
-  // Check if there are 8 or more commands in the last 20 ms
-  if (userCommandHistory[clientIp].length >= 8) {
-      consoleCmd.logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
-      
-    // Check if the normalized IP is already in the banlist
-    const isAlreadyBanned = serverConfig.webserver.banlist.some(banEntry => banEntry[0] === normalizedClientIp);
-
-    if (!isAlreadyBanned) {
-        // Add the normalized IP to the banlist
-        serverConfig.webserver.banlist.push([normalizedClientIp, 'Unknown', Date.now(), '[Auto ban] Spam']);
-        consoleCmd.logInfo(`User \x1b[90m${normalizedClientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
-        configSave();
+    if (command.length > maxPayloadSize) {
+      consoleCmd.logWarn(`Command from \x1b[90m${clientIp}\x1b[0m on \x1b[90m/${endpointName}\x1b[0m exceeded maximum payload size (${parseInt(command.length / 1024)} KB / ${parseInt(maxPayloadSize / 1024)} KB).`);
+      return "";
     }
-      
+
+    // 8 or more commands within 20 ms = bot, auto ban
+    recentCommands = recentCommands.filter(t => now - t <= 20);
+    recentCommands.push(now);
+    if (recentCommands.length >= 8) {
+      consoleCmd.logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming with rapid commands. Connection will be terminated and user will be banned.`);
+
+      if (!serverConfig.webserver.banlist.some(banEntry => banEntry[0] === clientIp)) {
+        serverConfig.webserver.banlist.push([clientIp, 'Unknown', Date.now(), '[Auto ban] Spam']);
+        consoleCmd.logInfo(`User \x1b[90m${clientIp}\x1b[0m has been added to the banlist due to extreme spam.`);
+        configSave();
+      }
+
       ws.close(1008, 'Bot-like behavior detected');
-      return command; // Return command value before closing connection
-  }
+      return command;
+    }
 
-  // Update the last message time for general spam detection
-  lastMessageTime = now;
-
-  // Initialize command history for rate-limiting checks
-  if (!userCommands[command]) {
-      userCommands[command] = [];
-  }
-
-  // Record the current timestamp for this command
-  userCommands[command].push(now);
-
-  // Remove timestamps older than 1 second
-  userCommands[command] = userCommands[command].filter(timestamp => now - timestamp <= 1000);
-
-  // If command count exceeds limit, close connection
-  if (userCommands[command].length > lengthCommands) {
-      if (now - lastWarn.time > 1000) { // Check if 1 second has passed
-          consoleCmd.logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}" in /${endpointName}. Connection will be terminated.`);
-          lastWarn.time = now; // Update the last warning time
+    // Same command more than lengthCommands times per second = kick
+    userCommands[command] = (userCommands[command] || []).filter(t => now - t <= 1000);
+    userCommands[command].push(now);
+    if (userCommands[command].length > lengthCommands) {
+      if (now - lastWarn > 1000) {
+        consoleCmd.logWarn(`User \x1b[90m${clientIp}\x1b[0m is spamming command "${command}" in /${endpointName}. Connection will be terminated.`);
+        lastWarn = now;
       }
       ws.close(1008, 'Spamming detected');
-      return command; // Return command value before closing connection
-  }
+    }
 
-  return command; // Return command value for normal execution
+    return command;
+  };
 }
 
 const escapeHtml = (unsafe) => {
@@ -430,5 +366,5 @@ const escapeHtml = (unsafe) => {
 
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, antispamProtection, escapeHtml
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, createAntispam, getClient, getClientIp, isBanned, escapeHtml
 }

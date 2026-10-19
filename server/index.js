@@ -2,7 +2,6 @@
 const express = require('express');
 const endpoints = require('./endpoints');
 const session = require('express-session');
-const bodyParser = require('body-parser');
 const http = require('http');
 const readline = require('readline');
 const app = express();
@@ -101,14 +100,14 @@ let currentUsers = 0;
 let serialport;
 let timeoutAntenna;
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 const sessionMiddleware = session({
   secret: 'GTce3tN6U8odMwoI',
   resave: false,
   saveUninitialized: true,
 });
 app.use(sessionMiddleware);
-app.use(bodyParser.json());
+app.use(express.json());
 
 connectToXdrd();
 connectToSerial();
@@ -370,49 +369,25 @@ setInterval(() => {
 
 wss.on('connection', (ws, request) => {
     const output = serverConfig.xdrd.wirelessConnection ? client : serialport;
-    let clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-    const userCommandHistory = {};
-    const normalizedClientIp = clientIp?.replace(/^::ffff:/, '');
-
-    if (clientIp && serverConfig.webserver.banlist?.includes(clientIp)) {
-        ws.close(1008, 'Banned IP');
-        return;
-    }
-
-    if (clientIp && clientIp.includes(',')) {
-        clientIp = clientIp.split(',')[0].trim();
-    }
+    const { ip: clientIp, isLocal, isInternal } = helpers.getClient(request);
 
     // Per-IP limit connection open
-    if (clientIp) {
-        const isLocalIp = (
-            clientIp === '127.0.0.1' ||
-            clientIp === '::1' ||
-            clientIp === '::ffff:127.0.0.1' ||
-            clientIp.startsWith('192.168.') ||
-            clientIp.startsWith('10.') || 
-            clientIp.startsWith('172.16.')
-        );
-        if (!isLocalIp) {
-            if (!ipConnectionCounts.has(clientIp)) {
-                ipConnectionCounts.set(clientIp, 0);
+    if (!isLocal) {
+        const currentCount = ipConnectionCounts.get(clientIp) || 0;
+        if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+            ws.close(1008, 'Too many open connections from this IP');
+            const lastLogTime = ipLogTimestamps.get(clientIp) || 0;
+            const now = Date.now();
+            if (now - lastLogTime > IP_LOG_INTERVAL_MS) {
+                logWarn(`Web client \x1b[31mclosed: limit exceeded\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
+                ipLogTimestamps.set(clientIp, now);
             }
-            const currentCount = ipConnectionCounts.get(clientIp);
-            if (currentCount >= MAX_CONNECTIONS_PER_IP) {
-                ws.close(1008, 'Too many open connections from this IP');
-                const lastLogTime = ipLogTimestamps.get(clientIp) || 0;
-                const now = Date.now();
-                if (now - lastLogTime > IP_LOG_INTERVAL_MS) {
-                    logWarn(`Web client \x1b[31mclosed: limit exceeded\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);
-                    ipLogTimestamps.set(clientIp, now);
-                }
-                return;
-            }
-            ipConnectionCounts.set(clientIp, currentCount + 1);
+            return;
         }
+        ipConnectionCounts.set(clientIp, currentCount + 1);
     }
 
-    if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+    if (!isInternal) {
       currentUsers++;
     }
 
@@ -431,14 +406,13 @@ wss.on('connection', (ws, request) => {
     }
   });  
 
-    const userCommands = {};
-    let lastWarn = { time: 0 };
+    const antispam = helpers.createAntispam(ws, clientIp, 18, 'text', 16 * 1024);
 
     ws.on('message', (message) => {
-        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '18', 'text', 16 * 1024);
+        const command = antispam(message);
 
-        if (!clientIp.includes("127.0.0.1")) {
-            if (((command.startsWith('X') || command.startsWith('Y')) && !request.session.isAdminAuthenticated) || 
+        if (clientIp !== '127.0.0.1') {
+            if (((command.startsWith('X') || command.startsWith('Y') || command.startsWith('C')) && !request.session.isAdminAuthenticated) || 
                ((command.startsWith('F') || command.startsWith('W')) && serverConfig.bwSwitch === false)) {
                 logWarn(`User \x1b[90m${clientIp}\x1b[0m attempted to send a potentially dangerous command: ${command.slice(0, 64)}.`);
                 return;
@@ -488,22 +462,12 @@ wss.on('connection', (ws, request) => {
 
     ws.on('close', (code, reason) => {
       // Per-IP limit connection closed
-      if (clientIp) {
-        const isLocalIp = (
-          clientIp === '127.0.0.1' ||
-          clientIp === '::1' ||
-          clientIp === '::ffff:127.0.0.1' ||
-          clientIp.startsWith('192.168.') ||
-          clientIp.startsWith('10.') || 
-          clientIp.startsWith('172.16.')
-        );
-        if (!isLocalIp) {
-          const current = ipConnectionCounts.get(clientIp) || 1;
-          ipConnectionCounts.set(clientIp, Math.max(0, current - 1));
-        }
+      if (!isLocal) {
+        const current = ipConnectionCounts.get(clientIp) || 1;
+        ipConnectionCounts.set(clientIp, Math.max(0, current - 1));
       }
 
-      if (clientIp !== '::ffff:127.0.0.1' || (request.connection && request.connection.remoteAddress && request.connection.remoteAddress !== '::ffff:127.0.0.1') || (request.headers && request.headers['origin'] && request.headers['origin'].trim() !== '')) {
+      if (!isInternal) {
         currentUsers--;
       }
         dataHandler.showOnlineUsers(currentUsers);
@@ -585,7 +549,7 @@ wss.on('connection', (ws, request) => {
         }
 
         if (code !== 1008) {
-          logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${normalizedClientIp}) \x1b[90m[${currentUsers}]`);
+          logInfo(`Web client \x1b[31mdisconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]`);
         }
     });
 
@@ -594,19 +558,10 @@ wss.on('connection', (ws, request) => {
 
 // Additional web socket for using plugins
 pluginsWss.on('connection', (ws, request) => { 
-    const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-    const userCommandHistory = {};
-    if (serverConfig.webserver.banlist?.includes(clientIp)) {
-      ws.close(1008, 'Banned IP');
-      return;
-    }
-    // Anti-spam tracking for each client
-    const userCommands = {};
-    let lastWarn = { time: 0 };
+    const antispam = helpers.createAntispam(ws, helpers.getClientIp(request), 10, 'data_plugins');
 
     ws.on('message', message => {
-        // Anti-spam
-        const command = helpers.antispamProtection(message, clientIp, ws, userCommands, lastWarn, userCommandHistory, '10', 'data_plugins');
+        const command = antispam(message);
 
         let messageData;
 
@@ -659,9 +614,9 @@ function isPortOpen(host, port, timeout = 1000) {
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
   
-  const clientIp = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-  if (serverConfig.webserver.banlist?.includes(clientIp)) {
-    socket.destroy();
+  // Banned users never get a WebSocket on any path
+  if (helpers.isBanned(request)) {
+    socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
     return;
   }
 
