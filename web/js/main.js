@@ -890,7 +890,7 @@ const $dataRt0 = $('#data-rt0 span');
 const $dataRt1 = $('#data-rt1 span');
 const $dataAntInput = $('.data-ant input');
 const $dataAgcInput = $('.data-agc input');
-const $dataBwInput = $('.data-bw input');
+const $dataBw = $('.data-bw');
 const $dataStationContainer = $('#data-station-container');
 const $dataTp = $('.data-tp');
 const $dataTa = $('.data-ta');
@@ -965,6 +965,32 @@ function updateDatasetValIfChanged($element, dataLabel, newVal) {
     }
 }
 
+function updateBandwidthControls(frequency, bandwidth) {
+    const numericFrequency = Number(frequency);
+    const isAmBand = Number.isFinite(numericFrequency) && numericFrequency < 30;
+
+    $dataBw.each(function() {
+        const $dropdown = $(this);
+        const $amOptions = $dropdown.find('.option[data-band="am"]');
+        const hasAmBandwidths = $amOptions.length > 0;
+        const activeBand = hasAmBandwidths && isAmBand ? 'am' : 'fm';
+        let $options = $dropdown.find('.option');
+
+        if (hasAmBandwidths) {
+            $options.prop('hidden', true);
+            $options = $options.filter(`[data-band="${activeBand}"]`).prop('hidden', false);
+        }
+
+        let $matchingOption = $options.filter(`[data-value="${bandwidth}"]`).first();
+
+        if ($matchingOption.length === 0) {
+            $matchingOption = $options.filter(`[data-value2="${bandwidth}"]`).first();
+        }
+
+        $dropdown.find('input').val($matchingOption.text() || '');
+    });
+}
+
 // Main function to update data elements, optimized
 const updateDataElements = throttle(function(parsedData) {
     updateTextIfChanged($dataFrequency, parsedData.freq);
@@ -1025,11 +1051,7 @@ const updateDataElements = throttle(function(parsedData) {
         $dataAgcInput.val($('.data-agc li[data-value="' + parsedData.agc + '"]').first().text());
     }
     
-    if (parsedData.bw < 500) {
-        $dataBwInput.val($('.data-bw li[data-value2="' + parsedData.bw + '"]').first().text());
-    } else {
-        $dataBwInput.val($('.data-bw li[data-value="' + parsedData.bw + '"]').first().text());
-    }
+    updateBandwidthControls(parsedData.freq, parsedData.bw);
     
     if (parsedData.txInfo.tx.length > 1) {
         updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx.replace(/%/g, '%25'));

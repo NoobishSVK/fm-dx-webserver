@@ -6,7 +6,11 @@ const profile = Array.isArray(tunerProfiles)
     : null;
 
 if (Array.isArray(profile?.fmBandwidths)) {
-    options = profile.fmBandwidths;
+    options.push(...profile.fmBandwidths.map((option) => ({ ...option, band: 'fm' })));
+}
+
+if (Array.isArray(profile?.amBandwidths)) {
+    options.push(...profile.amBandwidths.map((option) => ({ ...option, band: 'am' })));
 }
 %>
 
@@ -14,7 +18,7 @@ if (Array.isArray(profile?.fmBandwidths)) {
   <input type="text" placeholder="Auto" readonly tabindex="0">
   <ul class="options <%= cssClassOptions %>" tabindex="-1">
     <% options.forEach(function(opt) { %>
-      <li class="option" tabindex="0" data-value="<%= opt.value %>" <%= opt.value2 !== undefined ? 'data-value2="' + opt.value2 + '"' : '' %>><%= opt.label %></li>
+      <li class="option" tabindex="0" data-band="<%= opt.band %>" data-value="<%= opt.value %>" <% if (opt.value2 !== undefined) { %>data-value2="<%= opt.value2 %>"<% } %> <%= opt.band === 'am' ? 'hidden' : '' %>><%= opt.label %></li>
     <% }); %>
   </ul>
 </div>
