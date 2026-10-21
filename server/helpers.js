@@ -230,7 +230,7 @@ function formatUptime(uptimeInSeconds) {
 
 let incompleteDataBuffer = '';
 
-function resolveDataBuffer(data, wss, rdsWss) {
+function resolveDataBuffer(data, wss, rdsWss, onBandChange) {
   var receivedData = incompleteDataBuffer + data.toString();
   const isIncomplete = (receivedData.slice(-1) != '\n');
   
@@ -248,7 +248,7 @@ function resolveDataBuffer(data, wss, rdsWss) {
   }
   
   if (receivedData.length) {
-        dataHandler.handleData(wss, receivedData, rdsWss);
+        dataHandler.handleData(wss, receivedData, rdsWss, onBandChange);
     };
 }
 

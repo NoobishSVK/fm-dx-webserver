@@ -90,7 +90,7 @@ function rdsReset() {
   }
 }
 
-function handleData(wss, receivedData, rdsWss) {
+function handleData(wss, receivedData, rdsWss, onBandChange) {
   // Retrieve the last update time for this client
   const currentTime = Date.now();
 
@@ -113,6 +113,7 @@ function handleData(wss, receivedData, rdsWss) {
         break;
       case receivedLine.startsWith('T'): // Frequency
         modifiedData = receivedLine.substring(1).split(",")[0];
+        const previousFrequency = Number(dataToSend.freq);
 
         rdsReset();
         if((modifiedData / 1000).toFixed(3) == dataToSend.freq) {
@@ -130,6 +131,13 @@ function handleData(wss, receivedData, rdsWss) {
           rdsWss.clients.forEach((client) => {
             client.send("G:\r\nRESET-------\r\n\r\n");
           });
+
+          const currentFrequency = Number(dataToSend.freq);
+          if (previousFrequency >= 30 && currentFrequency < 30 && typeof onBandChange === 'function') {
+            onBandChange('am');
+          } else if (previousFrequency < 30 && currentFrequency >= 30 && typeof onBandChange === 'function') {
+            onBandChange('fm');
+          }
         }
         break;
       case receivedLine.startsWith('Z'): // Antenna
