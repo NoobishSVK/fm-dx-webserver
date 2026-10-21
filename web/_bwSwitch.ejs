@@ -18,7 +18,7 @@ if (Array.isArray(profile?.amBandwidths)) {
   <input type="text" placeholder="Auto" readonly tabindex="0">
   <ul class="options <%= cssClassOptions %>" tabindex="-1">
     <% options.forEach(function(opt) { %>
-      <li class="option" tabindex="0" data-band="<%= opt.band %>" data-value="<%= opt.value %>" <%= opt.value2 !== undefined ? 'data-value2="' + opt.value2 + '"' : '' %> <%= opt.band === 'am' ? 'hidden' : '' %>><%= opt.label %></li>
+      <li class="option" tabindex="0" data-band="<%= opt.band %>" data-value="<%= opt.value %>" <% if (opt.value2 !== undefined) { %>data-value2="<%= opt.value2 %>"<% } %> <%= opt.band === 'am' ? 'hidden' : '' %>><%= opt.label %></li>
     <% }); %>
   </ul>
 </div>

@@ -968,7 +968,6 @@ function updateDatasetValIfChanged($element, dataLabel, newVal) {
 function updateBandwidthControls(frequency, bandwidth) {
     const numericFrequency = Number(frequency);
     const isAmBand = Number.isFinite(numericFrequency) && numericFrequency < 30;
-    const bandwidthAttribute = Number(bandwidth) < 500 ? 'data-value2' : 'data-value';
 
     $dataBw.each(function() {
         const $dropdown = $(this);
@@ -982,9 +981,11 @@ function updateBandwidthControls(frequency, bandwidth) {
             $options = $options.filter(`[data-band="${activeBand}"]`).prop('hidden', false);
         }
 
-        const $matchingOption = $options
-            .filter(`[${bandwidthAttribute}="${bandwidth}"]`)
-            .first();
+        let $matchingOption = $options.filter(`[data-value="${bandwidth}"]`).first();
+
+        if ($matchingOption.length === 0) {
+            $matchingOption = $options.filter(`[data-value2="${bandwidth}"]`).first();
+        }
 
         $dropdown.find('input').val($matchingOption.text() || '');
     });

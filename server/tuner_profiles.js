@@ -21,6 +21,7 @@ const tunerProfiles = [
       { value: 311000, label: '311 kHz' }
     ],
     amBandwidths: [
+      { value: 0, value2: -1, label: 'Auto' },
       { value: 3000, value2: 0, label: '3 kHz' },
       { value: 4000, value2: 1, label: '4 kHz' },
       { value: 6000, value2: 2, label: '6 kHz' },
