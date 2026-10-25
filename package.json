@@ -4,6 +4,7 @@
   "description": "FM DX Webserver",
   "main": "index.js",
   "scripts": {
+    "test": "node --test test/*.test.js",
     "debug": "node index.js --debug",
     "debug_ffmpeg": "node index.js --ffmpegdebug",
     "debug_full": "node index.js --debug --ffmpegdebug",

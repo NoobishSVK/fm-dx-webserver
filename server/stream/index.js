@@ -3,6 +3,13 @@ const { configName, serverConfig, configUpdate, configSave, configExists } = req
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const checkFFmpeg = require('./checkFFmpeg');
 const audioServer = require('./3las.server');
+const {
+    buildArecordArgs,
+    containsAlsaSetupError,
+    containsAlsaXrun,
+    getAlsaFallbackProfile,
+    resolveAlsaLatencyProfile
+} = require('./linux_capture');
 
 const consoleLogTitle = '[Audio Stream]';
 
@@ -33,7 +40,7 @@ function checkAudioUtilities() {
     }
 }
 
-function buildCommand(ffmpegPath) {
+function buildCommand(ffmpegPath, alsaLatencyProfile) {
     const inputDevice = serverConfig.audio.audioDevice || 'Stereo Mix';
     const audioChannels = serverConfig.audio.audioChannels || 2;
     const webPort = Number(serverConfig.webserver.webserverPort);
@@ -95,18 +102,18 @@ function buildCommand(ffmpegPath) {
         if (!serverConfig.audio.ffmpeg) {
             const prefix = serverConfig.audio.softwareMode ? 'plug' : '';
             const device = `${prefix}${serverConfig.audio.audioDevice}`;
+            const arecord = buildArecordArgs(
+                device,
+                audioChannels,
+                alsaLatencyProfile || serverConfig.audio.alsaLatencyProfile
+            );
             logInfo(`${consoleLogTitle} Platform: Linux. Using "alsa" input.`);
             return {
                 // command not used if arecordArgs are used
                 command: `while true; do arecord -D "${device}" -f S16_LE -r 48000 -c ${audioChannels} -t raw; done`,
                 args: [],
-                arecordArgs: [
-                    '-D', device,
-                    '-f', 'S16_LE',
-                    '-r', '48000',
-                    '-c', audioChannels,
-                    '-t', 'raw'
-                ],
+                arecordArgs: arecord.args,
+                alsaLatencyProfile: arecord.profile,
                 ffmpegArgs: []
             };
         } else {
@@ -319,40 +326,110 @@ checkFFmpeg().then((ffmpegPath) => {
         }
 
         let currentArecord = null;
+        let arecordRestartTimer = null;
+        let audioServerRunning = false;
+        let shuttingDown = false;
+        let xrunTimestamps = [];
+        let activeAlsaProfile = resolveAlsaLatencyProfile(serverConfig.audio.alsaLatencyProfile);
+
+        const XRUN_LIMIT = 3;
+        const XRUN_WINDOW_MS = 30000;
 
         process.on('exit', () => {
             if (currentArecord) currentArecord.kill('SIGINT');
         });
 
         process.on('SIGINT', () => {
+            shuttingDown = true;
+            if (arecordRestartTimer) clearTimeout(arecordRestartTimer);
             if (currentArecord) currentArecord.kill('SIGINT');
             process.exit();
         });
 
+        function scheduleArecordRestart(delay = 2000) {
+            if (shuttingDown || arecordRestartTimer) return;
+
+            arecordRestartTimer = setTimeout(() => {
+                arecordRestartTimer = null;
+                startArecord();
+            }, delay);
+        }
+
+        function attachAudioInput(stream, processInstance) {
+            audioServer.waitUntilReady.then(() => {
+                if (processInstance !== currentArecord) return;
+
+                if (audioServerRunning) {
+                    audioServer.Server.SetInput(stream);
+                } else {
+                    audioServer.Server.StdIn = stream;
+                    audioServer.Server.Run();
+                    audioServerRunning = true;
+                }
+                connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn`);
+            });
+        }
+
+        function fallbackAlsaProfile(arecord, reason) {
+            if (arecord.fallbackRequested) return;
+
+            const fallbackName = getAlsaFallbackProfile(activeAlsaProfile.name);
+            if (!fallbackName) {
+                logWarn(`${consoleLogTitle} ${reason}; no safer ALSA latency profile is available.`);
+                return;
+            }
+
+            const previousName = activeAlsaProfile.name;
+            activeAlsaProfile = resolveAlsaLatencyProfile(fallbackName);
+            arecord.fallbackRequested = true;
+            logWarn(`${consoleLogTitle} ${reason} on the ${previousName} profile. Falling back to ${fallbackName}.`);
+            arecord.kill('SIGINT');
+        }
+
+        function handleArecordXrun(arecord) {
+            const now = Date.now();
+            xrunTimestamps = xrunTimestamps.filter((timestamp) => now - timestamp <= XRUN_WINDOW_MS);
+            xrunTimestamps.push(now);
+
+            if (xrunTimestamps.length < XRUN_LIMIT) return;
+
+            xrunTimestamps = [];
+            fallbackAlsaProfile(arecord, 'Repeated ALSA overruns');
+        }
+
         function startArecord() {
             if (!serverConfig.audio.ffmpeg) {
-                // Spawn the arecord loop
-                logDebug(`${consoleLogTitle} Launching arecord with args: ${commandDef.arecordArgs.join(' ')}`);
+                const arecordCommand = buildCommand(ffmpegPath, activeAlsaProfile.name);
+                activeAlsaProfile = arecordCommand.alsaLatencyProfile;
+                const latencyDescription = activeAlsaProfile.bufferTime === null
+                    ? 'system defaults'
+                    : `${activeAlsaProfile.bufferTime / 1000} ms buffer, ${activeAlsaProfile.periodTime / 1000} ms period`;
+                logInfo(`${consoleLogTitle} ALSA latency profile: ${activeAlsaProfile.name} (${latencyDescription}).`);
+                logDebug(`${consoleLogTitle} Launching arecord with args: ${arecordCommand.arecordArgs.join(' ')}`);
 
-                //const arecord = spawn(commandDef.command, { shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
-                const arecord = spawn('arecord', commandDef.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+                const arecord = spawn('arecord', arecordCommand.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
                 currentArecord = arecord;
 
-                audioServer.waitUntilReady.then(() => {
-                    audioServer.Server.StdIn = arecord.stdout;
-                    audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
-                });
+                attachAudioInput(arecord.stdout, arecord);
 
                 arecord.stderr.on('data', (data) => {
-                    logFfmpeg(`[arecord stderr]: ${data}`);
+                    const message = data.toString();
+                    logFfmpeg(`[arecord stderr]: ${message}`);
+                    if (containsAlsaSetupError(message)) {
+                        fallbackAlsaProfile(arecord, 'ALSA rejected the requested timing');
+                    } else if (containsAlsaXrun(message)) {
+                        handleArecordXrun(arecord);
+                    }
                 });
 
-                arecord.on('exit', (code) => {
-                    logFfmpeg(`[arecord exited] with code ${code}`);
-                    if (code !== 0) {
-                        setTimeout(startArecord, 2000);
-                    }
+                arecord.on('error', (error) => {
+                    logError(`${consoleLogTitle} Failed to start arecord: ${error.message}`);
+                });
+
+                arecord.on('exit', (code, signal) => {
+                    if (currentArecord === arecord) currentArecord = null;
+                    logFfmpeg(`[arecord exited] with ${signal ? `signal ${signal}` : `code ${code}`}`);
+                    scheduleArecordRestart(signal === 'SIGINT' ? 250 : 2000);
                 });
             }
         }

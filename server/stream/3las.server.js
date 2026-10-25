@@ -148,6 +148,7 @@ class StreamServer {
         this.SamplesCount = this.SampleRate / 100;
         this.Samples = new Int16Array(this.Channels * this.SamplesCount);
         this.SamplesPosition = 0;
+        this.StdInDataHandler = this.OnStdInData.bind(this);
     }
     Run() {
         this.Server = new ws.Server({
@@ -162,12 +163,21 @@ class StreamServer {
             });
         };
         this.Server.on('connection', this.OnServerConnection.bind(this));
-        if (!this.StdIn) {
+        const input = this.StdIn;
+        this.StdIn = null;
+        if (!this.SetInput(input)) {
           logError('[Stream] No audio input stream defined (this.StdIn is null)');
-          return;
         }
-        this.StdIn.on('data', this.OnStdInData.bind(this));
+    }
+    SetInput(stream) {
+        if (this.StdIn) {
+            this.StdIn.removeListener('data', this.StdInDataHandler);
+        }
+        this.StdIn = stream;
+        if (!this.StdIn) return false;
+        this.StdIn.on('data', this.StdInDataHandler);
         this.StdIn.resume();
+        return true;
     }
     BroadcastBinary(format, buffer) {
         this.FallbackClients[format].forEach((function each(client) {

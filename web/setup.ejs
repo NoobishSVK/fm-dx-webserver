@@ -220,6 +220,15 @@
                         <h3>Experimental</h3>
                         <p>If you use a USB audio card on Linux, enabling this option might fix your audio issues.</p>
                         <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                        <p>Use Stable if low-latency capture produces overruns or gaps.</p>
+                        <%- include('_components', { component: 'dropdown', id: 'audio-alsa-latency-dropdown', inputId: 'audio-alsaLatencyProfile', label: 'ALSA latency profile', cssClass: '', placeholder: 'Low latency',
+                        options: [
+                            { value: 'experimental', label: 'Experimental (20 ms)' },
+                            { value: 'low', label: 'Low latency (40 ms)' },
+                            { value: 'stable', label: 'Stable (80 ms)' },
+                            { value: 'system', label: 'System default (compatibility)' }
+                        ]
+                        }) %>
                     </div>
                 </div>
                 <div class="flex-container">

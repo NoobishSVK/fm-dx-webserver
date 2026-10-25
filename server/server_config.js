@@ -47,6 +47,7 @@ let serverConfig = {
     audioBitrate: "128k",
     audioBoost: false,
     softwareMode: false,
+    alsaLatencyProfile: "low",
     startupVolume: "0.95",
     ffmpeg: false,
     samplerateOffset: "0"
