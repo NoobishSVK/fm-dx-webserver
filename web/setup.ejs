@@ -218,8 +218,8 @@
                     </div>
                     <div class="panel-50 p-bottom-20">
                         <h3>Experimental</h3>
-                        <p>If you use a USB audio card on Linux, enabling this option might fix your audio issues.</p>
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                        <p>Enable this on Linux only if direct capture fails or produces no audio. ALSA may resample the device to 48 kHz and convert its sample format or channel count, which can add some latency.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA compatibility mode', id: 'audio-softwareMode'}) %>
                         <p>Use Stable if low-latency capture produces overruns or gaps.</p>
                         <%- include('_components', { component: 'dropdown', id: 'audio-alsa-latency-dropdown', inputId: 'audio-alsaLatencyProfile', label: 'ALSA latency profile', cssClass: '', placeholder: 'Low latency',
                         options: [
