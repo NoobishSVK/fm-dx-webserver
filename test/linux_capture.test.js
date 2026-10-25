@@ -8,8 +8,10 @@ const {
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
+    getAlsaCaptureDevice,
     getAlsaFallbackProfile,
     hasAudioCaptureStalled,
+    parseArecordDeviceList,
     resolveAlsaLatencyProfile
 } = require('../server/stream/linux_capture');
 
@@ -51,6 +53,29 @@ test('system profile preserves the previous arecord defaults', () => {
 
     assert.equal(command.args.includes('--buffer-time'), false);
     assert.equal(command.args.includes('--period-time'), false);
+});
+
+test('discovers every ALSA capture PCM endpoint', () => {
+    const output = `**** List of CAPTURE Hardware Devices ****
+card 1: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+card 2: Interface [Multi Input Interface], device 0: USB Audio [USB Audio]
+card 2: Interface [Multi Input Interface], device 1: USB Audio [USB Audio]
+card 2: Interface [Multi Input Interface], device 1: USB Audio [USB Audio]`;
+
+    assert.deepEqual(parseArecordDeviceList(output), [
+        { name: 'hw:Device,0' },
+        { name: 'hw:Interface,0' },
+        { name: 'hw:Interface,1' }
+    ]);
+});
+
+test('software mode only converts direct hardware devices', () => {
+    assert.equal(getAlsaCaptureDevice('hw:Device,0', true), 'plughw:Device,0');
+    assert.equal(getAlsaCaptureDevice('plughw:Device,0', true), 'plughw:Device,0');
+    assert.equal(getAlsaCaptureDevice('default', true), 'default');
+    assert.equal(getAlsaCaptureDevice('sysdefault:CARD=Device', true), 'sysdefault:CARD=Device');
+    assert.equal(getAlsaCaptureDevice('hw:Device,0', false), 'hw:Device,0');
 });
 
 test('recognizes ALSA overrun messages', () => {

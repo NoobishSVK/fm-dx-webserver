@@ -9,6 +9,7 @@ const {
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
+    getAlsaCaptureDevice,
     getAlsaFallbackProfile,
     hasAudioCaptureStalled,
     resolveAlsaLatencyProfile
@@ -86,8 +87,10 @@ function buildCommand(ffmpegPath, alsaLatencyProfile) {
         };
     } else {
         // Linux
-        const prefix = serverConfig.audio.softwareMode ? 'plug' : '';
-        const device = `${prefix}${serverConfig.audio.audioDevice}`;
+        const device = getAlsaCaptureDevice(
+            serverConfig.audio.audioDevice,
+            serverConfig.audio.softwareMode
+        );
         const arecord = buildArecordArgs(
             device,
             audioChannels,

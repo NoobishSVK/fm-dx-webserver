@@ -34,6 +34,31 @@ function getAlsaFallbackProfile(profileName) {
     return ALSA_PROFILE_FALLBACKS[name];
 }
 
+function getAlsaCaptureDevice(device, softwareMode) {
+    if (!softwareMode || typeof device !== 'string') return device;
+    if (/^plughw:/i.test(device)) return device;
+    if (/^hw:/i.test(device)) return device.replace(/^hw:/i, 'plughw:');
+    return device;
+}
+
+function parseArecordDeviceList(output) {
+    if (typeof output !== 'string') return [];
+
+    const devices = [];
+    const seen = new Set();
+    for (const line of output.split(/\r?\n/)) {
+        const match = line.match(/^card\s+\d+:\s*([^\s\[]+).*?,\s*device\s+(\d+):/i);
+        if (!match) continue;
+
+        const name = `hw:${match[1]},${match[2]}`;
+        if (!seen.has(name)) {
+            seen.add(name);
+            devices.push({ name });
+        }
+    }
+    return devices;
+}
+
 function buildArecordArgs(device, channels, profileName) {
     const profile = resolveAlsaLatencyProfile(profileName);
 
@@ -96,7 +121,9 @@ module.exports = {
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
+    getAlsaCaptureDevice,
     getAlsaFallbackProfile,
     hasAudioCaptureStalled,
+    parseArecordDeviceList,
     resolveAlsaLatencyProfile
 };
