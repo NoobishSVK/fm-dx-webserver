@@ -26,11 +26,12 @@
         setText("audio-stat-state", state.charAt(0).toUpperCase() + state.slice(1));
         setText("audio-stat-latency", stats.Connected ? formatMs(stats.LocalPlaybackLatencyMs) : "Waiting…");
         setText("audio-stat-buffer", stats.Connected ? formatMs(stats.ScheduledBufferMs) : "Waiting…");
+        setText("audio-stat-buffer-target", formatMs(stats.TargetBufferMs));
         setText("audio-stat-output", formatMs(stats.BrowserOutputMs));
         setText("audio-stat-bitrate", stats.ReceiveRateKbps > 0 ? Math.round(stats.ReceiveRateKbps) + " kbit/s" : "Waiting…");
 
         var packetTiming = stats.PacketIntervalMs > 0
-            ? Math.round(stats.PacketIntervalMs) + " ± " + Math.round(stats.PacketJitterMs) + " ms"
+            ? Math.round(stats.PacketIntervalMs) + " / " + Math.round(stats.PacketJitterMs) + " ms"
             : "Waiting…";
         setText("audio-stat-packets", packetTiming);
         setText("audio-stat-last-packet", stats.LastPacketAgeMs === null ? "Waiting…" : formatMs(stats.LastPacketAgeMs) + " ago");

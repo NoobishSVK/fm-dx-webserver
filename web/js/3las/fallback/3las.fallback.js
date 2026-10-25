@@ -10,7 +10,7 @@ var Fallback_Settings = /** @class */ (function () {
         ];
         this.MaxVolume = 1.0;
         this.AutoCorrectSpeed = false;
-        this.InitialBufferLength = 1.0 / 3.0;
+        this.InitialBufferLength = 0.2;
     }
     return Fallback_Settings;
 }());
@@ -132,13 +132,11 @@ var Fallback = /** @class */ (function () {
         var byteLength = data.byteLength || data.length || 0;
         if (this.LastPacketTime > 0) {
             var interval = now - this.LastPacketTime;
-            if (this.PacketIntervalMs === 0) {
-                this.PacketIntervalMs = interval;
+            if (interval <= 1000) {
+                this.PacketIntervals.push(interval);
+                if (this.PacketIntervals.length > 120)
+                    this.PacketIntervals.shift();
             }
-            else {
-                this.PacketIntervalMs += (interval - this.PacketIntervalMs) * 0.1;
-            }
-            this.PacketJitterMs += (Math.abs(interval - this.PacketIntervalMs) - this.PacketJitterMs) * 0.1;
         }
         this.LastPacketTime = now;
         this.StatsWindowBytes += byteLength;
@@ -164,23 +162,45 @@ var Fallback = /** @class */ (function () {
         this.StatsWindowStart = performance.now();
         this.ReceiveRateKbps = 0;
         this.LastPacketTime = 0;
-        this.PacketIntervalMs = 0;
-        this.PacketJitterMs = 0;
+        this.PacketIntervals = [];
+    };
+    Fallback.prototype.GetPercentile = function (values, percentile) {
+        if (values.length === 0)
+            return 0;
+        var sorted = values.slice().sort(function (a, b) { return a - b; });
+        var position = (sorted.length - 1) * percentile;
+        var lower = Math.floor(position);
+        var upper = Math.ceil(position);
+        if (lower === upper)
+            return sorted[lower];
+        return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+    };
+    Fallback.prototype.GetPacketTiming = function () {
+        var median = this.GetPercentile(this.PacketIntervals, 0.5);
+        var deviations = this.PacketIntervals.map(function (interval) {
+            return Math.abs(interval - median);
+        });
+        return {
+            IntervalMs: median,
+            JitterMs: this.GetPercentile(deviations, 0.95)
+        };
     };
     Fallback.prototype.GetStats = function () {
         var now = performance.now();
         this.UpdateReceiveRate(now);
         var playerStats = this.Player.GetStats();
+        var packetTiming = this.GetPacketTiming();
         var baseLatencyMs = Number.isFinite(this.Audio.baseLatency) ? this.Audio.baseLatency * 1000 : null;
         var outputLatencyMs = Number.isFinite(this.Audio.outputLatency) ? this.Audio.outputLatency * 1000 : null;
         var browserOutputMs = (baseLatencyMs || 0) + (outputLatencyMs || 0);
         return {
             Format: this.SelectedFormatName.toUpperCase(),
             ReceiveRateKbps: this.ReceiveRateKbps,
-            PacketIntervalMs: this.PacketIntervalMs,
-            PacketJitterMs: this.PacketJitterMs,
+            PacketIntervalMs: packetTiming.IntervalMs,
+            PacketJitterMs: packetTiming.JitterMs,
             LastPacketAgeMs: this.LastPacketTime > 0 ? now - this.LastPacketTime : null,
             ScheduledBufferMs: playerStats.ScheduledBufferMs,
+            TargetBufferMs: playerStats.TargetBufferMs,
             BrowserOutputMs: baseLatencyMs === null && outputLatencyMs === null ? null : browserOutputMs,
             LocalPlaybackLatencyMs: playerStats.ScheduledBufferMs + browserOutputMs,
             Underruns: playerStats.Underruns,
@@ -221,3 +241,7 @@ var Fallback = /** @class */ (function () {
     };
     return Fallback;
 }());
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Fallback: Fallback, Fallback_Settings: Fallback_Settings };
+}

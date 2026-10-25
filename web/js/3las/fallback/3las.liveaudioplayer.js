@@ -5,7 +5,7 @@
 var LiveAudioPlayer = /** @class */ (function () {
     function LiveAudioPlayer(audio, logger, maxVolume, startOffset, variableSpeed) {
         if (maxVolume === void 0) { maxVolume = 1.0; }
-        if (startOffset === void 0) { startOffset = 0.33; }
+        if (startOffset === void 0) { startOffset = 0.2; }
         if (variableSpeed === void 0) { variableSpeed = false; }
         this.Audio = audio;
         this.Logger = logger;
@@ -14,6 +14,9 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.VariableSpeed = variableSpeed;
         this.OffsetMin = this.StartOffset - LiveAudioPlayer.OffsetVariance;
         this.OffsetMax = this.StartOffset + LiveAudioPlayer.OffsetVariance;
+        this.TargetBufferLength = Math.min(LiveAudioPlayer.MaxBufferLength, Math.max(LiveAudioPlayer.MinBufferLength, startOffset));
+        this.LastUnderrunTime = Date.now();
+        this.LastBufferAdjustmentTime = this.LastUnderrunTime;
         // Set speed to default
         this.PlaybackSpeed = 1.0;
         // Reset variable for scheduling times
@@ -47,97 +50,65 @@ var LiveAudioPlayer = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    LiveAudioPlayer.prototype.UpdateAdaptiveBufferTarget = function () {
+        var now = Date.now();
+        if (this.TargetBufferLength <= LiveAudioPlayer.MinBufferLength)
+            return;
+        if (now - this.LastUnderrunTime < LiveAudioPlayer.StablePeriodMs)
+            return;
+        if (now - this.LastBufferAdjustmentTime < LiveAudioPlayer.StablePeriodMs)
+            return;
+
+        this.TargetBufferLength = Math.max(LiveAudioPlayer.MinBufferLength, this.TargetBufferLength - LiveAudioPlayer.BufferStep);
+        this.LastBufferAdjustmentTime = now;
+        this.Logger.Log("Audio stable; reducing target buffer to " + Math.round(this.TargetBufferLength * 1000) + " ms.");
+    };
+    LiveAudioPlayer.prototype.RegisterUnderrun = function () {
+        var now = Date.now();
+        this.UnderrunCount++;
+        this.LastUnderrunTime = now;
+        this.LastBufferAdjustmentTime = now;
+        this.TargetBufferLength = Math.min(LiveAudioPlayer.MaxBufferLength, this.TargetBufferLength + LiveAudioPlayer.BufferStep);
+        this.Logger.Log("Audio underrun; increasing target buffer to " + Math.round(this.TargetBufferLength * 1000) + " ms.");
+    };
     // Recieves an audiobuffer and schedules it for seamless playback
     LiveAudioPlayer.prototype.PushBuffer = function (buffer) {
+        this.UpdateAdaptiveBufferTarget();
         // Check if this is the first buffer we received
         if (this.NextScheduleTime == 0.0) {
-            // Start playing [StartOffset] s from now
-            this.NextScheduleTime = this.Audio.currentTime + this.StartOffset;
+            this.NextScheduleTime = this.Audio.currentTime + this.TargetBufferLength;
         }
-        var duration;
-        if (this.VariableSpeed)
-            duration = buffer.duration / this.PlaybackSpeed; // Use regular duration
-        else
-            duration = buffer.duration; // Use duration adjusted for playback speed
-        // Before creating a buffer and scheduling playback, check if playing this buffer makes sense at all
-        // If a buffer should have been started so far in the past that it would have finished playing by now, we are better of skipping it.
-        // But we still need to move the time forward to keep future timings right.
-        if (this.NextScheduleTime + duration > this.Audio.currentTime) {
-            var skipDurationTime = void 0;
-            // If the playback start time is in the past but the playback end time is in the future, we need to partially play the buffer.
-            if (this.Audio.currentTime >= this.NextScheduleTime) {
-                // Calculate the time we need to skip
-                skipDurationTime = this.Audio.currentTime - this.NextScheduleTime + 0.05;
-                if (!this.WasUnderrunning)
-                    this.UnderrunCount++;
-                this.WasUnderrunning = true;
-            }
-            else {
-                // No skipping needed
-                skipDurationTime = 0.0;
-                this.WasUnderrunning = false;
-            }
-            // Check if we'd skip the whole buffer anyway
-            if (skipDurationTime < duration) {
-                // Create new audio source for the buffer
-                var sourceNode_1 = this.Audio.createBufferSource();
-                // Make sure the node deletes itself after playback
-                sourceNode_1.onended = function (_ev) {
-                    sourceNode_1.disconnect();
-                };
-                // Prevent looping (the standard says that it should be off by default)
-                sourceNode_1.loop = false;
-                // Pass audio data to source
-                sourceNode_1.buffer = buffer;
-                //Connect the source to the gain node
-                sourceNode_1.connect(this.Amplification);
-                if (this.VariableSpeed) {
-                    var scheduleOffset = this.NextScheduleTime - this.Audio.currentTime;
-                    // Check if we are to far or too close to target schedule time
-                    if (this.NextScheduleTime - this.Audio.currentTime > this.OffsetMax) {
-                        if (this.PlaybackSpeed < 1.0 + LiveAudioPlayer.SpeedCorrectionFactor) {
-                            // We are too slow, speed up playback (somewhat noticeable)
-                            this.Logger.Log("Buffer size too large, speeding up playback.");
-                            this.PlaybackSpeed = 1.0 + LiveAudioPlayer.SpeedCorrectionFactor;
-                            duration = buffer.duration / this.PlaybackSpeed;
-                        }
-                    }
-                    else if (this.NextScheduleTime - this.Audio.currentTime < this.OffsetMin) {
-                        if (this.PlaybackSpeed > 1.0 - LiveAudioPlayer.SpeedCorrectionFactor) {
-                            // We are too fast, slow down playback (somewhat noticeable)
-                            this.Logger.Log("Buffer size too small, slowing down playback.");
-                            this.PlaybackSpeed = 1.0 - LiveAudioPlayer.SpeedCorrectionFactor;
-                            duration = buffer.duration / this.PlaybackSpeed;
-                        }
-                    }
-                    else {
-                        // Check if we are in time		
-                        if ((this.PlaybackSpeed > 1.0 && (this.NextScheduleTime - this.Audio.currentTime < this.StartOffset)) ||
-                            (this.PlaybackSpeed < 1.0 && (this.NextScheduleTime - this.Audio.currentTime > this.StartOffset))) {
-                            // We are within our min/max offset, set playpacks to default
-                            this.Logger.Log("Buffer size within limits, using normal playback speed.");
-                            this.PlaybackSpeed = 1.0;
-                            duration = buffer.duration;
-                        }
-                    }
-                    // Set playback speed
-                    sourceNode_1.playbackRate.value = this.PlaybackSpeed;
-                }
-                // Schedule playback
-                sourceNode_1.start(this.NextScheduleTime + skipDurationTime, skipDurationTime);
-            }
-            else {
-                this.Logger.Log("Skipped buffer because it became too old.");
-                this.SkippedBufferCount++;
-            }
+        else if (this.Audio.currentTime >= this.NextScheduleTime) {
+            if (!this.WasUnderrunning)
+                this.RegisterUnderrun();
+            this.WasUnderrunning = true;
+            this.NextScheduleTime = this.Audio.currentTime + this.TargetBufferLength;
         }
         else {
-            this.Logger.Log("Skipped buffer because it was too old.");
-            this.SkippedBufferCount++;
-            if (!this.WasUnderrunning)
-                this.UnderrunCount++;
-            this.WasUnderrunning = true;
+            this.WasUnderrunning = false;
         }
+
+        var scheduledBuffer = this.NextScheduleTime - this.Audio.currentTime;
+        if (this.VariableSpeed) {
+            this.PlaybackSpeed = 1.0;
+        }
+        else if (scheduledBuffer > this.TargetBufferLength + LiveAudioPlayer.BufferTolerance) {
+            this.PlaybackSpeed = LiveAudioPlayer.CatchUpSpeed;
+        }
+        else {
+            this.PlaybackSpeed = 1.0;
+        }
+        var duration = buffer.duration / this.PlaybackSpeed;
+
+        var sourceNode_1 = this.Audio.createBufferSource();
+        sourceNode_1.onended = function (_ev) {
+            sourceNode_1.disconnect();
+        };
+        sourceNode_1.loop = false;
+        sourceNode_1.buffer = buffer;
+        sourceNode_1.connect(this.Amplification);
+        sourceNode_1.playbackRate.value = this.PlaybackSpeed;
+        sourceNode_1.start(this.NextScheduleTime);
         // Move time forward
         this.NextScheduleTime += duration;
     };
@@ -146,10 +117,14 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.UnderrunCount = 0;
         this.SkippedBufferCount = 0;
         this.WasUnderrunning = false;
+        this.LastUnderrunTime = Date.now();
+        this.LastBufferAdjustmentTime = this.LastUnderrunTime;
+        this.PlaybackSpeed = 1.0;
     };
     LiveAudioPlayer.prototype.GetStats = function () {
         return {
             ScheduledBufferMs: Math.max(0, this.NextScheduleTime - this.Audio.currentTime) * 1000,
+            TargetBufferMs: this.TargetBufferLength * 1000,
             Underruns: this.UnderrunCount,
             SkippedBuffers: this.SkippedBufferCount,
             PlaybackSpeed: this.PlaybackSpeed
@@ -165,5 +140,15 @@ var LiveAudioPlayer = /** @class */ (function () {
     LiveAudioPlayer.SpeedCorrectionFactor = 40 / 1.0e6;
     // Hystersis value for speed up/down trigger
     LiveAudioPlayer.OffsetVariance = 0.2;
+    LiveAudioPlayer.MinBufferLength = 0.2;
+    LiveAudioPlayer.MaxBufferLength = 0.4;
+    LiveAudioPlayer.BufferStep = 0.05;
+    LiveAudioPlayer.BufferTolerance = 0.015;
+    LiveAudioPlayer.CatchUpSpeed = 1.003;
+    LiveAudioPlayer.StablePeriodMs = 60000;
     return LiveAudioPlayer;
 }());
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = LiveAudioPlayer;
+}
