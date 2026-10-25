@@ -51,6 +51,7 @@ var Fallback = /** @class */ (function () {
         this.Logger.Log("Using websocket fallback with MIME: " + this.SelectedFormatMime);
         try {
             this.Player = new LiveAudioPlayer(this.Audio, this.Logger, this.Settings.MaxVolume, this.Settings.InitialBufferLength, this.Settings.AutoCorrectSpeed);
+            this.Player.BufferPlayedCallback = this.PumpDecodedAudio.bind(this);
             this.Logger.Log("Init of LiveAudioPlayer succeeded");
         }
         catch (e) {
@@ -68,6 +69,9 @@ var Fallback = /** @class */ (function () {
         this.PacketModCounter = 0;
         this.LastCheckTime = 0;
         this.FocusChecker = 0;
+        this.PendingSamples = [];
+        this.PendingSamplesDuration = 0;
+        this.SamplePumpTimer = 0;
         this.ResetNetworkStats();
     }
     Fallback.prototype.Init = function (webSocket) {
@@ -117,8 +121,35 @@ var Fallback = /** @class */ (function () {
     };
     Fallback.prototype.OnReaderDataReady = function () {
         while (this.FormatReader.SamplesAvailable()) {
-            this.Player.PushBuffer(this.FormatReader.PopSamples());
+            var samples = this.FormatReader.PopSamples();
+            this.PendingSamples.push(samples);
+            this.PendingSamplesDuration += samples.duration;
         }
+        this.PumpDecodedAudio();
+    };
+    Fallback.prototype.PumpDecodedAudio = function () {
+        if (this.SamplePumpTimer) {
+            window.clearTimeout(this.SamplePumpTimer);
+            this.SamplePumpTimer = 0;
+        }
+
+        while (this.PendingSamples.length > 0 && this.Player.CanScheduleBuffer()) {
+            var samples = this.PendingSamples.shift();
+            this.PendingSamplesDuration = Math.max(0, this.PendingSamplesDuration - samples.duration);
+            this.Player.PushBuffer(samples, this.PendingSamplesDuration);
+        }
+
+        if (this.PendingSamples.length > 0) {
+            this.SamplePumpTimer = window.setTimeout(this.PumpDecodedAudio.bind(this), 25);
+        }
+    };
+    Fallback.prototype.ResetAudioQueue = function () {
+        if (this.SamplePumpTimer) {
+            window.clearTimeout(this.SamplePumpTimer);
+            this.SamplePumpTimer = 0;
+        }
+        this.PendingSamples = [];
+        this.PendingSamplesDuration = 0;
     };
     // Callback function from socket connection
     Fallback.prototype.OnSocketError = function (message) {
@@ -200,9 +231,10 @@ var Fallback = /** @class */ (function () {
             PacketJitterMs: packetTiming.JitterMs,
             LastPacketAgeMs: this.LastPacketTime > 0 ? now - this.LastPacketTime : null,
             ScheduledBufferMs: playerStats.ScheduledBufferMs,
+            PendingDecodedMs: this.PendingSamplesDuration * 1000,
             TargetBufferMs: playerStats.TargetBufferMs,
             BrowserOutputMs: baseLatencyMs === null && outputLatencyMs === null ? null : browserOutputMs,
-            LocalPlaybackLatencyMs: playerStats.ScheduledBufferMs + browserOutputMs,
+            LocalPlaybackLatencyMs: playerStats.ScheduledBufferMs + (this.PendingSamplesDuration * 1000) + browserOutputMs,
             Underruns: playerStats.Underruns,
             SkippedBuffers: playerStats.SkippedBuffers,
             PlaybackSpeed: playerStats.PlaybackSpeed,
@@ -235,6 +267,7 @@ var Fallback = /** @class */ (function () {
     Fallback.prototype.Reset = function () {
         this.StopFocusChecker();
         this.FormatReader.Reset();
+        this.ResetAudioQueue();
         this.Player.Reset();
         this.ResetNetworkStats();
         this.WebSocket = null;

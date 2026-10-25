@@ -26,6 +26,7 @@
         setText("audio-stat-state", state.charAt(0).toUpperCase() + state.slice(1));
         setText("audio-stat-latency", stats.Connected ? formatMs(stats.LocalPlaybackLatencyMs) : "Waiting…");
         setText("audio-stat-buffer", stats.Connected ? formatMs(stats.ScheduledBufferMs) : "Waiting…");
+        setText("audio-stat-pending", stats.Connected ? formatMs(stats.PendingDecodedMs) : "Waiting…");
         setText("audio-stat-buffer-target", formatMs(stats.TargetBufferMs));
         setText("audio-stat-output", formatMs(stats.BrowserOutputMs));
         setText("audio-stat-bitrate", stats.ReceiveRateKbps > 0 ? Math.round(stats.ReceiveRateKbps) + " kbit/s" : "Waiting…");

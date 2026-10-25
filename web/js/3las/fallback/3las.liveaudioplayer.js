@@ -24,6 +24,7 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.UnderrunCount = 0;
         this.SkippedBufferCount = 0;
         this.WasUnderrunning = false;
+        this.BufferPlayedCallback = null;
         // Create gain node for volume control
         this.Amplification = this.Audio.createGain();
         // Set volume to max
@@ -72,7 +73,24 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.Logger.Log("Audio underrun; increasing target buffer to " + Math.round(this.TargetBufferLength * 1000) + " ms.");
     };
     // Recieves an audiobuffer and schedules it for seamless playback
-    LiveAudioPlayer.prototype.PushBuffer = function (buffer) {
+    LiveAudioPlayer.prototype.GetScheduledBufferLength = function () {
+        return Math.max(0, this.NextScheduleTime - this.Audio.currentTime);
+    };
+    LiveAudioPlayer.prototype.CanScheduleBuffer = function () {
+        return this.NextScheduleTime === 0
+            || this.GetScheduledBufferLength() <= this.TargetBufferLength + LiveAudioPlayer.BufferTolerance;
+    };
+    LiveAudioPlayer.prototype.GetCatchUpSpeed = function (totalBufferedLength) {
+        var excess = totalBufferedLength - this.TargetBufferLength;
+        if (excess <= LiveAudioPlayer.BufferTolerance)
+            return 1.0;
+        return 1.0 + Math.min(
+            LiveAudioPlayer.MaxCatchUpRate,
+            Math.max(LiveAudioPlayer.MinCatchUpRate, excess * LiveAudioPlayer.CatchUpGain)
+        );
+    };
+    LiveAudioPlayer.prototype.PushBuffer = function (buffer, pendingDecodedLength) {
+        if (pendingDecodedLength === void 0) { pendingDecodedLength = 0; }
         this.UpdateAdaptiveBufferTarget();
         // Check if this is the first buffer we received
         if (this.NextScheduleTime == 0.0) {
@@ -88,21 +106,21 @@ var LiveAudioPlayer = /** @class */ (function () {
             this.WasUnderrunning = false;
         }
 
-        var scheduledBuffer = this.NextScheduleTime - this.Audio.currentTime;
+        var scheduledBuffer = this.GetScheduledBufferLength();
         if (this.VariableSpeed) {
             this.PlaybackSpeed = 1.0;
         }
-        else if (scheduledBuffer > this.TargetBufferLength + LiveAudioPlayer.BufferTolerance) {
-            this.PlaybackSpeed = LiveAudioPlayer.CatchUpSpeed;
-        }
         else {
-            this.PlaybackSpeed = 1.0;
+            this.PlaybackSpeed = this.GetCatchUpSpeed(scheduledBuffer + pendingDecodedLength + buffer.duration);
         }
         var duration = buffer.duration / this.PlaybackSpeed;
 
         var sourceNode_1 = this.Audio.createBufferSource();
+        var _this = this;
         sourceNode_1.onended = function (_ev) {
             sourceNode_1.disconnect();
+            if (_this.BufferPlayedCallback)
+                _this.BufferPlayedCallback();
         };
         sourceNode_1.loop = false;
         sourceNode_1.buffer = buffer;
@@ -123,7 +141,7 @@ var LiveAudioPlayer = /** @class */ (function () {
     };
     LiveAudioPlayer.prototype.GetStats = function () {
         return {
-            ScheduledBufferMs: Math.max(0, this.NextScheduleTime - this.Audio.currentTime) * 1000,
+            ScheduledBufferMs: this.GetScheduledBufferLength() * 1000,
             TargetBufferMs: this.TargetBufferLength * 1000,
             Underruns: this.UnderrunCount,
             SkippedBuffers: this.SkippedBufferCount,
@@ -144,7 +162,9 @@ var LiveAudioPlayer = /** @class */ (function () {
     LiveAudioPlayer.MaxBufferLength = 0.4;
     LiveAudioPlayer.BufferStep = 0.05;
     LiveAudioPlayer.BufferTolerance = 0.015;
-    LiveAudioPlayer.CatchUpSpeed = 1.003;
+    LiveAudioPlayer.MinCatchUpRate = 0.003;
+    LiveAudioPlayer.MaxCatchUpRate = 0.01;
+    LiveAudioPlayer.CatchUpGain = 0.05;
     LiveAudioPlayer.StablePeriodMs = 60000;
     return LiveAudioPlayer;
 }());

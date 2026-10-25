@@ -67,7 +67,7 @@ test('reduces an elevated target after a stable minute', () => {
     player.PushBuffer(decodedBuffer);
 
     assert.equal(Math.round(player.GetStats().TargetBufferMs), 250);
-    assert.equal(player.GetStats().PlaybackSpeed, LiveAudioPlayer.CatchUpSpeed);
+    assert.ok(player.GetStats().PlaybackSpeed > 1);
 });
 
 test('preserves the learned target across an automatic stream restart', () => {
