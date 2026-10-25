@@ -3,10 +3,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+    AlsaStderrParser,
+    DEFAULT_CAPTURE_STALL_TIMEOUT_MS,
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
     getAlsaFallbackProfile,
+    hasAudioCaptureStalled,
     resolveAlsaLatencyProfile
 } = require('../server/stream/linux_capture');
 
@@ -58,6 +61,24 @@ test('recognizes ALSA overrun messages', () => {
 
 test('recognizes rejected ALSA timing parameters', () => {
     assert.equal(containsAlsaSetupError('Unable to set hw params for PLAYBACK: Invalid argument'), true);
+    assert.equal(containsAlsaSetupError('Unable to install hw params:'), true);
     assert.equal(containsAlsaSetupError('cannot set period time 5000 for capture'), true);
+    assert.equal(containsAlsaSetupError('buffer time 20000 not available'), true);
     assert.equal(containsAlsaSetupError('Recording WAVE stdin'), false);
+});
+
+test('reassembles ALSA stderr lines split across chunks', () => {
+    const parser = new AlsaStderrParser();
+
+    assert.deepEqual(parser.Push('Unable to install hw pa'), []);
+    assert.deepEqual(parser.Push('rams:\nALSA xrun detected\npartial'), [
+        'Unable to install hw params:',
+        'ALSA xrun detected'
+    ]);
+    assert.deepEqual(parser.Flush(), ['partial']);
+});
+
+test('detects a stalled audio capture after the timeout', () => {
+    assert.equal(hasAudioCaptureStalled(1000, 1000 + DEFAULT_CAPTURE_STALL_TIMEOUT_MS - 1), false);
+    assert.equal(hasAudioCaptureStalled(1000, 1000 + DEFAULT_CAPTURE_STALL_TIMEOUT_MS), true);
 });

@@ -1,6 +1,7 @@
 'use strict';
 
 const DEFAULT_ALSA_LATENCY_PROFILE = 'low';
+const DEFAULT_CAPTURE_STALL_TIMEOUT_MS = 5000;
 
 const ALSA_LATENCY_PROFILES = Object.freeze({
     experimental: Object.freeze({ bufferTime: 20000, periodTime: 5000 }),
@@ -57,15 +58,45 @@ function containsAlsaXrun(message) {
 }
 
 function containsAlsaSetupError(message) {
-    return /(?:unable to set hw params|cannot set (?:buffer|period) time)/i.test(message);
+    return /(?:unable to (?:set|install) hw params|cannot set (?:buffer|period) time|(?:buffer|period) time .* not available)/i.test(message);
+}
+
+function hasAudioCaptureStalled(lastAudioAt, now = Date.now(), timeoutMs = DEFAULT_CAPTURE_STALL_TIMEOUT_MS) {
+    return Number.isFinite(lastAudioAt)
+        && Number.isFinite(now)
+        && Number.isFinite(timeoutMs)
+        && timeoutMs > 0
+        && now - lastAudioAt >= timeoutMs;
+}
+
+class AlsaStderrParser {
+    constructor() {
+        this.Pending = '';
+    }
+
+    Push(chunk) {
+        this.Pending += chunk.toString();
+        const lines = this.Pending.split(/\r?\n/);
+        this.Pending = lines.pop();
+        return lines.filter(Boolean);
+    }
+
+    Flush() {
+        const pending = this.Pending;
+        this.Pending = '';
+        return pending ? [pending] : [];
+    }
 }
 
 module.exports = {
+    AlsaStderrParser,
     ALSA_LATENCY_PROFILES,
+    DEFAULT_CAPTURE_STALL_TIMEOUT_MS,
     DEFAULT_ALSA_LATENCY_PROFILE,
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
     getAlsaFallbackProfile,
+    hasAudioCaptureStalled,
     resolveAlsaLatencyProfile
 };

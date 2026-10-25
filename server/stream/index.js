@@ -4,10 +4,13 @@ const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console'
 const checkFFmpeg = require('./checkFFmpeg');
 const audioServer = require('./3las.server');
 const {
+    AlsaStderrParser,
+    DEFAULT_CAPTURE_STALL_TIMEOUT_MS,
     buildArecordArgs,
     containsAlsaSetupError,
     containsAlsaXrun,
     getAlsaFallbackProfile,
+    hasAudioCaptureStalled,
     resolveAlsaLatencyProfile
 } = require('./linux_capture');
 
@@ -270,6 +273,20 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 if (processInstance !== currentArecord) return;
 
+                processInstance.lastAudioDataAt = Date.now();
+                processInstance.audioActivityHandler = () => {
+                    processInstance.lastAudioDataAt = Date.now();
+                };
+                stream.on('data', processInstance.audioActivityHandler);
+                processInstance.captureWatchdog = setInterval(() => {
+                    if (processInstance !== currentArecord || processInstance.stallRestartRequested) return;
+                    if (!hasAudioCaptureStalled(processInstance.lastAudioDataAt)) return;
+
+                    processInstance.stallRestartRequested = true;
+                    logWarn(`${consoleLogTitle} No PCM audio received for ${DEFAULT_CAPTURE_STALL_TIMEOUT_MS / 1000} seconds. Restarting arecord.`);
+                    processInstance.kill('SIGKILL');
+                }, 1000);
+
                 if (audioServerRunning) {
                     audioServer.Server.SetInput(stream);
                 } else {
@@ -308,6 +325,26 @@ checkFFmpeg().then((ffmpegPath) => {
             fallbackAlsaProfile(arecord, 'Repeated ALSA overruns');
         }
 
+        function handleArecordMessage(arecord, message) {
+            if (arecord !== currentArecord) return;
+            if (containsAlsaSetupError(message)) {
+                fallbackAlsaProfile(arecord, 'ALSA rejected the requested timing');
+            } else if (containsAlsaXrun(message)) {
+                handleArecordXrun(arecord);
+            }
+        }
+
+        function stopCaptureWatchdog(arecord) {
+            if (arecord.captureWatchdog) {
+                clearInterval(arecord.captureWatchdog);
+                arecord.captureWatchdog = null;
+            }
+            if (arecord.audioActivityHandler) {
+                arecord.stdout.removeListener('data', arecord.audioActivityHandler);
+                arecord.audioActivityHandler = null;
+            }
+        }
+
         function startArecord() {
             const arecordCommand = buildCommand(ffmpegPath, activeAlsaProfile.name);
             activeAlsaProfile = arecordCommand.alsaLatencyProfile;
@@ -318,25 +355,33 @@ checkFFmpeg().then((ffmpegPath) => {
             logDebug(`${consoleLogTitle} Launching arecord with args: ${arecordCommand.arecordArgs.join(' ')}`);
 
             const arecord = spawn('arecord', arecordCommand.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+            const stderrParser = new AlsaStderrParser();
             currentArecord = arecord;
 
             attachAudioInput(arecord.stdout, arecord);
 
             arecord.stderr.on('data', (data) => {
-                const message = data.toString();
-                logFfmpeg(`[arecord stderr]: ${message}`);
-                if (containsAlsaSetupError(message)) {
-                    fallbackAlsaProfile(arecord, 'ALSA rejected the requested timing');
-                } else if (containsAlsaXrun(message)) {
-                    handleArecordXrun(arecord);
+                logFfmpeg(`[arecord stderr]: ${data.toString()}`);
+                for (const message of stderrParser.Push(data)) {
+                    handleArecordMessage(arecord, message);
+                }
+            });
+
+            arecord.stderr.on('end', () => {
+                for (const message of stderrParser.Flush()) {
+                    handleArecordMessage(arecord, message);
                 }
             });
 
             arecord.on('error', (error) => {
+                stopCaptureWatchdog(arecord);
+                if (currentArecord === arecord) currentArecord = null;
                 logError(`${consoleLogTitle} Failed to start arecord: ${error.message}`);
+                scheduleArecordRestart();
             });
 
             arecord.on('exit', (code, signal) => {
+                stopCaptureWatchdog(arecord);
                 if (currentArecord === arecord) currentArecord = null;
                 logFfmpeg(`[arecord exited] with ${signal ? `signal ${signal}` : `code ${code}`}`);
                 scheduleArecordRestart(signal === 'SIGINT' ? 250 : 2000);

@@ -1,7 +1,7 @@
 'use strict';
 
-const MIN_CLIENT_BUFFER_BYTES = 16 * 1024;
-const MAX_CLIENT_BACKLOG_SECONDS = 1;
+const MIN_CLIENT_BUFFER_BYTES = 4 * 1024;
+const MAX_CLIENT_BACKLOG_SECONDS = 0.25;
 
 function bitrateToBytesPerSecond(bitrate) {
     const match = /^\s*(\d+(?:\.\d+)?)\s*([km]?)\s*$/i.exec(`${bitrate}`);

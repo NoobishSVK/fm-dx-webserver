@@ -270,24 +270,93 @@ class AFallbackProvider {
         this.InputBackpressured = false;
         this.DroppedInputChunks = 0;
         this.DroppedInputBytes = 0;
-        this.Process = (0, child_process_1.spawn)(FFmpeg_command, this.GetFFmpegArguments(), { shell: false, detached: false, stdio: ['pipe', 'pipe', 'ignore'] });
-        this.Process.stdout.addListener('data', this.OnData.bind(this));
-        this.Process.stdin.on('drain', this.OnInputDrain.bind(this));
-        this.Process.stdin.on('error', (error) => {
-            this.InputBackpressured = true;
-            logError(`[Stream] FFmpeg input error: ${error.message}`);
+        this.Process = null;
+        this.RestartTimer = null;
+        this.BackpressureTimer = null;
+        this.StartProcess();
+    }
+    StartProcess() {
+        this.InputBackpressured = false;
+        const encoder = (0, child_process_1.spawn)(FFmpeg_command, this.GetFFmpegArguments(), {
+            shell: false,
+            detached: false,
+            stdio: ['pipe', 'pipe', 'pipe']
         });
+        this.Process = encoder;
+        encoder.stdout.addListener('data', (data) => {
+            if (encoder === this.Process) this.OnData(data);
+        });
+        encoder.stderr.on('data', (data) => {
+            logFfmpeg(`[Stream encoder stderr]: ${data.toString()}`);
+        });
+        encoder.stdin.on('drain', () => this.OnInputDrain(encoder));
+        encoder.stdin.on('error', (error) => {
+            logError(`[Stream] FFmpeg input error: ${error.message}`);
+            this.ScheduleRestart(encoder, 'input failure');
+        });
+        encoder.on('error', (error) => {
+            logError(`[Stream] FFmpeg encoder failed to start: ${error.message}`);
+            this.ScheduleRestart(encoder, 'process failure');
+        });
+        encoder.on('exit', (code, signal) => {
+            const reason = signal ? `signal ${signal}` : `code ${code}`;
+            this.ScheduleRestart(encoder, reason);
+        });
+        if (this.DroppedInputChunks > 0) {
+            logWarn(`[Stream] Encoder restarted after dropping ${this.DroppedInputChunks} PCM chunks (${this.DroppedInputBytes} bytes).`);
+            this.DroppedInputChunks = 0;
+            this.DroppedInputBytes = 0;
+        }
+    }
+    ScheduleRestart(encoder, reason) {
+        if (encoder !== this.Process) return;
+
+        this.Process = null;
+        this.InputBackpressured = true;
+        this.ClearBackpressureTimer();
+        this.ResetOutputState();
+        if (encoder.exitCode === null && encoder.signalCode === null) {
+            try {
+                encoder.kill('SIGKILL');
+            } catch (_error) {
+            }
+        }
+        if (this.RestartTimer) return;
+
+        logWarn(`[Stream] FFmpeg encoder stopped (${reason}). Restarting in 2 seconds.`);
+        this.RestartTimer = setTimeout(() => {
+            this.RestartTimer = null;
+            this.StartProcess();
+        }, 2000);
+    }
+    ResetOutputState() {
+    }
+    StartBackpressureTimer(encoder) {
+        if (this.BackpressureTimer) return;
+        this.BackpressureTimer = setTimeout(() => {
+            this.BackpressureTimer = null;
+            if (encoder === this.Process && this.InputBackpressured) {
+                this.ScheduleRestart(encoder, 'input backpressure timeout');
+            }
+        }, 5000);
+    }
+    ClearBackpressureTimer() {
+        if (!this.BackpressureTimer) return;
+        clearTimeout(this.BackpressureTimer);
+        this.BackpressureTimer = null;
     }
     InsertData(buffer) {
-        if (this.InputBackpressured || !this.Process.stdin.writable) {
+        const encoder = this.Process;
+        if (this.InputBackpressured || !encoder || !encoder.stdin.writable) {
             this.DroppedInputChunks++;
             this.DroppedInputBytes += buffer.length;
             return false;
         }
 
         try {
-            if (!this.Process.stdin.write(buffer)) {
+            if (!encoder.stdin.write(buffer)) {
                 this.InputBackpressured = true;
+                this.StartBackpressureTimer(encoder);
             }
             return true;
         } catch (error) {
@@ -295,10 +364,13 @@ class AFallbackProvider {
             this.DroppedInputChunks++;
             this.DroppedInputBytes += buffer.length;
             logError(`[Stream] FFmpeg input write failed: ${error.message}`);
+            this.ScheduleRestart(encoder, 'input write failure');
             return false;
         }
     }
-    OnInputDrain() {
+    OnInputDrain(encoder) {
+        if (encoder !== this.Process) return;
+        this.ClearBackpressureTimer();
         this.InputBackpressured = false;
         if (this.DroppedInputChunks > 0) {
             logWarn(`[Stream] Encoder recovered from backpressure; dropped ${this.DroppedInputChunks} stale PCM chunks (${this.DroppedInputBytes} bytes).`);
@@ -341,6 +413,9 @@ class FallbackProviderMp3 extends AFallbackProvider {
         for (const packet of this.Packetizer.Push(chunk)) {
             this.Server.BroadcastBinary("mp3", packet);
         }
+    }
+    ResetOutputState() {
+        this.Packetizer = new Mp3Packetizer(2);
     }
     PrimeClient(_) {
     }
@@ -388,6 +463,10 @@ class FallbackProviderWav extends AFallbackProvider {
                 this.Server.BroadcastBinary("wav", chunkBuffer);
             }
         }
+    }
+    ResetOutputState() {
+        this.ChunkBuffer = Buffer.alloc(0);
+        this.HeaderBuffer = new Array();
     }
     PrimeClient(client) {
         let headerBuffer = this.HeaderBuffer;
