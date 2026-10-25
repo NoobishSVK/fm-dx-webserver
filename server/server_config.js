@@ -49,7 +49,6 @@ let serverConfig = {
     softwareMode: false,
     alsaLatencyProfile: "low",
     startupVolume: "0.95",
-    ffmpeg: false,
     samplerateOffset: "0"
   },
   identification: {
@@ -192,6 +191,7 @@ if (configExists()) {
   const configFileContents = fs.readFileSync(configPath, 'utf8');
   try {
     const configFile = JSON.parse(configFileContents);
+    if (configFile.audio) delete configFile.audio.ffmpeg;
     addMissingFields(configFile, serverConfig); // Add only missing fields from serverConfig
     serverConfig = configFile; // Use the updated configFile as the new serverConfig
     configSave(); // Save the merged config back to the file

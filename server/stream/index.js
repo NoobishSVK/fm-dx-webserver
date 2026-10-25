@@ -67,74 +67,39 @@ function buildCommand(ffmpegPath, alsaLatencyProfile) {
             ]
         };
     } else if (process.platform === 'darwin') {
-        // macOS
-        if (!serverConfig.audio.ffmpeg) {
-            logInfo(`${consoleLogTitle} Platform: macOS (darwin) using "coreaudio"`);
-            return {
-                args: [],
-                soxArgs: [
-                    '-t', 'coreaudio', `${inputDevice}`,
-                    '-b', '32',
-                    '-r', '48000',
-                    '-c', `${audioChannels}`,
-                    '-t', 'raw',
-                    '-b', '16',
-                    '-r', '48000',
-                    '-c', `${audioChannels}`
-                    , '-'
-                ]
-            };
-        } else {
-            const device = serverConfig.audio.audioDevice;
-            return {
-                command: ffmpegPath,
-                args: [
-                    ...baseOptions.flags,
-                    '-f', 'avfoundation',
-                    '-i', `${device || ':0'}`,
-                    ...baseOptions.codec,
-                    ...baseOptions.output
-                ]
-            };
-        }
+        logInfo(`${consoleLogTitle} Platform: macOS (darwin) using "coreaudio"`);
+        return {
+            soxArgs: [
+                '-t', 'coreaudio', `${inputDevice}`,
+                '-b', '32',
+                '-r', '48000',
+                '-c', `${audioChannels}`,
+                '-t', 'raw',
+                '-b', '16',
+                '-r', '48000',
+                '-c', `${audioChannels}`,
+                '-'
+            ]
+        };
     } else {
         // Linux
-        if (!serverConfig.audio.ffmpeg) {
-            const prefix = serverConfig.audio.softwareMode ? 'plug' : '';
-            const device = `${prefix}${serverConfig.audio.audioDevice}`;
-            const arecord = buildArecordArgs(
-                device,
-                audioChannels,
-                alsaLatencyProfile || serverConfig.audio.alsaLatencyProfile
-            );
-            logInfo(`${consoleLogTitle} Platform: Linux. Using "alsa" input.`);
-            return {
-                // command not used if arecordArgs are used
-                command: `while true; do arecord -D "${device}" -f S16_LE -r 48000 -c ${audioChannels} -t raw; done`,
-                args: [],
-                arecordArgs: arecord.args,
-                alsaLatencyProfile: arecord.profile,
-                ffmpegArgs: []
-            };
-        } else {
-            const device = serverConfig.audio.audioDevice;
-            return {
-                command: ffmpegPath,
-                args: [
-                    ...baseOptions.flags,
-                    '-f', 'alsa',
-                    '-i', `${device}`,
-                    ...baseOptions.codec,
-                    ...baseOptions.output
-                ],
-                arecordArgs: [],
-            };
-        }
+        const prefix = serverConfig.audio.softwareMode ? 'plug' : '';
+        const device = `${prefix}${serverConfig.audio.audioDevice}`;
+        const arecord = buildArecordArgs(
+            device,
+            audioChannels,
+            alsaLatencyProfile || serverConfig.audio.alsaLatencyProfile
+        );
+        logInfo(`${consoleLogTitle} Platform: Linux. Using "alsa" input.`);
+        return {
+            arecordArgs: arecord.args,
+            alsaLatencyProfile: arecord.profile
+        };
     }
 }
 
 checkFFmpeg().then((ffmpegPath) => {
-    if (!serverConfig.audio.ffmpeg) checkAudioUtilities();
+    checkAudioUtilities();
     let audioErrorLogged = false;
 
     logInfo(`${consoleLogTitle} Using`, ffmpegPath === 'ffmpeg' ? 'system-installed FFmpeg' : 'ffmpeg-static');
@@ -238,11 +203,6 @@ checkFFmpeg().then((ffmpegPath) => {
         // macOS (sox --> 3las.server.js --> FFmpeg)
         const commandDef = buildCommand(ffmpegPath);
 
-        // Apply audio boost if enabled and FFmpeg is used
-        if (serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg) {
-            commandDef.args.splice(commandDef.soxArgs.indexOf('pipe:1'), 0, '-af', 'volume=1.7');
-        }
-
         let currentSox = null;
 
         process.on('exit', () => {
@@ -255,76 +215,32 @@ checkFFmpeg().then((ffmpegPath) => {
         });
 
         function startSox() {
-            if (!serverConfig.audio.ffmpeg) {
-                // Spawn sox
-                logDebug(`${consoleLogTitle} Launching sox with args: ${commandDef.soxArgs.join(' ')}`);
+            logDebug(`${consoleLogTitle} Launching sox with args: ${commandDef.soxArgs.join(' ')}`);
 
-                const sox = spawn('sox', commandDef.soxArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-                currentSox = sox;
+            const sox = spawn('sox', commandDef.soxArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+            currentSox = sox;
 
-                audioServer.waitUntilReady.then(() => {
-                    audioServer.Server.StdIn = sox.stdout;
-                    audioServer.Server.Run();
-                    connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg ? ' (audio boost)' : ''}`);
-                });
-
-                sox.stderr.on('data', (data) => {
-                    logFfmpeg(`[sox stderr]: ${data}`);
-                });
-
-                sox.on('exit', (code) => {
-                    logFfmpeg(`[sox exited] with code ${code}`);
-                    if (code !== 0) {
-                        setTimeout(startSox, 2000);
-                    }
-                });
-            }
-        }
-
-        startSox();
-
-        if (serverConfig.audio.ffmpeg) {
-            logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${commandDef.args.join(' ')}`);
-            const ffmpeg = spawn(ffmpegPath, commandDef.args, { stdio: ['ignore', 'pipe', 'pipe'] });
-
-            // Pipe FFmpeg output to 3las.server.js
             audioServer.waitUntilReady.then(() => {
-                audioServer.Server.StdIn = ffmpeg.stdout;
+                audioServer.Server.StdIn = sox.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
+                connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn`);
             });
 
-            process.on('SIGINT', () => {
-                ffmpeg.kill('SIGINT');
-                process.exit();
+            sox.stderr.on('data', (data) => {
+                logFfmpeg(`[sox stderr]: ${data}`);
             });
 
-            process.on('exit', () => {
-                ffmpeg.kill('SIGINT');
-            });
-
-            // FFmpeg stderr handling
-            ffmpeg.stderr.on('data', (data) => {
-                logFfmpeg(`[FFmpeg stderr]: ${data}`);
-            });
-
-            // FFmpeg exit handling
-            ffmpeg.on('exit', (code) => {
-                logFfmpeg(`[FFmpeg exited] with code ${code}`);
+            sox.on('exit', (code) => {
+                logFfmpeg(`[sox exited] with code ${code}`);
                 if (code !== 0) {
-                    logWarn(`${consoleLogTitle} FFmpeg exited unexpectedly with code ${code}`);
+                    setTimeout(startSox, 2000);
                 }
             });
         }
+
+        startSox();
     } else {
         // Linux (arecord --> 3las.server.js --> FFmpeg)
-        const commandDef = buildCommand(ffmpegPath);
-
-        // Apply audio boost if enabled and FFmpeg is used
-        if (serverConfig.audio.audioBoost && serverConfig.audio.ffmpeg) {
-            commandDef.args.splice(commandDef.args.indexOf('pipe:1'), 0, '-af', 'volume=1.7');
-        }
-
         let currentArecord = null;
         let arecordRestartTimer = null;
         let audioServerRunning = false;
@@ -398,77 +314,41 @@ checkFFmpeg().then((ffmpegPath) => {
         }
 
         function startArecord() {
-            if (!serverConfig.audio.ffmpeg) {
-                const arecordCommand = buildCommand(ffmpegPath, activeAlsaProfile.name);
-                activeAlsaProfile = arecordCommand.alsaLatencyProfile;
-                const latencyDescription = activeAlsaProfile.bufferTime === null
-                    ? 'system defaults'
-                    : `${activeAlsaProfile.bufferTime / 1000} ms buffer, ${activeAlsaProfile.periodTime / 1000} ms period`;
-                logInfo(`${consoleLogTitle} ALSA latency profile: ${activeAlsaProfile.name} (${latencyDescription}).`);
-                logDebug(`${consoleLogTitle} Launching arecord with args: ${arecordCommand.arecordArgs.join(' ')}`);
+            const arecordCommand = buildCommand(ffmpegPath, activeAlsaProfile.name);
+            activeAlsaProfile = arecordCommand.alsaLatencyProfile;
+            const latencyDescription = activeAlsaProfile.bufferTime === null
+                ? 'system defaults'
+                : `${activeAlsaProfile.bufferTime / 1000} ms buffer, ${activeAlsaProfile.periodTime / 1000} ms period`;
+            logInfo(`${consoleLogTitle} ALSA latency profile: ${activeAlsaProfile.name} (${latencyDescription}).`);
+            logDebug(`${consoleLogTitle} Launching arecord with args: ${arecordCommand.arecordArgs.join(' ')}`);
 
-                const arecord = spawn('arecord', arecordCommand.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-                currentArecord = arecord;
+            const arecord = spawn('arecord', arecordCommand.arecordArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+            currentArecord = arecord;
 
-                attachAudioInput(arecord.stdout, arecord);
+            attachAudioInput(arecord.stdout, arecord);
 
-                arecord.stderr.on('data', (data) => {
-                    const message = data.toString();
-                    logFfmpeg(`[arecord stderr]: ${message}`);
-                    if (containsAlsaSetupError(message)) {
-                        fallbackAlsaProfile(arecord, 'ALSA rejected the requested timing');
-                    } else if (containsAlsaXrun(message)) {
-                        handleArecordXrun(arecord);
-                    }
-                });
+            arecord.stderr.on('data', (data) => {
+                const message = data.toString();
+                logFfmpeg(`[arecord stderr]: ${message}`);
+                if (containsAlsaSetupError(message)) {
+                    fallbackAlsaProfile(arecord, 'ALSA rejected the requested timing');
+                } else if (containsAlsaXrun(message)) {
+                    handleArecordXrun(arecord);
+                }
+            });
 
-                arecord.on('error', (error) => {
-                    logError(`${consoleLogTitle} Failed to start arecord: ${error.message}`);
-                });
+            arecord.on('error', (error) => {
+                logError(`${consoleLogTitle} Failed to start arecord: ${error.message}`);
+            });
 
-                arecord.on('exit', (code, signal) => {
-                    if (currentArecord === arecord) currentArecord = null;
-                    logFfmpeg(`[arecord exited] with ${signal ? `signal ${signal}` : `code ${code}`}`);
-                    scheduleArecordRestart(signal === 'SIGINT' ? 250 : 2000);
-                });
-            }
+            arecord.on('exit', (code, signal) => {
+                if (currentArecord === arecord) currentArecord = null;
+                logFfmpeg(`[arecord exited] with ${signal ? `signal ${signal}` : `code ${code}`}`);
+                scheduleArecordRestart(signal === 'SIGINT' ? 250 : 2000);
+            });
         }
 
         startArecord();
-
-        if (serverConfig.audio.ffmpeg) {
-            logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${commandDef.args.join(' ')}`);
-            const ffmpeg = spawn(ffmpegPath, commandDef.args, { stdio: ['ignore', 'pipe', 'pipe'] });
-
-            // Pipe FFmpeg output to 3las.server.js
-            audioServer.waitUntilReady.then(() => {
-                audioServer.Server.StdIn = ffmpeg.stdout;
-                audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected FFmpeg stdout \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
-            });
-
-            process.on('SIGINT', () => {
-                ffmpeg.kill('SIGINT');
-                process.exit();
-            });
-
-            process.on('exit', () => {
-                ffmpeg.kill('SIGINT');
-            });
-
-            // FFmpeg stderr handling
-            ffmpeg.stderr.on('data', (data) => {
-                logFfmpeg(`[FFmpeg stderr]: ${data}`);
-            });
-
-            // FFmpeg exit handling
-            ffmpeg.on('exit', (code) => {
-                logFfmpeg(`[FFmpeg exited] with code ${code}`);
-                if (code !== 0) {
-                    logWarn(`${consoleLogTitle} FFmpeg exited unexpectedly with code ${code}`);
-                }
-            });
-        }
     }
 }).catch((err) => {
     logError(`${consoleLogTitle} Error: ${err.message}`);

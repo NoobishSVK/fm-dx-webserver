@@ -9,6 +9,7 @@ const checkFFmpeg = require('./checkFFmpeg');
 const { spawn } = require('child_process');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const { serverConfig } = require('../server_config');
+const { getMaxClientBufferBytes, hasExceededClientBuffer } = require('./live_stream_buffer');
 
 let ffmpegStaticPath = 'ffmpeg'; // fallback value
 
@@ -64,8 +65,10 @@ class StreamClient {
             compress: false,
             binary: true
         };
+        this.Destroyed = false;
         this.Socket.on('error', this.OnError.bind(this));
         this.Socket.on('message', this.OnMessage.bind(this));
+        this.Socket.once('close', () => this.Server.RemoveClient(this));
     }
     OnMessage(message, isBinary) {
         try {
@@ -97,9 +100,15 @@ class StreamClient {
     OnError(_err) {
         this.Server.DestroyClient(this);
     }
-    Destroy() {
+    Destroy(force = false) {
+        if (this.Destroyed) return;
+        this.Destroyed = true;
         try {
-            this.Socket.close();
+            if (force) {
+                this.Socket.terminate();
+            } else {
+                this.Socket.close();
+            }
         }
         catch (ex) {
         }
@@ -109,14 +118,31 @@ class StreamClient {
             this.OnError(null);
             return;
         }
-        this.Socket.send(buffer, this.BinaryOptions);
+        if (hasExceededClientBuffer(this.Socket.bufferedAmount, this.Server.MaxClientBufferBytes)) {
+            logWarn(`[Stream] Disconnecting an audio client with more than ${this.Server.MaxClientBufferBytes} queued bytes.`);
+            this.Server.DestroyClient(this, true);
+            return;
+        }
+        try {
+            this.Socket.send(buffer, this.BinaryOptions, (error) => {
+                if (error) this.OnError(error);
+            });
+        } catch (error) {
+            this.OnError(error);
+        }
     }
     SendText(text) {
         if (this.Socket.readyState != ws.OPEN) {
             this.OnError(null);
             return;
         }
-        this.Socket.send(text);
+        try {
+            this.Socket.send(text, (error) => {
+                if (error) this.OnError(error);
+            });
+        } catch (error) {
+            this.OnError(error);
+        }
     }
     OnIceCandidate(e) {
         if (e.candidate) {
@@ -132,6 +158,7 @@ class StreamServer {
         this.Port = port || null;
         this.Channels = channels;
         this.SampleRate = sampleRate;
+        this.MaxClientBufferBytes = getMaxClientBufferBytes(serverConfig.audio.audioBitrate);
         this.Clients = new Set();
         this.FallbackClients = {
             "wav": new Set(),
@@ -145,9 +172,6 @@ class StreamServer {
             this.FallbackProvider["wav"] = AFallbackProvider.Create(this, "wav");
         }
         this.StdIn = process.stdin;
-        this.SamplesCount = this.SampleRate / 100;
-        this.Samples = new Int16Array(this.Channels * this.SamplesCount);
-        this.SamplesPosition = 0;
         this.StdInDataHandler = this.OnStdInData.bind(this);
     }
     Run() {
@@ -185,21 +209,6 @@ class StreamServer {
         }).bind(this));
     }
     OnStdInData(buffer) {
-        for (let i = 0; i < buffer.length; i += 2) {
-            this.Samples[this.SamplesPosition] = buffer.readInt16LE(i);
-            this.SamplesPosition++;
-            if (this.SamplesPosition >= this.Samples.length) {
-                let data = {
-                    "samples": this.Samples,
-                    "sampleRate": this.SampleRate,
-                    "bitsPerSample": 16,
-                    "channelCount": this.Channels,
-                    "numberOfFrames": this.SamplesCount,
-                };
-                this.Samples = new Int16Array(this.Channels * this.SamplesCount);
-                this.SamplesPosition = 0;
-            }
-        }
         for (let format in this.FallbackProvider) {
             this.FallbackProvider[format].InsertData(buffer);
         }
@@ -215,11 +224,14 @@ class StreamServer {
         this.FallbackClients[format].add(client);
         this.FallbackProvider[format].PrimeClient(client);
     }
-    DestroyClient(client) {
+    RemoveClient(client) {
         this.FallbackClients["mp3"].delete(client);
         this.FallbackClients["wav"].delete(client);
         this.Clients.delete(client);
-        client.Destroy();
+    }
+    DestroyClient(client, force = false) {
+        this.RemoveClient(client);
+        client.Destroy(force);
     }
     GetStats() {
         let fallback = {
@@ -253,11 +265,44 @@ class StreamServer {
 class AFallbackProvider {
     constructor(server) {
         this.Server = server;
+        this.InputBackpressured = false;
+        this.DroppedInputChunks = 0;
+        this.DroppedInputBytes = 0;
         this.Process = (0, child_process_1.spawn)(FFmpeg_command, this.GetFFmpegArguments(), { shell: false, detached: false, stdio: ['pipe', 'pipe', 'ignore'] });
         this.Process.stdout.addListener('data', this.OnData.bind(this));
+        this.Process.stdin.on('drain', this.OnInputDrain.bind(this));
+        this.Process.stdin.on('error', (error) => {
+            this.InputBackpressured = true;
+            logError(`[Stream] FFmpeg input error: ${error.message}`);
+        });
     }
     InsertData(buffer) {
-        this.Process.stdin.write(buffer);
+        if (this.InputBackpressured || !this.Process.stdin.writable) {
+            this.DroppedInputChunks++;
+            this.DroppedInputBytes += buffer.length;
+            return false;
+        }
+
+        try {
+            if (!this.Process.stdin.write(buffer)) {
+                this.InputBackpressured = true;
+            }
+            return true;
+        } catch (error) {
+            this.InputBackpressured = true;
+            this.DroppedInputChunks++;
+            this.DroppedInputBytes += buffer.length;
+            logError(`[Stream] FFmpeg input write failed: ${error.message}`);
+            return false;
+        }
+    }
+    OnInputDrain() {
+        this.InputBackpressured = false;
+        if (this.DroppedInputChunks > 0) {
+            logWarn(`[Stream] Encoder recovered from backpressure; dropped ${this.DroppedInputChunks} stale PCM chunks (${this.DroppedInputBytes} bytes).`);
+            this.DroppedInputChunks = 0;
+            this.DroppedInputBytes = 0;
+        }
     }
     static Create(server, format) {
         if (format == "mp3") {
