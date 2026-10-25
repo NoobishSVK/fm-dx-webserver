@@ -34,6 +34,7 @@
   <script src="js/3las/fallback/3las.fallback.js"></script>
   <script src="js/3las/3las.js"></script>
   <script src="js/3las/main.js"></script>
+  <script src="js/3las/audio-stats.js"></script>
   <script type="text/javascript">
     window.addEventListener('load', Init, false);
     document.ontouchmove = function(e) {
@@ -546,6 +547,21 @@
               <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
               <br>
               <p class="text-small color-3" id="current-ping"></p>
+              <details id="audio-stream-stats" class="audio-stream-stats" hidden>
+                <summary>Audio stats for nerds</summary>
+                <dl>
+                  <dt>State</dt><dd id="audio-stat-state">—</dd>
+                  <dt>Local playback delay</dt><dd id="audio-stat-latency">—</dd>
+                  <dt>Scheduled buffer</dt><dd id="audio-stat-buffer">—</dd>
+                  <dt>Browser output</dt><dd id="audio-stat-output">—</dd>
+                  <dt>Receive rate</dt><dd id="audio-stat-bitrate">—</dd>
+                  <dt>Packet timing</dt><dd id="audio-stat-packets">—</dd>
+                  <dt>Last packet</dt><dd id="audio-stat-last-packet">—</dd>
+                  <dt>Audio format</dt><dd id="audio-stat-format">—</dd>
+                  <dt>Recovery events</dt><dd id="audio-stat-recovery">—</dd>
+                </dl>
+                <p class="audio-stream-stats-note">Local estimate only; capture, encoding and network transit are not measurable in the browser.</p>
+              </details>
             </div>
           </div>
         </div>

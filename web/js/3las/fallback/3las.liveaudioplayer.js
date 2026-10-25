@@ -18,6 +18,9 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.PlaybackSpeed = 1.0;
         // Reset variable for scheduling times
         this.NextScheduleTime = 0.0;
+        this.UnderrunCount = 0;
+        this.SkippedBufferCount = 0;
+        this.WasUnderrunning = false;
         // Create gain node for volume control
         this.Amplification = this.Audio.createGain();
         // Set volume to max
@@ -65,10 +68,14 @@ var LiveAudioPlayer = /** @class */ (function () {
             if (this.Audio.currentTime >= this.NextScheduleTime) {
                 // Calculate the time we need to skip
                 skipDurationTime = this.Audio.currentTime - this.NextScheduleTime + 0.05;
+                if (!this.WasUnderrunning)
+                    this.UnderrunCount++;
+                this.WasUnderrunning = true;
             }
             else {
                 // No skipping needed
                 skipDurationTime = 0.0;
+                this.WasUnderrunning = false;
             }
             // Check if we'd skip the whole buffer anyway
             if (skipDurationTime < duration) {
@@ -121,16 +128,32 @@ var LiveAudioPlayer = /** @class */ (function () {
             }
             else {
                 this.Logger.Log("Skipped buffer because it became too old.");
+                this.SkippedBufferCount++;
             }
         }
         else {
             this.Logger.Log("Skipped buffer because it was too old.");
+            this.SkippedBufferCount++;
+            if (!this.WasUnderrunning)
+                this.UnderrunCount++;
+            this.WasUnderrunning = true;
         }
         // Move time forward
         this.NextScheduleTime += duration;
     };
     LiveAudioPlayer.prototype.Reset = function () {
         this.NextScheduleTime = 0.0;
+        this.UnderrunCount = 0;
+        this.SkippedBufferCount = 0;
+        this.WasUnderrunning = false;
+    };
+    LiveAudioPlayer.prototype.GetStats = function () {
+        return {
+            ScheduledBufferMs: Math.max(0, this.NextScheduleTime - this.Audio.currentTime) * 1000,
+            Underruns: this.UnderrunCount,
+            SkippedBuffers: this.SkippedBufferCount,
+            PlaybackSpeed: this.PlaybackSpeed
+        };
     };
     LiveAudioPlayer.prototype.CheckBeforeDecode = function (playbackLength) {
         if (this.NextScheduleTime == 0)

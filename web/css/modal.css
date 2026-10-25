@@ -122,6 +122,51 @@ body.modal-open {
     width: 200px;
 }
 
+.audio-stream-stats {
+    width: min(330px, calc(100% - 30px));
+    box-sizing: border-box;
+    margin: 14px auto 24px;
+    padding: 12px 14px;
+    border-radius: 15px;
+    background: var(--color-1);
+    color: var(--color-text);
+    text-align: left;
+}
+
+.audio-stream-stats summary {
+    color: var(--color-4);
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.audio-stream-stats dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    margin: 12px 0 0;
+    font-size: 13px;
+}
+
+.audio-stream-stats dt {
+    color: var(--color-3);
+}
+
+.audio-stream-stats dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.audio-stream-stats-note {
+    margin: 12px 0 0;
+    color: var(--color-3);
+    font-size: 11px;
+    line-height: 1.35;
+    text-align: center;
+}
+
 .modal-panel-chat {
     width: 100%;
     max-width: 960px;

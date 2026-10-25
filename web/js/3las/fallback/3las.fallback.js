@@ -68,6 +68,7 @@ var Fallback = /** @class */ (function () {
         this.PacketModCounter = 0;
         this.LastCheckTime = 0;
         this.FocusChecker = 0;
+        this.ResetNetworkStats();
     }
     Fallback.prototype.Init = function (webSocket) {
         this.MobileUnmute();
@@ -127,6 +128,21 @@ var Fallback = /** @class */ (function () {
     Fallback.prototype.OnSocketDisconnect = function () {
     };
     Fallback.prototype.OnSocketDataReady = function (data) {
+        var now = performance.now();
+        var byteLength = data.byteLength || data.length || 0;
+        if (this.LastPacketTime > 0) {
+            var interval = now - this.LastPacketTime;
+            if (this.PacketIntervalMs === 0) {
+                this.PacketIntervalMs = interval;
+            }
+            else {
+                this.PacketIntervalMs += (interval - this.PacketIntervalMs) * 0.1;
+            }
+            this.PacketJitterMs += (Math.abs(interval - this.PacketIntervalMs) - this.PacketJitterMs) * 0.1;
+        }
+        this.LastPacketTime = now;
+        this.StatsWindowBytes += byteLength;
+        this.UpdateReceiveRate(now);
         this.PacketModCounter++;
         if (this.PacketModCounter > 100) {
             if (this.ActivityCallback)
@@ -134,6 +150,45 @@ var Fallback = /** @class */ (function () {
             this.PacketModCounter = 0;
         }
         this.FormatReader.PushData(new Uint8Array(data));
+    };
+    Fallback.prototype.UpdateReceiveRate = function (now) {
+        var elapsed = now - this.StatsWindowStart;
+        if (elapsed < 1000)
+            return;
+        this.ReceiveRateKbps = this.StatsWindowBytes * 8 / elapsed;
+        this.StatsWindowBytes = 0;
+        this.StatsWindowStart = now;
+    };
+    Fallback.prototype.ResetNetworkStats = function () {
+        this.StatsWindowBytes = 0;
+        this.StatsWindowStart = performance.now();
+        this.ReceiveRateKbps = 0;
+        this.LastPacketTime = 0;
+        this.PacketIntervalMs = 0;
+        this.PacketJitterMs = 0;
+    };
+    Fallback.prototype.GetStats = function () {
+        var now = performance.now();
+        this.UpdateReceiveRate(now);
+        var playerStats = this.Player.GetStats();
+        var baseLatencyMs = Number.isFinite(this.Audio.baseLatency) ? this.Audio.baseLatency * 1000 : null;
+        var outputLatencyMs = Number.isFinite(this.Audio.outputLatency) ? this.Audio.outputLatency * 1000 : null;
+        var browserOutputMs = (baseLatencyMs || 0) + (outputLatencyMs || 0);
+        return {
+            Format: this.SelectedFormatName.toUpperCase(),
+            ReceiveRateKbps: this.ReceiveRateKbps,
+            PacketIntervalMs: this.PacketIntervalMs,
+            PacketJitterMs: this.PacketJitterMs,
+            LastPacketAgeMs: this.LastPacketTime > 0 ? now - this.LastPacketTime : null,
+            ScheduledBufferMs: playerStats.ScheduledBufferMs,
+            BrowserOutputMs: baseLatencyMs === null && outputLatencyMs === null ? null : browserOutputMs,
+            LocalPlaybackLatencyMs: playerStats.ScheduledBufferMs + browserOutputMs,
+            Underruns: playerStats.Underruns,
+            SkippedBuffers: playerStats.SkippedBuffers,
+            PlaybackSpeed: playerStats.PlaybackSpeed,
+            SampleRate: this.Audio.sampleRate,
+            AudioState: this.Audio.state
+        };
     };
     Fallback.prototype.StartFocusChecker = function () {
         if (!this.FocusChecker) {
@@ -161,6 +216,7 @@ var Fallback = /** @class */ (function () {
         this.StopFocusChecker();
         this.FormatReader.Reset();
         this.Player.Reset();
+        this.ResetNetworkStats();
         this.WebSocket = null;
     };
     return Fallback;

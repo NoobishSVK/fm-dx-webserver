@@ -46,6 +46,11 @@ var _3LAS = /** @class */ (function () {
     _3LAS.prototype.CanChangeVolume = function () {
             return true;
     };
+    _3LAS.prototype.GetStats = function () {
+        var stats = this.Fallback.GetStats();
+        stats.Connected = !!(this.WebSocket && this.WebSocket.Connected);
+        return stats;
+    };
     _3LAS.prototype.Start = function () {
         this.ConnectivityFlag = false;
         this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
