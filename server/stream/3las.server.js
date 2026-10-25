@@ -9,7 +9,9 @@ const checkFFmpeg = require('./checkFFmpeg');
 const { spawn } = require('child_process');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const { serverConfig } = require('../server_config');
+const { getAudioFilterArguments } = require('./audio_encoder');
 const { getMaxClientBufferBytes, hasExceededClientBuffer } = require('./live_stream_buffer');
+const { Mp3Packetizer } = require('./mp3_packetizer');
 
 let ffmpegStaticPath = 'ffmpeg'; // fallback value
 
@@ -316,6 +318,7 @@ class AFallbackProvider {
 class FallbackProviderMp3 extends AFallbackProvider {
     constructor(server) {
         super(server);
+        this.Packetizer = new Mp3Packetizer(2);
     }
     GetFFmpegArguments() {
         return [
@@ -324,6 +327,7 @@ class FallbackProviderMp3 extends AFallbackProvider {
             "-ar", Number(this.Server.SampleRate.toString()) + Number(serverConfig.audio.samplerateOffset),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
+            ...getAudioFilterArguments(serverConfig.audio.audioBoost),
             "-c:a", "libmp3lame",
             "-b:a", serverConfig.audio.audioBitrate,
             "-ac", this.Server.Channels.toString(),
@@ -334,7 +338,9 @@ class FallbackProviderMp3 extends AFallbackProvider {
         ];
     }
     OnData(chunk) {
-        this.Server.BroadcastBinary("mp3", chunk);
+        for (const packet of this.Packetizer.Push(chunk)) {
+            this.Server.BroadcastBinary("mp3", packet);
+        }
     }
     PrimeClient(_) {
     }
@@ -355,6 +361,7 @@ class FallbackProviderWav extends AFallbackProvider {
             "-ar", Number(this.Server.SampleRate.toString()) + Number(serverConfig.audio.samplerateOffset),
             "-ac", this.Server.Channels.toString(),
             "-i", "pipe:0",
+            ...getAudioFilterArguments(serverConfig.audio.audioBoost),
             "-c:a", "pcm_s16le",
             "-ar", Settings.FallbackWavSampleRate.toString(),
             "-ac", "1",

@@ -121,12 +121,7 @@ checkFFmpeg().then((ffmpegPath) => {
 
         function launchFFmpeg() {
             const commandDef = buildCommand(ffmpegPath);
-            let ffmpegArgs = commandDef.args;
-
-            // Apply audio boost if enabled
-            if (serverConfig.audio.audioBoost) {
-                ffmpegArgs.splice(ffmpegArgs.indexOf('pipe:1'), 0, '-af', 'volume=1.7');
-            }
+            const ffmpegArgs = commandDef.args;
 
             logDebug(`${consoleLogTitle} Launching FFmpeg with args: ${ffmpegArgs.join(' ')}`);
             ffmpeg = spawn(ffmpegPath, ffmpegArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -223,7 +218,7 @@ checkFFmpeg().then((ffmpegPath) => {
             audioServer.waitUntilReady.then(() => {
                 audioServer.Server.StdIn = sox.stdout;
                 audioServer.Server.Run();
-                connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn`);
+                connectMessage(`${consoleLogTitle} Connected SoX \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
 
             sox.stderr.on('data', (data) => {
@@ -282,7 +277,7 @@ checkFFmpeg().then((ffmpegPath) => {
                     audioServer.Server.Run();
                     audioServerRunning = true;
                 }
-                connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn`);
+                connectMessage(`${consoleLogTitle} Connected arecord \u2192 FFmpeg \u2192 Server.StdIn${serverConfig.audio.audioBoost ? ' (audio boost)' : ''}`);
             });
         }
 
