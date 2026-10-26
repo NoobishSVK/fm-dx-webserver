@@ -24,8 +24,10 @@ function createRDSReceiver(dataToSend) {
   parser.on('ecc', value => { dataToSend.ecc = value; });
   parser.on('af', frequencyKhz => { dataToSend.af.push(frequencyKhz); });
   parser.on('country', value => {
-    dataToSend.country_name = countryName(value);
-    dataToSend.country_iso = countryISO(value);
+    const name = countryName(value);
+    const iso = countryISO(value);
+    dataToSend.country_name = name;
+    dataToSend.country_iso = name.startsWith('USA') ? 'US' : /^[A-Z]{2}$/.test(iso) ? iso : 'UN';
   });
   parser.on('ps', snapshot => {
     dataToSend.ps = snapshot.text;
