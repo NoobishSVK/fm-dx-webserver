@@ -108,17 +108,23 @@ var AudioFormatReader_MPEG = /** @class */ (function (_super) {
             this.Frames.splice(0, this.Frames.length - 1);
             // Increment Id
             var id_1 = this.Id++;
+            var generation_1 = this.Generation;
             // Check if decoded frames might be too far back in the past
             if (!this.OnBeforeDecode(id_1, expectedTotalPlayTime_1))
                 return;
             // Push window to the decoder
             this.Audio.decodeAudioData(decodeBuffer.buffer, (function (decodedData) {
+                if (generation_1 !== this.Generation) return;
                 var _id = id_1;
                 var _expectedTotalPlayTime = expectedTotalPlayTime_1;
                 var _firstGranulePlayTime = firstGranulePlayTime_1;
                 var _lastGranulePlayTime = lastGranulePlayTime_1;
                 this._OnDecodeSuccess(decodedData, _id, _expectedTotalPlayTime, _firstGranulePlayTime, _lastGranulePlayTime);
-            }).bind(this), this._OnDecodeError.bind(this));
+            }).bind(this), (function (error) {
+                if (generation_1 !== this.Generation) return;
+                this.OnDataReady(id_1, null);
+                this._OnDecodeError(error);
+            }).bind(this));
         }
     };
     // Finds frame boundries within the data buffer

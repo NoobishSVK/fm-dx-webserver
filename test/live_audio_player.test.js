@@ -32,6 +32,15 @@ function createAudioContext() {
 const logger = { Log() {} };
 const decodedBuffer = { duration: 0.048 };
 
+test('keeps learned protection through a few quiet minutes', () => {
+    const player = new LiveAudioPlayer(createAudioContext(), logger, 1, 0.2, false);
+    player.TargetBufferLength = 0.35;
+    player.LastUnderrunTime = Date.now() - 180000;
+    player.LastBufferAdjustmentTime = player.LastUnderrunTime;
+    player.UpdateAdaptiveBufferTarget();
+    assert.equal(player.TargetBufferLength, 0.35);
+});
+
 test('starts with a 200 ms adaptive audio target', () => {
     const audio = createAudioContext();
     const player = new LiveAudioPlayer(audio, logger, 1, 0.2, false);
@@ -56,7 +65,7 @@ test('raises the target after an underrun and refills before resuming', () => {
     assert.ok(stats.ScheduledBufferMs >= 250);
 });
 
-test('reduces an elevated target after a stable minute', () => {
+test('reduces an elevated target after five stable minutes', () => {
     const audio = createAudioContext();
     const player = new LiveAudioPlayer(audio, logger, 1, 0.2, false);
     player.TargetBufferLength = 0.3;

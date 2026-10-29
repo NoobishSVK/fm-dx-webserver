@@ -19,6 +19,7 @@ var AudioFormatReader = /** @class */ (function () {
         this.BeforeDecodeCheck = beforeDecodeCheck;
         this.DataReadyCallback = dataReadyCallback;
         this.Id = 0;
+        this.Generation = 0;
         this.LastPushedId = -1;
         this.Samples = new Array();
         this.BufferStore = {};
@@ -46,6 +47,7 @@ var AudioFormatReader = /** @class */ (function () {
     };
     // Deletes all encoded and decoded data from the reader (does not effect headers, etc.)
     AudioFormatReader.prototype.PurgeData = function () {
+        this.Generation++;
         this.Id = 0;
         this.LastPushedId = -1;
         this.Samples = new Array();
@@ -81,11 +83,11 @@ var AudioFormatReader = /** @class */ (function () {
     AudioFormatReader.prototype.OnDataReady = function (id, audioBuffer) {
         if (this.LastPushedId + 1 == id) {
             // Push samples into array
-            this.Samples.push(audioBuffer);
+            if (audioBuffer) this.Samples.push(audioBuffer);
             this.LastPushedId++;
-            while (this.BufferStore[this.LastPushedId + 1]) {
+            while (Object.prototype.hasOwnProperty.call(this.BufferStore, this.LastPushedId + 1)) {
                 // Push samples we decoded earlier in correct order
-                this.Samples.push(this.BufferStore[this.LastPushedId + 1]);
+                if (this.BufferStore[this.LastPushedId + 1]) this.Samples.push(this.BufferStore[this.LastPushedId + 1]);
                 delete this.BufferStore[this.LastPushedId + 1];
                 this.LastPushedId++;
             }

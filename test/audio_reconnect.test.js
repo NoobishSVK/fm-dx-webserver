@@ -34,7 +34,7 @@ test('repeated starts keep only one watchdog and Stop cancels pending reconnects
     const h = harness();
     h.player.Start();
     h.player.Start();
-    assert.equal(h.intervals.size, 2);
+    assert.equal(h.intervals.size, 1);
     h.advance(3000);
     h.intervals.get(h.player.ReconnectWatchdog)();
     assert.equal(h.timeouts.size, 1);
@@ -54,6 +54,17 @@ test('audio recovering during the grace period cancels the restart', () => {
     assert.equal(h.connections(), 1);
 });
 
+test('radio data recovery does not restart healthy audio', () => {
+    const h = harness();
+    h.player.Start();
+    h.context.requiresAudioStreamRestart = true;
+    h.advance(3000);
+    h.context.window.startTimeConnectionWatchdog = h.context.performance.now();
+    for (const callback of h.intervals.values()) callback();
+    assert.equal(h.connections(), 1);
+    assert.equal(h.timeouts.size, 0);
+});
+
 test('a sustained audio stall still restarts the stream', () => {
     const h = harness();
     h.player.Start();
@@ -62,5 +73,5 @@ test('a sustained audio stall still restarts the stream', () => {
     h.advance(2000);
     h.timeouts.get(h.player.ReconnectTimer)();
     assert.equal(h.connections(), 2);
-    assert.equal(h.intervals.size, 2);
+    assert.equal(h.intervals.size, 1);
 });

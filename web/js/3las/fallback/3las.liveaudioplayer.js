@@ -165,7 +165,7 @@ var LiveAudioPlayer = /** @class */ (function () {
     LiveAudioPlayer.MinCatchUpRate = 0.003;
     LiveAudioPlayer.MaxCatchUpRate = 0.01;
     LiveAudioPlayer.CatchUpGain = 0.05;
-    LiveAudioPlayer.StablePeriodMs = 60000;
+    LiveAudioPlayer.StablePeriodMs = 300000;
     return LiveAudioPlayer;
 }());
 

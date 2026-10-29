@@ -1,7 +1,9 @@
 'use strict';
 
 const MIN_CLIENT_BUFFER_BYTES = 4 * 1024;
-const MAX_CLIENT_BACKLOG_SECONDS = 0.25;
+// Allow brief network stalls to drain without forcing a reconnect.
+// This is a hard ceiling, not a target or an intentional send delay.
+const MAX_CLIENT_BACKLOG_SECONDS = 1;
 
 function bitrateToBytesPerSecond(bitrate) {
     const match = /^\s*(\d+(?:\.\d+)?)\s*([km]?)\s*$/i.exec(`${bitrate}`);
