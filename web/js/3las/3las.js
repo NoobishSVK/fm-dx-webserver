@@ -73,22 +73,24 @@ var _3LAS = /** @class */ (function () {
 
         // Stream connection watchdog monitors mp3 frames
         console.log("Stream connection watchdog active.");
-        let intervalReconnectWatchdog = setInterval(() => {
+        window.startTimeConnectionWatchdog = performance.now();
+        this.ReconnectWatchdog = setInterval(() => {
             if (Stream) {
                 let endTimeConnectionWatchdog = performance.now();
                 elapsedTimeConnectionWatchdog = endTimeConnectionWatchdog - window.startTimeConnectionWatchdog;
                 //console.log(`Stream frame elapsed time: ${parseInt(elapsedTimeConnectionWatchdog)} ms`);
-                if (elapsedTimeConnectionWatchdog > 2000 && shouldReconnect) {
-                    clearInterval(intervalReconnectWatchdog);
-                    setTimeout(() => {
-                        clearInterval(intervalReconnectWatchdog);
+                if (elapsedTimeConnectionWatchdog > 2000 && shouldReconnect && !this.ReconnectTimer) {
+                    this.ReconnectTimer = setTimeout(() => {
+                        this.ReconnectTimer = null;
+                        // A temporary stall may have recovered during the grace period.
+                        if (!Stream || !shouldReconnect || performance.now() - window.startTimeConnectionWatchdog <= 2000)
+                            return;
                         console.log("Unstable internet connection detected, reconnecting... (" + parseInt(elapsedTimeConnectionWatchdog) + " ms)");
                         this.Stop();
                         this.Start();
                     }, 2000);
                 }
             } else {
-                clearInterval(intervalReconnectWatchdog);
                 this.Stop();
                 console.log("Stream connection watchdog inactive.");
             }
@@ -113,6 +115,12 @@ var _3LAS = /** @class */ (function () {
         }
     };
     _3LAS.prototype.Stop = function () {
+        clearInterval(this.ReconnectWatchdog);
+        clearTimeout(this.ReconnectTimer);
+        clearInterval(audioStreamRestartInterval);
+        this.ReconnectWatchdog = null;
+        this.ReconnectTimer = null;
+        audioStreamRestartInterval = null;
         try {
             // Close WebSocket connection
             if (this.WebSocket) {
