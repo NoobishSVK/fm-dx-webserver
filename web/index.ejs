@@ -24,17 +24,6 @@
   <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
 
   <!-- 3LAS Scripts for Audio streaming -->
-  <script src="js/3las/util/3las.helpers.js"></script>
-  <script src="js/3las/util/3las.logging.js"></script>
-  <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
-  <script src="js/3las/fallback/3las.formatreader.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
-  <script src="js/3las/util/3las.websocketclient.js"></script>
-  <script src="js/3las/fallback/3las.fallback.js"></script>
-  <script src="js/3las/3las.js"></script>
-  <script src="js/3las/main.js"></script>
-  <script src="js/3las/audio-stats.js"></script>
   <script type="text/javascript">
     window.addEventListener('load', Init, false);
     document.ontouchmove = function(e) {
@@ -153,7 +142,7 @@
           <div class="flex-container">
             <div class="panel-75 flex-container no-bg">
               <div class="panel-10 no-bg h-100 m-0 m-right-20 hide-phone" style="width: 100px;margin-right: 20px !important;">
-                <button class="playbutton" aria-label="Play / Stop"><i class="fa-solid fa-play fa-lg"></i></button>
+                <button class="playbutton" aria-label="Audio temporarily unavailable" disabled><i class="fa-solid fa-play fa-lg"></i></button>
               </div>
               <div class="panel-100 m-0 hover-brighten flex-center tooltip" id="ps-container" style="height: 90px;" data-tooltip="Clicking on the RDS PS will copy the RDS info into the clipboard.">
                 <span class="text-big" id="data-ps"></span>
@@ -440,7 +429,7 @@
     </div>
 
     <div id="mobileTray" class="hide-desktop">
-        <button class="playbutton" aria-label="Play / Stop" style="width: 64px; height: 64px; position:absolute;display: block;top: -50%;left: 50%; transform: translateX(-50%);"><i class="fa-solid fa-play fa-lg"></i></button>
+        <button class="playbutton" aria-label="Audio temporarily unavailable" disabled style="width: 64px; height: 64px; position:absolute;display: block;top: -50%;left: 50%; transform: translateX(-50%);"><i class="fa-solid fa-play fa-lg"></i></button>
 
         <div style="width: calc(50% - 32px);text-align: center;">
           <button class="users-online-container" aria-label="Online users" style="display: inline-block;"><i class="fa-solid fa-user"></i> <span class="users-online"></span></button>
@@ -547,23 +536,6 @@
               <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
               <br>
               <p class="text-small color-3" id="current-ping"></p>
-              <details id="audio-stream-stats" class="audio-stream-stats" hidden>
-                <summary>Audio stats for nerds</summary>
-                <dl>
-                  <dt>State</dt><dd id="audio-stat-state">—</dd>
-                  <dt>Local playback delay</dt><dd id="audio-stat-latency">—</dd>
-                  <dt>Scheduled buffer</dt><dd id="audio-stat-buffer">—</dd>
-                  <dt>Decoded pending</dt><dd id="audio-stat-pending">—</dd>
-                  <dt>Buffer target</dt><dd id="audio-stat-buffer-target">—</dd>
-                  <dt>Browser output</dt><dd id="audio-stat-output">—</dd>
-                  <dt>Receive rate</dt><dd id="audio-stat-bitrate">—</dd>
-                  <dt>Packet median / jitter p95</dt><dd id="audio-stat-packets">—</dd>
-                  <dt>Last packet</dt><dd id="audio-stat-last-packet">—</dd>
-                  <dt>Audio format</dt><dd id="audio-stat-format">—</dd>
-                  <dt>Recovery events</dt><dd id="audio-stat-recovery">—</dd>
-                </dl>
-                <p class="audio-stream-stats-note">The buffer target adapts between 200 and 600 ms. Local estimate only; capture, encoding and network transit are not measurable in the browser.</p>
-              </details>
             </div>
           </div>
         </div>
