@@ -32,6 +32,14 @@ function createAudioContext() {
 const logger = { Log() {} };
 const decodedBuffer = { duration: 0.048 };
 
+test('learns a buffer target from an observed long packet gap', () => {
+    const player = new LiveAudioPlayer(createAudioContext(), logger, 1, 0.2, false);
+    player.ObservePacketGap(0.384);
+    assert.equal(Math.round(player.TargetBufferLength * 1000), 484);
+    player.ObservePacketGap(2);
+    assert.equal(player.TargetBufferLength, 0.6);
+});
+
 test('keeps learned protection through a few quiet minutes', () => {
     const player = new LiveAudioPlayer(createAudioContext(), logger, 1, 0.2, false);
     player.TargetBufferLength = 0.35;

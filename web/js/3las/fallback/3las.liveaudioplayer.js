@@ -73,6 +73,15 @@ var LiveAudioPlayer = /** @class */ (function () {
         this.TargetBufferLength = Math.min(LiveAudioPlayer.MaxBufferLength, this.TargetBufferLength + LiveAudioPlayer.BufferStep);
         this.Logger.Log("Audio underrun; increasing target buffer to " + Math.round(this.TargetBufferLength * 1000) + " ms.");
     };
+    LiveAudioPlayer.prototype.ObservePacketGap = function (gapSeconds) {
+        if (!Number.isFinite(gapSeconds) || gapSeconds < 0.25) return;
+        var target = Math.min(LiveAudioPlayer.MaxBufferLength, gapSeconds + 0.1);
+        if (target > this.TargetBufferLength) {
+            this.TargetBufferLength = target;
+            this.LastBufferAdjustmentTime = Date.now();
+            this.Logger.Log("Audio packet gap; increasing target buffer to " + Math.round(target * 1000) + " ms.");
+        }
+    };
     // Recieves an audiobuffer and schedules it for seamless playback
     LiveAudioPlayer.prototype.GetScheduledBufferLength = function () {
         return Math.max(0, this.NextScheduleTime - this.Audio.currentTime);
@@ -160,7 +169,7 @@ var LiveAudioPlayer = /** @class */ (function () {
     // Hystersis value for speed up/down trigger
     LiveAudioPlayer.OffsetVariance = 0.2;
     LiveAudioPlayer.MinBufferLength = 0.2;
-    LiveAudioPlayer.MaxBufferLength = 0.4;
+    LiveAudioPlayer.MaxBufferLength = 0.6;
     LiveAudioPlayer.BufferStep = 0.05;
     LiveAudioPlayer.BufferTolerance = 0.015;
     LiveAudioPlayer.MinCatchUpRate = 0.003;

@@ -164,6 +164,7 @@ var Fallback = /** @class */ (function () {
         var byteLength = data.byteLength || data.length || 0;
         if (this.LastPacketTime > 0) {
             var interval = now - this.LastPacketTime;
+            this.Player.ObservePacketGap(interval / 1000);
             if (interval >= 250 && (!this.LastPacketGapLog || now - this.LastPacketGapLog >= 10000)) {
                 console.warn("[Audio] Packet gap " + Math.round(interval) + " ms at " + new Date().toISOString() + " (includes browser scheduling delay)");
                 this.LastPacketGapLog = now;
