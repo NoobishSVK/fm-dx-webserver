@@ -21,6 +21,7 @@ var WebSocketClient = /** @class */ (function () {
         this.DisconnectCallback = disconnectCallback;
         // Client is not yet connected
         this.IsConnected = false;
+        this.Closed = false;
         // Create socket, connect to URI
         if (typeof WebSocket !== "undefined")
             this.Socket = new WebSocket(this.Uri);
@@ -64,18 +65,24 @@ var WebSocketClient = /** @class */ (function () {
     };
     // Change connetion status on disconnect
     WebSocketClient.prototype.OnClose = function (_ev) {
-        if (this.IsConnected == true && (this.Socket.readyState == 2 || this.Socket.readyState == 3)) {
+        if (!this.Closed) {
+            this.Closed = true;
             this.IsConnected = false;
-            this.DisconnectCallback();
+            this.DisconnectCallback(_ev);
         }
     };
     WebSocketClient.prototype.Close = function () {
+        // Intentional shutdown must not reconnect or deliver late socket events.
+        this.Closed = true;
+        this.IsConnected = false;
+        this.ConnectCallback = this.ErrorCallback = this.DataReadyCallback = this.DisconnectCallback = function () {};
         if (this.Socket) {
             this.Socket.close();
         }
     };
     // Handle incomping data
     WebSocketClient.prototype.OnMessage = function (ev) {
+        if (this.Closed) return;
         // Trigger callback
         this.DataReadyCallback(ev.data);
     };

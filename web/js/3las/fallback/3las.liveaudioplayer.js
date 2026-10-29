@@ -67,6 +67,7 @@ var LiveAudioPlayer = /** @class */ (function () {
     LiveAudioPlayer.prototype.RegisterUnderrun = function () {
         var now = Date.now();
         this.UnderrunCount++;
+        console.warn("[Audio] Playback underrun at " + new Date().toISOString() + "; target " + Math.round(this.TargetBufferLength * 1000) + " ms");
         this.LastUnderrunTime = now;
         this.LastBufferAdjustmentTime = now;
         this.TargetBufferLength = Math.min(LiveAudioPlayer.MaxBufferLength, this.TargetBufferLength + LiveAudioPlayer.BufferStep);

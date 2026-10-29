@@ -283,8 +283,19 @@ class AFallbackProvider {
             stdio: ['pipe', 'pipe', 'pipe']
         });
         this.Process = encoder;
+        let lastOutputAt = 0;
+        let lastGapWarningAt = 0;
         encoder.stdout.addListener('data', (data) => {
-            if (encoder === this.Process) this.OnData(data);
+            if (encoder === this.Process) {
+                const now = Date.now();
+                const gap = now - lastOutputAt;
+                if (lastOutputAt && gap >= 500 && now - lastGapWarningAt >= 10000) {
+                    logWarn(`[Stream] Encoder output gap: ${gap} ms (includes capture and event-loop delay).`);
+                    lastGapWarningAt = now;
+                }
+                lastOutputAt = now;
+                this.OnData(data);
+            }
         });
         encoder.stderr.on('data', (data) => {
             logFfmpeg(`[Stream encoder stderr]: ${data.toString()}`);

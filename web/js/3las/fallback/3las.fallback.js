@@ -118,6 +118,7 @@ var Fallback = /** @class */ (function () {
     // Callback functions from format reader
     Fallback.prototype.OnReaderError = function () {
         this.Logger.Log("Reader error: Decoding failed.");
+        console.warn("[Audio] Decode failed at " + new Date().toISOString());
     };
     Fallback.prototype.OnReaderDataReady = function () {
         while (this.FormatReader.SamplesAvailable()) {
@@ -163,6 +164,10 @@ var Fallback = /** @class */ (function () {
         var byteLength = data.byteLength || data.length || 0;
         if (this.LastPacketTime > 0) {
             var interval = now - this.LastPacketTime;
+            if (interval >= 250 && (!this.LastPacketGapLog || now - this.LastPacketGapLog >= 10000)) {
+                console.warn("[Audio] Packet gap " + Math.round(interval) + " ms at " + new Date().toISOString() + " (includes browser scheduling delay)");
+                this.LastPacketGapLog = now;
+            }
             if (interval <= 1000) {
                 this.PacketIntervals.push(interval);
                 if (this.PacketIntervals.length > 120)

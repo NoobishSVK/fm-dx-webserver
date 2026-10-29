@@ -278,7 +278,13 @@ checkFFmpeg().then((ffmpegPath) => {
 
                 processInstance.lastAudioDataAt = Date.now();
                 processInstance.audioActivityHandler = () => {
-                    processInstance.lastAudioDataAt = Date.now();
+                    const now = Date.now();
+                    const gap = now - processInstance.lastAudioDataAt;
+                    if (gap >= 500 && now - (processInstance.lastGapWarningAt || 0) >= 10000) {
+                        logWarn(`${consoleLogTitle} Capture data gap: ${gap} ms (includes event-loop delay).`);
+                        processInstance.lastGapWarningAt = now;
+                    }
+                    processInstance.lastAudioDataAt = now;
                 };
                 stream.on('data', processInstance.audioActivityHandler);
                 processInstance.captureWatchdog = setInterval(() => {
@@ -387,6 +393,7 @@ checkFFmpeg().then((ffmpegPath) => {
                 stopCaptureWatchdog(arecord);
                 if (currentArecord === arecord) currentArecord = null;
                 logFfmpeg(`[arecord exited] with ${signal ? `signal ${signal}` : `code ${code}`}`);
+                if (!shuttingDown && !arecord.fallbackRequested) logWarn(`${consoleLogTitle} arecord exited with ${signal ? `signal ${signal}` : `code ${code}`}; restarting.`);
                 scheduleArecordRestart(signal === 'SIGINT' ? 250 : 2000);
             });
         }

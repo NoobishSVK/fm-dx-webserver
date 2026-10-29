@@ -75,3 +75,18 @@ test('a sustained audio stall still restarts the stream', () => {
     assert.equal(h.connections(), 2);
     assert.equal(h.intervals.size, 1);
 });
+
+test('a closed socket reconnects without waiting for the decode watchdog', () => {
+    const h = harness();
+    h.player.Start();
+    h.player.OnSocketDisconnect({ code: 1006, reason: '', wasClean: false });
+    assert.equal(h.player.ReconnectDelay, 250);
+    h.timeouts.get(h.player.ReconnectTimer)();
+    assert.equal(h.connections(), 2);
+    h.player.OnSocketDisconnect({ code: 1006 });
+    assert.equal(h.player.ReconnectDelay, 500);
+    h.player.Stop();
+    const count = h.timeouts.size;
+    h.player.OnSocketDisconnect({ code: 1000 });
+    assert.equal(h.timeouts.size, count);
+});

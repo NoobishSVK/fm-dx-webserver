@@ -53,6 +53,7 @@ var _3LAS = /** @class */ (function () {
     _3LAS.prototype.Start = function () {
         this.ConnectivityFlag = false;
         this.Stop(); // Attempt to mitigate the 0.5x speed/multiple stream bug
+        this.Running = true;
 
         // Stream connection watchdog monitors mp3 frames
         console.log("Stream connection watchdog active.");
@@ -68,7 +69,7 @@ var _3LAS = /** @class */ (function () {
                         // A temporary stall may have recovered during the grace period.
                         if (!Stream || !shouldReconnect || performance.now() - window.startTimeConnectionWatchdog <= 2000)
                             return;
-                        console.log("Unstable internet connection detected, reconnecting... (" + parseInt(elapsedTimeConnectionWatchdog) + " ms)");
+                        console.log("Audio decode stalled; reconnecting audio stream.");
                         this.Stop();
                         this.Start();
                     }, 2000);
@@ -98,6 +99,7 @@ var _3LAS = /** @class */ (function () {
         }
     };
     _3LAS.prototype.Stop = function () {
+        this.Running = false;
         clearInterval(this.ReconnectWatchdog);
         clearTimeout(this.ReconnectTimer);
         this.ReconnectWatchdog = null;
@@ -157,8 +159,10 @@ var _3LAS = /** @class */ (function () {
             this.Fallback.OnSocketConnect();
             this.Fallback.Init(this.WebSocket);
     };
-    _3LAS.prototype.OnSocketDisconnect = function () {
-        this.Logger.Log("Lost connection to server.");
+    _3LAS.prototype.OnSocketDisconnect = function (event) {
+        if (!this.Running) return;
+        console.log("Audio socket closed", event ? { code: event.code, reason: event.reason, wasClean: event.wasClean } : {});
+        this.Logger.Log("Lost audio socket connection.");
             this.Fallback.OnSocketDisconnect();
             this.Fallback.Reset();
         if (this.ConnectivityFlag) {
@@ -166,9 +170,16 @@ var _3LAS = /** @class */ (function () {
             if (this.ConnectivityCallback)
                 this.ConnectivityCallback(false);
     }
+        clearTimeout(this.ReconnectTimer);
+        this.ReconnectDelay = Math.min(5000, this.ReconnectDelay ? this.ReconnectDelay * 2 : 250);
+        this.ReconnectTimer = setTimeout(() => {
+            this.ReconnectTimer = null;
+            if (this.Running && Stream && shouldReconnect) this.Start();
+        }, this.ReconnectDelay);
 };
 
     _3LAS.prototype.OnSocketDataReady = function (data) {
+        this.ReconnectDelay = 0;
         this.Fallback.OnSocketDataReady(data);
     };
     return _3LAS;
