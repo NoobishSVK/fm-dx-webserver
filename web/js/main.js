@@ -91,6 +91,31 @@ $(document).ready(function () {
     }
     
     const textInput = $('#commandinput');
+
+    textInput.on('keydown', function (event) {
+        // Allow keyboard shortcuts such as Ctrl+A and Ctrl+V.
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+        if (event.key.length === 1 && !/[0-9.]/.test(event.key)) {
+            event.preventDefault();
+        }
+    });
+
+    // Also sanitize pasted text and mobile keyboard input.
+    textInput.on('input', function () {
+        let value = this.value.replace(/[^0-9.]/g, '');
+
+        // Allow only one decimal point.
+        const dotIndex = value.indexOf('.');
+        if (dotIndex !== -1) {
+            value = value.slice(0, dotIndex + 1) +
+                    value.slice(dotIndex + 1).replace(/\./g, '');
+        }
+
+        if (this.value !== value) {
+            this.value = value;
+        }
+    });
     
     textInput.on('change blur', function (event) {
         const inputValue = Number(textInput.val());
