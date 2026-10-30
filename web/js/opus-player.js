@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    let context, worklet, gain, decoder, socket, retryTimer;
+    let context, worklet, gain, decoder, socket, retryTimer, watchdog;
     let active = false, generation = 0, timestamp = 0, retry = 250;
     let underruns = 0, drops = 0, bytes = 0, bytesAt = 0;
     function display(id, value) { const node = document.getElementById(id); if (node) node.textContent = value; }
@@ -14,6 +14,7 @@
     }
     async function stop() {
         active = false; generation++; clearTimeout(retryTimer);
+        clearInterval(watchdog);
         if (socket) { socket.onclose = null; socket.close(); socket = null; }
         if (decoder && decoder.state !== 'closed') decoder.close();
         decoder = null;
@@ -30,6 +31,25 @@
         worklet.port.postMessage({ type: 'reset' });
         const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/audio');
         socket = ws; ws.binaryType = 'arraybuffer';
+        let lastPacketAt = performance.now();
+        const reconnect = reason => {
+            if (!active || id !== generation || socket !== ws) return;
+            console.warn('[Opus] Reconnecting:', reason);
+            clearInterval(watchdog);
+            // Do not wait for a close handshake on an unresponsive connection.
+            socket = null;
+            ws.onclose = null;
+            ws.close();
+            display('opus-state', 'Reconnecting');
+            if (decoder && decoder.state !== 'closed') decoder.close();
+            decoder = null;
+            worklet.port.postMessage({ type: 'reset' });
+            retryTimer = setTimeout(() => connect(id), retry);
+            retry = Math.min(5000, retry * 2);
+        };
+        watchdog = setInterval(() => {
+            if (performance.now() - lastPacketAt >= 5000) reconnect('No audio packets for 5 seconds');
+        }, 1000);
         ws.onmessage = async event => {
             if (!active || id !== generation || socket !== ws) return;
             if (typeof event.data === 'string') {
@@ -61,6 +81,7 @@
                 return;
             }
             if (!decoder || decoder.state !== 'configured') return;
+            lastPacketAt = performance.now();
             bytes += event.data.byteLength;
             const now = performance.now();
             if (now - bytesAt >= 1000) {
@@ -75,16 +96,7 @@
             } catch (error) { console.error('[Opus] Decode failed:', error); ws.close(); }
         };
         ws.onerror = () => console.warn('[Opus] Audio connection error.');
-        ws.onclose = event => {
-            if (!active || id !== generation || socket !== ws) return;
-            console.warn('[Opus] Audio connection closed:', event.code);
-            display('opus-state', 'Reconnecting');
-            if (decoder && decoder.state !== 'closed') decoder.close();
-            decoder = null;
-            worklet.port.postMessage({ type: 'reset' });
-            retryTimer = setTimeout(() => connect(id), retry);
-            retry = Math.min(5000, retry * 2);
-        };
+        ws.onclose = event => reconnect('Audio connection closed: ' + event.code);
     }
     async function start() {
         const id = ++generation; active = true; state(true);

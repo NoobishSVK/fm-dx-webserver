@@ -2,15 +2,17 @@
 
 const { spawn } = require('child_process');
 const WebSocket = require('ws');
+const checkFFmpeg = require('./checkFFmpeg');
 const { buildLinuxOpusPipeline } = require('./opus_pipeline');
 const { OggOpusPackets } = require('./ogg_opus_packets');
 const { AlsaStderrParser, containsAlsaSetupError, containsAlsaXrun, getAlsaFallbackProfile } = require('./linux_capture');
 
 class OpusServer {
-    constructor(audio, logger = console, spawnProcess = spawn) {
+    constructor(audio, logger = console, spawnProcess = spawn, resolveFFmpeg = checkFFmpeg) {
         this.audio = { ...audio };
         this.log = logger;
         this.spawnProcess = spawnProcess;
+        this.resolveFFmpeg = resolveFFmpeg;
         this.clients = new Set();
         this.stopped = true;
         this.generation = 0;
@@ -30,9 +32,21 @@ class OpusServer {
         this.wss.handleUpgrade(req, socket, head, ws => this.wss.emit('connection', ws, req));
     }
 
-    start() {
+    async start() {
         if (!this.stopped) return;
         this.stopped = false;
+        const generation = ++this.generation;
+        try {
+            const executable = await this.resolveFFmpeg();
+            if (this.stopped || generation !== this.generation) return;
+            if (!executable) throw new Error('No FFmpeg executable available');
+            this.ffmpeg = executable;
+        } catch (error) {
+            if (this.stopped || generation !== this.generation) return;
+            this.stopped = true;
+            this.log.error('[Opus] Cannot locate FFmpeg:', error.message);
+            return;
+        }
         this.launch();
     }
 
@@ -43,7 +57,7 @@ class OpusServer {
         catch (error) { this.log.error('[Opus] Invalid audio configuration:', error.message); return; }
         const generation = ++this.generation;
         const capture = this.spawnProcess('arecord', pipeline.captureArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
-        const encoder = this.spawnProcess('ffmpeg', pipeline.encoderArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
+        const encoder = this.spawnProcess(this.ffmpeg, pipeline.encoderArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
         this.capture = capture;
         this.encoder = encoder;
         const parser = new OggOpusPackets();
