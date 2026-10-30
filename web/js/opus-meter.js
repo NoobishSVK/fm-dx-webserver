@@ -9,7 +9,7 @@
         const panel = document.createElement('section');
         panel.id = 'peak-meter-container';
         panel.className = 'panel-100';
-        panel.innerHTML = `<h2>Digital input</h2>
+        panel.innerHTML = `<h2>Audio levels</h2>
             <p class="meter-caption">Tuner input level · independent of playback volume</p>
             <div class="meter-channels"></div>
             <div class="meter-scale"><span>−90</span><span>−60</span><span>−30</span><span>0 dBFS</span></div>
