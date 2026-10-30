@@ -10,9 +10,9 @@
         panel.id = 'peak-meter-container';
         panel.className = 'panel-100';
         panel.innerHTML = `<h2>Digital input</h2>
-            <p class="meter-caption">16-bit · dBFS · before boost and playback volume</p>
+            <p class="meter-caption">Tuner input level · independent of playback volume</p>
             <div class="meter-channels"></div>
-            <div class="meter-scale"><span>−90</span><span>−60</span><span>−30</span><span>0</span></div>
+            <div class="meter-scale"><span>−90</span><span>−60</span><span>−30</span><span>0 dBFS</span></div>
             <p class="meter-caption meter-status">Start audio to show input levels</p>`;
         const style = document.createElement('style');
         style.textContent = `
@@ -36,10 +36,11 @@
         function update() {
             const reading = window.fmdxAudio?.getInputLevels?.();
             const channels = reading?.channels;
-            if (channels && channels.length !== count) {
-                count = channels.length;
+            const channelCount = channels?.length || count || 2;
+            if (channelCount !== count) {
+                count = channelCount;
                 container.replaceChildren();
-                rows = channels.map((_, i) => {
+                rows = Array.from({ length: count }, (_, i) => {
                     const row = document.createElement('div');
                     row.className = 'meter-row';
                     row.innerHTML = `<span>${count === 1 ? 'M' : ['L', 'R'][i]}</span><div class="meter-track"><div class="meter-fill"></div><div class="meter-hold"></div></div><span class="meter-value"></span>`;
@@ -48,8 +49,10 @@
                 });
             }
             if (!reading) {
-                rows.forEach(row => { row.fill.style.clipPath = 'inset(0 100% 0 0)'; row.hold.style.display = 'none'; row.text.textContent = '—'; row.peak = null; });
-                status.textContent = 'No input readings — start audio or wait for the connection';
+                rows.forEach(row => { row.fill.style.clipPath = 'inset(0 100% 0 0)'; row.hold.style.display = 'none'; row.text.textContent = '—'; row.text.title = 'No input reading'; row.peak = null; });
+                status.textContent = window.fmdxAudio?.getOutput?.()
+                    ? 'Waiting for input levels…'
+                    : 'Audio stopped · press Play to show input levels';
                 lastReading = null;
                 return;
             }
@@ -73,7 +76,7 @@
             });
             status.textContent = channels.some(channel => channel.fullScale)
                 ? 'Digital full scale reached — check tuner output level'
-                : `${count === 1 ? 'Mono input' : 'Stereo input'} · sample peaks · 1 s peak hold · 0 dBFS = full scale`;
+                : `${count === 1 ? 'Mono' : 'Left / right'} · peak held for 1 second · 0 dBFS is the digital maximum`;
         }
         update();
         const timer = setInterval(update, 100);
