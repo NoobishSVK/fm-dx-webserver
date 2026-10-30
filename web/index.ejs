@@ -14,6 +14,7 @@
   <script src="js/libs/luxon.min.js"></script>
   <script src="js/libs/chartjs-adapter-luxon.umd.min.js"></script>
   <script src="js/libs/chartjs-plugin-streaming.min.js"></script>
+  <script src="js/opus-player.js" defer></script>
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg" id="favicon" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,9 +24,7 @@
   <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
   <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
 
-  <!-- 3LAS Scripts for Audio streaming -->
   <script type="text/javascript">
-    window.addEventListener('load', Init, false);
     document.ontouchmove = function(e) {
       e.preventDefault();
     }
@@ -536,6 +535,18 @@
               <span class="text-small" style="color: var(--color-3);">[<a href="https://servers.fmdx.org/" target="_blank">Receiver Map</a>]</span>
               <br>
               <p class="text-small color-3" id="current-ping"></p>
+              <details id="audio-stream-stats" class="audio-stream-stats" hidden>
+                <summary>Audio stats for nerds</summary>
+                <dl>
+                  <dt>State</dt><dd id="opus-state">Waiting…</dd>
+                  <dt>Format</dt><dd>Opus · 48 kHz</dd>
+                  <dt>Playback buffer</dt><dd id="opus-buffer">Waiting…</dd>
+                  <dt>Buffer target</dt><dd id="opus-target">Waiting…</dd>
+                  <dt>Receive rate</dt><dd id="opus-rate">Waiting…</dd>
+                  <dt>Recovery events</dt><dd id="opus-events">0 underruns · 0 drops</dd>
+                </dl>
+                <p class="audio-stream-stats-note">Browser buffer only; capture, encoding and network transit are not included.</p>
+              </details>
             </div>
           </div>
         </div>

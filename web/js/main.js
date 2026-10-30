@@ -1221,3 +1221,6 @@ function showTunerDescription() {
         }
     }
     
+const isAndroid = /Android/i.test(navigator.userAgent);
+const isIPadOS = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isIOS = /iPhone|iPod/i.test(navigator.userAgent);

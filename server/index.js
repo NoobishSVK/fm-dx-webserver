@@ -25,8 +25,15 @@ const fmdxList = require('./fmdx_list');
 const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
+const { OpusServer } = require('./stream/opus_server');
 const pluginsApi = require('./plugins_api');
 const pjson = require('../package.json');
+
+const opusServer = process.platform === 'linux' && configExists() ? new OpusServer(serverConfig.audio, { info: logInfo, warn: logWarn, error: logError }) : null;
+if (opusServer) {
+  opusServer.start();
+  process.once('exit', () => opusServer.stop());
+}
 
 // Function to find server files based on the plugins listed in config
 function findServerFiles(plugins) {
@@ -624,6 +631,8 @@ httpServer.on('upgrade', (request, socket, head) => {
         wss.emit('connection', ws, request);
       });
     });
+  } else if (request.url === '/audio' && opusServer) {
+    opusServer.upgrade(request, socket, head);
   } else if (request.url === '/chat' && serverConfig.webserver.chatEnabled === true) {
     sessionMiddleware(request, {}, () => {
       chatWss.handleUpgrade(request, socket, head, (ws) => {
