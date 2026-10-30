@@ -43,7 +43,10 @@ test('reconnects a silent open socket without waiting for close and stops its wa
     await click();
     assert.ok(context.window.fmdxAudio.getOutput().node);
     await sockets[0].onmessage({ data: JSON.stringify({ type: 'format', codec: 'opus', channels: 2 }) });
+    await sockets[0].onmessage({ data: JSON.stringify({ type: 'levels', channels: [{ peakDb: -6, rmsDb: -9 }] }) });
+    assert.equal(context.window.fmdxAudio.getInputLevels().channels[0].peakDb, -6);
     now = 4000;
+    assert.equal(context.window.fmdxAudio.getInputLevels(), null, 'stale input readings expire');
     await sockets[0].onmessage({ data: new ArrayBuffer(10) });
     now = 8000;
     for (const fn of [...intervals]) fn();

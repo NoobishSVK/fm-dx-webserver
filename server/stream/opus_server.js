@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const checkFFmpeg = require('./checkFFmpeg');
 const { buildLinuxOpusPipeline } = require('./opus_pipeline');
 const { OggOpusPackets } = require('./ogg_opus_packets');
+const { PcmMeter } = require('./pcm_meter');
 const { AlsaStderrParser, containsAlsaSetupError, containsAlsaXrun, getAlsaFallbackProfile } = require('./linux_capture');
 
 class OpusServer {
@@ -30,6 +31,16 @@ class OpusServer {
 
     upgrade(req, socket, head) {
         this.wss.handleUpgrade(req, socket, head, ws => this.wss.emit('connection', ws, req));
+    }
+
+    broadcast(data, binary) {
+        const bitrate = parseInt(this.audio.audioBitrate || '128k', 10) * 1000;
+        for (const client of this.clients) {
+            if (client.readyState !== WebSocket.OPEN) continue;
+            if (client.bufferedAmount > Math.max(8192, bitrate / 16)) { client.terminate(); continue; }
+            try { client.send(data, { binary }, error => { if (error) client.terminate(); }); }
+            catch (_) { client.terminate(); }
+        }
     }
 
     async start() {
@@ -61,6 +72,7 @@ class OpusServer {
         this.capture = capture;
         this.encoder = encoder;
         const parser = new OggOpusPackets();
+        const meter = new PcmMeter(Number(this.audio.audioChannels));
         const stderr = new AlsaStderrParser();
         let lastOutput = Date.now();
         let lastCapture = Date.now();
@@ -77,7 +89,11 @@ class OpusServer {
             this.restartTimer = setTimeout(() => this.launch(), this.retryMs);
             this.retryMs = Math.min(30000, this.retryMs * 2);
         };
-        capture.stdout.on('data', () => { lastCapture = Date.now(); });
+        capture.stdout.on('data', data => {
+            if (failed || this.stopped || generation !== this.generation) return;
+            lastCapture = Date.now();
+            for (const reading of meter.push(data)) this.broadcast(JSON.stringify(reading), false);
+        });
         capture.stdout.pipe(encoder.stdin);
         encoder.stdin.on('error', error => fail('encoder input: ' + error.message));
         capture.on('error', error => fail('capture: ' + error.message));
@@ -112,13 +128,7 @@ class OpusServer {
                     lastOutput = Date.now();
                     if (!healthySince) healthySince = lastOutput;
                     if (lastOutput - healthySince >= 30000) this.retryMs = 1000;
-                    for (const client of this.clients) {
-                        if (client.readyState !== WebSocket.OPEN) continue;
-                        const bitrate = parseInt(this.audio.audioBitrate || '128k', 10) * 1000;
-                        if (client.bufferedAmount > Math.max(8192, bitrate / 16)) { client.terminate(); continue; }
-                        try { client.send(packet, { binary: true }, error => { if (error) client.terminate(); }); }
-                        catch (_) { client.terminate(); }
-                    }
+                    this.broadcast(packet, true);
                 }
             } catch (error) { fail('invalid encoder output: ' + error.message); }
         });

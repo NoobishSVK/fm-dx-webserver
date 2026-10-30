@@ -4,8 +4,12 @@
     let active = false, generation = 0, timestamp = 0, retry = 250;
     let underruns = 0, drops = 0, bytes = 0, bytesAt = 0;
     let audioOutput = null;
+    let inputLevels = null;
     // Plugins can attach analysers to the current output without codec internals.
-    window.fmdxAudio = Object.freeze({ getOutput: () => audioOutput });
+    window.fmdxAudio = Object.freeze({
+        getOutput: () => audioOutput,
+        getInputLevels: () => inputLevels && performance.now() - inputLevels.receivedAt < 1500 ? inputLevels : null
+    });
     function display(id, value) { const node = document.getElementById(id); if (node) node.textContent = value; }
     const buttons = () => document.querySelectorAll('.playbutton');
     function state(playing) {
@@ -17,6 +21,7 @@
     }
     async function stop() {
         audioOutput = null;
+        inputLevels = null;
         active = false; generation++; clearTimeout(retryTimer);
         clearInterval(watchdog);
         if (socket) { socket.onclose = null; socket.close(); socket = null; }
@@ -42,6 +47,7 @@
             clearInterval(watchdog);
             // Do not wait for a close handshake on an unresponsive connection.
             socket = null;
+            inputLevels = null;
             ws.onclose = null;
             ws.close();
             display('opus-state', 'Reconnecting');
@@ -59,6 +65,10 @@
             if (typeof event.data === 'string') {
                 let format;
                 try { format = JSON.parse(event.data); } catch (_) { ws.close(); return; }
+                if (format.type === 'levels') {
+                    inputLevels = { ...format, receivedAt: performance.now() };
+                    return;
+                }
                 if (format.type !== 'format' || format.codec !== 'opus' || ![1, 2].includes(format.channels)) { ws.close(); return; }
                 const config = { codec: 'opus', sampleRate: 48000, numberOfChannels: format.channels };
                 try {

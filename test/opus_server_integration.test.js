@@ -23,15 +23,22 @@ test('encodes a generated live source and streams Opus packets over WebSocket', 
     t.after(() => socket.terminate());
     const packets = [];
     let format;
+    let levels;
     await new Promise((resolve, reject) => {
         socket.on('error', reject);
         socket.on('message', (data, binary) => {
-            if (!binary) format = JSON.parse(data.toString());
+            if (!binary) {
+                const message = JSON.parse(data.toString());
+                if (message.type === 'format') format = message;
+                if (message.type === 'levels') levels = message;
+            }
             else { packets.push(data); if (packets.length >= 5) resolve(); }
         });
     });
     assert.equal(format.codec, 'opus');
     assert.equal(format.channels, 2);
+    assert.equal(levels.channels.length, 2);
+    assert.ok(levels.channels[0].peakDb < 0);
     assert.ok(packets.every(packet => packet.length > 0));
     assert.equal(errors.some(message => message.includes('restarting')), false, errors.join('\n'));
 
