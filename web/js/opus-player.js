@@ -5,8 +5,54 @@
     let underruns = 0, drops = 0, bytes = 0, bytesAt = 0;
     let audioOutput = null;
     let inputLevels = null;
-    // Plugins can attach analysers to the current output without codec internals.
+    let audioState = 'stopped', starting = null;
+    const subscribers = new Set(), taps = new Set();
+    function publish(event) {
+        for (const listener of subscribers) {
+            try { listener(event); } catch (error) { console.error('[Audio plugin]', error); }
+        }
+    }
+    function setAudioState(value) {
+        if (audioState === value) return;
+        audioState = value;
+        publish({ type: 'state', state: value });
+    }
+    async function ensureStarted() {
+        if (starting) return starting;
+        if (audioOutput) return;
+        starting = start();
+        try { await starting; }
+        finally { starting = null; }
+        if (!audioOutput) throw new Error('Audio playback could not be started');
+    }
+    async function createStream() {
+        await ensureStarted();
+        if (!audioOutput || !active) throw new Error('Audio was stopped');
+        const source = worklet;
+        const destination = context.createMediaStreamDestination();
+        source.connect(destination);
+        let released = false;
+        const release = () => {
+            if (released) return;
+            released = true;
+            try { source.disconnect(destination); } catch (_) {}
+            destination.stream.getTracks().forEach(track => track.stop());
+            taps.delete(release);
+        };
+        taps.add(release);
+        return Object.freeze({ stream: destination.stream, release });
+    }
+    // One connection and decoder for playback and every plugin.
     window.fmdxAudio = Object.freeze({
+        version: 1,
+        start: ensureStarted,
+        getState: () => audioState,
+        createStream,
+        subscribe(listener) {
+            if (typeof listener !== 'function') throw new TypeError('Audio subscriber must be a function');
+            subscribers.add(listener);
+            return () => subscribers.delete(listener);
+        },
         getOutput: () => audioOutput,
         getInputLevels: () => inputLevels && performance.now() - inputLevels.receivedAt < 1500 ? inputLevels : null
     });
@@ -23,6 +69,8 @@
         audioOutput = null;
         inputLevels = null;
         active = false; generation++; clearTimeout(retryTimer);
+        setAudioState('stopped');
+        for (const release of [...taps]) release();
         clearInterval(watchdog);
         if (socket) { socket.onclose = null; socket.close(); socket = null; }
         if (decoder && decoder.state !== 'closed') decoder.close();
@@ -37,6 +85,7 @@
         if (!active || id !== generation) return;
         timestamp = 0;
         display('opus-state', 'Connecting');
+        setAudioState('connecting');
         worklet.port.postMessage({ type: 'reset' });
         const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/audio');
         socket = ws; ws.binaryType = 'arraybuffer';
@@ -51,6 +100,7 @@
             ws.onclose = null;
             ws.close();
             display('opus-state', 'Reconnecting');
+            setAudioState('reconnecting');
             if (decoder && decoder.state !== 'closed') decoder.close();
             decoder = null;
             worklet.port.postMessage({ type: 'reset' });
@@ -67,6 +117,7 @@
                 try { format = JSON.parse(event.data); } catch (_) { ws.close(); return; }
                 if (format.type === 'levels') {
                     inputLevels = { ...format, receivedAt: performance.now() };
+                    publish({ type: 'levels', levels: inputLevels });
                     return;
                 }
                 if (format.type !== 'format' || format.codec !== 'opus' || ![1, 2].includes(format.channels)) { ws.close(); return; }
@@ -106,6 +157,7 @@
             try {
                 decoder.decode(new EncodedAudioChunk({ type: 'key', timestamp, duration: 20000, data: event.data }));
                 display('opus-state', 'Receiving');
+                setAudioState('receiving');
                 timestamp += 20000; retry = 250;
             } catch (error) { console.error('[Opus] Decode failed:', error); ws.close(); }
         };
@@ -114,6 +166,7 @@
     }
     async function start() {
         const id = ++generation; active = true; state(true);
+        setAudioState('starting');
         underruns = drops = bytes = 0; bytesAt = performance.now();
         const panel = document.getElementById('audio-stream-stats');
         if (panel) panel.hidden = false;
@@ -148,7 +201,7 @@
         } catch (error) { if (id !== generation) return; console.error('[Opus]', error); alert(error.message); await stop(); }
     }
     document.addEventListener('DOMContentLoaded', () => {
-        buttons().forEach(button => { button.disabled = false; button.addEventListener('click', () => active ? stop() : start()); });
+        buttons().forEach(button => { button.disabled = false; button.addEventListener('click', () => active ? stop() : ensureStarted().catch(error => console.error('[Audio]', error))); });
         const slider = document.getElementById('volumeSlider');
         slider.addEventListener('input', () => { if (gain && context) gain.gain.setTargetAtTime(Number(slider.value), context.currentTime, 0.02); });
     });

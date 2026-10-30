@@ -33,8 +33,7 @@
         let rows = [], count = 0, lastReading = null;
         const position = db => db === null ? 0 : Math.max(0, Math.min(1, (db + 90) / 90));
         const value = db => db === null ? '−∞' : db.toFixed(1);
-        function update() {
-            const reading = window.fmdxAudio?.getInputLevels?.();
+        function update(reading = window.fmdxAudio?.getInputLevels?.()) {
             const channels = reading?.channels;
             const channelCount = channels?.length || count || 2;
             if (channelCount !== count) {
@@ -79,8 +78,18 @@
                 : `${count === 1 ? 'Mono' : 'Left / right'} · peak held for 1 second · 0 dBFS is the digital maximum`;
         }
         update();
-        const timer = setInterval(update, 100);
-        window.addEventListener('pagehide', () => clearInterval(timer), { once: true });
+        let expiry;
+        const unsubscribe = window.fmdxAudio?.subscribe(event => {
+            if (event.type === 'levels') {
+                clearTimeout(expiry);
+                update(event.levels);
+                expiry = setTimeout(() => update(null), 1500);
+            } else if (event.type === 'state' && event.state !== 'receiving') {
+                clearTimeout(expiry);
+                update(null);
+            }
+        });
+        window.addEventListener('pagehide', () => { clearTimeout(expiry); unsubscribe?.(); }, { once: true });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
     else init();
