@@ -3,6 +3,9 @@
     let context, worklet, gain, decoder, socket, retryTimer, watchdog;
     let active = false, generation = 0, timestamp = 0, retry = 250;
     let underruns = 0, drops = 0, bytes = 0, bytesAt = 0;
+    let audioOutput = null;
+    // Plugins can attach analysers to the current output without codec internals.
+    window.fmdxAudio = Object.freeze({ getOutput: () => audioOutput });
     function display(id, value) { const node = document.getElementById(id); if (node) node.textContent = value; }
     const buttons = () => document.querySelectorAll('.playbutton');
     function state(playing) {
@@ -13,6 +16,7 @@
         });
     }
     async function stop() {
+        audioOutput = null;
         active = false; generation++; clearTimeout(retryTimer);
         clearInterval(watchdog);
         if (socket) { socket.onclose = null; socket.close(); socket = null; }
@@ -129,6 +133,7 @@
             gain = context.createGain();
             gain.gain.value = Number(document.getElementById('volumeSlider').value);
             worklet.connect(gain).connect(context.destination);
+            audioOutput = { context, node: gain };
             if (active && id === generation) connect(id);
         } catch (error) { if (id !== generation) return; console.error('[Opus]', error); alert(error.message); await stop(); }
     }

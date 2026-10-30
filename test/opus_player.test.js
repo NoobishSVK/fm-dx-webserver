@@ -41,6 +41,7 @@ test('reconnects a silent open socket without waiting for close and stops its wa
     });
     vm.runInContext(fs.readFileSync(require.resolve('../web/js/opus-player.js'), 'utf8'), context);
     await click();
+    assert.ok(context.window.fmdxAudio.getOutput().node);
     await sockets[0].onmessage({ data: JSON.stringify({ type: 'format', codec: 'opus', channels: 2 }) });
     now = 4000;
     await sockets[0].onmessage({ data: new ArrayBuffer(10) });
@@ -54,6 +55,7 @@ test('reconnects a silent open socket without waiting for close and stops its wa
     for (const fn of [...timers]) { timers.delete(fn); fn(); }
     assert.equal(sockets.length, 2);
     await click();
+    assert.equal(context.window.fmdxAudio.getOutput(), null);
     assert.equal(intervals.size, 0);
     assert.equal(timers.size, 0);
 });
