@@ -143,15 +143,20 @@
                         }) %>
                     </div>
 
-                    <div class="panel-100 no-bg text-center">
+                    <div class="panel-100 no-bg text-center contains-dropdown">
                         <div class="flex-container">
-                            <div class="panel-50 no-bg">
-                                <p>If you use an USB audio card on Linux, enabling this option might fix your audio issues.</p>
-                                <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
-                            </div>
-                            <div class="panel-50 no-bg">
-                                <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
-                                <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
+                            <div class="panel-100-real no-bg">
+                                <p>Enable this on Linux only if direct capture fails or produces no audio. ALSA may resample the device to 48 kHz and convert its sample format or channel count, which can add some latency.</p>
+                                <%- include('_components', {component: 'checkbox', cssClass: 'panel-100 flex-container flex-center', label: 'ALSA compatibility mode', id: 'audio-softwareMode'}) %>
+                                <p>Use Stable if low-latency capture produces overruns or gaps.</p>
+                                <%- include('_components', { component: 'dropdown', id: 'audio-alsa-latency-dropdown', inputId: 'audio-alsaLatencyProfile', label: 'ALSA latency profile', cssClass: '', placeholder: 'Low latency',
+                                options: [
+                                    { value: 'experimental', label: 'Experimental (20 ms)' },
+                                    { value: 'low', label: 'Low latency (40 ms)' },
+                                    { value: 'stable', label: 'Stable (80 ms)' },
+                                    { value: 'system', label: 'System default (compatibility)' }
+                                ]
+                                }) %>
                             </div>
                         </div>
                     </div>

@@ -194,7 +194,7 @@
                         </div>
                         <div class="panel-33 p-bottom-20">
                             <h3>Bitrate</h3>
-                            <p>The bitrate of the mp3 audio.<br>
+                            <p>The bitrate of the Opus audio.<br>
                                 <span class="text-gray">Minimum: 64 Kbps • Maximum: 320 Kbps</span>
                             </p>
                             <%- include('_components', { component: 'dropdown', id: 'audio-quality-dropdown', inputId: 'audio-audioBitrate', label: 'Audio quality', cssClass: '', placeholder: '128kbps (standard)', 
@@ -210,7 +210,7 @@
                         </div>
                 </div>
 
-                <div class="flex-container">
+                <div class="flex-container contains-dropdown">
                     <div class="panel-50 p-bottom-20">
                         <h3>Audio boost</h3>
                         <p>This option will boost the audio volume. Use if the output is too quiet.</p>
@@ -218,17 +218,21 @@
                     </div>
                     <div class="panel-50 p-bottom-20">
                         <h3>Experimental</h3>
-                        <p>If you use a USB audio card on Linux, enabling this option might fix your audio issues.</p>
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA Software mode', id: 'audio-softwareMode'}) %>
+                        <p>Enable this on Linux only if direct capture fails or produces no audio. ALSA may resample the device to 48 kHz and convert its sample format or channel count, which can add some latency.</p>
+                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'ALSA compatibility mode', id: 'audio-softwareMode'}) %>
+                        <p>Use Stable if low-latency capture produces overruns or gaps.</p>
+                        <%- include('_components', { component: 'dropdown', id: 'audio-alsa-latency-dropdown', inputId: 'audio-alsaLatencyProfile', label: 'ALSA latency profile', cssClass: '', placeholder: 'Low latency',
+                        options: [
+                            { value: 'experimental', label: 'Experimental (20 ms)' },
+                            { value: 'low', label: 'Low latency (40 ms)' },
+                            { value: 'stable', label: 'Stable (80 ms)' },
+                            { value: 'system', label: 'System default (compatibility)' }
+                        ]
+                        }) %>
                     </div>
                 </div>
                 <div class="flex-container">
-                    <div class="panel-50 p-bottom-20 bottom-20">
-                        <h3>FFmpeg</h3>
-                        <p>Legacy option for Linux / macOS that could resolve audio issues, but will consume additional CPU and RAM usage.</p>
-                        <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Additional FFmpeg', id: 'audio-ffmpeg'}) %>
-                    </div>
-                    <div class="panel-50 p-bottom-20 bottom-20">
+                    <div class="panel-100-real p-bottom-20 bottom-20">
                         <h3>Sample rate offset</h3>
                         <p>Using a negative value could eliminate audio buffering issues during long periods of listening. <br>
                             However, a value that’s too low might increase the buffer over time.</p>
