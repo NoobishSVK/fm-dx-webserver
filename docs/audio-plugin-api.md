@@ -38,3 +38,18 @@ recorder.start(1000);
 Jax-installed plugin loads that script. It chooses WebM/Opus, Ogg/Opus, or MP4
 using browser support checks. It records decoded audio with MediaRecorder, so
 this is a new encoding, not a lossless copy of the incoming Opus packets.
+
+## Meter and spectrum
+
+`web/js/opus-meter.js` switches between two views when clicked (or when its
+heading button is activated with the keyboard):
+
+- Audio levels subscribe to `levels` events: raw server capture before boost.
+- Stereo spectrum uses `createStream()`, a `MediaStreamAudioSourceNode`, and a
+  two-channel splitter with one analyser per channel. This visualises decoded
+  audio before playback volume, including server boost and codec effects.
+
+The spectrum is a display, not an equalizer that changes the sound. It opens no
+additional WebSocket. Leaving the spectrum view disconnects its analysis nodes
+and releases its stream. Stopping playback clears it; starting playback attaches
+it to the new audio context. The recorder's independent tap is unaffected.
