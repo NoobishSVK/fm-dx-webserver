@@ -1,5 +1,5 @@
 let connectedUsers = [];
 let chatHistory = [];
-let connectionLog = []; // newest first, max 100
+let connectionLog = [];
 
 module.exports = { connectedUsers, chatHistory, connectionLog };

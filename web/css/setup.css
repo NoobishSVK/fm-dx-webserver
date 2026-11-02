@@ -175,7 +175,6 @@ li.active {
     flex-direction: column;
 }
 
-/* fills the panel edge to edge */
 #console-output {
     background-color: #111;
     flex: 1 1 300px;
