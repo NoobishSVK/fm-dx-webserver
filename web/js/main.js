@@ -288,25 +288,15 @@ function getServerTime() {
         url: "./server_time",
         dataType: "json",
         success: function(data) {
-            const serverTimeUtc = data.serverTime;
-            
-            const options = {
+            $("#server-time").text(new Date(data.serverTime).toLocaleString(undefined, {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: false
-            };
-            
-            const serverOptions = {
-                ...options,
-                timeZone: 'Etc/UTC'
-            };
-            
-            const formattedServerTime = new Date(serverTimeUtc).toLocaleString(navigator.language ? navigator.language : 'en-US', serverOptions);
-            
-            $("#server-time").text(formattedServerTime);        
+                hour12: false,
+                timeZone: data.timeZone
+            }));
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.error("Error fetching server time:", errorThrown);
@@ -338,8 +328,12 @@ function sendPingRequest() {
     
     fetchWithTimeout('./ping', { cache: 'no-store' }, timeoutDuration)
     .then(response => {
-        const endTime = new Date().getTime();
-        const pingTime = endTime - startTime;
+        // Resource Timing excludes main-thread lag; fall back to wall clock if the entry is missing
+        const timing = performance.getEntriesByName(response.url).pop();
+        performance.clearResourceTimings();
+        const pingTime = timing && timing.responseStart > 0
+            ? Math.round(timing.responseStart - timing.requestStart)
+            : new Date().getTime() - startTime;
         $('#current-ping').text(`Ping: ${pingTime}ms`);
         pingTimeLimit = false;
     })
@@ -931,9 +925,9 @@ function buildAltTxList(txList) {
         outString += `<div class="panel-100-real m-0 hover-brighten no-bg-phone m-0 br-0 p-10" style="min-height: 72px;padding-left: 20px;">
               <div id="data-station-container-${i}" style="display: block;" class="text-left" data-score="${tx.score}">
                 <h2 style="margin-top: 0;" class="mb-0">
-                  <span id="data-station-name-${i}">${tx.station.replace("R.", "Radio ").replace(/%/g, '%25')}</span>
+                  <span id="data-station-name-${i}">${escapeHTML(tx.station.replace("R.", "Radio "))}</span>
                 </h2>
-                <span id="data-station-city-${i}" style="font-size: 16px;">${tx.name}</span> <span class="text-small">[<span id="data-station-itu-${i}">${tx.itu}</span>]</span>
+                <span id="data-station-city-${i}" style="font-size: 16px;">${escapeHTML(tx.name)}</span> <span class="text-small">[<span id="data-station-itu-${i}">${tx.itu}</span>]</span>
                 <span class="text-small" style="opacity: 0.8;">
                   <span style="margin-left: 20px;">&nbsp;</span>
                   <span id="data-station-erp">${tx.erp}</span> kW [<span id="data-station-pol">${tx.pol.toUpperCase()}</span>] <span class="text-gray">•</span> <span id="data-station-distance">${tx.distanceKm.toFixed(0)} km</span> <span class="text-gray">•</span> <span id="data-station-azimuth">${tx.azimuth.toFixed(0)}°</span>
@@ -1032,7 +1026,7 @@ const updateDataElements = throttle(function(parsedData) {
     }
     
     if (parsedData.txInfo.tx.length > 1) {
-        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx.replace(/%/g, '%25'));
+        updateTextIfChanged($('#data-station-name'), parsedData.txInfo.tx);
         updateTextIfChanged($('#data-station-erp'), parsedData.txInfo.erp);
         updateTextIfChanged($('#data-station-city'), parsedData.txInfo.city);
         updateTextIfChanged($('#data-station-itu'), parsedData.txInfo.itu);

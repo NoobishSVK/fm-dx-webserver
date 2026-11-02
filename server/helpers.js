@@ -199,7 +199,18 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
 
     const userLocationForLog = locationInfo?.isp ? `${userLocation} (${locationInfo.isp})` : userLocation;
 
+    // Refreshes / extra tabs within a minute reuse the IP's last entry instead of flooding the log
+    let logEntry = storage.connectionLog.find(e => e.ip === clientIp);
+    if (logEntry && (!logEntry.disconnected || Date.now() - logEntry.disconnected < 60000)) {
+      logEntry.disconnected = null;
+    } else {
+      logEntry = { ip: clientIp, location: userLocationForLog, connected: Date.now(), disconnected: null };
+      storage.connectionLog.unshift(logEntry);
+      storage.connectionLog.length = Math.min(storage.connectionLog.length, 100);
+    }
+
     storage.connectedUsers.push({
+      logEntry,
       ip: clientIp,
       location: userLocation,
       isp: locationInfo?.isp,

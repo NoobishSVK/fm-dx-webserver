@@ -6,6 +6,7 @@ var mapAttrib='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStree
 $(document).ready(function() {
   mapCreate();
   loadConsoleLogs();
+  $('#connection-log pre').each(function () { $(this).html(colorizeLog($(this).text())); });
   
   showPanelFromHash();
   initNav();

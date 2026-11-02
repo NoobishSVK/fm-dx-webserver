@@ -472,8 +472,9 @@ wss.on('connection', (ws, request) => {
       }
         dataHandler.showOnlineUsers(currentUsers);
 
-        const index = storage.connectedUsers.findIndex(user => user.ip === clientIp);
+        const index = storage.connectedUsers.findIndex(user => user.instance === ws);
         if (index !== -1) {
+            storage.connectedUsers[index].logEntry.disconnected = Date.now();
             storage.connectedUsers.splice(index, 1);
         }
 

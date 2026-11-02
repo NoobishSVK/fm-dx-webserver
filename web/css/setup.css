@@ -132,10 +132,72 @@ li.active {
 }
 
 
+/* 6-column grid so every row's edges line up (2+2+2, 4+2, 3+3) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 20px;
+    margin: 20px 10px;
+}
+
+.dashboard-grid > [class^="panel-"] {
+    width: auto;
+    margin: 0;
+}
+
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+.span-6 { grid-column: span 6; }
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 15px;
+}
+
+.stat-card .text-medium-big {
+    line-height: 1.1;
+}
+
+@media only screen and (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard-grid > [class^="panel-"] {
+        grid-column: auto;
+    }
+}
+
+.log-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+/* fills the panel edge to edge */
 #console-output {
     background-color: #111;
-    height: 300px;
-    overflow-y:auto;
+    flex: 1 1 300px;
+    min-height: 300px;
+    overflow-y: auto;
+    border-radius: 0 0 15px 15px;
+}
+
+.connection-log {
+    max-height: 175px;
+    overflow-y: auto;
+}
+
+.connection-log-download {
+    align-self: flex-start;
+    margin: 10px 10px 0;
+    padding: 5px 10px;
+    opacity: 0.6;
+}
+
+.connection-log-download:hover {
+    opacity: 1;
 }
 .w-250 {
     width: 250px !important

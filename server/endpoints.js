@@ -154,6 +154,7 @@ router.get('/wizard', (req, res) => {
               enabledPlugins: updatedConfig.plugins,
               onlineUsers: dataHandler.dataToSend.users,
               connectedUsers: storage.connectedUsers,
+              connectionLog: connectionLogLines(),
               device: serverConfig.device,
               banlist: updatedConfig.webserver.banlist, // Updated banlist from the latest config
               tunerProfiles: tunerProfiles.map((profile) => ({
@@ -256,6 +257,16 @@ router.get('/kick', (req, res) => {
 router.get('/console', (req, res) => {
     if (!req.session.isAdminAuthenticated) return res.status(403).end();
     res.json(logs);
+});
+
+const connectionLogLines = () => {
+    const fmt = (ts) => ts ? new Date(ts).toLocaleString() : 'online';
+    return storage.connectionLog.map(e => `[${fmt(e.connected)} → ${fmt(e.disconnected)}] ${e.ip} - ${e.location}`);
+};
+
+router.get('/connectionlog.txt', (req, res) => {
+    if (!req.session.isAdminAuthenticated) return res.status(403).end();
+    res.attachment('connection-log.txt').type('text/plain; charset=utf-8').send(connectionLogLines().join('\n'));
 });
 
 router.post('/restart', (req, res) => {
@@ -374,10 +385,9 @@ router.get('/static_data', (req, res) => {
 });
 
 router.get('/server_time', (req, res) => {
-    const serverTime = new Date(); // Get current server time
-    const serverTimeUTC = new Date(serverTime.getTime() - (serverTime.getTimezoneOffset() * 60000)); // Adjust server time to UTC
     res.json({
-        serverTime: serverTimeUTC,
+        serverTime: new Date(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
 });
 

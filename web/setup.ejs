@@ -74,26 +74,24 @@
             <div class="panel-full tab-content no-bg m-0" id="dashboard" role="tabpanel">
                 <h2>Dashboard</h2>
 
-                <div class="flex-container">
-                    <div class="panel-33 p-20">
+                <div class="dashboard-grid">
+                    <div class="panel-33 stat-card span-2">
                         <span class="text-medium-big color-5"><%= onlineUsers %></span>
-                        <p>Online users</p>
+                        <p class="m-0">Online users</p>
                     </div>
 
-                    <div class="panel-33 p-20">
+                    <div class="panel-33 stat-card span-2">
                         <span class="text-medium-big color-5"><%= memoryUsage %></span>
-                        <span class="text-small color-4" style="display: block; font-size: 1em; font-weight: 600; line-height: 0;">(<%= memoryHeap %> heap)</span>
-                        <p>Memory usage</p>
+                        <span class="text-small color-4">(<%= memoryHeap %> heap)</span>
+                        <p class="m-0">Memory usage</p>
                     </div>
 
-                    <div class="panel-33 p-20">
+                    <div class="panel-33 stat-card span-2">
                         <span class="text-medium-big color-5"><%= processUptime %></span>
-                        <p >Uptime</p>
+                        <p class="m-0">Uptime</p>
                     </div>
-                </div>
 
-                <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20" style="overflow-x: auto;">
+                    <div class="panel-75 p-bottom-20 span-4" style="overflow-x: auto;">
                         <h3>Current users</h3>
                         <table class="table-big">
                             <thead>
@@ -126,27 +124,31 @@
                                     </tr>
                                 <% } %>
                             </tbody>
-                        </table>    
+                        </table>
                     </div>
-                </div>
-                    
-                <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20">
-                        <h3>Quick settings</h3>
-                        <div class="flex-container flex-center" style="margin: 30px;">
-                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Unlocked Tuner', id: 'publicTuner'}) %>
-                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Admin lock', id: 'lockToAdmin'}) %><br>
-                        </div>
-        
-                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
-                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %><br>
-                    </div>
-                </div>
 
-                <div class="flex-container">
-                    <div class="panel-100-real p-bottom-20 bottom-20">
+                    <div class="panel-33 p-bottom-20 span-2">
+                        <h3>Quick settings</h3>
+                        <div class="flex-container flex-center" style="margin: 10px;">
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Unlocked Tuner', id: 'publicTuner'}) %>
+                            <%- include('_components', {component: 'checkbox', cssClass: '', label: 'Admin lock', id: 'lockToAdmin'}) %>
+                        </div>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Tune password', id: 'password-tunePass', password: true}) %>
+                        <%- include('_components', {component: 'text', cssClass: 'w-150 br-15', placeholder: '', label: 'Admin password', id: 'password-adminPass', password: true}) %>
+                    </div>
+
+                    <div class="panel-100-real p-bottom-20 log-panel span-6">
+                        <h3>Connection log</h3>
+                        <div class="connection-log br-5 p-10 text-small text-left top-10" id="connection-log">
+                            <% connectionLog.forEach(line => { %><pre class="m-0" style="white-space:pre-wrap;"><%= line %></pre><% }); %>
+                            <% if (connectionLog.length === 0) { %><p class="m-0">No connections yet.</p><% } %>
+                        </div>
+                        <a href="./connectionlog.txt" class="connection-log-download text-small"><i class="fa-solid fa-download"></i> Download log</a>
+                    </div>
+
+                    <div class="panel-100-real log-panel span-6">
                         <h3>Console</h3>
-                        <div class="panel-100 auto br-5 p-10 text-small text-left top-10" id="console-output"></div>
+                        <div class="p-10 text-small text-left top-10" id="console-output"></div>
                     </div>
                 </div>
             </div>
