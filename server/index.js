@@ -27,6 +27,7 @@ const { logDebug, logError, logInfo, logWarn, logChat } = require('./console');
 const storage = require('./storage');
 const { serverConfig, configExists, configSave } = require('./server_config');
 const pluginsApi = require('./plugins_api');
+const tuneQueue = require('./tunequeue');
 const pjson = require('../package.json');
 
 // Function to find server files based on the plugins listed in config
@@ -455,6 +456,17 @@ wss.on('connection', (ws, request) => {
             }
         }
 
+        // --- fair-share tuning queue: only the token holder's T commands reach the chip ---
+        if (command.startsWith('T') && tuneQueue.isEnabled() && !isAdminAuthenticated) {
+            const verdict = tuneQueue.tryAcquire(ws, clientIp);
+            if (verdict === 'granted' || verdict === 'already-holder') {
+                tuneQueue.activity(ws); // holder tuned -> refresh idle timer
+            } else {
+                return; // queued / queue full -> command swallowed, client notified via TQ:*
+            }
+        }
+        // --- end queue ---
+
         if ((serverConfig.publicTuner && !serverConfig.lockToAdmin) || isAdminAuthenticated || (!serverConfig.publicTuner && !serverConfig.lockToAdmin && isTuneAuthenticated)) {
             output.write(`${command}\n`);
         }
@@ -532,6 +544,8 @@ wss.on('connection', (ws, request) => {
             tunerLockTracker.delete(ws);
             serverConfig.publicTuner = true;
         }
+
+        tuneQueue.release(ws); // holder/queued client left -> promote next in line
 
         if (currentUsers === 0 && serverConfig.enableDefaultFreq === true && 
             serverConfig.autoShutdown !== true && serverConfig.xdrd.wirelessConnection === true) {
