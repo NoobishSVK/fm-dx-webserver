@@ -7,6 +7,10 @@
     border-radius: 15px;
     /*border-bottom: 4px solid var(--color-2);*/
   }
+
+  .contains-dropdown.dropdown-open {
+    z-index: 999;
+  }
   @media (max-width: 400px) {
     .dropdown {
       width: 240px;

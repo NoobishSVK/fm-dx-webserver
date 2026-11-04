@@ -32,7 +32,6 @@ FM-DX Webserver is a cross-platform web server designed for FM DXers who want to
 
 This project utilizes these libraries:
 
-- [3LAS](https://github.com/jojobond/3LAS) library by JoJoBond for Low Latency Audio Streaming.
 - [FlagKit](https://github.com/madebybowtie/FlagKit) library by madebybowtie for RDS country flags.
 - [librdsparser](https://github.com/kkonradpl/librdsparser) library by Konrad Kosmatka for RDS parsing.
 

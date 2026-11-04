@@ -400,7 +400,6 @@ function sendPingRequest() {
                 window.socket.close(1000, 'Normal closure'); // Force reconnection to unfreeze browser UI
             }, 8000); // Timeout must be higher than TIMEOUT_DURATION
             connectionLost = false;
-            requiresAudioStreamRestart = true;
             console.log("Radio data restored.");
         }
     }
@@ -606,7 +605,6 @@ let reconnectTimer = null;
 let dataTimeout = null;
 let dataTimeoutPrevious = null;
 let connectionLost = false;
-let requiresAudioStreamRestart = false;
 
 const TIMEOUT_DURATION = 5000;  // 5 seconds timeout for lost connection
 
@@ -1217,3 +1215,6 @@ function showTunerDescription() {
         }
     }
     
+const isAndroid = /Android/i.test(navigator.userAgent);
+const isIPadOS = /iPad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isIOS = /iPhone|iPod/i.test(navigator.userAgent);

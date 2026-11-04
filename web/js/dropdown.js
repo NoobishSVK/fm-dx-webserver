@@ -6,6 +6,13 @@ $(document).ready(function() {
     let currentIndex = -1; // Track the currently focused option
     
     // Functions
+    const syncDropdownLayers = () => {
+        $('.contains-dropdown').each(function() {
+            const $container = $(this);
+            $container.toggleClass('dropdown-open', $container.find('.dropdown.opened').length > 0);
+        });
+    };
+
     const toggleDropdown = (event) => {
         event.stopPropagation();
         const $currentDropdown = $(event.currentTarget).closest('.dropdown');
@@ -16,6 +23,7 @@ $(document).ready(function() {
         $currentDropdown.toggleClass('opened');
         currentDropdown = $currentDropdown.hasClass('opened') ? $currentDropdown : null;
         currentIndex = -1; // Reset the current index when toggling the dropdown
+        syncDropdownLayers();
     };
     
     const selectOption = (event) => {
@@ -61,6 +69,7 @@ $(document).ready(function() {
         setTimeout(() => {
             $currentDropdown.removeClass('opened');
             currentDropdown = null;
+            syncDropdownLayers();
         }, 10); // Adjust the delay as needed
     };
     
@@ -71,6 +80,7 @@ $(document).ready(function() {
         if (!isClickedInsideDropdown && $currentDropdown && $currentDropdown.hasClass('opened')) {
             $currentDropdown.removeClass('opened');
             currentDropdown = null;
+            syncDropdownLayers();
         }
     };
     
@@ -97,6 +107,7 @@ $(document).ready(function() {
             currentDropdown.removeClass('opened');
             currentDropdown = null;
             currentIndex = -1;
+            syncDropdownLayers();
             break;
         }
     };

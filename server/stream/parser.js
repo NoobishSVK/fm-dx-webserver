@@ -1,10 +1,23 @@
 'use strict';
 
-const exec = require('child_process').exec;
-const fs = require('fs').promises; // Use the Promise-based fs API
+const { exec, execFile } = require('child_process');
 const ffmpeg = require('ffmpeg-static');
-const filePath = '/proc/asound/cards';
+const { parseArecordDeviceList } = require('./linux_capture');
 const platform = process.platform;
+
+function listLinuxCaptureDevices() {
+    return new Promise((resolve) => {
+        execFile('arecord', ['-l'], {
+            env: { ...process.env, LC_ALL: 'C' }
+        }, (error, stdout, stderr) => {
+            const devices = parseArecordDeviceList(stdout);
+            if (error && devices.length === 0) {
+                console.error(`Error listing ALSA capture devices: ${(stderr || error.message).trim()}`);
+            }
+            resolve(devices);
+        });
+    });
+}
 
 function parseAudioDevice(options, callback) {
     let videoDevices = [];
@@ -22,19 +35,7 @@ function parseAudioDevice(options, callback) {
     const execute = async (fulfill, reject) => {
         try {
             if (platform === 'linux') {
-                try {
-                    const data = await fs.readFile(filePath, 'utf8');
-                    const regex = /\[([^\]]+)\]/g;
-                    const matches = (data.match(regex) || []).map(match => 'hw:' + match.replace(/\s+/g, '').slice(1, -1));
-
-                    matches.forEach(match => {
-                        if (typeof match === 'string') {
-                            audioDevices.push({ name: match });
-                        }
-                    });
-                } catch (err) {
-                    console.error(`Error reading file: ${err.message}`);
-                }
+                audioDevices = await listLinuxCaptureDevices();
 
                 // Linux doesn't support the `-list_devices` ffmpeg command like macOS/Windows,
                 // so skip the ffmpeg exec for Linux
