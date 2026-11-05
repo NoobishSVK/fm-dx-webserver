@@ -23,17 +23,9 @@
   <meta property="og:image" content="https://fmdx.org/img/webserver_icon.png">
   <meta property="og:description" content="Server description: <%= tunerDescMeta %>.">
 
-  <!-- 3LAS Scripts for Audio streaming -->
-  <script src="js/3las/util/3las.helpers.js"></script>
-  <script src="js/3las/util/3las.logging.js"></script>
-  <script src="js/3las/fallback/3las.liveaudioplayer.js"></script>
-  <script src="js/3las/fallback/3las.formatreader.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.mpeg.js"></script>
-  <script src="js/3las/fallback/formats/3las.formatreader.wav.js"></script>
-  <script src="js/3las/util/3las.websocketclient.js"></script>
-  <script src="js/3las/fallback/3las.fallback.js"></script>
-  <script src="js/3las/3las.js"></script>
-  <script src="js/3las/main.js"></script>
+  <!-- Audio streaming -->
+  <script src="js/audio/mp3_player.js"></script>
+  <script src="js/audio/main.js"></script>
   <script type="text/javascript">
     window.addEventListener('load', Init, false);
     document.ontouchmove = function(e) {

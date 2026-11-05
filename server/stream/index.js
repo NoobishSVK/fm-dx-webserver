@@ -2,7 +2,7 @@ const { spawn, execSync } = require('child_process');
 const { configName, serverConfig, configUpdate, configSave, configExists } = require('../server_config');
 const { logDebug, logError, logInfo, logWarn, logFfmpeg } = require('../console');
 const checkFFmpeg = require('./checkFFmpeg');
-const audioServer = require('./3las.server');
+const audioServer = require('./audio.server');
 
 const consoleLogTitle = '[Audio Stream]';
 
