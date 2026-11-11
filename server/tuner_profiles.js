@@ -20,6 +20,12 @@ const tunerProfiles = [
       { value: 287000, label: '287 kHz' },
       { value: 311000, label: '311 kHz' }
     ],
+    amBandwidths: [
+      { value: 3000, value2: 0, label: '3 kHz' },
+      { value: 4000, value2: 1, label: '4 kHz' },
+      { value: 6000, value2: 2, label: '6 kHz' },
+      { value: 8000, value2: 3, label: '8 kHz' }
+    ],
     details: ''
   },
   {
@@ -76,6 +82,15 @@ const tunerProfiles = [
       { value: 60000, label: '60 kHz' },
       { value: 84000, label: '84 kHz' },
       { value: 110000, label: '110 kHz' }
+    ],
+    amBandwidths: [
+      { value: 1000, value2: 4, label: '1 kHz' },
+      { value: 1800, value2: 5, label: '1.8 kHz' },
+      { value: 2000, value2: 3, label: '2 kHz' },
+      { value: 2500, value2: 6, label: '2.5 kHz' },
+      { value: 3000, value2: 2, label: '3 kHz' },
+      { value: 4000, value2: 1, label: '4 kHz' },
+      { value: 6000, value2: 0, label: '6 kHz' }
     ],
     details: ''
   }

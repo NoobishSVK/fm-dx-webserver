@@ -77,7 +77,8 @@ $(document).ready(function() {
     const navigateOptions = (event) => {
         if (!currentDropdown) return;
         
-        const $options = currentDropdown.find('.option');
+        const $options = currentDropdown.find('.option:visible');
+        if ($options.length === 0) return;
         switch (event.key) {
             case 'ArrowDown':
             event.preventDefault();

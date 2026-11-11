@@ -100,6 +100,13 @@ let currentUsers = 0;
 let serialport;
 let timeoutAntenna;
 
+function applyTefBandDefaults(band, output) {
+  if (serverConfig.device !== 'tef' || band !== 'am' || !output) return;
+
+  output.write('F1\n');
+  output.write('W4000\n');
+}
+
 app.use(express.urlencoded({ extended: true }));
 const sessionMiddleware = session({
   secret: 'GTce3tN6U8odMwoI',
@@ -208,7 +215,7 @@ if (serverConfig.xdrd.wirelessConnection === false) {
     }, 6000);
     
     serialport.on('data', (data) => {
-      helpers.resolveDataBuffer(data, wss, rdsWss);
+      helpers.resolveDataBuffer(data, wss, rdsWss, (band) => applyTefBandDefaults(band, serialport));
     });
 
     serialport.on('error', (error) => {
@@ -254,7 +261,7 @@ function connectToXdrd() {
 client.on('data', (data) => {
   const { xdrd } = serverConfig;
   
-  helpers.resolveDataBuffer(data, wss, rdsWss);
+  helpers.resolveDataBuffer(data, wss, rdsWss, (band) => applyTefBandDefaults(band, client));
   if (authFlags.authMsg == true && authFlags.messageCount > 1) {
     return;
   }
