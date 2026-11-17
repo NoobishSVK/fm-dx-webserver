@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 const { serverConfig } = require('./server_config');
-const { logChat } = require('./console');
+const { logChat, logWarn } = require('./console');
 const helpers = require('./helpers');
 
 function heartbeat() { // WebSocket heartbeat helper
@@ -27,6 +27,7 @@ function createChatServer(storage) {
     chatWss.on('connection', (ws, request) => {
         ws.isAlive = true;
         ws.on('pong', heartbeat);
+        ws.on('error', (err) => logWarn('[Chat WebSocket] ' + err.message)); // unhandled 'error' crashes the process
 
         const clientIp = helpers.getClientIp(request);
 

@@ -9,6 +9,7 @@ const httpServer = http.createServer(app);
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
 const rdsWss = new WebSocket.Server({ noServer: true });
+rdsWss.on('connection', (ws) => ws.on('error', (err) => logWarn('[RDS WebSocket] ' + err.message))); // unhandled 'error' crashes the process
 const pluginsWss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
 const fs = require('fs');
 const path = require('path');

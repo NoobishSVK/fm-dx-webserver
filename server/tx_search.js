@@ -47,6 +47,7 @@ if (serverConfig.identification.gpsMode) {
     setTimeout(() => {
         const websocket = new WebSocket(externalWsUrl);
         consoleCmd.logInfo('Set up GPS websocket for lat/lon');
+        websocket.on('error', (err) => consoleCmd.logWarn('GPS websocket error: ' + err.message));
         // Event listener to receive data
         websocket.on('message', (data) => {
             try {
