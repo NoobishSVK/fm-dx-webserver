@@ -7,10 +7,10 @@ const readline = require('readline');
 const app = express();
 const httpServer = http.createServer(app);
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
-const rdsWss = new WebSocket.Server({ noServer: true });
+const wss = new WebSocket.Server({ noServer: true, perMessageDeflate: true, maxPayload: 64 * 1024 });
+const rdsWss = new WebSocket.Server({ noServer: true, maxPayload: 64 * 1024 });
 rdsWss.on('connection', (ws) => ws.on('error', (err) => logWarn('[RDS WebSocket] ' + err.message))); // unhandled 'error' crashes the process
-const pluginsWss = new WebSocket.Server({ noServer: true, perMessageDeflate: true });
+const pluginsWss = new WebSocket.Server({ noServer: true, perMessageDeflate: true, maxPayload: 1024 * 1024 });
 const fs = require('fs');
 const path = require('path');
 const net = require('net');

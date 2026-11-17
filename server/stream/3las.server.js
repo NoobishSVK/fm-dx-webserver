@@ -154,6 +154,7 @@ class StreamServer {
             noServer: true,
             clientTracking: true,
             perMessageDeflate: false,
+            maxPayload: 64 * 1024,
         });
         // Allow manual upgrade handling from index.js
         this.handleUpgrade = (req, socket, head) => {

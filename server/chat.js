@@ -12,7 +12,7 @@ function createChatServer(storage) {
         return null;
     }
 
-    const chatWss = new WebSocket.Server({ noServer: true });
+    const chatWss = new WebSocket.Server({ noServer: true, maxPayload: 64 * 1024 });
     let nextMessageId = 0;
 
     function broadcast(data) {
@@ -56,6 +56,9 @@ function createChatServer(storage) {
                 ws.send(JSON.stringify({ error: "Invalid message format" }));
                 return;
             }
+
+            // JSON.parse also accepts null/numbers/arrays; property access on those throws and kills the process
+            if (!messageData || typeof messageData !== 'object' || Array.isArray(messageData)) return;
 
             if (messageData.type === 'clear' || messageData.type === 'delete') {
                 if (request.session?.isAdminAuthenticated !== true) return;
@@ -105,9 +108,7 @@ function createChatServer(storage) {
                 messageData.nickname = messageData.nickname.substring(0, 32);
             }
 
-            if (messageData.message?.length > 255) {
-                messageData.message = messageData.message.substring(0, 255);
-            }
+            messageData.message = String(messageData.message ?? '').substring(0, 255);
 
             storage.chatHistory.push(messageData);
 
