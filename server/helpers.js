@@ -111,14 +111,34 @@ function fetchIpInfo(ip, timeoutMs = 1500) {
 
 const ipInfoCache = new Map(); // ip -> Promise of info, shared by parallel connects
 
-function handleConnect(clientIp, currentUsers, ws, callback) {
+function getIpInfo(clientIp) {
   if (!ipInfoCache.has(clientIp)) {
     ipInfoCache.set(clientIp, fetchIpInfo(clientIp).then((info) => {
       if (!info.country) ipInfoCache.delete(clientIp); // retry failed lookups next time
       return info;
     }));
   }
-  ipInfoCache.get(clientIp).then((info) => processConnection(clientIp, info, currentUsers, ws, callback));
+  return ipInfoCache.get(clientIp);
+}
+
+function handleConnect(clientIp, currentUsers, ws, callback) {
+  getIpInfo(clientIp).then((info) => processConnection(clientIp, info, currentUsers, ws, callback));
+}
+
+// Resolves true if the IP's AS is on the banned_as list
+function isBannedAS(clientIp) {
+  return getIpInfo(clientIp).then((info) => new Promise((resolve) =>
+    fetchBannedAS((error, bannedAS) => {
+      const banned = bannedAS.some((as) => info.as?.includes(as));
+      if (banned) {
+        const now = Date.now();
+        if (now - (recentBannedIps.get(clientIp) || 0) > 300 * 1000) {
+          consoleCmd.logWarn(`Banned AS list client kicked (${clientIp})`);
+          recentBannedIps.set(clientIp, now);
+        }
+      }
+      resolve(banned);
+    })));
 }
 
 let bannedASCache = { data: null, timestamp: 0 };
@@ -167,64 +187,46 @@ function processConnection(clientIp, locationInfo, currentUsers, ws, callback) {
   const options = { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" };
   const connectionTime = new Date().toLocaleString([], options);
 
-  fetchBannedAS((error, bannedAS) => {
-    if (error) {
-      console.error("Error fetching banned AS list:", error);
-    }
+  const userLocation =
+    locationInfo && locationInfo.country !== undefined
+      ? [
+          locationInfo.city,
+          locationInfo.regionName && /\p{L}/u.test(String(locationInfo.regionName))
+            ? locationInfo.regionName
+            : undefined,
+          locationInfo.countryCode,
+        ]
+          .filter(Boolean)
+          .join(', ')
+      : 'Unknown';
 
-    if (bannedAS.some((as) => locationInfo.as?.includes(as))) {
-      const now = Date.now();
-      const lastSeen = recentBannedIps.get(clientIp) || 0;
+  const userLocationForLog = locationInfo?.isp ? `${userLocation} (${locationInfo.isp})` : userLocation;
 
-      if (now - lastSeen > 300 * 1000) {
-        consoleCmd.logWarn(`Banned AS list client kicked (${clientIp})`);
-        recentBannedIps.set(clientIp, now);
-      }
+  // Refreshes / extra tabs within a minute reuse the IP's last entry instead of flooding the log
+  let logEntry = storage.connectionLog.find(e => e.ip === clientIp);
+  if (logEntry && (!logEntry.disconnected || Date.now() - logEntry.disconnected < 60000)) {
+    logEntry.disconnected = null;
+  } else {
+    logEntry = { ip: clientIp, location: userLocationForLog, connected: Date.now(), disconnected: null };
+    storage.connectionLog.unshift(logEntry);
+    storage.connectionLog.length = Math.min(storage.connectionLog.length, 100);
+  }
 
-      return callback("User banned");
-    }
-
-    const userLocation =
-      locationInfo && locationInfo.country !== undefined
-        ? [
-            locationInfo.city,
-            locationInfo.regionName && /\p{L}/u.test(String(locationInfo.regionName))
-              ? locationInfo.regionName
-              : undefined,
-            locationInfo.countryCode,
-          ]
-            .filter(Boolean)
-            .join(', ')
-        : 'Unknown';
-
-    const userLocationForLog = locationInfo?.isp ? `${userLocation} (${locationInfo.isp})` : userLocation;
-
-    // Refreshes / extra tabs within a minute reuse the IP's last entry instead of flooding the log
-    let logEntry = storage.connectionLog.find(e => e.ip === clientIp);
-    if (logEntry && (!logEntry.disconnected || Date.now() - logEntry.disconnected < 60000)) {
-      logEntry.disconnected = null;
-    } else {
-      logEntry = { ip: clientIp, location: userLocationForLog, connected: Date.now(), disconnected: null };
-      storage.connectionLog.unshift(logEntry);
-      storage.connectionLog.length = Math.min(storage.connectionLog.length, 100);
-    }
-
-    storage.connectedUsers.push({
-      logEntry,
-      ip: clientIp,
-      location: userLocation,
-      isp: locationInfo?.isp,
-      as: locationInfo?.as,
-      time: connectionTime,
-      instance: ws,
-    });
-
-    consoleCmd.logInfo(
-      `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocationForLog}`
-    );
-
-    callback("User allowed");
+  storage.connectedUsers.push({
+    logEntry,
+    ip: clientIp,
+    location: userLocation,
+    isp: locationInfo?.isp,
+    as: locationInfo?.as,
+    time: connectionTime,
+    instance: ws,
   });
+
+  consoleCmd.logInfo(
+    `Web client \x1b[32mconnected\x1b[0m (${clientIp}) \x1b[90m[${currentUsers}]\x1b[0m Location: ${userLocationForLog}`
+  );
+
+  callback("User allowed");
 }
 
 function formatUptime(uptimeInSeconds) {
@@ -377,5 +379,5 @@ const escapeHtml = (unsafe) => {
 
 
 module.exports = {
-  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, createAntispam, getClient, getClientIp, isBanned, escapeHtml
+  authenticateWithXdrd, parseMarkdown, handleConnect, removeMarkdown, formatUptime, resolveDataBuffer, kickClient, checkIPv6Support, checkLatency, createAntispam, getClient, getClientIp, isBanned, isBannedAS, escapeHtml
 }
