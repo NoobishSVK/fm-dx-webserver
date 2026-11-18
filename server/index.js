@@ -610,7 +610,8 @@ function isPortOpen(host, port, timeout = 1000) {
 
 // Websocket register for /text, /audio and /chat paths 
 httpServer.on('upgrade', (request, socket, head) => {
-  
+  socket.on('error', () => socket.destroy());
+
   // Banned users never get a WebSocket on any path
   if (helpers.isBanned(request)) {
     socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
