@@ -64,7 +64,14 @@ function sendUpdate() {
 
   let bwLimit = '';
   if (serverConfig.webserver.tuningLimit === true) {
-    bwLimit = serverConfig.webserver.tuningLowerLimit + ' - ' + serverConfig.webserver.tuningUpperLimit + ' MHz';
+    const lower = serverConfig.webserver.tuningLowerLimit;
+    const upper = serverConfig.webserver.tuningUpperLimit;
+    const hasLower = lower !== undefined && lower !== null && String(lower).trim() !== '';
+    const hasUpper = upper !== undefined && upper !== null && String(upper).trim() !== '';
+
+    const lowerText = hasLower ? `${String(lower).trim()} MHz` : '0 MHz';
+    const upperText = hasUpper ? `${String(upper).trim()} MHz` : 'no limit';
+    bwLimit = `${lowerText} - ${upperText}`;
   }
 
   const request = {
