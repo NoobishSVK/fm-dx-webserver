@@ -627,6 +627,18 @@ socket.onmessage = (event) => {
         }, 500);
         return;
     }
+
+    // --- fair-share tuning queue: plain-string protocol, handled before JSON.parse ---
+    if (typeof event.data === 'string' && event.data.startsWith('TQ:')) {
+        const tqParts = event.data.split(':');
+        const tqKind = tqParts[1];
+        const tqArg = tqParts[2];
+        if (tqKind === 'QUEUED') sendToast('info', 'Tuning queue', 'You are #' + tqArg + ' in the tuning queue', false, false);
+        else if (tqKind === 'GRANTED') sendToast('success', 'Tuning queue', "It's your turn - tune away", false, false);
+        else if (tqKind === 'RELEASED') sendToast('warning', 'Tuning queue', 'Your turn ended (idle timeout)', false, false);
+        else if (tqKind === 'FULL') sendToast('error', 'Tuning queue', 'The tuning queue is full - try again shortly', false, false);
+        return;
+    }
     
     parsedData = JSON.parse(event.data);
     

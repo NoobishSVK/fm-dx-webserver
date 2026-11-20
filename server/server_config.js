@@ -112,6 +112,11 @@ let serverConfig = {
   defaultFreq: 87.5,
   publicTuner: true,
   lockToAdmin: false,
+  tuneQueue: {
+    enabled: false,      // opt-in: default off = today's last-writer-wins behavior
+    maxTuneSeconds: 120, // holder idle timeout before the token auto-releases
+    maxQueueLength: 10,  // max waiters; further joiners get TQ:FULL
+  },
   autoShutdown: false,
   enableDefaultFreq: false,
   defaultFreq: "87.5",
