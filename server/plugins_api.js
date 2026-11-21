@@ -1,4 +1,4 @@
-// plugins_api.js
+// plugins_api.js - v2026.09.10
 // Shared API for server plugins:
 // - Provides privileged/admin command access
 // - Exposes server-side hooks for inter-plugin communication
@@ -113,6 +113,27 @@ function offPluginEvent(event, handler) {
     pluginEvents.off(event, handler);
 }
 
+// Fires on every raw chunk from the tuner connection, before core buffers it into a complete line
+const rawSerialDataListeners = new Set();
+
+function onRawSerialData(handler) {
+    rawSerialDataListeners.add(handler);
+}
+
+function offRawSerialData(handler) {
+    rawSerialDataListeners.delete(handler);
+}
+
+function emitRawSerialData(data) {
+    for (const handler of rawSerialDataListeners) {
+        try {
+            handler(data);
+        } catch (err) {
+            logError(`[plugins_api] Raw serial data handler error: ${err.message}`);
+        }
+    }
+}
+
 // ---- exports ----
 
 module.exports = {
@@ -133,5 +154,10 @@ module.exports = {
     // inter-plugin hooks
     emitPluginEvent,
     onPluginEvent,
-    offPluginEvent
+    offPluginEvent,
+
+    // raw serial data hook
+    onRawSerialData,
+    offRawSerialData,
+    emitRawSerialData
 };
